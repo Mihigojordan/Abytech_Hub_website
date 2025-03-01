@@ -1,9 +1,9 @@
 import React from 'react'
-import HeaderImage from "../assets/images/header.jpg"
+import HeaderImage from "../assets/images/header.avif"
 
 const Header = ({title,path}) => {
     return (
-        <div className='w-full h-[40vh] ' style={{
+        <div className='w-full h-[40vh] -mt-8 ' style={{
             background:`linear-gradient( to right,rgba(0,0,0,0.7),rgba(0,0,0,0.5)),url(${HeaderImage})`,
             backgroundPosition: `center`,
             backgroundRepeat:`no-repeat`,
