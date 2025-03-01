@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import AOS from "aos";
 import "aos/dist/aos.css";
 import { FaRegCheckCircle } from "react-icons/fa";
+import { FaRocket } from "react-icons/fa";
 
 export default function ContentSection() {
   useEffect(() => {

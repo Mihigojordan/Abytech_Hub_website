@@ -89,7 +89,7 @@ const FooterContent = () => {
       className="fixed bottom-6 right-6 bg-[#FFD44D] p-3 rounded-full shadow-md hover:bg-yellow-500 transition"
       aria-label="Scroll to Top"
     >
-      <IoMdArrowRoundUp className="text-black text-xl" />
+      <IoMdArrowRoundUp className="text-white text-xl" />
     </button>
     </footer>
   );

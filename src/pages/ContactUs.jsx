@@ -42,6 +42,7 @@ const ContactUs = () => {
             allowFullScreen=""
             loading="lazy"
             referrerPolicy="no-referrer-when-downgrade"
+            style={{borderRadius:"10px"}}
           ></iframe>
         </div>
         
