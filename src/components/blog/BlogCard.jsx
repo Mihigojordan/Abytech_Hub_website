@@ -11,7 +11,7 @@ const BlogCard = ({image,title,description}) => {
         </div>
 
         <h1 className='text-xl md:text-xl xl:text-1xl capitalize group-hover:text-amber-400 transition duration-200 ease-in-out '>{title}</h1>
-        <p className='text-sm md:text-sm text-gray-600'>{description}</p>
+        <p className='text-sm md:text-sm text-gray-500'>{description}</p>
 
     </div>
   )

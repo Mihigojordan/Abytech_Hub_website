@@ -1,62 +1,69 @@
-import React from 'react';
+import React,{useEffect}from 'react';
 import { motion } from 'framer-motion';
+import Header from '../../components/header'
 import SubscribeSection from '../../components/blog/subscribe';
 import ContentSection from '../../components/talkContent';
+import BlogLatest from '../../components/blog/BlogDisplay';
+import Testimonials from '../../components/home/testimony'
+import ExperienceComponent from './experience';
+import AOS from 'aos';
+import { IoBriefcase } from "react-icons/io5";
+import { FiFileText } from "react-icons/fi";
+import MissionVisionComponent from './mission';
 
 const AboutUs = () => {
+    useEffect(() => {
+            AOS.init({ duration: 1000, once: true });
+          }, []);
+    
+        useEffect(()=>{
+       
+           document.documentElement.scrollIntoView({
+               behavior:'smooth',
+               block:'start',
+               inline:'start',
+           })
+           },[])
     return (
         <>
-        <div className="bg-gray-900 text-white py-20">
-            <div className="container mx-auto px-4">
-                <motion.h2 
-                    className="text-4xl font-bold mb-6 text-center text-yellow-400"
-                    initial={{ opacity: 0, y: 50 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.8 }}
-                >
-                    About Us
-                </motion.h2>
-                <div className="flex flex-col md:flex-row items-center gap-10">
-                    <motion.div 
-                        className="flex-1"
-                        initial={{ opacity: 0, x: -50 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.8 }}
-                    >
-                        <p className="text-lg leading-relaxed mb-6">
-                            At Abytech, we are dedicated to delivering top-notch software solutions that drive success. 
-                            With a passion for technology and innovation, we specialize in building modern, efficient, 
-                            and scalable web applications that meet your business needs.
-                        </p>
-                        <p className="text-lg leading-relaxed mb-6">
-                            Our team of experienced full-stack developers excels in both MERN and PERN stacks, 
-                            leveraging the power of PostgreSQL, Sequelize, and real-time technologies to create dynamic, 
-                            user-centric applications. Whether it's implementing robust search features, real-time updates, 
-                            or crafting visually appealing designs, we have you covered.
-                        </p>
-                        <p className="text-lg leading-relaxed">
-                            Trust Abytech to transform your vision into reality with tailored solutions and a commitment 
-                            to excellence. We are here to support you at every step of your digital journey.
-                        </p>
-                    </motion.div>
-                    <motion.div 
-                        className="flex-1"
-                        initial={{ opacity: 0, x: 50 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.8 }}
-                    >
-                        <img 
-                            src="../image/blog5.png" 
-                            alt="About Us" 
-                            className="rounded-2xl shadow-lg"
-                        />
-                    </motion.div>
+        <div className='w-full flex-col pb-7 justify-center bg-[#0d0f15]  items-center flex gap-2  mt-25'>
+            <Header title={`About Us`} path={`About`} />
+
+            <div className="flex items-center gap-14 w-full justify-center flex-wrap px-34 py-24" data-aos="fade-up">
+                <div className="flex flex-col md:flex-row gap-10 w-full items-center justify-between">
+                <div className="relative">
+                        <img src="../image/bg2.png" alt="Content Writer" className="w-full rounded-2xl" />
+                    </div>
+                    <div className="flex flex-col gap-4 max-w-md">
+                        <h2 className="text-white text-3xl font-bold">We Are <span className='text-yellow-300'>Content Writing</span> Since 2016</h2>
+                        <p className="text-gray-400">Ac quis pretium consectetur urna dolor. Cursus et amet neque ullamcorper. Cursus tempus accumsan eu nibh.</p>
+                        <div className="flex flex-col gap-6">
+                            <div className="flex items-start gap-4">
+                                <div className="text-orange-500"><IoBriefcase size={36} /></div>
+                                <div>
+                                    <h3 className="text-white font-bold text-2xl">Experienced</h3>
+                                    <p className="text-gray-400">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor.</p>
+                                </div>
+                            </div>
+                            <div className="flex items-start gap-4">
+                                <div className="text-orange-500"><FiFileText size={36} /></div>
+                                <div>
+                                    <h3 className="text-white font-bold text-2xl">Certified</h3>
+                                    <p className="text-gray-400">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                   
+                </div>
                 </div>
             </div>
-
-            
-        </div>
-        <ContentSection />
+        
+        <MissionVisionComponent />
+        <ExperienceComponent />
+        <Testimonials /> 
+        <BlogLatest />
+        <SubscribeSection />
         </>
     );
 };
