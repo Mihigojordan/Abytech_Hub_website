@@ -40,11 +40,11 @@ function NavBar() {
         >
           {[
             { name: "Home", path: "/" },
-            { name: "About Us", path: "/about" },
+            { name: "About Us", path: "/about-us" },
             { name: " Our Services", path: "/services" },
             { name: "Our Team", path: "/why-choose-me" },
            
-            { name: "blogs", path: "/blogs" },
+            { name: "Contact Us", path: "/reviews" },
             { name: "Contact Us", path: "/contact-us" },
           ].map((item, index) => (
             <li key={index} className="py-2  lg:py-0">
