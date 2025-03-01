@@ -17,7 +17,7 @@ const HomePage = () => {
         <>
             <LandingPage />
             <WhyChooseUs />
-            <ClientsSection />
+         
             <ContentReach />
             <ContentWriteServices />
             <WorkProcess />
