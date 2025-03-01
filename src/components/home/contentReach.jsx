@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { FaArrowUp } from "react-icons/fa";
+import Splash from '../../assets/images/splash.jpg'
 
 const ContentReach = () => {
   const [showScroll, setShowScroll] = useState(false);
@@ -13,47 +14,43 @@ const ContentReach = () => {
   }, []);
 
   return (
-    <section
-      className="relative h-[400px] text-white py-16 px-8 bg-cover bg-center"
-    >
-      {/* Background with Overlay */}
-      <div
-        className="absolute inset-0 bg-black bg-opacity-100"
-        style={{
-          backgroundImage: "url('../image/bg.png')",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-        }}
-      ></div>
+<section className="relative h-[400px] text-white py-16 px-8 bg-cover bg-center">
+  {/* Background with Overlay */}
+  <div
+    className="absolute inset-0"
+    style={{
+      backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0.75)), url(${Splash})`,
+      backgroundSize: "cover",
+      backgroundAttachment: "fixed",
+      backgroundPosition: "center",
+    }}
+  ></div>
 
-      {/* Content */}
-      <div className="relative z-10 max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between">
-        <div className="md:w-2/3">
-          <h2 className="text-4xl font-bold">
-            <span className="text-yellow-400">Content Reaches</span>
-            <br /> your audience’s audience.
-          </h2>
-        </div>
-        <div className="md:w-1/3 flex flex-col gap-4 mt-6 md:mt-0">
-          <button className="border border-white text-white py-2 px-6 rounded-lg hover:bg-white hover:text-black transition">
-            Working With Us
-          </button>
-          <button className="bg-red-400 text-white py-2 px-6 rounded-lg hover:bg-red-500 transition">
-            Trust Us To Get New
-          </button>
-        </div>
-      </div>
+  {/* Content */}
+  <div className="relative z-10 max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between">
+    {/* Left Side - Heading & Description */}
+    <div className="md:w-2/3 -ml-16">
+      <h2 className="text-4xl font-bold leading-tight">
+        <span className="text-yellow-400">Build Your Future in Web Development</span>
+        <br /> Craft powerful, scalable, and innovative websites.
+      </h2>
+      <p className="text-gray-300 mt-4 max-w-xl leading-10">
+        Whether you're just starting out or looking to enhance your skills, we provide expert guidance, real-world projects, and career opportunities to help you thrive in the web development industry.
+      </p>
+    </div>
 
-      {/* Scroll to Top Button */}
-      {showScroll && (
-        <button
-          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-          className="fixed bottom-6 right-6 bg-yellow-400 p-3 rounded-full shadow-lg hover:bg-yellow-500 transition"
-        >
-          <FaArrowUp className="text-black" />
-        </button>
-      )}
-    </section>
+    {/* Right Side - Call to Action Buttons */}
+    <div className="md:w-1/3 ml-40 flex flex-col gap-4 mt-6 md:mt-0">
+      <button className="border border-white text-white py-2 mb-6 px-6 rounded-lg hover:bg-white hover:text-black transition">
+        Start Your Journey
+      </button>
+      <button className="bg-red-500 text-white py-2 px-6 rounded-lg hover:bg-red-600 transition">
+        Advance Your Skills
+      </button>
+    </div>
+  </div>
+</section>
+
   );
 };
 

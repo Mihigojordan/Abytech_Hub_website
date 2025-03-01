@@ -1,76 +1,79 @@
-import React, { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
-import AOS from "aos";
-import "aos/dist/aos.css";
+import { useState } from "react";
+import { NavLink } from "react-router-dom"; // Import NavLink
+import { FiMenu, FiX } from "react-icons/fi";
+import React from "react";
+import Logo from '../assets/images/logo.png'
+
+function NavBar() {
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  return (
+    <header
+      className="fixed top-0 left-0 w-full z-50 bg-[#171B224D] backdrop-blur-lg p-2 shadow-md transition-all duration-300"
+    >
+      <nav className="container mx-auto flex justify-between items-center px-4 py-2">
+        {/* Logo */}
+        <div className="flex items-center space-x-2">
+  <img
+    src={Logo}
+    alt="Brand Logo"
+    className="h-16 w-auto object-contain"
+  />
+</div>
 
 
-
-const Navbar = () => {
-
-     const [scrolling, setScrolling] = useState(false);
-      
-        useEffect(() => {
-          AOS.init({ duration: 200, easing: "ease-in-out", once: false });
-      
-          const handleScroll = () => {
-            setScrolling(window.scrollY > 80); // Change background when scrolled past 50px
-          };
-      
-          window.addEventListener("scroll", handleScroll);
-          return () => window.removeEventListener("scroll", handleScroll);
-        }, []);
-    
-       
-    const links = [
-        {path:'/',name:'Home'},
-        {path:'/services',name:'Services'},
-        {path:'/blogs',name:'Blog'},
-        {path:'/contact-us',name:'Contact Us'},
-    
-    
-      ]
-    
-    return (
-
-        <header
-            className={`fixed top-0 left-0 w-full py-4 px-6 h-30 flex justify-between items-center transition-all duration-300 z-50 ${
-              scrolling ? "bg-gray-60 shadow-md backdrop-blur-md" : "bg-transparent"
-            }`}
-            data-aos="fade-down"
+        {/* Mobile Menu Icon */}
+        <div className="lg:hidden">
+          <button
+            onClick={() => setMenuOpen(!menuOpen)}
+            className="text-black focus:outline-none"
           >
-            {/* Logo Section */}
-            <div className="flex items-center">
-              <span className="text-4xl font-bold text-yellow-400">Abytech Hub</span>
-            </div>
-      
-            {/* Navigation Menu */}
-            <nav className="hidden md:flex space-x-6">
-              {links.map((link, key) => (
-                <Link
-                  key={key}
-                  to={link.path}
-                  className="text-white hover:text-yellow-400 transition"
-                >
-                  {link.name}
-                </Link>
-              ))}
-            </nav>
-      
-            {/* Contact Us Button */}
-            
-            <Link to="/contact-us">
-            <button className="bg-red-500 hidden md:flex hover:bg-red-600 px-4 py-2 rounded-md text-white font-bold transition">
+            {menuOpen ? <FiX className="w-8 h-8" /> : <FiMenu className="w-8 h-8" />}
+          </button>
+        </div>
+
+        {/* Menu Items */}
+        <ul
+          className={`lg:flex lg:space-x-6  absolute lg:relative  lg:w-auto left-0 top-16 lg:top-0 flex-col lg:flex-row pl-8 w-[100%] pr-4 transition-transform duration-300 ease-in-out ${
+            menuOpen ? "flex" : "hidden"
+          }`}
+        >
+          {[
+            { name: "Home", path: "/" },
+            { name: "About Us", path: "/about" },
+            { name: " Our Services", path: "/services" },
+            { name: "Our Team", path: "/why-choose-me" },
+       
+            { name: "Our Blog", path: "/reviews" },
+            { name: "Contact Us", path: "/reviews" },
+          ].map((item, index) => (
+            <li key={index} className="py-2  lg:py-0">
+              <NavLink
+                to={item.path}
+                className={({ isActive }) =>
+                  `block px-4 py-2 text-lg font-semibold capitalize transition-all ${
+                    isActive ? "text-primaryColor" : "text-white hover:text-primaryColor"
+                  }`
+                }
+              >
+                {item.name}
+              </NavLink>
+            </li>
+          ))}
+
+          {/* Contact Us Button */}
+          <li className="py-2 lg:py-0 lg:ml-56">
+            <NavLink
+              to="/contact"
+              className="px-6 py-2  text-lg font-semibold text-white bg-[#FFD44D] rounded-lg transition-all hover:bg-yellow-500"
+            >
               Contact Us
-            </button>
-            </Link>
-            
-      
-            {/* Mobile Menu (Hamburger) */}
-            <div className="md:hidden">
-              <button className="text-white text-2xl">&#9776;</button>
-            </div>
-          </header>
-    )
+            </NavLink>
+          </li>
+        </ul>
+      </nav>
+    </header>
+  );
 }
 
-export default Navbar
+export default NavBar;
