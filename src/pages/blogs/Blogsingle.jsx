@@ -58,15 +58,15 @@ const BlogSingle = () => {
                     <div className="flex flex-col gap-7 w-full">
 
                         <div className="flex flex-wrap w-full gap-4 ">
-                            <div className="flex-1/2 lg:flex-1/3 min-h-80 ">
-                                <img src={BlogImage3} className='w-full h-full object-cover ' alt="" />
+                            <div className="flex-1/2 lg:flex-1/3">
+                                <img src={BlogImage3} className='w-full  object-cover ' height={20} alt="" />
                             </div>
                             <div className="flex-1/2 lg:flex-1/3 min-h-80 ">
-                                <img src={BlogImage2} className='w-full h-full object-cover ' alt="" />
+                                <img src={BlogImage2} className='w-full  object-cover ' alt="" />
                             </div>
                         </div>
                         <div className="h-[49vh] w-full">
-                            <img src={BlogImage1} className='w-full h-full object-cover ' alt="" />
+                            <img src={BlogImage1} className='w-full  object-cover ' alt="" />
                         </div>
                     </div>
 

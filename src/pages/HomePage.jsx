@@ -17,12 +17,11 @@ const HomePage = () => {
         <>
             <LandingPage />
             <WhyChooseUs />
-         
-            <ContentReach />
+<ContentReach />
             <ContentWriteServices />
             <WorkProcess />
             <ContentSection />
-            {/* <LatestProjects /> */}
+            <LatestProjects />
             <Testimonials />
             <BlogLatest />
 

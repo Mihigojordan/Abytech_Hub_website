@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { FaArrowUp } from "react-icons/fa";
+
 import Splash from '../../assets/images/splash.jpg'
 
 const ContentReach = () => {
@@ -14,6 +15,7 @@ const ContentReach = () => {
   }, []);
 
   return (
+
 <section className="relative h-[400px] text-white py-16 px-8 bg-cover bg-center">
   {/* Background with Overlay */}
   <div
@@ -51,7 +53,7 @@ const ContentReach = () => {
   </div>
 </section>
 
-  );
+);
 };
 
 export default ContentReach;

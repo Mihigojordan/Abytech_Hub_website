@@ -49,7 +49,7 @@ const WhyChooseUs = () => {
             <FaLaptopCode className="w-10 h-10 text-yellow-400" />
             <div>
               <h3 className="text-xl font-bold">Custom Software Development</h3>
-              <p className="text-gray-300">We develop scalable and efficient software solutions for businesses, startups, and enterprises.</p>
+              <p className="text-gray-300">We develop scalable and efficient** software solutions for businesses, startups, and enterprises.</p>
             </div>
           </div>
 
@@ -67,7 +67,7 @@ const WhyChooseUs = () => {
             <FaServer className="w-10 h-10 text-yellow-400" />
             <div>
               <h3 className="text-xl font-bold">Secure & Reliable Web Hosting</h3>
-              <p className="text-gray-300">We offer fast, secure, and scalable hosting solutions for businesses of all sizes.</p>
+              <p className="text-gray-300">We offer **fast, secure, and scalable** hosting solutions for businesses of all sizes.</p>
             </div>
           </div>
 
@@ -76,7 +76,7 @@ const WhyChooseUs = () => {
             <MdVerifiedUser className="w-10 h-10 text-yellow-400" />
             <div>
               <h3 className="text-xl font-bold">Timely & Reliable Delivery</h3>
-              <p className="text-gray-300">We ensure that every project is delivered on time without compromising quality.</p>
+              <p className="text-gray-300">We ensure that every project is delivered **on time** without compromising quality.</p>
             </div>
           </div>
 
