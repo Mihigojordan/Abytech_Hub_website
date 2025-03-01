@@ -44,31 +44,28 @@ const FooterContent = () => {
       <div className=" pt-4 pr-18 pl-22 pb-4 border-t border-gray-700 bg-[#171B224D] flex flex-col md:flex-row justify-between items-center">
   {/* Left Section - Social Media */}
   <div className="flex space-x-4">
-  <a href="https://www.facebook.com" target="_blank" rel="noopener noreferrer"
-    className="w-8 h-8 flex items-center justify-center rounded-full border-2 border-[#FFD44D] bg-[#FFD44D] text-gray-900 hover:bg-transparent hover:text-[#FFD44D] transition">
-    <FaFacebookF className="text-sm" />
-  </a>
 
-  <a href="https://twitter.com" target="_blank" rel="noopener noreferrer"
+
+  <a href="https://x.com/AbytechHUB" target="_blank" rel="noopener noreferrer"
     className="w-8 h-8 flex items-center justify-center rounded-full border-2 border-[#FFD44D] bg-[#FFD44D] text-gray-900 hover:bg-transparent hover:text-[#FFD44D] transition">
     <RxCross2 className="text-sm" />
   </a>
 
-  <a href="https://www.linkedin.com" target="_blank" rel="noopener noreferrer"
+  <a href="https://www.linkedin.com/in/aby-tech-9b8947174/" target="_blank" rel="noopener noreferrer"
     className="w-8 h-8 flex items-center justify-center rounded-full border-2 border-[#FFD44D] bg-[#FFD44D] text-gray-900 hover:bg-transparent hover:text-[#FFD44D] transition">
     <FaLinkedinIn className="text-sm" />
   </a>
-  <a href="https://www.instagram.com" target="_blank" rel="noopener noreferrer"
+  <a href="https://www.instagram.com/abytech_hub/" target="_blank" rel="noopener noreferrer"
     className="w-8 h-8 flex items-center justify-center rounded-full border-2 border-[#FFD44D] bg-[#FFD44D] text-gray-900 hover:bg-transparent hover:text-[#FFD44D] transition">
     <FaInstagram className="text-sm" />
   </a>
 
-  <a href="https://wa.me/YOUR_NUMBER" target="_blank" rel="noopener noreferrer"
+  <a href="https://wa.me/+250791813289" target="_blank" rel="noopener noreferrer"
     className="w-8 h-8 flex items-center justify-center rounded-full border-2 border-[#FFD44D] bg-[#FFD44D] text-gray-900 hover:bg-transparent hover:text-[#FFD44D] transition">
     <FaWhatsapp className="text-sm" />
   </a>
 
-  <a href="mailto:your-email@example.com" target="_blank" rel="noopener noreferrer"
+  <a href="mailto:abytechhubllc@gmail.com" target="_blank" rel="noopener noreferrer"
     className="w-8 h-8 flex items-center justify-center rounded-full border-2 border-[#FFD44D] bg-[#FFD44D] text-gray-900 hover:bg-transparent hover:text-[#FFD44D] transition">
     <FaEnvelope className="text-sm" />
   </a>
