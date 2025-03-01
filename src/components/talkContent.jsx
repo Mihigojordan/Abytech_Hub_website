@@ -1,22 +1,20 @@
 
 import React from "react";
 import { FaRegCheckCircle } from "react-icons/fa";
+import BlogImage1 from '../assets/images/blog/blog2.jpg'
 
 export default function ContentSection() {
   return (
-    <section className="bg-gray-900 text-white py-16 px-8 flex items-center justify-center">
-      <div className="max-w-6xl flex flex-col md:flex-row items-center">
-        <div className="relative w-full md:w-1/2 flex justify-center">
-          
-          <div className="absolute bottom-6 left-6 bg-gray-800 p-4 rounded-lg shadow-lg flex items-center space-x-3">
-          
-          </div>
+    <section className="bg-gray-900 w-full  text-white py-16 px-8 flex items-center justify-center">
+      <div className="  w-full flex gap-2 flex-col-reverse justify-between  lg:flex-row-reverse  items-center">
+        <div className="relative w-full lg:w-1/2 flex justify-center">
+        <img src={BlogImage1} className=" rounded-xl w-full" alt="" />
         </div>
-        <div className="w-full md:w-1/2 text-left mt-10 md:mt-0 md:ml-16">
+        <div className="w-full lg:w-1/2 text-left mt-10 md:mt-0 md:ml-16">
           <h2 className="text-4xl font-bold">
             Content <span className="text-yellow-400">That Walks</span>, Talks & Sells For You.
           </h2>
-          <p className="mt-4 text-gray-300">
+          <p className="mt-4 text-gray-300 w-full text-base md:text-lg md:w-10/12">
             Sed faucibus velit arcu in quis a. Sit ornare et dignissim in sit enim. 
             Cras eget vitae aenean dolor orci sagittis proin porttitor.
           </p>
