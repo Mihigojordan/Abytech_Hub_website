@@ -6,9 +6,11 @@ const SubscribeSection = () => {
              <div
         className="absolute inset-0 bg-black bg-opacity-100"
         style={{
-          backgroundImage: "url('../image/blog6.jpg')",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
+            background:`linear-gradient( to right,rgba(0,0,0,0.7),rgba(0,0,0,0.5)), url('../image/blog6.jpg')`,
+            backgroundPosition: `center`,
+            backgroundRepeat:`no-repeat`,
+            backgroundSize:`cover`
+            
         }}
       ></div>
             <div className="absolute inset-0  bg-opacity-60"></div>
