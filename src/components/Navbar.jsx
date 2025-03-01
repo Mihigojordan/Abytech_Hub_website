@@ -45,7 +45,7 @@ function NavBar() {
             { name: "Our Team", path: "/why-choose-me" },
            
             { name: "blogs", path: "/blogs" },
-            { name: "Contact Us", path: "/reviews" },
+            { name: "Contact Us", path: "/contact-us" },
           ].map((item, index) => (
             <li key={index} className="py-2  lg:py-0">
               <NavLink
