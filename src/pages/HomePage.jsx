@@ -20,8 +20,7 @@ const HomePage = () => {
 <ContentReach />
             <ContentWriteServices />
             <WorkProcess />
-            <ContentSection />
-            <LatestProjects />
+          
             <Testimonials />
             <BlogLatest />
 
