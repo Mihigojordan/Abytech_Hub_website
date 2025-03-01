@@ -41,9 +41,7 @@ function NavBar() {
           {[
             { name: "Home", path: "/" },
             { name: "About Us", path: "/about" },
-            { name: " Our Services", path: "/services" },
-            { name: "Our Team", path: "/why-choose-me" },
-           
+            { name: " Our Services", path: "/services" },  
             { name: "blogs", path: "/blogs" },
             { name: "Contact Us", path: "/contact-us" },
           ].map((item, index) => (
@@ -64,7 +62,7 @@ function NavBar() {
           {/* Contact Us Button */}
           <li className="py-2 lg:py-0 lg:ml-56">
             <NavLink
-              to="/contact"
+              to="/contact-u"
               className="px-6 py-2  text-lg font-semibold text-white bg-[#FFD44D] rounded-lg transition-all hover:bg-yellow-500"
             >
               Contact Us
