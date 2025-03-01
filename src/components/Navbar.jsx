@@ -44,7 +44,7 @@ function NavBar() {
             { name: " Our Services", path: "/services" },
             { name: "Our Team", path: "/why-choose-me" },
            
-            { name: "Contact Us", path: "/reviews" },
+            { name: "blogs", path: "/blogs" },
             { name: "Contact Us", path: "/reviews" },
           ].map((item, index) => (
             <li key={index} className="py-2  lg:py-0">
