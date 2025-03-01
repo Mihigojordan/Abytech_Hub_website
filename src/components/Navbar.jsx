@@ -26,7 +26,7 @@ function NavBar() {
         <div className="lg:hidden">
           <button
             onClick={() => setMenuOpen(!menuOpen)}
-            className="text-black focus:outline-none"
+            className="text-white focus:outline-none"
           >
             {menuOpen ? <FiX className="w-8 h-8" /> : <FiMenu className="w-8 h-8" />}
           </button>
