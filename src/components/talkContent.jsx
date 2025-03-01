@@ -7,19 +7,9 @@ export default function ContentSection() {
     <section className="bg-gray-900 text-white py-16 px-8 flex items-center justify-center">
       <div className="max-w-6xl flex flex-col md:flex-row items-center">
         <div className="relative w-full md:w-1/2 flex justify-center">
-          <img src="/woman-laptop.png" alt="Woman with Laptop" className="w-[80%] md:w-[90%]" />
+          
           <div className="absolute bottom-6 left-6 bg-gray-800 p-4 rounded-lg shadow-lg flex items-center space-x-3">
-            <div>
-              <p className="text-sm text-gray-400">Worked with more than 100 people</p>
-              <div className="flex items-center mt-2">
-                <div className="flex -space-x-2">
-                  <img src="/user1.jpg" className="w-8 h-8 rounded-full border-2 border-gray-900" />
-                  <img src="/user2.jpg" className="w-8 h-8 rounded-full border-2 border-gray-900" />
-                  <img src="/user3.jpg" className="w-8 h-8 rounded-full border-2 border-gray-900" />
-                </div>
-                <p className="ml-4 text-white font-bold">100+ Clients</p>
-              </div>
-            </div>
+          
           </div>
         </div>
         <div className="w-full md:w-1/2 text-left mt-10 md:mt-0 md:ml-16">

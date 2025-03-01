@@ -41,7 +41,7 @@ const FooterContent = () => {
     </section>
 
       {/* Footer Bottom */}
-      <div className=" pt-4 pr-18 pl-24 pb-4 border-t border-gray-700 bg-[#171B224D] flex flex-col md:flex-row justify-between items-center">
+      <div className=" pt-4 pr-18 pl-22 pb-4 border-t border-gray-700 bg-[#171B224D] flex flex-col md:flex-row justify-between items-center">
   {/* Left Section - Social Media */}
   <div className="flex space-x-4">
   <a href="https://www.facebook.com" target="_blank" rel="noopener noreferrer"
