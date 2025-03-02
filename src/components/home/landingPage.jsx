@@ -32,7 +32,7 @@ const Home = () => {
     <section className="relative  text-white min-h-screen bg-[#171B224D]  md:px-2">
      
     
-    <section className="flex flex-col md:flex-row items-center  justify-center w-[100%]  px-6 md:px-12 py-12 bg-[#171B224D] text-white  h-[700px]">
+    <section className="flex flex-col md:flex-row items-center  justify-center w-[100%]  px-6 md:px-12 py-12 bg-[#171B224D] mt-24 text-white">
       {/* Image Container */}
     <div className="relative w-[100%] md:w-[45%] ml-[40px] flex mt-16  justify-center">
         <img

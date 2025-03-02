@@ -11,7 +11,7 @@ const WhyChooseUs = () => {
   }, []);
 
   return (
-    <section className="bg-[#171B224D] text-white px-10 md:px-20 lg:px-32 py-16">
+    <section className="bg-[#171B224D] text-white px-10 py-10 md:px-20 lg:px-32 ">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-20 items-center">
         {/* Left Side - Title & Image */}
         <div className="bg-gray-900 p-8 rounded-lg relative" data-aos="fade-right">
