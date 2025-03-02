@@ -79,15 +79,15 @@ export default function Testimonials() {
   };
 
   return (
-    <section className="bg-[#0d0f15] py-16 px-4 text-white text-center relative">
+    <section className=" py-16 px-4 text-white w-[80%] mx-auto text-center relative">
       {/* Heading */}
       <h2 className="text-3xl md:text-4xl font-bold mb-4" data-aos="fade-up">
-        What My <span className="text-yellow-400">Clients</span> Say
+        What Our <span className="text-yellow-400">Clients</span> Say
       </h2>
       <p className="text-gray-400 mb-8">Different customers sharing their experience with AbyTech.</p>
 
       {/* Testimonials Slider */}
-      <div className="relative w-[80%] mx-auto">
+      <div className="relative w-[100%] mx-auto">
         <div className="overflow-hidden">
           <div
             className="flex transition-transform duration-500 ease-in-out"
