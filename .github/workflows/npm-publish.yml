@@ -32,7 +32,7 @@ jobs:
         password: MIHIGOprince12@
         protocol: ftps
         local-dir: dist/  # ✅ Ensure this matches your build folder
-        server-dir: public_html/  # ✅ Deploy directly to public_html
+        server-dir: /  # ✅ Deploy directly to public_html
         exclude: |
           **/.git*
           **/node_modules/**
