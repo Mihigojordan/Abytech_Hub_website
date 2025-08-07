@@ -33,6 +33,7 @@ function NavBar() {
             { name: "Home", path: "/" },
             { name: "About Us", path: "/about-us" },
             { name: "Our Services", path: "/services" },
+            { name: "team", path: "/team-member" },
             { name: "Blogs", path: "/blogs" },
             { name: "Contact Us", path: "/contact-us" },
           ].map((item, index) => (
