@@ -8,6 +8,7 @@ const  ServicePage = lazy(()=> import( "./pages/services/ServicePage"));
 const  ServiceSingle = lazy(()=> import( "./pages/services/ServiceSingle"));
 const BlogContainer= lazy(()=>import("../src/pages/blogs/blogContainer"));
 const AboutUs=lazy(()=>import('./pages/about us/aboutUs'));
+const TeamMember = lazy(()=> import('./pages/Team'))
 
 import MainLayout from "./layouts/MainLayout";
 
@@ -37,7 +38,8 @@ const router = createBrowserRouter([
       {path:'/services',element:<SuspenseWrapper><ServicePage /> </SuspenseWrapper>},
 
       {path:'/about-us',element:<SuspenseWrapper><AboutUs /></SuspenseWrapper>},
- {path:'/service/:id',element:<SuspenseWrapper><ServiceSingle /> </SuspenseWrapper>},
+      {path:'/service/:id',element:<SuspenseWrapper><ServiceSingle /> </SuspenseWrapper>},
+      {path:'/team-member',element:<SuspenseWrapper><TeamMember /> </SuspenseWrapper>},
 
     ]
   }
