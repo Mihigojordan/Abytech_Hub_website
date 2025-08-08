@@ -10,6 +10,7 @@ const BlogContainer= lazy(()=>import("../src/pages/blogs/blogContainer"));
 const AboutUs=lazy(()=>import('./pages/about us/aboutUs'));
 
 import MainLayout from "./layouts/MainLayout";
+import ProjectsPage from "./pages/Projects/ProjectPages";
 
 
 
@@ -38,6 +39,7 @@ const router = createBrowserRouter([
 
       {path:'/about-us',element:<SuspenseWrapper><AboutUs /></SuspenseWrapper>},
  {path:'/service/:id',element:<SuspenseWrapper><ServiceSingle /> </SuspenseWrapper>},
+ {path:'/project',element:<SuspenseWrapper><ProjectsPage /> </SuspenseWrapper>},
 
     ]
   }
