@@ -45,111 +45,146 @@ const projects = [
 // Project Card Component
 const ProjectCard = ({ project }) => {
     return (
-        <div className="group flex flex-col justify-between relative rounded-2xl cursor-pointer shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-600 hover:border-gray-500" style={{ backgroundColor: '#171B22' }}>
-            {/* Project Image */}
-            <div className="relative h-48 overflow-hidden">
-                <img 
-                    src={project.imageUrl} 
-                    alt={project.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
-                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            </div>
-
-            {/* Content */}
-            <div className="p-6">
-                <h3 className="text-xl font-bold text-white mb-3 group-hover:text-yellow-400 transition-colors duration-200">
+        <div className="bg-gray-800 rounded-2xl p-8 hover:transform hover:scale-105 transition-all duration-300 hover:bg-gray-750 group shadow-lg border border-gray-700">
+            {/* Project Image & Basic Info */}
+            <div className="text-center mb-8">
+                <div className="relative mb-6">
+                    <div className="w-full h-60 mx-auto rounded-2xl overflow-hidden border-4 border-gray-700 group-hover:border-yellow-400 transition-colors duration-300">
+                        <img 
+                            src={project.imageUrl} 
+                            alt={project.title}
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                        />
+                    </div>
+                </div>
+                
+                <h3 className="text-xl font-bold mb-3 text-white group-hover:text-yellow-400 transition-colors">
                     {project.title}
                 </h3>
-
-                <p className="text-gray-500 text-sm leading-relaxed mb-4">
+                
+                <p className="text-gray-300 text-sm leading-relaxed mb-4 min-h-[3rem]">
                     {project.description}
                 </p>
+            </div>
 
-                {/* Tech Stack */}
-                <div className="flex flex-wrap gap-2 mb-4">
+            {/* Tech Stack */}
+            <div className="mb-6">
+                <h4 className="text-yellow-400 font-medium text-sm mb-3 flex items-center">
+                    <Code className="w-4 h-4 mr-2" />
+                    Technologies
+                </h4>
+                <div className="flex flex-wrap gap-2">
                     {project.techStack.map((tech, index) => (
                         <span
                             key={index}
-                            className="px-3 py-1 text-xs font-medium bg-gray-500 text-white rounded-full"
-
+                            className="px-3 py-1 text-xs font-medium bg-gray-700 text-gray-300 rounded-full hover:bg-gray-600 transition-colors"
                         >
                             {tech}
                         </span>
                     ))}
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex gap-3">
-                    {
-                        project.liveDemo && (
-                            <a
-                                href={project.liveDemo}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className={`flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors duration-200 justify-center ${project.repoLink ? 'flex-1' : 'w-full'
-                                    }`}
-                            >
-                                <ExternalLink size={16} />
-                                Live Demo
-                            </a>
-
-                        )
-                    }
-                    {project.repoLink && (
-                        <a
-                            href={project.repoLink}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-2 px-4 py-2 border-2 border-gray-300 hover:border-gray-400 text-gray-700 hover:text-gray-800 text-sm font-medium rounded-lg transition-colors duration-200 flex-1 justify-center"
-                        >
-                            <Github size={16} />
-                            Code
-                        </a>
-                    )}
+                   
                 </div>
             </div>
 
-            {/* Hover Effect Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+            {/* Project Stats */}
+            <div className="grid grid-cols-2 gap-4 mb-6">
+                <div className="bg-gray-700 p-3 rounded-lg hover:bg-gray-600 transition-colors text-center">
+                    <div className="text-yellow-400 font-bold text-lg">Live</div>
+                    <div className="text-gray-300 text-xs">Status</div>
+                </div>
+                <div className="bg-gray-700 p-3 rounded-lg hover:bg-gray-600 transition-colors text-center">
+                    <div className="text-yellow-400 font-bold text-lg">{project.techStack.length}</div>
+                    <div className="text-gray-300 text-xs">Technologies</div>
+                </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex space-x-3 justify-center pt-4 border-t border-gray-700">
+                {project.liveDemo && (
+                    <a
+                        href={project.liveDemo}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-3 bg-gray-700 rounded-lg hover:bg-yellow-400 hover:text-gray-900 transition-colors group/btn"
+                        title="Live Demo"
+                    >
+                        <ExternalLink className="w-5 h-5" />
+                    </a>
+                )}
+                
+                {project.repoLink && (
+                    <a
+                        href={project.repoLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-3 bg-gray-700 rounded-lg hover:bg-yellow-400 hover:text-gray-900 transition-colors group/btn"
+                        title="View Code"
+                    >
+                        <Github className="w-5 h-5" />
+                    </a>
+                )}
+                
+               
+            </div>
         </div>
     );
 };
 // Main Projects Page Component
 const ProjectsPage = () => {
     return (
-        <div className="min-h-screen pb-7 bg-[#171B224D] pt-20" >
-            <Header title={`Our Projects`} path={`Project`} />
-            <div className="w-10/12 py-4 mx-auto">
-                {/* Header Section */}
-                <div className="text-center mb-12">
-
-                    <h1 className="text-4xl md:text-5xl font-bold text-yellow-400 mb-4">
-                        Our Projects
-                    </h1>
-                    <p className="text-lg    text-gray-200 max-w-2xl mx-auto">
-                        A collection of projects I've built using various technologies and frameworks.
-                        Each project represents a unique challenge and learning experience.
-                    </p>
+        <div className="w-full flex flex-col pb-16 items-center gap-12 mt-8 bg-gray-900 min-h-screen">
+            <Header title="Our Projects" path="Project" />
+            
+            {/* Hero Section */}
+            <div className="text-center  mx-auto px-6 mt-8">
+                <h1 className="text-5xl md:text-6xl font-bold mb-6 text-white">
+                    Our <span className="text-yellow-400">Amazing Projects</span>
+                </h1>
+                <p className="text-gray-300 text-xl leading-relaxed mb-12">
+                    Discover our portfolio of innovative solutions. Each project represents our commitment 
+                    to excellence, creativity, and cutting-edge technology implementation.
+                </p>
+                
+                {/* Stats */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+                    <div className="bg-gray-800 rounded-2xl p-8 shadow-lg border border-gray-700">
+                        <div className="text-4xl font-bold text-yellow-400 mb-2">{projects.length}</div>
+                        <div className="text-gray-300 font-medium">Live Projects</div>
+                    </div>
+                    <div className="bg-gray-800 rounded-2xl p-8 shadow-lg border border-gray-700">
+                        <div className="text-4xl font-bold text-yellow-400 mb-2">
+                            {[...new Set(projects.flatMap(p => p.techStack))].length}
+                        </div>
+                        <div className="text-gray-300 font-medium">Technologies Used</div>
+                    </div>
+                    <div className="bg-gray-800 rounded-2xl p-8 shadow-lg border border-gray-700">
+                        <div className="text-4xl font-bold text-yellow-400 mb-2">100%</div>
+                        <div className="text-gray-300 font-medium">Success Rate</div>
+                    </div>
                 </div>
+            </div>
 
-                {/* Projects Grid */}
+            {/* Projects Grid */}
+            <div className=" w-10/12 mx-auto px-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {projects.map((project) => (
                         <ProjectCard key={project.id} project={project} />
                     ))}
                 </div>
+            </div>
 
-                {/* Footer Section */}
-                <div className="text-center mt-16">
-                    <p className="text-gray-500 mb-4">
-                        Want to see more projects or collaborate on something new?
-                    </p>
-                    <button className="px-8 py-3 bg-gray-800 hover:bg-gray-900 text-white font-medium rounded-lg transition-colors duration-200">
-                        Get In Touch
-                    </button>
-                </div>
+            {/* Footer Section */}
+            <div className="text-center mt-16 max-w-4xl mx-auto px-6">
+                <h2 className="text-3xl font-bold text-white mb-4">
+                    Ready to Start Your Project?
+                </h2>
+                <p className="text-gray-300 text-lg mb-8">
+                    Want to see more projects or collaborate on something new? 
+                    Let's discuss how we can bring your ideas to life.
+                </p>
+                <button className="px-8 py-4 bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold text-lg rounded-xl transition-colors duration-200 shadow-lg hover:shadow-xl">
+                    Get In Touch
+                </button>
             </div>
         </div>
     );
