@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { NavLink } from "react-router-dom";
 import { FiMenu, FiX } from "react-icons/fi";
 import React from "react";
@@ -7,64 +7,189 @@ import Logo from '../assets/images/logo.png';
 function NavBar() {
   const [menuOpen, setMenuOpen] = useState(false);
 
+  // Close menu when screen size changes to desktop
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) { // lg breakpoint in Tailwind
+        setMenuOpen(false);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   return (
-    <header className="fixed top-0 left-0 w-full z-50 bg-[#171B224D] backdrop-blur-lg p-2 shadow-md transition-all duration-300">
-      <nav className="container mx-auto flex justify-between items-center px-4 py-2">
-        {/* Logo */}
-        <div className="flex items-center space-x-2">
-          <img src={Logo} alt="Brand Logo" className="h-16 w-auto object-contain" />
-        </div>
+    <>
+      {/* CSS Styles */}
+      <style>{`
+        @keyframes slideIn {
+          from {
+            transform: translateX(-100%);
+          }
+          to {
+            transform: translateX(0);
+          }
+        }
+        
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateX(-20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+        
+        .slide-in-animation {
+          animation: slideIn 0.5s ease-out;
+        }
+        
+        .fade-in-up-animation {
+          animation: fadeInUp 0.3s ease-out forwards;
+          opacity: 0;
+        }
+        
+        .overlay-fade-in {
+          animation: fadeInUp 0.3s ease-out forwards;
+        }
+      `}</style>
+      
+      <header className="fixed top-0 left-0 w-full z-50 bg-[#171B224D] backdrop-blur-lg p-2 shadow-md transition-all duration-300">
+        <nav className="container mx-auto flex justify-between items-center px-4 py-2">
+          {/* Logo */}
+          <div className="flex items-center space-x-2">
+            <img src={Logo} alt="Brand Logo" className="h-16 w-auto object-contain" />
+          </div>
 
-        {/* Mobile Menu Button */}
-        <div className="lg:hidden">
-          <button 
-            onClick={() => setMenuOpen(!menuOpen)} 
-            className="text-white focus:outline-none"
-          >
-            {menuOpen ? <FiX className="w-8 h-8" /> : <FiMenu className="w-8 h-8" />}
-          </button>
-        </div>
+          {/* Mobile Menu Button */}
+          <div className="lg:hidden">
+            <button 
+              onClick={() => setMenuOpen(!menuOpen)}
+              className="text-white focus:outline-none z-60 relative transition-transform duration-200 hover:scale-110"
+              aria-label="Toggle menu"
+            >
+              <div className={`transition-all duration-300 ${menuOpen ? 'rotate-180' : 'rotate-0'}`}>
+                {menuOpen ? <FiX className="w-8 h-8" /> : <FiMenu className="w-8 h-8" />}
+              </div>
+            </button>
+          </div>
 
-        {/* Menu Items */}
-        <ul className={`lg:flex lg:space-x-6 fixed lg:relative bg-slate-900  md:bg-transparent w-3/4 lg:w-auto md:h-full h-[500px] lg:h-auto md:top-0 top-24 left-0 p-6 lg:p-0 transition-transform duration-300 ease-in-out transform   ${
-          menuOpen ? "translate-x-0" : "-translate-x-full"
-        } lg:translate-x-0 lg:flex-row flex-col`}>
-          {[
-            { name: "Home", path: "/" },
-            { name: "About Us", path: "/about-us" },
-            { name: "Our Services", path: "/services" },
-            { name: "team", path: "/team-member" },
-            { name: "Blogs", path: "/blogs" },
-            { name: "Project", path: "/project" },
-            { name: "Contact Us", path: "/contact-us" },
-          ].map((item, index) => (
-            <li key={index} className="py-3 lg:py-0">
+          {/* Desktop Menu Items */}
+          <ul className="hidden lg:flex lg:space-x-6 lg:justify-around lg:items-center">
+            {[
+              { name: "Home", path: "/" },
+              { name: "About Us", path: "/about-us" },
+              { name: "Our Services", path: "/services" },
+              { name: "Team", path: "/team-member" },
+              { name: "Blogs", path: "/blogs" },
+              { name: "Project", path: "/project" },
+              { name: "Contact Us", path: "/contact-us" },
+            ].map((item, index) => (
+              <li key={index}>
+                <NavLink
+                  to={item.path}
+                  className={({ isActive }) =>
+                    `block px-4 py-2 text-lg font-semibold capitalize transition-all duration-200 ${
+                      isActive ? "text-[#FFD44D]" : "text-white hover:text-[#FFD44D]"
+                    }`
+                  }
+                >
+                  {item.name}
+                </NavLink>
+              </li>
+            ))}
+
+            {/* Desktop Contact Us Button */}
+            <li className="ml-6">
               <NavLink
-                to={item.path}
-                className={({ isActive }) =>
-                  `block px-4 py-2 text-lg font-semibold capitalize transition-all ${
-                    isActive ? "text-[#FFD44D]" : "text-white hover:text-[#FFD44D]"
-                  }`
-                }
-                onClick={() => setMenuOpen(false)} // Close menu on click
+                to="/contact-us"
+                className="px-6 py-2 text-lg font-semibold text-white bg-[#FFD44D] rounded-lg transition-all duration-200 hover:bg-yellow-500 hover:scale-105"
               >
-                {item.name}
+                Contact Us
               </NavLink>
             </li>
-          ))}
+          </ul>
 
-          {/* Contact Us Button */}
-          <li className="py-3 lg:py-0 md:ml-56">
-            <NavLink 
-              to="/contact-us" 
-              className="px-6 py-2 text-lg font-semibold text-white bg-[#FFD44D] rounded-lg transition-all hover:bg-yellow-500"
-            >
-              Contact Us
-            </NavLink>
-          </li>
-        </ul>
-      </nav>
-    </header>
+          {/* Mobile Menu Overlay */}
+          {menuOpen && (
+            <div 
+              className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-30 overlay-fade-in"
+              onClick={() => setMenuOpen(false)}
+            />
+          )}
+
+          {/* Mobile Menu Items - Only render when open */}
+          {menuOpen && (
+            <div className="lg:hidden fixed top-0 left-0 w-3/4 h-full bg-slate-900 z-40 slide-in-animation">
+              {/* Mobile menu header with close button */}
+              <div className="flex justify-between items-center p-6 border-b border-slate-700">
+                <img src={Logo} alt="Brand Logo" className="h-12 w-auto object-contain" />
+                <button 
+                  onClick={() => setMenuOpen(false)}
+                  className="text-white focus:outline-none transition-transform duration-200 hover:scale-110"
+                  aria-label="Close menu"
+                >
+                  <FiX className="w-6 h-6" />
+                </button>
+              </div>
+
+              <ul className="flex flex-col p-6 space-y-2">
+                {[
+                  { name: "Home", path: "/" },
+                  { name: "About Us", path: "/about-us" },
+                  { name: "Our Services", path: "/services" },
+                  { name: "Team", path: "/team-member" },
+                  { name: "Blogs", path: "/blogs" },
+                  { name: "Project", path: "/project" },
+                  { name: "Contact Us", path: "/contact-us" },
+                ].map((item, index) => (
+                  <li 
+                    key={index}
+                    className="fade-in-up-animation"
+                    style={{ 
+                      animationDelay: `${index * 100}ms`
+                    }}
+                  >
+                    <NavLink
+                      to={item.path}
+                      className={({ isActive }) =>
+                        `block px-4 py-3 text-lg font-semibold capitalize transition-all duration-200 rounded-lg ${
+                          isActive 
+                            ? "text-[#FFD44D] bg-slate-800" 
+                            : "text-white hover:text-[#FFD44D] hover:bg-slate-800"
+                        }`
+                      }
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      {item.name}
+                    </NavLink>
+                  </li>
+                ))}
+
+                {/* Mobile Contact Us Button */}
+                <li 
+                  className="pt-4 fade-in-up-animation"
+                  style={{ 
+                    animationDelay: '700ms'
+                  }}
+                >
+                  <NavLink
+                    to="/contact-us"
+                    className="block px-6 py-3 text-lg font-semibold text-slate-900 bg-[#FFD44D] rounded-lg transition-all duration-200 hover:bg-yellow-500 hover:scale-105 text-center"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    Contact Us
+                  </NavLink>
+                </li>
+              </ul>
+            </div>
+          )}
+        </nav>
+      </header>
+    </>
   );
 }
 
