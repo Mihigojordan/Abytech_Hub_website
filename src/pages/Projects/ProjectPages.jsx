@@ -1,13 +1,13 @@
 import React, { useEffect } from "react";
 import { ExternalLink, Github, Code } from "lucide-react";
 import Header from "../../components/header";
-import ride from "../../assets/images/project/ride.png";
-import chat from "../../assets/images/project/chat.png";
-import rent from "../../assets/images/project/rent.png";
-import inventory from "../../assets/images/project/inventory.png";
-import frexi from "../../assets/images/project/flex.png"
-import kalinga from "../../assets/images/project/kalinga.png"
-import abyhr from "../../assets/images/project/abyhr.png"
+import ride from "../../assets/images/project/ride2.png";
+import chat from "../../assets/images/project/chat2.png";
+import rent from "../../assets/images/project/rent2.png";
+import inventory from "../../assets/images/project/inventory2.png";
+import frexi from "../../assets/images/project/frex2.png";
+import kalinga from "../../assets/images/project/kalinga2.png";
+import abyhr from "../../assets/images/project/abyhr2.png";
 
 // Projects data
 const projects = [
@@ -148,7 +148,7 @@ const ProjectCard = ({ project }) => {
     });
   }, []);
   return (
-    <div className="bg-gray-800 rounded-2xl p-8 hover:transform hover:scale-105 transition-all duration-300 hover:bg-gray-750 group shadow-lg border border-gray-700">
+    <div className="bg-gray-800 rounded-2xl p-3 hover:transform hover:scale-105 transition-all duration-300 hover:bg-gray-750 group shadow-lg border border-gray-700">
       {/* Project Image & Basic Info */}
       <div className="text-center mb-8">
         <div className="relative mb-6">
@@ -242,11 +242,13 @@ const ProjectsPage = () => {
         <h1 className="text-5xl md:text-6xl font-bold mb-6 text-white">
           Our <span className="text-yellow-400">Amazing Projects</span>
         </h1>
-        <p className="text-gray-300 text-xl leading-relaxed mb-12">
-          Discover our portfolio of innovative solutions. Each project
-          represents our commitment to excellence, creativity, and cutting-edge
-          technology implementation.
-        </p>
+        <div className=" flex justify-center items-center" >
+          <p className="text-gray-300 text-xl leading-relaxed mb-12 w-7/12 ">
+            Discover our portfolio of innovative solutions. Each project
+            represents our commitment to excellence, creativity, and
+            cutting-edge technology implementation.
+          </p>
+        </div>
 
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
@@ -276,20 +278,6 @@ const ProjectsPage = () => {
             <ProjectCard key={project.id} project={project} />
           ))}
         </div>
-      </div>
-
-      {/* Footer Section */}
-      <div className="text-center mt-16 max-w-4xl mx-auto px-6">
-        <h2 className="text-3xl font-bold text-white mb-4">
-          Ready to Start Your Project?
-        </h2>
-        <p className="text-gray-300 text-lg mb-8">
-          Want to see more projects or collaborate on something new? Let's
-          discuss how we can bring your ideas to life.
-        </p>
-        <button className="px-8 py-4 bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold text-lg rounded-xl transition-colors duration-200 shadow-lg hover:shadow-xl">
-          Get In Touch
-        </button>
       </div>
     </div>
   );
