@@ -1,4 +1,7 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import image1 from '../../public/image/profile3.jpeg'
+import image2 from '../../public/image/profile2.jpeg'
+import image3 from '../../public/image/myphoto.jpeg'
 import {
   Mail,
   Phone,
@@ -21,14 +24,20 @@ import { div } from "framer-motion/m";
 
 const TeamMembersPage = () => {
 
+  useEffect(() => {
+      document.documentElement.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+        inline: "start",
+      });
+    }, []);
   const teamMembers = [
     {
       id: 1,
       name: "Mihigo Prince jordan",
       position: "Senior Developer",
       department: "Development",
-      image:
-        "https://images.unsplash.com/photo-1494790108755-2616b612b607?w=400&h=400&fit=crop&crop=face",
+      image: image1,
       bio: "With 8+ years of expertise in full-stack development, Sarah leads our development initiatives and mentors junior developers.",
       email: "mihigojordan8@gmail.com",
       phone: "+250 791 812 389",
@@ -47,8 +56,7 @@ const TeamMembersPage = () => {
       name: "ishimwe serge",
       position: "UI/UX Designer and frontend developer",
       department: "Design",
-      image:
-        "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop&crop=face",
+      image: image2,
       bio: "Creative UI/UX designer with 6+ years of experience crafting user-centered digital experiences.",
       email: "ishiweserge07@gmail.com",
       phone: "+250 796 130 187",
@@ -67,8 +75,7 @@ const TeamMembersPage = () => {
       name: "hirwa mihigo honore",
       position: "backend developer",
       department: "backend",
-      image:
-        "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&h=400&fit=crop&crop=face",
+      image: image3,
       bio: "Skilled DevOps engineer ensuring applications run smoothly and scale efficiently across multiple environments.",
       email: "mihigohonore@gmail.com",
       phone: "+1 (555) 345-6789",
