@@ -55,10 +55,41 @@ function NavBar() {
         .overlay-fade-in {
           animation: fadeInUp 0.3s ease-out forwards;
         }
+
+        /* Enhanced mobile navbar background */
+        .mobile-navbar-bg {
+          background: rgba(23, 27, 34, 0.95);
+          backdrop-filter: blur(10px);
+          -webkit-backdrop-filter: blur(10px);
+        }
+        
+        /* Fallback for browsers that don't support backdrop-filter */
+        @supports not (backdrop-filter: blur(10px)) {
+          .mobile-navbar-bg {
+            background: rgba(23, 27, 34, 0.98);
+          }
+        }
+        
+        /* Desktop navbar background */
+        .desktop-navbar-bg {
+          background: rgba(23, 27, 34, 0.3);
+          backdrop-filter: blur(16px);
+          -webkit-backdrop-filter: blur(16px);
+        }
+        
+        @supports not (backdrop-filter: blur(16px)) {
+          .desktop-navbar-bg {
+            background: rgba(23, 27, 34, 0.9);
+          }
+        }
       `}</style>
       
-      <header className="fixed top-0 left-0 w-full z-50 bg-[#171B22]/30 backdrop-blur-lg p-2 shadow-md transition-all duration-300">
-        <nav className="container mx-auto flex justify-between items-center px-2 py-2">
+      <header className="fixed top-0 left-0 w-full z-50 p-2 shadow-md transition-all duration-300">
+        {/* Conditional background based on screen size */}
+        <div className="absolute inset-0 mobile-navbar-bg lg:hidden"></div>
+        <div className="absolute inset-0 desktop-navbar-bg hidden lg:block"></div>
+        
+        <nav className="container mx-auto flex justify-between items-center px-2 py-2 relative">
           {/* Logo */}
           <div className="flex items-center space-x-2">
             <img src={Logo} alt="Brand Logo" className="h-16 w-auto object-contain" />
@@ -78,7 +109,7 @@ function NavBar() {
           </div>
 
           {/* Desktop Menu Items */}
-          <ul className="hidden lg:flex lg:space-x-6 lg:justify-around lg:items-center">
+          <ul className="hidden lg:flex lg:space-x-4 lg:justify-around lg:items-center">
             {[
               { name: "Home", path: "/" },
               { name: "About Us", path: "/about-us" },
@@ -132,7 +163,7 @@ function NavBar() {
                   className="text-white focus:outline-none transition-transform duration-200 hover:scale-110"
                   aria-label="Close menu"
                 >
-                  <FiX className="w-6 h-6" />
+                  {/* <FiX className="w-6 h-6" /> */}
                 </button>
               </div>
 
