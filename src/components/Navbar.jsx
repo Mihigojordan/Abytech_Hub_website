@@ -57,8 +57,8 @@ function NavBar() {
         }
       `}</style>
       
-      <header className="fixed top-0 left-0 w-full z-50 bg-[#171B224D] backdrop-blur-lg p-2 shadow-md transition-all duration-300">
-        <nav className="container mx-auto flex justify-between items-center px-4 py-2">
+      <header className="fixed top-0 left-0 w-full z-50 bg-[#171B22]/30 backdrop-blur-lg p-2 shadow-md transition-all duration-300">
+        <nav className="container mx-auto flex justify-between items-center px-2 py-2">
           {/* Logo */}
           <div className="flex items-center space-x-2">
             <img src={Logo} alt="Brand Logo" className="h-16 w-auto object-contain" />
@@ -92,7 +92,7 @@ function NavBar() {
                 <NavLink
                   to={item.path}
                   className={({ isActive }) =>
-                    `block px-4 py-2 text-lg font-semibold capitalize transition-all duration-200 ${
+                    `block px-2 py-2 text-lg font-semibold capitalize transition-all duration-200 ${
                       isActive ? "text-[#FFD44D]" : "text-white hover:text-[#FFD44D]"
                     }`
                   }
