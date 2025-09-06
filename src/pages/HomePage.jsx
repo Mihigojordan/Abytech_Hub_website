@@ -1,5 +1,6 @@
 import React, { lazy } from 'react';
 import BlogLatest from '../components/blog/BlogDisplay';
+import Partners from '../components/home/Partners';
 
 const LandingPage = lazy(() => import('../components/home/landingPage'));
 const WhyChooseUs = lazy(() => import('../components/home/chooseUs'));
@@ -20,9 +21,9 @@ const HomePage = () => {
             <ContentReach />
             <ContentWriteServices />
             <WorkProcess />
-          
             <Testimonials />
             <BlogLatest />
+            <Partners />
 
         </>
     )
