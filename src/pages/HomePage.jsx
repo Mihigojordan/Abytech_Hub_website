@@ -1,5 +1,6 @@
-import React, { lazy, useEffect } from "react";
-import BlogLatest from "../components/blog/BlogDisplay";
+import React, { lazy } from 'react';
+import BlogLatest from '../components/blog/BlogDisplay';
+import Partners from '../components/home/Partners';
 
 const LandingPage = lazy(() => import("../components/home/landingPage"));
 const WhyChooseUs = lazy(() => import("../components/home/chooseUs"));
@@ -14,24 +15,19 @@ const LatestProjects = lazy(() => import("../components/home/project"));
 const Testimonials = lazy(() => import("../components/home/testimony"));
 
 const HomePage = () => {
-  useEffect(() => {
-    document.documentElement.scrollIntoView({
-      behavior: "smooth",
-      block: "start",
-      inline: "start",
-    });
-  }, []);
-  return (
-    <>
-      <LandingPage />
-      <WhyChooseUs />
-      <ContentReach />
-      <ContentWriteServices />
-      <WorkProcess />
-      <Testimonials />
-      <BlogLatest />
-    </>
-  );
-};
+    return (
+        <>
+            <LandingPage />
+            <WhyChooseUs />
+            <ContentReach />
+            <ContentWriteServices />
+            <WorkProcess />
+            <Testimonials />
+            <BlogLatest />
+            <Partners />
+
+        </>
+    )
+}
 
 export default HomePage;
