@@ -22,7 +22,10 @@ const ServicePage = () => {
       <div className="flex flex-col justify-center w-[100%] pt-10 items-center gap-10">
         <ContentWriteServices />
         <Testimonials />
+        <div className="">
+
         <BlogLatest />
+        </div>
       </div>
     </div>
   );

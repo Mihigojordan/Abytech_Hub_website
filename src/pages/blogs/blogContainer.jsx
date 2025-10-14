@@ -21,7 +21,7 @@ const NewsAndBlogs = () => {
 
   return (
     <section className="bg-[#0e1323] py-12">
-      <div className="max-w-7xl mx-auto px-4">
+      <div className="max-w-9xl mx-auto px-4">
         <h2 className="text-4xl font-bold text-yellow-400 mb-8">News & Blogs</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {posts.map((post, index) => (
