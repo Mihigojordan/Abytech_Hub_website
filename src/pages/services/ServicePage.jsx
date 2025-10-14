@@ -16,15 +16,14 @@ const ServicePage = () => {
     });
   }, []);
   return (
-    <div className="w-full flex-col pb-7 justify-center bg-[#0d0f15]  items-center flex gap-2 mt-25">
+    <section className="bg-gradient-to-br from-blue-50 via-purple-50 to-indigo-50 py-4 text-center min-h-screen">
       <Header title={`service`} path={`service`} />
 
-      <div className="flex flex-col justify-center w-[100%] pt-10 items-center gap-10">
+      <div className="flex flex-col justify-center w-[100%]  items-center gap-10">
         <ContentWriteServices />
-        <Testimonials />
-        <BlogLatest />
+    
       </div>
-    </div>
+</section>
   );
 };
 
