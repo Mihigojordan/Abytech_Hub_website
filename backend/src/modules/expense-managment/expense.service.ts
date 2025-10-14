@@ -9,7 +9,7 @@ export class ExpenseService {
       const expense = await this.prisma.expense.create({
         data: {
           ...data,
-          adminId,
+          admin:{ connect: { id:adminId } }
         },
       });
       return { message: 'Expense created successfully', expense };
