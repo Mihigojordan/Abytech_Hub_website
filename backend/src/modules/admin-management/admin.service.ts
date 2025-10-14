@@ -9,7 +9,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import * as bcrypt from 'bcryptjs';
 import { JwtService } from '@nestjs/jwt';
 import { Response } from 'express';
-import { OTPService } from 'src/global/otp/otp.service';
+
 import { EmailService } from 'src/global/email/email.service';
 
 @Injectable()

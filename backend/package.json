@@ -36,6 +36,7 @@
     "bcryptjs": "^3.0.2",
     "body-parser": "^2.2.0",
     "cookie-parser": "^1.4.7",
+    "googleapis": "^162.0.0",
     "handlebars": "^4.7.8",
     "ioredis": "^5.7.0",
     "multer": "^2.0.2",
