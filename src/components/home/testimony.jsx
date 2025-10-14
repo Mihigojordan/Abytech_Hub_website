@@ -1,11 +1,5 @@
-import React, { useEffect } from 'react';
-import AOS from 'aos';
-import 'aos/dist/aos.css';
-import { FaQuoteRight, FaStar } from 'react-icons/fa';
-import { Swiper, SwiperSlide } from 'swiper/react';
-import { Pagination, Autoplay } from 'swiper/modules';
-import 'swiper/css';
-import 'swiper/css/pagination';
+import React, { useState, useEffect } from "react";
+import { FaQuoteRight, FaStar, FaChevronLeft, FaChevronRight } from "react-icons/fa";
 
 const testimonials = [
   {
@@ -59,95 +53,128 @@ const testimonials = [
 ];
 
 export default function Testimonials() {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [itemsPerSlide, setItemsPerSlide] = useState(
+    window.innerWidth >= 1024 ? 3 : window.innerWidth >= 768 ? 2 : 1
+  );
+
   useEffect(() => {
-    AOS.init({ duration: 1000, once: true, easing: 'ease-in-out' });
+    const handleResize = () => {
+      setItemsPerSlide(window.innerWidth >= 1024 ? 3 : window.innerWidth >= 768 ? 2 : 1);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  useEffect(() => {
+    const interval = setInterval(() => {
+      nextSlide();
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [currentIndex, itemsPerSlide]);
+
+  const nextSlide = () => {
+    setCurrentIndex((prevIndex) => (prevIndex + itemsPerSlide) % testimonials.length);
+  };
+
+  const prevSlide = () => {
+    setCurrentIndex((prevIndex) =>
+      prevIndex - itemsPerSlide < 0 ? testimonials.length - itemsPerSlide : prevIndex - itemsPerSlide
+    );
+  };
+
   return (
-    <section className="bg-gradient-to-br from-white via-gray-50 to-blue-50 py-16 md:py-24 px-4 md:px-8">
-      <div className="mx-auto">
-        {/* Header */}
-        <div className="text-center mb-16 md:mb-20" data-aos="fade-up">
-          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-            What Our <span className="text-primary-500">Clients</span> Say
-          </h2>
-          <p className="text-gray-600 text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
-            Different customers sharing their real experience and success stories with AbyTech.
-          </p>
+    <section className="py-20 px-4 bg-gradient-to-b from-white to-primary-50 text-gray-900 w-full mx-auto text-center relative">
+      <div className="max-w-7xl mx-auto">
+        {/* Section Badge */}
+        <div className="inline-block mb-4">
+          <span className="text-primary-600 font-semibold text-sm uppercase tracking-wider bg-primary-50 px-4 py-2 rounded-full">
+            Testimonials
+          </span>
         </div>
 
+        {/* Heading */}
+        <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
+          What Our <span className="text-primary-600">Clients</span> Say
+        </h2>
+        <p className="text-gray-600 mb-12 text-lg max-w-2xl mx-auto">
+          Different customers sharing their experience with AbyTech.
+        </p>
+
         {/* Testimonials Slider */}
-        <div className="relative">
-          <Swiper
-            modules={[Pagination, Autoplay]}
-            spaceBetween={16}
-            slidesPerView={1}
-            breakpoints={{
-              768: { slidesPerView: 2 },
-              1024: { slidesPerView: 3 },
-            }}
-            loop={true}
-            autoplay={{ delay: 5000, disableOnInteraction: false }}
-            //  pagination={{ clickable: true }}
-            className="mySwiper"
-          >
-            {testimonials.map((testimonial, index) => (
-              <SwiperSlide key={index}>
+        <div className="relative w-full mx-auto">
+          <div className="overflow-hidden">
+            <div
+              className="flex transition-transform duration-500 ease-in-out"
+              style={{ transform: `translateX(-${currentIndex * (100 / itemsPerSlide)}%)` }}
+            >
+              {testimonials.map((t, index) => (
                 <div
-                  className="px-3 md:px-4"
-                  data-aos="zoom-in"
-                  data-aos-delay={index * 100}
+                  key={index}
+                  className="w-full md:w-1/2 lg:w-1/3 px-4"
+                  style={{ flex: `0 0 ${100 / itemsPerSlide}%` }}
                 >
-                  <div className="h-full bg-white border-2 border-gray-200 rounded-2xl p-8 md:p-10 shadow-lg hover:shadow-2xl hover:border-primary-400 transition-all duration-300 group">
+                  <div className="bg-white p-8 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-primary-100 h-full flex flex-col group">
                     {/* Quote Icon */}
-                    <div className="flex justify-between items-start mb-4">
-                      <div className="w-12 h-12 bg-gradient-to-br from-primary-50 to-primary-100 rounded-full flex items-center justify-center">
-                        <FaQuoteRight className="text-primary-500 text-lg" />
+                    <div className="flex justify-start mb-4">
+                      <div className="bg-primary-50 p-3 rounded-full group-hover:bg-primary-100 transition-colors duration-300">
+                        <FaQuoteRight className="text-primary-600 text-xl" />
                       </div>
-                      <div className="text-2xl">{testimonial.emoji}</div>
                     </div>
 
                     {/* Star Ratings */}
-                    <div className="flex gap-1 mb-4">
-                      {[...Array(testimonial.rating)].map((_, i) => (
-                        <FaStar key={i} className="text-yellow-400 text-sm" />
+                    <div className="flex justify-start mb-4 text-secondary-500">
+                      {[...Array(t.rating)].map((_, i) => (
+                        <FaStar key={i} className="mr-1" />
                       ))}
-                      {[...Array(5 - testimonial.rating)].map((_, i) => (
-                        <FaStar key={i + testimonial.rating} className="text-gray-300 text-sm" />
+                      {[...Array(5 - t.rating)].map((_, i) => (
+                        <FaStar key={i} className="mr-1 text-gray-300" />
                       ))}
                     </div>
 
-                    {/* Title */}
-                    <h3 className="text-lg font-semibold text-gray-900 mb-3 group-hover:text-primary-500 transition-colors">
-                      {testimonial.title}
-                    </h3>
-
                     {/* Testimonial Text */}
-                    <p className="text-gray-600 text-sm md:text-base leading-relaxed mb-6 min-h-20 line-clamp-4">
-                      "{testimonial.text}"
+                    <p className="text-gray-700 mb-6 text-left leading-relaxed flex-grow">
+                      "{t.text}"
                     </p>
 
-                    {/* Divider */}
-                    <div className="w-12 h-1 bg-gradient-to-r from-primary-400 to-primary-300 rounded-full mb-4"></div>
-
-                    {/* Author Info */}
-                    <div className="flex flex-col">
-                      <p className="font-semibold text-gray-900 text-sm md:text-base">
-                        {testimonial.name}
-                      </p>
-                      <p className="text-gray-500 text-xs md:text-sm">
-                        {testimonial.date}
-                      </p>
+                    {/* Client Info */}
+                    <div className="flex items-center justify-between pt-6 border-t border-primary-100">
+                      <div className="text-left">
+                        <p className="font-bold text-gray-900 text-lg">{t.name}</p>
+                        <p className="text-primary-600 text-sm font-medium">
+                          {t.title} {t.emoji}
+                        </p>
+                      </div>
+                      <p className="text-gray-500 text-sm">{t.date}</p>
                     </div>
                   </div>
                 </div>
-              </SwiperSlide>
-            ))}
-          </Swiper>
+              ))}
+            </div>
+          </div>
 
-          {/* Pagination Dots */}
-          <div className="swiper-pagination flex justify-center gap-2 mt-8 md:mt-12"></div>
+          {/* Navigation Arrows */}
+          <button
+            className="absolute -left-4 top-1/2 transform -translate-y-1/2 bg-white hover:bg-primary-600 text-gray-700 hover:text-white p-4 rounded-full shadow-lg transition-all duration-300 border border-primary-200 hover:border-primary-600"
+            onClick={prevSlide}
+            aria-label="Previous testimonial"
+          >
+            <FaChevronLeft className="text-lg" />
+          </button>
+          <button
+            className="absolute -right-4 top-1/2 transform -translate-y-1/2 bg-white hover:bg-primary-600 text-gray-700 hover:text-white p-4 rounded-full shadow-lg transition-all duration-300 border border-primary-200 hover:border-primary-600"
+            onClick={nextSlide}
+            aria-label="Next testimonial"
+          >
+            <FaChevronRight className="text-lg" />
+          </button>
         </div>
+
+        {/* Decorative Elements */}
+        <div className="absolute top-10 left-10 w-20 h-20 bg-primary-100 rounded-full opacity-30 blur-xl"></div>
+        <div className="absolute bottom-10 right-10 w-32 h-32 bg-secondary-100 rounded-full opacity-20 blur-xl"></div>
       </div>
     </section>
   );

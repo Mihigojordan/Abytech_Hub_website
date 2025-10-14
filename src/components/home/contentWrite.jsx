@@ -76,7 +76,7 @@ export default function ServicesSection() {
               <div className="h-full bg-white border-2 border-gray-200 rounded-2xl p-8 md:p-10 transition-all duration-300 hover:border-primary-500 hover:shadow-xl overflow-hidden">
                 
                 {/* Background decoration */}
-                <div className="absolute top-0 right-0 w-32 h-32 bg-primary-50 rounded-full -mr-16 -mt-16 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <div className="absolute top-10 right-10 w-16 h-16 bg-primary-50 rounded-full -mr-16 -mt-16 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 
                 {/* Icon Container */}
                 <div className="relative z-10 inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-primary-50 to-primary-100 rounded-xl mb-6 group-hover:from-primary-100 group-hover:to-primary-200 transition-all duration-300">

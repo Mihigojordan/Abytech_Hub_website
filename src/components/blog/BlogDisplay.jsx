@@ -46,61 +46,33 @@ const BlogCard = ({ image, title, description, id }) => {
 };
 
 const BlogLatest = () => {
-  useEffect(() => {
-    AOS.init({ duration: 1000, once: true, easing: 'ease-in-out' });
-  }, []);
+    const navigate =  useNavigate()
+    
+    return (
+        <div className='w-full   flex-col sm:flex-row pb-7 justify-center bg-[white]  items-center flex gap-2' onClick={()=>navigate('/blog/2')}>
+            <div className="flex flex-col justify-center w-11/12 pt-10 items-center gap-10">
 
-  return (
-    <section className="bg-gradient-to-br from-white via-gray-50 to-blue-50 py-16 md:py-24 px-4 md:px-8">
-      <div className="mx-auto">
-        {/* Header */}
-        <div className="text-center mb-16 md:mb-20" data-aos="fade-up">
-          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-            Latest <span className="text-primary-500">News & Blogs</span>
-          </h2>
-          <p className="text-gray-600 text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
-            Explore our latest insights, tips, and updates from the world of technology and innovation.
-          </p>
-        </div>
+                <h1 className='text-primary-300 font-bold text-2xl md:text-3xl lg:text-4xl xl:text-5xl'><span className='text-black'> Latest </span> News & Blogs</h1>
 
-        {/* Blog Slider */}
-        <div className="relative">
-          <Swiper
-            modules={[Pagination, Autoplay]}
-            spaceBetween={16}
-            slidesPerView={1}
-            breakpoints={{
-              768: { slidesPerView: 2 },
-              1024: { slidesPerView: 3 },
-            }}
-            loop={true}
-            autoplay={{ delay: 5000, disableOnInteraction: false }}
-            pagination={{
-              el: '.swiper-pagination',
-              clickable: true,
-              bulletClass: 'swiper-pagination-bullet',
-              bulletActiveClass: 'swiper-pagination-bullet-active',
-            }}
-            className="mySwiper"
-          >
-            {cards.slice(0, 3).map((card, index) => (
-              <SwiperSlide key={index}>
-                <div
-                  className="px-3 md:px-4"
-                  data-aos="zoom-in"
-                  data-aos-delay={index * 100}
-                >
-                  <BlogCard {...card} id={index + 1} />
+                <div className="flex items-start gap-9 justify-center ">
+
+                    {
+                        cards.map((card, key) => {
+                            if (key >= 3) {
+                                return
+                            }
+                            return <BlogCard {...card} key={key} ></BlogCard>
+                        }
+                        )
+                    }
+
                 </div>
-              </SwiperSlide>
-            ))}
-          </Swiper>
 
-          {/* Pagination Dots */}
-          <div className="swiper-pagination flex justify-center gap-2 mt-8 md:mt-12"></div>
+
+            </div>
         </div>
-      </div>
-    </section>
+
+      
   );
 };
 
