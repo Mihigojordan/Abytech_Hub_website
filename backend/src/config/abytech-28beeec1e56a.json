@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "abytech",
+  "private_key_id": "28beeec1e56a27b26bd236762c4d30e506bdd0e8",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQCnaHglvkbFiUqU\nzZbbSv2nsPrXl5qUtOlSNUpvqZzpNq1G/wC0vrbCUA060Zkf76+KxE1m/ubSqNoa\nUmhC/ZDKiBroLLFE/kQhsaLPZqnpaVX4tK8e7olYDKcFT5gchiLusY9id9JcmW6Y\nArUXSx7b5w/mY2/e/J1ST9rsljht99L4fzD0GPTkO7YT2GGEn3bYcKvAOpTVVX8q\n5/OjvQlIlXNPJbAAAwry2jmY85v4/TfErEGyYy8eO50Pbs6g7lKijygdocI9v+4q\niDIInlEh0T0tKmMaMhhFo1ZSg5ZoSMQrpVSqYA7ofDgSfjRZRVGtPC9jP+ndvDZq\nfIGfxt2xAgMBAAECggEAOY5NYIyewGOHZMmaSCLsOq86Ts0stFvOrBjuUp25+OR3\nhqU9lObM5tmm8sYFI1nAvLDo+7Q/n8W11r7mYcHT+g35UkGrYNEak4sDMtNVL46r\npCpa2wOf7MnM0qKe5Y+oivA5H92aUYPe5hxoLm4BWhGDAe7GE6A+ZoJV/mlXVVcE\noreaUJLPXUd4Vg7aibATpGldcC0M5o0uZFcmEO+yXIXF9CsR/z1QgRdRWG5jehm+\nopgEcoADEojrHSxbUwQwJ9ViEpBD/Cf1Wqt4OU5p00WbsGNgXisUUx1ZJKEfhK1r\nsUAS+DFjmHUgsgof/cBKXvEqHJN2HPbUA/5ek/sJ0QKBgQDVgMroYzjy4XyNXDTv\ncdoEFBV3SHnUchwHaCtgiwXx7VIIBu6Zo9c74fspTOMlbudwG4vmFzCoNq1Wun8h\nstiZH2wxDpL5fJT2awNzwwq+yvAHMkQwfc3kdn3P/wcbucTh4eACFKPWA0etyFzN\n5fzOIW/0yILEA11fwAeSiaZXgwKBgQDIut8VErPs7CxNmj5pS8bjMjBflDg301E5\nwSDkoGX6LWgFUtaI0D/O5vjCORIZpChQUHnDDyvrW5Sp+N4gpNSnmykIgsiKWgzp\nFaFXdomslpok9d2CQtKb5vEH9mLYghpxpDZBLQXBzflPciMDYN/NxNafy0IAt+lN\nhZKUzZN7uwKBgEPR36KmMibk/b2htqcBEXIONytm+FxFyyWHL5BBWSgabN5j5VMk\nunApPrFF3Tm82wO/nFcAstIcXD+ailvYBfnOA34p1QIvUtpb8ALLyBQHPuvqScLl\nk4upIBn8NvPVtPbT22aNy+VlsVVAukolboLEGF43e2JsdzK9OyqPUymlAoGAHu28\nRdD17EGPqf1kNHE6mfM3xOJfrypeT5nUaaXVULECYB+dcsMzsbuhBLwqb8z9cTKV\nMFr8F22rAG2aPElpgtHDhs4v/DFX3+o3S/S1zeP+qEdB9Do7nU3+QY3TOS0CyhPV\nUEGRq4UDLxyVDIY2tcvojgKRju7Hgexc45SxbtUCgYAfimjjb+nH5ZPuKeS1FQY1\n6ovas63wI/HolcYnVSCjlxxaW4wPe58IAwMLrdO3sMcFvaG7arXjbK+Ch2Z0kqAU\ntBLcwoJJFfkBOLdag6evxrC8TQ1VnIXWGEdLetXAylQl089uwiCo3oiLs+uhW8xw\n1TgyI9dRGuVbXEtNAHhgdg==\n-----END PRIVATE KEY-----\n",
+  "client_email": "abytech-drive-service@abytech.iam.gserviceaccount.com",
+  "client_id": "115143521096511185936",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/abytech-drive-service%40abytech.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
