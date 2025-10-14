@@ -4,52 +4,52 @@ import { FaQuoteRight, FaStar, FaChevronLeft, FaChevronRight } from "react-icons
 const testimonials = [
   {
     rating: 5,
-    title: "Software Engineer",
-    emoji: "🚀",
-    text: "AbyTech has been a game-changer for my career. Their mentorship and resources helped me scale my skills to new heights!",
-    name: "Nsanzimana Fabrice",
-    date: "15 March 2025"
+    title: 'Software Engineer',
+    emoji: '🚀',
+    text: 'AbyTech has been a game-changer for my career. Their mentorship and resources helped me scale my skills to new heights!',
+    name: 'Nsanzimana Fabrice',
+    date: '15 March 2025',
   },
   {
     rating: 4,
-    title: "IT Manager",
-    emoji: "💡",
-    text: "Working with AbyTech was an eye-opening experience. Their expertise and professional approach to IT solutions impressed me greatly.",
-    name: "Nkaka Jean Doumour",
-    date: "5 Feb 2025"
+    title: 'IT Manager',
+    emoji: '💡',
+    text: 'Working with AbyTech was an eye-opening experience. Their expertise and professional approach to IT solutions impressed me greatly.',
+    name: 'Nkaka Jean Doumour',
+    date: '5 Feb 2025',
   },
   {
     rating: 5,
-    title: "Data Analyst",
-    emoji: "📊",
-    text: "AbyTech provided powerful tools and insights that helped optimize our data processing at Kigali City Archive. Highly recommend their services!",
-    name: "Mihigo Guillaume",
-    date: "28 Jan 2025"
+    title: 'Data Analyst',
+    emoji: '📊',
+    text: 'AbyTech provided powerful tools and insights that helped optimize our data processing. Highly recommend their services!',
+    name: 'Mihigo Guillaume',
+    date: '28 Jan 2025',
   },
   {
     rating: 5,
-    title: "Full Stack Developer",
-    emoji: "💻",
-    text: "AbyTech transformed my approach to web and backend development. Their hands-on guidance was invaluable.",
-    name: "Habineza Patrick",
-    date: "10 March 2025"
+    title: 'Full Stack Developer',
+    emoji: '💻',
+    text: 'AbyTech transformed my approach to web and backend development. Their hands-on guidance was invaluable.',
+    name: 'Habineza Patrick',
+    date: '10 March 2025',
   },
   {
     rating: 4,
-    title: "Cloud Engineer",
-    emoji: "☁️",
-    text: "Their cloud solutions are top-notch! AbyTech helped us implement secure and scalable architectures.",
-    name: "Rugamba Eric",
-    date: "3 Feb 2025"
+    title: 'Cloud Engineer',
+    emoji: '☁️',
+    text: 'Their cloud solutions are top-notch! AbyTech helped us implement secure and scalable architectures.',
+    name: 'Rugamba Eric',
+    date: '3 Feb 2025',
   },
   {
     rating: 5,
-    title: "UX/UI Designer",
-    emoji: "🎨",
-    text: "Amazing experience! The design team at AbyTech has a keen eye for user experience and creativity.",
-    name: "Umutoni Grace",
-    date: "18 Feb 2025"
-  }
+    title: 'UX/UI Designer',
+    emoji: '🎨',
+    text: 'Amazing experience! The design team at AbyTech has a keen eye for user experience and creativity.',
+    name: 'Umutoni Grace',
+    date: '18 Feb 2025',
+  },
 ];
 
 export default function Testimonials() {
