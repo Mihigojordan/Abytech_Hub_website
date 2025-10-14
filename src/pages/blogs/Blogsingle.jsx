@@ -10,25 +10,34 @@ import { useParams } from 'react-router-dom'
 
 const BlogSingle = () => {
     const {id} = useParams()
-     useEffect(()=>{
-    
+    useEffect(()=>{
         document.documentElement.scrollIntoView({
             behavior:'smooth',
             block:'start',
             inline:'start',
         })
-        },[id])
+    },[id])
+    
     return (
-        <div className='w-full flex-col pb-7  justify-center bg-[#0d0f15]  items-center flex gap-2'>
+        <div className='w-full flex flex-col pb-6 justify-center bg-white items-center gap-8'>
             <Header title={`single blog`} path={`blog / Single Blog 1`} />
 
-            <div className="flex  justify-center p-4 w-full md:w-10/12 flex-wrap xl:flex-nowrap  lg:w-9/12 pt-10 items-start gap-7">
+            <div className="flex justify-center p-4 w-full md:w-10/12 lg:w-9/12 xl:w-11/12 pt-10 items-start gap-10 max-w-8xl mx-auto">
 
                 {/* left side */}
-                <div className="flex flex-col w-full sm:w-11/12 md:w-10/12 xl:w-9/12  gap-4">
-                    <h1 className='text-2xl capitalize md:text-3xl'>How do you improve your content writing skills?</h1>
+                <div className="flex flex-col w-full xl:w-7/12 gap-8">
+                    <div>
+                        <h1 className='text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 capitalize mb-4'>
+                            How do you improve your content writing skills?
+                        </h1>
+                        <div className="flex items-center gap-4 text-gray-600">
+                            <span className="text-sm">By Jordan Smith</span>
+                            <span>•</span>
+                            <span className="text-sm">5 min read</span>
+                        </div>
+                    </div>
 
-                    <p className='text-neutral-500  md:text-base xl:text-lg'>
+                    <p className='text-gray-600 md:text-base lg:text-lg leading-relaxed'>
                         Commodo semper bibendum adipiscing orci bibendum eu lectus sed.
                         Commodo cursus vitae augue luctus nibh. Congue sit quisque volutpat libero tempor a id cursus purus.
                         Pellentesque pellentesque scelerisque curabitur porta dolor. Amet vulputate vitae eget sit rhoncus imperdiet.
@@ -37,109 +46,116 @@ const BlogSingle = () => {
                         Nec arcu cras ultrices velit sed ligula. Iaculis elit vulputate sollicitudin quisque ut faucibus.
                     </p>
 
-                    <p className='text-neutral-500  md:text-base xl:text-lg'>
-                        Facilisis nec malesuada enim viverra cras. Auctor dignissim tellus vestibulum vitae hac amet
-                        . Suspendisse sit feugiat in pulvinar bibendum arcu nunc id.
+                    <p className='text-gray-600 md:text-base lg:text-lg leading-relaxed'>
+                        Facilisis nec malesuada enim viverra cras. Auctor dignissim tellus vestibulum vitae hac amet.
+                        Suspendisse sit feugiat in pulvinar bibendum arcu nunc id.
                         Duis hac nisl dui facilisi placerat at mauris elit scelerisque.
                         Turpis ornare auctor amet vestibulum in magna aliquet ultricies netus.
                         Adipiscing lobortis a interdum morbi etiam non.
                     </p>
 
-                    <div className="p-7 bg-zinc-900  ">
-                        <p className='italic text-neutral-500'> Mattis facilisis quam amet blandit faucibus. Sed in vitae montes sem quis faucibus bibendum massa.
+                    <div className="p-8 bg-orange-50 border-l-4 border-[#FF9078] rounded-lg">
+                        <p className='italic text-gray-700 mb-4'>
+                            "Mattis facilisis quam amet blandit faucibus. Sed in vitae montes sem quis faucibus bibendum massa.
                             Eget volutpat molestie eget non netus nisl eleifend.
                             Sit pellentesque posuere vitae scelerisque vel aliquet vulputate purus.
-                            Ac risus neque sed at pellentesque ultrices.</p>
-                        <div className='flex gap-7 items-center'><div className=' h-0 border border-[#FF9078] w-12'></div> <p className=''>By jordan smith</p> </div>
-                    </div>
-
-
-
-                    <div className="flex flex-col gap-7 w-full">
-
-                        <div className="flex flex-wrap w-full gap-4 ">
-                            <div className="flex-1/2 lg:flex-1/3">
-                                <img src={BlogImage3} className='w-full  object-cover ' height={20} alt="" />
-                            </div>
-                            <div className="flex-1/2 lg:flex-1/3 min-h-80 ">
-                                <img src={BlogImage2} className='w-full  object-cover ' alt="" />
-                            </div>
-                        </div>
-                        <div className="h-[49vh] w-full">
-                            <img src={BlogImage1} className='w-full  object-cover ' alt="" />
+                            Ac risus neque sed at pellentesque ultrices."
+                        </p>
+                        <div className='flex gap-3 items-center text-gray-700 font-semibold'>
+                            <div className='h-0 border-2 border-[#FF9078] w-12'></div>
+                            <p>By Jordan Smith</p>
                         </div>
                     </div>
 
-                    <p className='text-neutral-500  md:text-base xl:text-lg'>
+                    <div className="flex flex-col gap-6 w-full">
+                        <div className="flex flex-wrap w-full gap-4">
+                            <div className="flex-1 md:flex-none md:w-1/3 h-64 rounded-lg overflow-hidden shadow-md">
+                                <img src={BlogImage3} className='w-full h-full object-cover hover:scale-105 transition-transform duration-300' alt="Blog" />
+                            </div>
+                            <div className="flex-1 md:flex-none md:w-1/3 h-64 rounded-lg overflow-hidden shadow-md">
+                                <img src={BlogImage2} className='w-full h-full object-cover hover:scale-105 transition-transform duration-300' alt="Blog" />
+                            </div>
+                        </div>
+                        <div className="w-full h-96 rounded-lg overflow-hidden shadow-md">
+                            <img src={BlogImage1} className='w-full h-full object-cover hover:scale-105 transition-transform duration-300' alt="Blog" />
+                        </div>
+                    </div>
+
+                    <p className='text-gray-600 md:text-base lg:text-lg leading-relaxed'>
                         Facilisis nec malesuada enim viverra cras. Auctor dignissim tellus vestibulum vitae hac amet.
                         Suspendisse sit feugiat in pulvinar bibendum arcu nunc id. Duis hac nisl dui facilisi placerat at mauris elit scelerisque.
                         Turpis ornare auctor amet vestibulum in magna aliquet ultricies netus.
                         Adipiscing lobortis a interdum morbi etiam non. Elit sed magna risus tempor non quis. Nec pulvinar scelerisque in faucibus.
                     </p>
-                    <p className='text-neutral-500  md:text-base xl:text-lg'>
+                    
+                    <p className='text-gray-600 md:text-base lg:text-lg leading-relaxed'>
                         Dis morbi cursus aliquam rutrum tortor amet.
                         Mauris consequat libero praesent pellentesque nibh sed eget urna.
                         Leo at feugiat vel dictum eget quam et commodo nullam. Nec arcu egestas adipiscing mollis dapibus justo non.
-
-
                     </p>
 
-
-                    <div className="flex  justify-center w-full">
-                        <div className="w-5/12 border border-l-0 py-2 border-zinc-700 flex justify-start items-center">
-                            <p className='capitalize'>prev</p>
-                        </div>
-                        <div className="w-2/12  border border-x-0  py-2 border-zinc-700 flex justify-center items-center">
-                            <BsShare className='w-4 h-4' />
-                        </div>
-                        <div className="w-5/12 border border-r-0  py-2 border-zinc-700 flex justify-end items-center">
-                            <p className='capitalize'>next</p>
-                        </div>
+                    {/* Navigation */}
+                    <div className="flex justify-between items-center w-full border-t border-b border-gray-300 py-6 mt-4">
+                        <button className='flex items-center gap-2 text-gray-700 font-semibold hover:text-[#FF9078] transition-colors duration-300'>
+                            <span>←</span>
+                            <span className='capitalize'>Previous Post</span>
+                        </button>
+                        <button className='p-3 rounded-lg bg-gray-100 hover:bg-[#FF9078] hover:text-white text-gray-700 transition-all duration-300' title="Share">
+                            <BsShare className='w-5 h-5' />
+                        </button>
+                        <button className='flex items-center gap-2 text-gray-700 font-semibold hover:text-[#FF9078] transition-colors duration-300'>
+                            <span className='capitalize'>Next Post</span>
+                            <span>→</span>
+                        </button>
                     </div>
-
                 </div>
 
                 {/* right side */}
+                <div className="flex flex-col w-full xl:w-5/12 gap-8">
 
-                <div className="flex flex-col w-full gap-7 md:w-10/12  xl:w-4/12 ">
-
-                    <div className="p-10 w-full border border-zinc-600">
-                        <input type="text" className='bg-white p-3 w-full text-lg rounded-md text-black ' placeholder='search' />
+                    {/* Search Box */}
+                    <div className="w-full">
+                        <input 
+                            type="text" 
+                            className='bg-white p-4 w-full text-lg rounded-lg text-gray-900 border-2 border-gray-300 focus:border-[#FF9078] focus:outline-none transition-colors placeholder-gray-500' 
+                            placeholder='Search articles...' 
+                        />
                     </div>
 
+                    {/* Category Section */}
+                    <div className="flex flex-col w-full p-8 border-2 border-gray-300 rounded-lg shadow-md">
+                        <h2 className='text-2xl md:text-3xl font-bold text-gray-900 mb-6'>Categories</h2>
 
-                    <div className="flex justify-center gap-3 w-full p-8 border border-zinc-600 items-center flex-col">
-                        <h1 className=' text-2xl md:text-3xl xl:text-4xl'>Category</h1>
-
-                        <div className="flex flex-col gap-3">
-                            <p className='hover:text-amber-300 transition-all  ease-linear text-base cursor-pointer md:text-lg font-medium flex items-center gap-3 justify-start'><span><FaSquareCheck className='w-8 h-8 fill-amber-300' /></span>Fiction Writers</p>
-                            <p className='hover:text-amber-300 transition-all  ease-linear text-base cursor-pointer md:text-lg font-medium flex items-center justify-start gap-3'><span><FaSquareCheck className='w-8 h-8 fill-amber-300' /></span>Content Writers</p>
-                            <p className='hover:text-amber-300 transition-all  ease-linear text-base cursor-pointer md:text-lg font-medium flex items-center justify-start gap-3'><span><FaSquareCheck className='w-8 h-8 fill-amber-300' /></span>Digital Writers </p>
-                            <p className='hover:text-amber-300 transition-all  ease-linear text-base cursor-pointer md:text-lg font-medium flex items-center justify-start gap-3'><span><FaSquareCheck className='w-8 h-8 fill-amber-300' /></span>Business Writers</p>
-                            <p className='hover:text-amber-300 transition-all  ease-linear text-base cursor-pointer md:text-lg font-medium flex items-center justify-start gap-3'><span><FaSquareCheck className='w-8 h-8 fill-amber-300' /></span>Technical Writers</p>
-                            <p className='hover:text-amber-300 transition-all  ease-linear text-base cursor-pointer md:text-lg font-medium flex items-center justify-start gap-3'><span><FaSquareCheck className='w-8 h-8 fill-amber-300' /></span>Marketing Writers</p>
-
-
+                        <div className="flex flex-col gap-4">
+                            {[
+                                'Fiction Writers',
+                                'Content Writers',
+                                'Digital Writers',
+                                'Business Writers',
+                                'Technical Writers',
+                                'Marketing Writers'
+                            ].map((category, index) => (
+                                <label key={index} className='flex items-center gap-3 cursor-pointer group'>
+                                    <div className='w-5 h-5 border-2 border-[#FF9078] rounded-md flex items-center justify-center group-hover:bg-[#FF9078] transition-colors duration-300'>
+                                        <FaSquareCheck className='w-4 h-4 text-[#FF9078] opacity-0 group-hover:opacity-100 transition-opacity' />
+                                    </div>
+                                    <p className='text-base md:text-lg font-medium text-gray-700 group-hover:text-[#FF9078] transition-colors duration-300'>
+                                        {category}
+                                    </p>
+                                </label>
+                            ))}
                         </div>
                     </div>
 
-
-                    <div className="bg-zinc-800 border gap-2 flex items-center justify-center flex-col  border-zinc-700 p-10">
-
-                        <h1 className=' text-xl md:text-2xl lg:text-3xl xl:text-4xl capitalize '>get in touch</h1>
-                        <p className='text-neutral-400 text-sm md:text-base text-center'>Ready to assist you in resolving any issues you may have.</p>
-                        <button className='p-3 cursor-pointer bg-[#FF9078] w-52 text-xl'>Submit Now</button>
-
+                    {/* CTA Box */}
+                    <div className="bg-gradient-to-br from-orange-50 to-orange-100 border-2 border-orange-200 rounded-lg gap-4 flex items-center justify-center flex-col p-8 shadow-md">
+                        <h3 className='text-2xl md:text-3xl font-bold text-gray-900 capitalize text-center'>Get in Touch</h3>
+                        <p className='text-gray-600 text-sm md:text-base text-center'>Ready to assist you in resolving any issues you may have.</p>
+                        <button className='px-8 py-3 cursor-pointer bg-[#FF9078] hover:bg-[#ff6f6f] text-white font-bold text-lg rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl w-full sm:w-auto'>
+                            Submit Now
+                        </button>
                     </div>
-
-
-
-
-
                 </div>
-
-
-
             </div>
 
             <BlogLatest />
