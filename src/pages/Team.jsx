@@ -1,44 +1,34 @@
 import React, { useEffect } from "react";
-import image1 from '../assets/images/sadiki.jpg'
-import image2 from '../assets/mihi.jpg'
-import image3 from '../assets/serge.jpg'
-import image4 from '../assets/honore.jpg'
 import {
   Mail,
-  Phone,
-  Linkedin,
-  Twitter,
-  Github,
   MapPin,
   Star,
   Award,
   Users,
   Code,
-  Database,
-  Smartphone,
-  Globe,
-  Filter,
-  Search,
+  Linkedin,
+  Twitter,
+  Github,
 } from "lucide-react";
 import Header from "../components/header";
 
 const TeamMembersPage = () => {
-
   useEffect(() => {
-      document.documentElement.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-        inline: "start",
-      });
-    }, []);
+    document.documentElement.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+      inline: "start",
+    });
+  }, []);
+
   const teamMembers = [
     {
       id: 1,
-      name: "Sadiki Rukara ",
+      name: "Sadiki Rukara",
       position: "C.E.O && FOUNDER",
       department: "Development",
-      image: image1,
-      bio: "With 8+ years of expertise in full-stack development, Sarah leads our development initiatives and mentors junior developers.",
+      image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop",
+      bio: "With 8+ years of expertise in full-stack development, leading our development initiatives and mentoring junior developers.",
       email: "rukara2095@gmail.com",
       phone: "+250 791 812 389",
       location: "United State Of America",
@@ -56,11 +46,11 @@ const TeamMembersPage = () => {
       name: "Mihigo Prince Jordan",
       position: "Senior Full Stack Software Developer",
       department: "Development",
-      image: image2,
-      bio: "With 8+ years of expertise in full-stack development, Sarah leads our development initiatives and mentors junior developers.",
+      image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=400&fit=crop",
+      bio: "With 8+ years of expertise in full-stack development, leading our development initiatives and mentoring junior developers.",
       email: "mihigojordan8@gmail.com",
       phone: "+250 791 812 389",
-      location: "Kigali , Rwanda ",
+      location: "Kigali, Rwanda",
       joinDate: "March 2020",
       linkedin: "sarah-johnson",
       twitter: "sarahdev",
@@ -73,13 +63,13 @@ const TeamMembersPage = () => {
     {
       id: 3,
       name: "Ishimwe Serge",
-      position: "UI/UX Designer and frontend developer",
+      position: "UI/UX Designer and Frontend Developer",
       department: "Design",
-      image: image3,
+      image: "https://images.unsplash.com/photo-1519345182560-3f2917c472ef?w=400&h=400&fit=crop",
       bio: "Creative UI/UX designer with 6+ years of experience crafting user-centered digital experiences.",
       email: "ishiweserge07@gmail.com",
       phone: "+250 796 130 187",
-      location: "kigali, Rwanda",
+      location: "Kigali, Rwanda",
       joinDate: "January 2021",
       linkedin: "michael-chen-design",
       twitter: "mikedesigns",
@@ -92,13 +82,13 @@ const TeamMembersPage = () => {
     {
       id: 4,
       name: "Hirwa Mihigo Honore",
-      position: "Devops && backend developer",
-      department: "backend",
-      image: image4,
+      position: "DevOps && Backend Developer",
+      department: "Backend",
+      image: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&h=400&fit=crop",
       bio: "Skilled DevOps engineer ensuring applications run smoothly and scale efficiently across multiple environments.",
       email: "mihigohonore@gmail.com",
       phone: "+1 (555) 345-6789",
-      location: "kamonyi, Rwanda",
+      location: "Kamonyi, Rwanda",
       joinDate: "September 2019",
       linkedin: "emily-rodriguez-devops",
       twitter: "emilyops",
@@ -111,63 +101,106 @@ const TeamMembersPage = () => {
   ];
 
   const TeamMemberCard = ({ member }) => (
-    <div className="bg-gray-800 rounded-2xl p-8 hover:transform hover:scale-105 transition-all duration-300 hover:bg-gray-750 group shadow-lg">
+    <div className="group relative bg-white rounded-3xl p-8 hover:transform hover:scale-105 transition-all duration-500 shadow-xl hover:shadow-2xl overflow-hidden">
+      {/* Gradient Background Overlay */}
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-indigo-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+      
+      {/* Decorative Top Corner */}
+      <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-purple-200/40 via-blue-200/30 to-transparent rounded-bl-full"></div>
+      
       {/* Profile Image & Basic Info */}
-      <div className="text-center mb-8">
-        <div className="relative mb-6">
+      <div className="relative text-center mb-6">
+        <div className="relative mb-6 inline-block">
+          {/* Gradient Ring */}
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full blur-md opacity-0 group-hover:opacity-70 transition-opacity duration-500 scale-110"></div>
+          
           <img
             src={member.image}
             alt={member.name}
-            className="w-40 h-40 rounded-full mx-auto border-4 border-gray-700 group-hover:border-yellow-400 transition-colors duration-300 object-cover"
+            className="relative w-32 h-32 rounded-full border-4 border-white shadow-lg group-hover:border-purple-300 transition-all duration-300 object-cover"
           />
+          
+          {/* Status Badge */}
+          <div className="absolute -bottom-2 -right-2 w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg">
+            <Star className="w-5 h-5 text-white fill-white" />
+          </div>
         </div>
-        <h3 className="text-xl font-bold mb-2 text-white group-hover:text-yellow-400 transition-colors">
+        
+        <h3 className="text-xl font-bold mb-2 bg-gradient-to-r from-blue-700 via-purple-700 to-indigo-700 bg-clip-text text-transparent group-hover:scale-105 transition-transform duration-300">
           {member.name}
         </h3>
-        <p className="text-yellow-400 font-medium text-sm mb-2">
+        <p className="text-purple-600 font-semibold text-sm mb-1">
           {member.position}
         </p>
-    
+        <div className="inline-block px-3 py-1 bg-gradient-to-r from-blue-100 to-purple-100 rounded-full">
+          <span className="text-xs font-medium text-blue-700">{member.department}</span>
+        </div>
       </div>
 
       {/* Contact Info */}
-      <div className="space-y-4 mb-8">
-        <div className="flex items-center text-gray-300 text-sm bg-gray-700 p-3 rounded-lg hover:bg-gray-600 transition-colors">
-          <MapPin className="w-4 h-4 text-yellow-400 mr-3" />
-          {member.location}
+      <div className="relative space-y-3 mb-6">
+        <div className="flex items-center text-gray-700 text-sm bg-gradient-to-r from-blue-50 to-purple-50 p-3 rounded-xl hover:shadow-md transition-all duration-300 group/item">
+          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center mr-3 group-hover/item:scale-110 transition-transform duration-300">
+            <MapPin className="w-4 h-4 text-white" />
+          </div>
+          <span className="text-xs">{member.location}</span>
         </div>
-        <div className="flex items-center text-gray-300 text-sm bg-gray-700 p-3 rounded-lg hover:bg-gray-600 transition-colors">
-          <Mail className="w-4 h-4 text-yellow-400 mr-3" />
-          <span className="truncate">{member.email}</span>
+        
+        <div className="flex items-center text-gray-700 text-sm bg-gradient-to-r from-purple-50 to-indigo-50 p-3 rounded-xl hover:shadow-md transition-all duration-300 group/item">
+          <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg flex items-center justify-center mr-3 group-hover/item:scale-110 transition-transform duration-300">
+            <Mail className="w-4 h-4 text-white" />
+          </div>
+          <span className="truncate text-xs">{member.email}</span>
         </div>
       </div>
 
+      {/* Social Links */}
+      <div className="relative flex justify-center gap-3 pt-4 border-t border-purple-100">
+        <a href="#" className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center hover:scale-110 hover:rotate-6 transition-all duration-300 shadow-md">
+          <Linkedin className="w-4 h-4 text-white" />
+        </a>
+        <a href="#" className="w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full flex items-center justify-center hover:scale-110 hover:rotate-6 transition-all duration-300 shadow-md">
+          <Twitter className="w-4 h-4 text-white" />
+        </a>
+        <a href="#" className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-full flex items-center justify-center hover:scale-110 hover:rotate-6 transition-all duration-300 shadow-md">
+          <Github className="w-4 h-4 text-white" />
+        </a>
+      </div>
+
+      {/* Bottom Decorative Element */}
+      <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-blue-200/30 via-purple-200/20 to-transparent rounded-tr-full"></div>
     </div>
   );
 
   return (
-    <div className="w-full flex flex-col pb-16 items-center gap-12 mt-8 bg-gray-900 min-h-screen">
-      <Header title="Our Team" path="team-member" />
-      
+    <div className="w-full flex flex-col pb-4 items-center gap-12 bg-gradient-to-br from-blue-50 via-purple-50 to-indigo-50 min-h-screen">
+         <Header title={`Our Team`} path={`Our Team`} />
+
       {/* Hero Section */}
-      <div className="text-center max-w-8xl mx-auto px-6 mt-8">
-        <h1 className="text-5xl md:text-6xl font-bold mb-6 text-white">
-          Meet Our <span className="text-yellow-400">Exceptional Team</span>
+      <div className="text-center max-w-8xl mx-auto px-6 mt-0">
+        <div className="inline-block mb-6 px-6 py-2 bg-gradient-to-r from-blue-100 to-purple-100 rounded-full">
+          <span className="text-sm font-semibold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            Meet Our Team
+          </span>
+        </div>
+        
+        <h1 className="text-5xl md:text-6xl font-bold mb-6 leading-tight">
+          Our{" "}
+          <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
+            Exceptional Team
+          </span>
         </h1>
-        <p className="text-gray-300 text-xl leading-relaxed mb-12">
-          Discover the talented professionals who drive our success.
-          
-          <br />
-           Each member brings unique expertise, 
+        
+        <p className="text-gray-700 text-lg leading-relaxed mb-2 max-w-3xl mx-auto">
+          Discover the talented professionals who drive our success. Each member brings unique expertise, 
           creativity, and dedication to deliver outstanding results.
         </p>
-        
-     
+
       </div>
 
       {/* Team Grid */}
       <div className="w-full max-w-8xl mx-auto px-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {teamMembers.map((member) => (
             <TeamMemberCard key={member.id} member={member} />
           ))}
