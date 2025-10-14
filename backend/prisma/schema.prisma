@@ -27,6 +27,9 @@ model Admin {
   isLocked   Boolean? @default(false)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+
+  expenses     Expense[]
+  report       Report[]
 }
 
 enum AdminStatus{
@@ -34,5 +37,22 @@ enum AdminStatus{
     INACTIVE
 }
 
+model Expense {
+  id          String   @id @default(uuid())
+  title       String
+  amount      Float
+  description String?
+  adminId     String
+  createdAt   DateTime @default(now())
+  admin    Admin    @relation(fields: [adminId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+}
 
 
+model Report{
+  id         String   @id @default(uuid())
+  title       String
+  filePath    String
+  createdAt   DateTime @default(now())
+  adminId    String
+  admin   Admin    @relation(fields: [adminId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+}
