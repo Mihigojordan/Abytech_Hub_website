@@ -1,38 +1,19 @@
-import { MulterOptions } from "@nestjs/platform-express/multer/interfaces/multer-options.interface";
-import { diskStorage } from "multer";
-import * as path from "path";
-import * as fs from 'fs'
-import { NotFoundException } from "@nestjs/common";
+import { MulterOptions } from '@nestjs/platform-express/multer/interfaces/multer-options.interface';
+import { diskStorage } from 'multer';
+import * as path from 'path';
+import * as fs from 'fs';
+import { NotFoundException } from '@nestjs/common';
 
 export const createUnifiedUploadConfig = (): MulterOptions => ({
   storage: diskStorage({
     destination: (req, file, cb) => {
       let subFolder: string | undefined;
 
-     if (file.fieldname === 'profileImg') {
-        subFolder = 'profile_images'; 
+      if (file.fieldname === 'reportUrl') {
+        subFolder = 'reports';
+      } else if (file.fieldname === 'profileImg') {
+        subFolder = 'profile_images';
       }
-      else if(file.fieldname ===  'cv'){
-        subFolder = 'cv_files'
-      
-      }
-      else if(file.fieldname ===  'cvFile'){
-        subFolder = 'cv_files'
-      
-      }
-      else if(file.fieldname ===  'applicationLetter'){
-        subFolder = 'application_letters'
-      }
-      else if(file.fieldname ===  'assetImg'){
-        subFolder = 'asset_images'
-      }
-      else if(file.fieldname === 'siteImg'){
-        subFolder = 'site_images'
-      }
-      else if(file.fieldname === 'attachmentImg'){
-        subFolder = 'attachment_images'
-      }
-
       console.log('Received file.fieldname:', file.fieldname);
 
       if (!subFolder) {
@@ -40,7 +21,7 @@ export const createUnifiedUploadConfig = (): MulterOptions => ({
         return cb(error as Error, '' as any); // ✅ Fixed TS error
       }
 
-    //  const uploadDir = path.join(__dirname, '..', '..', 'uploads', subFolder);
+      //  const uploadDir = path.join(__dirname, '..', '..', 'uploads', subFolder);
       const uploadDir = path.join(process.cwd(), 'uploads', subFolder); // Use process.cwd() for absolute path
       console.log('Uploading to:', uploadDir);
 
@@ -53,16 +34,24 @@ export const createUnifiedUploadConfig = (): MulterOptions => ({
     },
     filename: (req, file, cb) => {
       const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-      cb(null, `${file.fieldname}-${uniqueSuffix}${path.extname(file.originalname)}`);
+      cb(
+        null,
+        `${file.fieldname}-${uniqueSuffix}${path.extname(file.originalname)}`,
+      );
     },
   }),
   fileFilter: (req, file, cb) => {
     const allowedTypes = /jpeg|jpg|png|webp|pdf/;
-    const isValidExt = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+    const isValidExt = allowedTypes.test(
+      path.extname(file.originalname).toLowerCase(),
+    );
     const isValidMime = allowedTypes.test(file.mimetype);
 
     if (!isValidExt || !isValidMime) {
-      return cb(new Error('Only JPEG, JPG, PNG, WebP files are allowed '), false);
+      return cb(
+        new Error('Only JPEG, JPG, PNG, WebP files are allowed '),
+        false,
+      );
     }
 
     cb(null, true);
@@ -73,7 +62,6 @@ export const createUnifiedUploadConfig = (): MulterOptions => ({
   },
   // Image transformation should be handled after upload, not in MulterOptions
 });
-
 
 // ✅ Delete file helper
 export const deleteFile = (filepath: string) => {
@@ -88,39 +76,8 @@ export const deleteFile = (filepath: string) => {
   });
 };
 
+export const ReportFileFields = [{ name: 'reportUrl', maxCount: 1 }];
+export const AdminFileFields = [{ name: 'profileImg', maxCount: 1 }];
 
-
-
-export const EmployeeFileFields = [
-  { name: 'profileImg', maxCount:1 },
-  { name: 'applicationLetter', maxCount:1 },
-  { name: 'cv', maxCount:1 },
-]
-export const ApplicantFileFields = [
-  { name: 'cvFile', maxCount:1 },
-]
-export const ClientFileFields = [
-  { name: 'profileImg', maxCount:1 },
-]
-export const AdminFileFields = [
-  { name: 'profileImg', maxCount:1 },
-]
-export const AssetFileFields = [
-  { name: 'assetImg', maxCount: 1 },
-];
-export const SiteFileFields = [
-  { name: 'siteImg', maxCount: 1 },
-];
-export const AttachmentsFileFields = [
-  { name: 'attachmentImg', maxCount: 1 },
-];
-
-
-
-export const EmployeeUploadConfig = createUnifiedUploadConfig()
-export const ApplicantUploadConfig = createUnifiedUploadConfig()
-export const ClientUploadConfig = createUnifiedUploadConfig()
-export const AdminUploadConfig = createUnifiedUploadConfig()
-export const AssetUploadConfig = createUnifiedUploadConfig();
-export const SiteUploadConfig = createUnifiedUploadConfig();
-export const AttachmentsUploadConfig = createUnifiedUploadConfig();
+export const ReportUploadConfig = createUnifiedUploadConfig();
+export const AdminUploadConfig = createUnifiedUploadConfig();
