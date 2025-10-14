@@ -16,7 +16,7 @@ const ServicePage = () => {
     });
   }, []);
   return (
-    <div className="w-full flex-col pb-7 justify-center bg-[#0d0f15]  items-center flex gap-2 mt-25">
+    <div className="w-full flex-col pb-7 justify-center   items-center flex gap-2 mt-25">
       <Header title={`service`} path={`service`} />
 
       <div className="flex flex-col justify-center w-[100%] pt-10 items-center gap-10">
