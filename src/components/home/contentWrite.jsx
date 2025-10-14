@@ -1,105 +1,110 @@
-import { FaPencilRuler, FaCode, FaUserGraduate } from "react-icons/fa";
-import { IoDocumentTextSharp } from "react-icons/io5";
-import { MdOutlineDraw, MdSupportAgent } from "react-icons/md";
-import { AiOutlineShoppingCart } from "react-icons/ai";
-import { FaAngleDoubleRight } from "react-icons/fa";
-
-import React, { useEffect } from "react";
-import AOS from "aos";
-import "aos/dist/aos.css";
+import React, { useEffect } from 'react';
+import { FaPencilRuler, FaCode, FaUserGraduate, FaArrowRight } from 'react-icons/fa';
+import { IoDocumentTextSharp } from 'react-icons/io5';
+import { MdSupportAgent } from 'react-icons/md';
+import { AiOutlineShoppingCart } from 'react-icons/ai';
+import AOS from 'aos';
+import 'aos/dist/aos.css';
 
 const services = [
   {
-    title: "Web Development",
-    icon: <FaPencilRuler size={50} className="text-[#FFD44D]" />,
+    title: 'Web Development',
+    icon: <FaPencilRuler size={40} />,
     description:
-      "We design and develop modern, high-performance websites tailored to your brand’s identity. Our solutions ensure responsiveness, speed, and seamless user experience. Whether it’s a corporate site, portfolio, or custom platform, we bring your vision to life. Stay ahead of the competition with cutting-edge web technologies.",
+      'We design and develop modern, high-performance websites tailored to your brand identity. Our solutions ensure responsiveness, speed, and seamless user experience.',
   },
   {
-    title: "App Development",
-    icon: <IoDocumentTextSharp size={50} className="text-[#FFD44D]" />,
+    title: 'App Development',
+    icon: <IoDocumentTextSharp size={40} />,
     description:
-      "From mobile to web apps, we create high-quality, scalable, and intuitive applications. Our apps offer smooth functionality, stunning UI, and cross-platform compatibility. We focus on performance optimization to ensure seamless experiences for users. Transform your ideas into powerful applications with our expert team.",
+      'From mobile to web apps, we create high-quality, scalable, and intuitive applications with smooth functionality and stunning UI.',
   },
   {
-    title: "Software Development",
-    icon: <FaCode size={50} className="text-[#FFD44D]" />,
+    title: 'Software Development',
+    icon: <FaCode size={40} />,
     description:
-      "We build customized software solutions designed to meet your unique business needs. Our development process ensures security, scalability, and future-proof technology integration. Whether you need enterprise software, automation tools, or cloud-based systems, we have you covered. Let us help you streamline operations and enhance efficiency.",
-  },
-
-  {
-    title: "E-Commerce Solutions",
-    icon: <AiOutlineShoppingCart size={50} className="text-[#FFD44D]" />,
-    description:
-      "We develop robust, scalable, and secure e-commerce platforms tailored for your business. Our solutions include seamless payment gateways, inventory management, and user-friendly navigation. Enhance customer engagement with optimized shopping experiences and performance-driven designs. Build a profitable online store with cutting-edge technology.",
+      'We build customized software solutions designed to meet your unique business needs with security and scalability.',
   },
   {
-    title: "IT Support",
-    icon: <MdSupportAgent size={50} className="text-[#FFD44D]" />,
+    title: 'E-Commerce Solutions',
+    icon: <AiOutlineShoppingCart size={40} />,
     description:
-      "Reliable IT support ensures that your business operates smoothly without technical disruptions. We provide troubleshooting, network security, software updates, and infrastructure maintenance. Our experts help optimize your systems for maximum efficiency and uptime. Experience uninterrupted workflows with our proactive IT solutions.",
+      'We develop robust, scalable e-commerce platforms with seamless payment gateways and inventory management.',
   },
   {
-    title: "Internship Program",
-    icon: <FaUserGraduate size={50} className="text-[#FFD44D]" />,
+    title: 'IT Support',
+    icon: <MdSupportAgent size={40} />,
     description:
-      "Gain hands-on experience through our well-structured internship program designed for students and graduates. Learn from industry professionals, work on real projects, and enhance your skills. We provide mentorship, training, and career development opportunities in various domains. Start your journey towards a successful career with practical knowledge.",
+      'Reliable IT support ensures your business operates smoothly with proactive troubleshooting and network security.',
+  },
+  {
+    title: 'Internship Program',
+    icon: <FaUserGraduate size={40} />,
+    description:
+      'Gain hands-on experience through our well-structured internship program with mentorship and real project work.',
   },
 ];
 
-
-
-export default function ContentWriteServices() {
+export default function ServicesSection() {
   useEffect(() => {
-    AOS.init({ duration: 1000, once: true, easing: "ease-in-out" });
+    AOS.init({ duration: 1000, once: true, easing: 'ease-in-out' });
   }, []);
 
   return (
-    <section className="bg-[#0D0F1A] text-white py-16 px-6 text-center">
-      <h2 className="text-4xl font-bold">
-        Our <span className="text-[#FFD44D]">Content Write</span> Services
-      </h2>
-      <p className="mt-4 text-gray-300 max-w-2xl mx-auto">
-        We provide high-quality digital solutions tailored to your needs.
-      </p>
+    <section className="bg-gradient-to-b from-gray-50 to-white py-16 md:py-24 px-4 md:px-8">
+      <div className=" mx-auto">
+        
+        {/* Header */}
+        <div className="text-center mb-16 md:mb-20">
+          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+            Our <span className="text-primary-500">Services</span>
+          </h2>
+          <p className="text-gray-600 text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
+            We provide high-quality digital solutions tailored to your needs and business requirements.
+          </p>
+        </div>
 
-      {/* Services Grid */}
-      <div
-        className="mt-12 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-10  mx-auto w-[90%]"
+        {/* Services Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+          {services.map((service, index) => (
+            <div
+              key={index}
+              data-aos="fade-up"
+              data-aos-delay={index * 100}
+              className="group relative"
+            >
+              <div className="h-full bg-white border-2 border-gray-200 rounded-2xl p-8 md:p-10 transition-all duration-300 hover:border-primary-500 hover:shadow-xl overflow-hidden">
+                
+                {/* Background decoration */}
+                <div className="absolute top-0 right-0 w-32 h-32 bg-primary-50 rounded-full -mr-16 -mt-16 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                
+                {/* Icon Container */}
+                <div className="relative z-10 inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-primary-50 to-primary-100 rounded-xl mb-6 group-hover:from-primary-100 group-hover:to-primary-200 transition-all duration-300">
+                  <div className="text-primary-500">
+                    {service.icon}
+                  </div>
+                </div>
 
-        data-aos="fade-right"
-     
-      >
-        {services.map((service, index) => (
-          <div
-            key={index}
-            className="bg-transparent flex gap-2"
-            data-aos="fade-up"
-            data-aos-delay={index * 200}
-           
-          >
-            <div className="relative bg-[#0D0F1A] border-[1px] border-gray-800 text-white p-8 w-[100%]   min-h-[400px]  max-h-[460px] rounded-lg overflow-hidden">
-              <div className="absolute bottom-0 right-0 w-20 h-20">
-                <div
-                  className="absolute inset-0 bg-[#121420d2]"
-                  style={{ clipPath: "polygon(100% 0, 0 100%, 100% 100%)" }}
-                ></div>
-              </div>
+                {/* Title */}
+                <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 relative z-10">
+                  {service.title}
+                </h3>
 
-              <div className="text-orange-400 text-4xl">{service.icon}</div>
+                {/* Description */}
+                <p className="text-gray-600 text-sm md:text-base leading-relaxed mb-6 relative z-10 line-clamp-4">
+                  {service.description}
+                </p>
 
-              <h3 className="text-2xl font-bold mt-4">{service.title}</h3>
-
-              <p className="text-gray-400 mt-4">{service.description}</p>
-              <div className="h-10"></div>
-
-              <div className="absolute bottom-[10px] right-[10px] w-[60px] h-[60px] bg-[#0D0F1A] border-[2px] border-gray-800 text-orange-400 flex items-center justify-center rounded-full text-2xl shadow-lg">
-                <FaAngleDoubleRight className="w-5 h-5 text-white" />
+                {/* Arrow Button */}
+                <div className="absolute bottom-8 right-8 z-10">
+                  <div className="w-12 h-12 bg-gradient-to-br from-primary-400 to-primary-500 rounded-full flex items-center justify-center text-white shadow-lg group-hover:scale-110 group-hover:shadow-xl transition-all duration-300">
+                    <FaArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </section>
   );

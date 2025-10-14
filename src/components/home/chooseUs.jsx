@@ -1,90 +1,104 @@
-import React, { useEffect } from "react";
-import AOS from "aos";
-import "aos/dist/aos.css";
-import { LuNotebookPen } from "react-icons/lu";
-import { MdOutlineContentPaste, MdRestore, MdVerifiedUser, MdOutlineWeb } from "react-icons/md";
-import { FaLaptopCode, FaServer } from "react-icons/fa";
+import React, { useState } from 'react';
+import { Shield, Users, Lock, Cpu, Code } from 'lucide-react';
 
-const WhyChooseUs = () => {
-  useEffect(() => {
-    AOS.init({ duration: 800, once: true }); // Initialize AOS with animation duration
-  }, []);
+export default function WhyChooseUs() {
+  const [highlighted,setHighlighted] = useState(null)
+ const services = [
+    {
+      icon: Code,
+      title: 'Web Development',
+      description: 'Building modern, responsive applications using technologies such as React, JavaScript, and related frameworks to create high-impact digital products.',
+      path: '/services'
+    },
+    {
+      icon: Cpu,
+      title: 'Software Solutions',
+      description: 'Delivering cutting-edge software solutions that drive businesses forward and transform ideas into impactful digital experiences.',
+      path: '/services'
+    },
+    {
+      icon: Users,
+      title: 'IT Training',
+      description: 'Empowering local talent through coding workshops and digital skills programs, supporting innovation within Rwanda’s growing tech ecosystem.',
+      path: '/services'
+    }
+  ];
 
   return (
-    <section className="bg-[#171B224D] text-white px-10 py-10 md:px-20 lg:px-32 ">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-20 items-center">
-        {/* Left Side - Title & Image */}
-        <div className="bg-gray-900 p-8 rounded-lg relative" data-aos="fade-right">
-          <h2 className="text-3xl font-bold text-yellow-400">
-            Why Choose <span className="text-white">Abytech Hub?</span>
-          </h2>
-          <p className="text-gray-300 mt-4">
-            We provide cutting-edge digital solutions, ensuring high-quality, fast, and scalable results tailored to your business needs.
-          </p>
-          <div className="mt-6 relative">
-            <img
-              src="../image/working.png"
-              alt="Working"
-              className="rounded-lg shadow-lg"
-              data-aos="zoom-in"
-            />
+    <div className="w-full bg-white py-16 md:py-24 px-4 md:px-8">
+      <div className=" mx-auto">
+        
+        {/* Header */}
+        <div className="text-center mb-12 md:mb-20">
+          <div className="flex items-center justify-center gap-2 mb-6">
+            <div className="w-2 h-2 bg-primary-500 rounded-full"></div>
+            <p className="text-primary-500 font-semibold text-sm md:text-base tracking-wide">OUR SOLUTIONS</p>
+            <div className="w-2 h-2 bg-primary-500 rounded-full"></div>
           </div>
+          
+          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6 leading-tight">
+            We Different From Others <br /> Should Choose Us
+          </h2>
+          
+          <p className="text-gray-600 text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna.
+          </p>
         </div>
 
-        {/* Right Side - Features List */}
-        <div className="space-y-8">
-          {/* SEO Optimized */}
-          <div className="flex items-start space-x-4" data-aos="fade-up">
-            <LuNotebookPen className="w-10 h-10 text-yellow-400" />
-            <div>
-              <h3 className="text-xl font-bold">SEO Optimized Solutions</h3>
-              <p className="text-gray-300">We create content and websites that rank higher on search engines, driving organic traffic and visibility.</p>
-            </div>
-          </div>
+        {/* Services Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+          {services.map((service, index) => {
+            const Icon = service.icon;
+            return (
+              <div
+                key={index}
+                onClick={()=> setHighlighted(index)}
+                className={`p-8 md:p-10 rounded-2xl transition-all duration-300 hover:shadow-lg ${
+                  highlighted == index
+                    ? 'border-2 border-primary-500 bg-white'
+                    : 'bg-gray-50 border-2 border-transparent hover:border-primary-200'
+                }`}
+              >
+                {/* Icon */}
+                <div className="mb-6 flex justify-center">
+                  <div className={`p-4 rounded-xl ${
+                    highlighted == index 
+                      ? 'bg-primary-50' 
+                      : 'bg-gray-200'
+                  }`}>
+                    <Icon 
+                      className={`w-8 h-8 ${
+                        highlighted == index 
+                          ? 'text-primary-500' 
+                          : 'text-gray-700'
+                      }`}
+                      strokeWidth={1.5}
+                    />
+                  </div>
+                </div>
 
-       
+                {/* Title */}
+                <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 text-center">
+                  {service.title}
+                </h3>
 
-          {/* Software Development */}
-          <div className="flex items-start space-x-4" data-aos="fade-up" data-aos-delay="400">
-            <FaLaptopCode className="w-10 h-10 text-yellow-400" />
-            <div>
-              <h3 className="text-xl font-bold">Custom Software Development</h3>
-              <p className="text-gray-300">We develop scalable and efficient** software solutions for businesses, startups, and enterprises.</p>
-            </div>
-          </div>
+                {/* Description */}
+                <p className="text-gray-600 text-sm md:text-base text-center mb-6 leading-relaxed">
+                  {service.description}
+                </p>
 
-          {/* Website Design */}
-          <div className="flex items-start space-x-4" data-aos="fade-up" data-aos-delay="600">
-            <MdOutlineWeb className="w-10 h-10 text-yellow-400" />
-            <div>
-              <h3 className="text-xl font-bold">Professional Website Design</h3>
-              <p className="text-gray-300">We create visually stunning, user-friendly, and responsive websites tailored to your business needs.</p>
-            </div>
-          </div>
-
-          {/* Web Hosting */}
-          <div className="flex items-start space-x-4" data-aos="fade-up" data-aos-delay="800">
-            <FaServer className="w-10 h-10 text-yellow-400" />
-            <div>
-              <h3 className="text-xl font-bold">Secure & Reliable Web Hosting</h3>
-              <p className="text-gray-300">We offer *fast, secure, and scalable* hosting solutions for businesses of all sizes.</p>
-            </div>
-          </div>
-
-          {/* Quick Delivery */}
-          <div className="flex items-start space-x-4" data-aos="fade-up" data-aos-delay="1000">
-            <MdVerifiedUser className="w-10 h-10 text-yellow-400" />
-            <div>
-              <h3 className="text-xl font-bold">Timely & Reliable Delivery</h3>
-              <p className="text-gray-300">We ensure that every project is delivered *on time* without compromising quality.</p>
-            </div>
-          </div>
-
-      
+                {/* Link */}
+                <a
+                  href="#"
+                  className="text-primary-500 font-semibold text-center block hover:text-primary-600 transition-colors text-sm md:text-base"
+                >
+                  View Details →
+                </a>
+              </div>
+            );
+          })}
         </div>
       </div>
-    </section>
+    </div>
   );
-};
-
-export default WhyChooseUs;
+}
