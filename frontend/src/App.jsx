@@ -1,5 +1,5 @@
 import React, { Suspense, lazy } from "react";
-import { BrowserRouter, createBrowserRouter, Route, RouterProvider, Routes } from "react-router-dom"
+import { BrowserRouter, createBrowserRouter, Navigate, Outlet, Route, RouterProvider, Routes } from "react-router-dom"
 const HomePage = lazy(() => import("./pages/HomePage"));
 const ContactUs = lazy(() => import("./pages/ContactUs"));
 const BlogPage = lazy(() => import("./pages/blogs/BlogPage"));
@@ -12,6 +12,11 @@ const TeamMember = lazy(() => import('./pages/Team'))
 
 import MainLayout from "./layouts/MainLayout";
 import ProjectsPage from "./pages/Projects/ProjectPages";
+import AdminLogin from "./pages/auth/admin/Login";
+import ProtectPrivateAdminRoute from "./components/protectors/ProtectPrivateAdminRoute";
+import DashboardLayout from "./layouts/DashboardLayout";
+import DashboardHome from "./pages/dashboard/DashboardHome";
+import AdminProfilePage from "./pages/dashboard/AdminProfile";
 
 
 
@@ -41,9 +46,32 @@ const router = createBrowserRouter([
       { path: '/service/:id', element: <SuspenseWrapper><ServiceSingle /> </SuspenseWrapper> },
       { path: '/project', element: <SuspenseWrapper><ProjectsPage /> </SuspenseWrapper> },
       { path: '/team-member', element: <SuspenseWrapper><TeamMember /> </SuspenseWrapper> },
+    ]
+  },
+  {
+    path:'/admin',
+    element: <ProtectPrivateAdminRoute><Outlet /></ProtectPrivateAdminRoute>,
+    children:[
+       { index: true, element: <Navigate to={'/admin/dashboard'}></Navigate>},
+       { 
+        path: 'dashboard', 
+        element: <SuspenseWrapper><DashboardLayout /> </SuspenseWrapper>,
+        children:[
+          {index:true , element:<DashboardHome />},
+          {path:'profile' , element:<AdminProfilePage />}
+        ]
+       },
 
     ]
-  }
+  },
+  {
+    path: '/auth/admin/login',
+    element: (
+      <SuspenseWrapper>
+        <AdminLogin />
+      </SuspenseWrapper>
+    ),
+  },
 ])
 
 
