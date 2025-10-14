@@ -17,6 +17,9 @@ import ProtectPrivateAdminRoute from "./components/protectors/ProtectPrivateAdmi
 import DashboardLayout from "./layouts/DashboardLayout";
 import DashboardHome from "./pages/dashboard/DashboardHome";
 import AdminProfilePage from "./pages/dashboard/AdminProfile";
+import UnlockScreen from "./pages/auth/admin/UnlockScreen";
+import ExpenseDashboard from "./pages/dashboard/ExpenseDashboard";
+import ReportDashboard from "./pages/dashboard/ReportManagement";
 
 
 
@@ -58,7 +61,10 @@ const router = createBrowserRouter([
         element: <SuspenseWrapper><DashboardLayout /> </SuspenseWrapper>,
         children:[
           {index:true , element:<DashboardHome />},
-          {path:'profile' , element:<AdminProfilePage />}
+          {path:'expense' , element:<ExpenseDashboard />},
+          {path:'report' , element:<ReportDashboard />},
+          {path:'profile' , element:<AdminProfilePage />},
+          
         ]
        },
 
@@ -69,6 +75,14 @@ const router = createBrowserRouter([
     element: (
       <SuspenseWrapper>
         <AdminLogin />
+      </SuspenseWrapper>
+    ),
+  },
+  {
+    path: '/auth/admin/unlock',
+    element: (
+      <SuspenseWrapper>
+        <UnlockScreen />
       </SuspenseWrapper>
     ),
   },

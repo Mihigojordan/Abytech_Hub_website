@@ -41,10 +41,13 @@ import {
   SoupIcon,
   WheatIcon,
   Milk,
+  ShoppingBag,
+  File,
 } from "lucide-react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 
 import useAdminAuth from "../../context/AdminAuthContext";
+import logo from '../../assets/tran.png'
 
 
 interface SidebarProps {
@@ -93,6 +96,20 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onToggle, }) => {
         label: "Dashboard",
         icon: TrendingUp,
         path: basePath,
+      },
+      {
+        id: "expense",
+        label: "Expense",
+        icon: ShoppingBag,
+        path: `${basePath}/expense`,
+        
+      },
+      {
+        id: "report",
+        label: "Report",
+        icon: File,
+        path: `${basePath}/report`,
+        
       },
       
 
@@ -271,15 +288,12 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onToggle, }) => {
         {/* Sidebar Header */}
         <div className="flex items-center justify-between p-3 border-b border-primary-200">
           <div className="flex items-center space-x-2">
-            <div className="flex items-center justify-center w-7 h-7 bg-gradient-to-r from-primary-500 to-primary-600 rounded-lg">
-              <div className="flex items-center space-x-0.5">
-                <MapPin className="w-3 h-3 text-white" />
-                <Plane className="w-2 h-2 text-white" />
-              </div>
-            </div>
+            <img src={logo} className="flex items-center justify-center w-10 h-10  rounded-lg" />
+             
+            
             <div>
               <h2 className="font-bold text-base text-primary-800">
-                Aby Hr Management
+                AbyTech
               </h2>
               <p className="text-xs text-primary-500">{portalTitle}</p>
             </div>
