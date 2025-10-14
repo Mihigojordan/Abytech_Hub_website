@@ -33,7 +33,7 @@ const ContentReach = () => {
     {/* Left Side - Heading & Description */}
     <div className="md:w-2/3 -ml-16">
       <h2 className="text-4xl font-bold leading-tight">
-        <span className="text-yellow-500">Build Your Future in Web Development</span>
+        <span className="text-primary-500">Build Your Future in Web Development</span>
         <br /> Craft powerful, scalable, and innovative websites.
       </h2>
       <p className="text-gray-300 mt-4 max-w-xl leading-10">
@@ -46,7 +46,7 @@ const ContentReach = () => {
       <button className="border border-white text-white py-2 mb-6 px-6 rounded-lg hover:bg-white hover:text-black transition">
         Start Your Journey
       </button>
-      <button className="bg-yellow-500 text-white py-2 px-6 rounded-lg hover:bg-red-600 transition">
+      <button className="bg-primary-500 text-white py-2 px-6 rounded-lg hover:bg-red-600 transition">
         Advance Your Skills
       </button>
     </div>
