@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { useState, useEffect } from "react";
 import { NavLink } from "react-router-dom";
 import {
@@ -12,7 +13,7 @@ import {
   FiLinkedin,
 } from "react-icons/fi";
 import React from "react";
-import Logo from "../assets/images/logo.png";
+import Logo from "../assets/trans.png";
 
 function NavBar() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -26,6 +27,13 @@ function NavBar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  const socialLinks = [
+  { icon: FiFacebook, href: "https://www.facebook.com/profile.php?id=61561463187987" },
+  { icon: FiTwitter, href: "https://x.com/AbytechHUB" },
+  { icon: FiInstagram, href: "https://www.instagram.com/explore/locations/383650954824335/abytech-hub/?hl=en" },
+  { icon: FiLinkedin, href: "https://www.linkedin.com/in/abytech-hub-754226354/" },
+];
+
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth >= 1024) setMenuOpen(false);
@@ -33,6 +41,7 @@ function NavBar() {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+  
 
   return (
     <>
@@ -62,7 +71,7 @@ function NavBar() {
 
       <header className="fixed top-0 left-0 w-full z-50">
         {/* Top Info Bar */}
-        <div className="bg-gradient-to-r from-purple-700 via-blue-700 to-blue-900 text-white py-2 px-4 hidden lg:block pl-12 pr-10">
+        <div className="bg-gradient-to-r from-purple-900 via-blue-900 to-purple-900 text-white py-2 px-4 hidden lg:block pl-12 pr-10">
           <div className="container mx-auto flex justify-between items-center text-sm">
             <div className="flex items-center space-x-6">
               <a
@@ -70,7 +79,7 @@ function NavBar() {
                 className="flex items-center space-x-2 hover:text-blue-300 transition-colors"
               >
                 <FiPhone className="w-4 h-4" />
-                <span>+250 788 888 888</span>
+                <span>+250 791813289</span>
               </a>
               <p>|</p>
               <a
@@ -78,7 +87,7 @@ function NavBar() {
                 className="flex items-center space-x-2 hover:text-blue-300 transition-colors"
               >
                 <FiMail className="w-4 h-4" />
-                <span>info@company.com</span>
+                <span>info@abytechhub.com</span>
               </a>
                  
             </div>
@@ -89,15 +98,17 @@ function NavBar() {
                 <span>Kigali, Rwanda</span>
               </div>
               <p>|</p>
-              {[FiFacebook, FiTwitter, FiInstagram, FiLinkedin].map((Icon, i) => (
-                <a
-                  key={i}
-                  href="#"
-                  className="hover:text-blue-300 transition-all hover:scale-110"
-                >
-                  <Icon className="w-4 h-4" />
-                </a>
-              ))}
+                    {socialLinks.map(({ icon: Icon, href }, i) => (
+        <a
+          key={i}
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-white hover:text-blue-300 transition-all hover:scale-110"
+        >
+          <Icon className="w-4 h-4" />
+        </a>
+      ))}
             </div>
           </div>
         </div>
@@ -107,7 +118,7 @@ function NavBar() {
           className={`shadow-md nav-transition ${
             scrolled
               ? "bg-white text-gray-900"
-              : "bg-gradient-to-r from-purple-700 via-blue-700 to-blue-800 text-white"
+              : "bg-gradient-to-r from-purple-900 via-blue-900 to-purple-900 text-white"
           }`}
         >
           <div className="container mx-auto flex justify-between items-center px-4 py-3 lg:py-4 pl-12 pr-10">
@@ -131,6 +142,7 @@ function NavBar() {
                 { name: "Team", path: "/team-member" },
                 { name: "Blogs", path: "/blogs" },
                 { name: "Project", path: "/project" },
+                { name: "Contact Us", path: "/contact-us" },
               ].map((item, index) => (
                 <li key={index}>
                   <NavLink
@@ -164,7 +176,7 @@ function NavBar() {
                       : "text-blue-700 hover:text-blue-500 "
                   }`}
                 >
-                  Contact Us
+                  Get Quote
                 </NavLink>
               </div>
 
@@ -231,15 +243,17 @@ function NavBar() {
 
               <div className="absolute bottom-0 left-0 right-0 p-6 border-t border-white border-opacity-10">
                 <div className="flex justify-center space-x-6">
-                  {[FiFacebook, FiTwitter, FiInstagram, FiLinkedin].map((Icon, i) => (
-                    <a
-                      key={i}
-                      href="#"
-                      className="text-white hover:text-blue-300 transition-all hover:scale-110"
-                    >
-                      <Icon className="w-5 h-5" />
-                    </a>
-                  ))}
+                 {socialLinks.map(({ icon: Icon, href }, i) => (
+        <a
+          key={i}
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-white hover:text-blue-300 transition-all hover:scale-110"
+        >
+          <Icon className="w-5 h-5" />
+        </a>
+      ))}
                 </div>
               </div>
             </div>

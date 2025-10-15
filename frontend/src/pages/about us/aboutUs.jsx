@@ -25,7 +25,7 @@ const AboutUs = () => {
     },
     {
       icon: <Users className="w-12 h-12 text-indigo-500" />,
-      number: "20+",
+      number: "10+",
       label: "Team members",
       subtitle: "Expert professionals"
     },
@@ -37,7 +37,7 @@ const AboutUs = () => {
     },
     {
       icon: <Target className="w-12 h-12 text-cyan-500" />,
-      number: "100+",
+      number: "20+",
       label: "Projects",
       subtitle: "Successfully delivered"
     }
@@ -84,9 +84,11 @@ const AboutUs = () => {
         </span>
       </h1>
 
-      <p className="text-xl text-gray-600 max-w-2xl leading-relaxed mb-8">
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-      </p>
+<p className="text-xl text-gray-600 max-w-2xl leading-relaxed mb-8">
+  We create meaningful solutions that empower people and make technology more human and impactful.
+</p>
+
+
 {/* Stats Boxes */}
 <div className="grid border w-[300%]  grid-cols-1 sm:grid-cols-2 gap-4 max-w-md">
   <div className="flex items-center gap-4 p-4 bg-white rounded-xl shadow hover:shadow-lg transition w-[330px] h-[120px]">
@@ -94,7 +96,7 @@ const AboutUs = () => {
       <img src={Image1} alt="Years Icon" className="w-24 h-16" />
     </div>
     <div>
-      <p className="font-bold text-lg text-black">10 Years</p>
+      <p className="font-bold text-lg text-black">4 Years</p>
       <p className="text-gray-500 text-sm">On the market</p>
     </div>
   </div>
@@ -104,7 +106,7 @@ const AboutUs = () => {
       <img src={Image2} alt="Team Icon" className="w-24 h-16" />
     </div>
     <div>
-      <p className="font-bold text-lg text-black">45+</p>
+      <p className="font-bold text-lg text-black">10+</p>
       <p className="text-gray-500 text-sm">Team members</p>
     </div>
   </div>
@@ -114,7 +116,7 @@ const AboutUs = () => {
       <img src={Image3} alt="Satisfaction Icon" className="w-24 h-16" />
     </div>
     <div>
-      <p className="font-bold text-lg text-black">100%</p>
+      <p className="font-bold text-lg text-black">80%</p>
       <p className="text-gray-500 text-sm">Satisfaction rate</p>
     </div>
   </div>
@@ -124,7 +126,7 @@ const AboutUs = () => {
       <img src={Image4} alt="Scientist Icon" className="w-24 h-16" />
     </div>
     <div>
-      <p className="font-bold text-lg text-black">80%</p>
+      <p className="font-bold text-lg text-black">70%</p>
       <p className="text-gray-500 text-sm">Senior scientist</p>
     </div>
   </div>

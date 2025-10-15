@@ -265,7 +265,7 @@ const ReportDashboard = () => {
         {/* Header */}
         <div className="mb-8 flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Report Dashboard</h1>
+            <h1 className="text-md font-bold text-gray-900 mb-2">Report Dashboard</h1>
             <p className="text-gray-600">Manage and view all system reports</p>
           </div>
           <button
@@ -305,7 +305,7 @@ const ReportDashboard = () => {
                   </div>
                   <div className="flex-1">
                     <p className="text-gray-600 text-sm font-medium mb-2">Total Reports</p>
-                    <p className="text-3xl font-bold text-gray-900">{getStats.totalReports}</p>
+                    <p className="text-md font-bold text-gray-900">{getStats.totalReports}</p>
                   </div>
                 </div>
               </div>
@@ -316,7 +316,7 @@ const ReportDashboard = () => {
                   </div>
                   <div className="flex-1">
                     <p className="text-gray-600 text-sm font-medium mb-2">Today's Reports</p>
-                    <p className="text-3xl font-bold text-gray-900">{getStats.todayReports}</p>
+                    <p className="text-md font-bold text-gray-900">{getStats.todayReports}</p>
                   </div>
                 </div>
               </div>
@@ -327,7 +327,7 @@ const ReportDashboard = () => {
                   </div>
                   <div className="flex-1">
                     <p className="text-gray-600 text-sm font-medium mb-2">This Week</p>
-                    <p className="text-3xl font-bold text-gray-900">{getStats.weekReports}</p>
+                    <p className="text-md font-bold text-gray-900">{getStats.weekReports}</p>
                   </div>
                 </div>
               </div>
@@ -338,7 +338,7 @@ const ReportDashboard = () => {
                   </div>
                   <div className="flex-1">
                     <p className="text-gray-600 text-sm font-medium mb-2">This Month</p>
-                    <p className="text-3xl font-bold text-gray-900">{getStats.monthReports}</p>
+                    <p className="text-md font-bold text-gray-900">{getStats.monthReports}</p>
                   </div>
                 </div>
               </div>
@@ -349,7 +349,7 @@ const ReportDashboard = () => {
                   </div>
                   <div className="flex-1">
                     <p className="text-gray-600 text-sm font-medium mb-2">Total Admins</p>
-                    <p className="text-3xl font-bold text-gray-900">{getStats.uniqueAdmins}</p>
+                    <p className="text-md font-bold text-gray-900">{getStats.uniqueAdmins}</p>
                   </div>
                 </div>
               </div>

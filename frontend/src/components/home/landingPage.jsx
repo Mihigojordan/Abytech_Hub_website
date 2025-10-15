@@ -78,7 +78,7 @@ export default function HeroSection() {
   }, []);
 
   return (
-    <div className="w-full min-h-screen relative overflow-hidden">
+    <div className="w-full min-h-screen relative overflow-hidden py-10">
       {/* Animated Background Gradient */}
       <div className="absolute inset-0 bg-gradient-to-br from-purple-900 via-blue-900 to-purple-800 animate-gradientShift"></div>
       
@@ -109,7 +109,7 @@ export default function HeroSection() {
           const IconComponent = slide.icon;
           return (
             <SwiperSlide key={index}>
-              <div className="flex items-center justify-center h-full px-4 md:px-16 ">
+              <div className="flex items-center justify-center h-full px-4 md:px-8 py- ">
                 <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 items-center">
                   {/* Left Section */}
                   <div className="flex flex-col justify-center space-y-6 overflow-hidden relative">
@@ -162,21 +162,7 @@ export default function HeroSection() {
                       </Link>
                     </div>
 
-                    {/* Stats Counter Animation */}
-                    <div className="hero-animate flex gap-6 pl-6 opacity-0 animate-fadeIn" style={{ animationDelay: "1s" }}>
-                      <div className="flex flex-col">
-                        <span className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-500">3+</span>
-                        <span className="text-sm text-blue-200">Years Active</span>
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-500">50+</span>
-                        <span className="text-sm text-blue-200">Projects Done</span>
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-500">100+</span>
-                        <span className="text-sm text-blue-200">Students Trained</span>
-                      </div>
-                    </div>
+     
                   </div>
 
                   {/* Right Section */}

@@ -93,20 +93,20 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onToggle, }) => {
     return [
       {
         id: "dashboard",
-        label: "Dashboard",
+        label: "Dashboard Summary",
         icon: TrendingUp,
         path: basePath,
       },
       {
-        id: "expense",
-        label: "Expense",
+        id: "expense ",
+        label: "Expense Management",
         icon: ShoppingBag,
         path: `${basePath}/expense`,
         
       },
       {
         id: "report",
-        label: "Report",
+        label: "Report Management ",
         icon: File,
         path: `${basePath}/report`,
         
@@ -293,7 +293,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onToggle, }) => {
             
             <div>
               <h2 className="font-bold text-base text-primary-800">
-                AbyTech
+                ABYTECH-HUB  LTD 
               </h2>
               <p className="text-xs text-primary-500">{portalTitle}</p>
             </div>

@@ -11,6 +11,10 @@ import {
   Github,
 } from "lucide-react";
 import Header from "../components/header";
+import Image1 from '../assets/mihi.jpg'
+import Image2 from '../assets/honore.jpg'
+import Image3 from '../assets/serge.jpg'
+import Image4 from '../assets/sadiki.jpg'
 
 const TeamMembersPage = () => {
   useEffect(() => {
@@ -25,9 +29,9 @@ const TeamMembersPage = () => {
     {
       id: 1,
       name: "Sadiki Rukara",
-      position: "C.E.O && FOUNDER",
+      position: "C.E.O & FOUNDER",
       department: "Development",
-      image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop",
+      image: Image4,
       bio: "With 8+ years of expertise in full-stack development, leading our development initiatives and mentoring junior developers.",
       email: "rukara2095@gmail.com",
       phone: "+250 791 812 389",
@@ -46,7 +50,7 @@ const TeamMembersPage = () => {
       name: "Mihigo Prince Jordan",
       position: "Senior Full Stack Software Developer",
       department: "Development",
-      image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=400&fit=crop",
+      image: Image1,
       bio: "With 8+ years of expertise in full-stack development, leading our development initiatives and mentoring junior developers.",
       email: "mihigojordan8@gmail.com",
       phone: "+250 791 812 389",
@@ -63,9 +67,9 @@ const TeamMembersPage = () => {
     {
       id: 3,
       name: "Ishimwe Serge",
-      position: "UI/UX Designer and Frontend Developer",
+      position: "UI/UX Designer & Frontend Developer",
       department: "Design",
-      image: "https://images.unsplash.com/photo-1519345182560-3f2917c472ef?w=400&h=400&fit=crop",
+      image:Image3,
       bio: "Creative UI/UX designer with 6+ years of experience crafting user-centered digital experiences.",
       email: "ishiweserge07@gmail.com",
       phone: "+250 796 130 187",
@@ -82,9 +86,9 @@ const TeamMembersPage = () => {
     {
       id: 4,
       name: "Hirwa Mihigo Honore",
-      position: "DevOps && Backend Developer",
+      position: "DevOps & Backend Developer",
       department: "Backend",
-      image: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&h=400&fit=crop",
+      image:Image2,
       bio: "Skilled DevOps engineer ensuring applications run smoothly and scale efficiently across multiple environments.",
       email: "mihigohonore@gmail.com",
       phone: "+1 (555) 345-6789",
@@ -132,9 +136,7 @@ const TeamMembersPage = () => {
         <p className="text-purple-600 font-semibold text-sm mb-1">
           {member.position}
         </p>
-        <div className="inline-block px-3 py-1 bg-gradient-to-r from-blue-100 to-purple-100 rounded-full">
-          <span className="text-xs font-medium text-blue-700">{member.department}</span>
-        </div>
+     
       </div>
 
       {/* Contact Info */}
@@ -154,18 +156,7 @@ const TeamMembersPage = () => {
         </div>
       </div>
 
-      {/* Social Links */}
-      <div className="relative flex justify-center gap-3 pt-4 border-t border-purple-100">
-        <a href="#" className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center hover:scale-110 hover:rotate-6 transition-all duration-300 shadow-md">
-          <Linkedin className="w-4 h-4 text-white" />
-        </a>
-        <a href="#" className="w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full flex items-center justify-center hover:scale-110 hover:rotate-6 transition-all duration-300 shadow-md">
-          <Twitter className="w-4 h-4 text-white" />
-        </a>
-        <a href="#" className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-full flex items-center justify-center hover:scale-110 hover:rotate-6 transition-all duration-300 shadow-md">
-          <Github className="w-4 h-4 text-white" />
-        </a>
-      </div>
+   
 
       {/* Bottom Decorative Element */}
       <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-blue-200/30 via-purple-200/20 to-transparent rounded-tr-full"></div>
