@@ -1,4 +1,4 @@
-name: Publish Website to cPanel
+name: Publish Frontend & Backend to cPanel
 
 on:
   push:
@@ -7,32 +7,54 @@ on:
 
 jobs:
   deploy:
-    name: Deploy Frontend to cPanel
+    name: Deploy Frontend and Backend to cPanel
     runs-on: ubuntu-latest
 
     steps:
     - name: Checkout Repository
       uses: actions/checkout@v3  # Clone your repo
 
+    # -----------------------------
+    # FRONTEND BUILD AND DEPLOY
+    # -----------------------------
     - name: Set up Node.js
       uses: actions/setup-node@v3
       with:
-        node-version: '20'  # Use Node.js 20
+        node-version: '20'
 
     - name: Install Dependencies & Build Frontend
+      working-directory: ./frontend
       run: |
-        npm install  # Install frontend dependencies
-        npm run build  # Build frontend (React, Vite, etc.)
+        npm install
+        npm run build
 
     - name: Deploy Frontend to cPanel
       uses: SamKirkland/FTP-Deploy-Action@4.3.0
       with:
-        server: ftp.abytechhub.com 
+        server: ftp.abytechhub.com
         username: abyridellc@abytechhub.com
         password: ABYRIDEllc12@
         protocol: ftps
-        local-dir: dist/  # ✅ Ensure this matches your build folder
-        server-dir: /  # ✅ Deploy directly to public_html
+        local-dir: ./frontend/dist/   # Path to frontend build output
+        server-dir: /public_html/     # Path on cPanel for frontend
+        exclude: |
+          **/.git*
+          **/node_modules/**
+          **/.github/**
+          **/README.md
+
+    # -----------------------------
+    # BACKEND DEPLOY (no build)
+    # -----------------------------
+    - name: Deploy Backend to cPanel
+      uses: SamKirkland/FTP-Deploy-Action@4.3.0
+      with:
+        server: ftp.abytechhub.com
+        username: abyridellc@abytechhub.com
+        password: ABYRIDEllc12@
+        protocol: ftps
+        local-dir: ./backend/         # Upload backend folder as-is
+        server-dir: /backend/         # Path on cPanel for backend
         exclude: |
           **/.git*
           **/node_modules/**
