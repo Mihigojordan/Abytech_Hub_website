@@ -4,7 +4,7 @@ import 'aos/dist/aos.css';
 import { Eye, EyeOff, Users, Building2, Shield, Zap } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import useAdminAuth from '../../../context/AdminAuthContext';
-import Logo from '../../../assets/tran.png';
+import Logo from '../../../assets/trans.png';
 
 const AdminLogin = () => {
   const { login, loginWithGoogle, isLoading: authLoading, isAuthenticated } = useAdminAuth();
@@ -128,7 +128,7 @@ const AdminLogin = () => {
   };
 
   return (
-    <div className="min-h-screen flex bg-white">
+    <div className=" flex bg-white">
       {/* Left side - Brand with Background Image */}
       <div 
         className="w-5/12 flex items-center justify-center p-8 relative overflow-hidden"
@@ -139,10 +139,10 @@ const AdminLogin = () => {
         }}
       >
         {/* Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-br from-[#0c62c3]/95 via-[#0c62c3]/90 to-[#578bc3]/85"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-900 via-blue-900 to-purple-900"></div>
         
         {/* Animated circles */}
-        <div className="absolute top-20 right-20 w-64 h-64 bg-white/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute top-20 right-20 w-64 h-32 bg-white/10 rounded-full blur-3xl animate-pulse"></div>
         <div className="absolute bottom-20 left-20 w-80 h-80 bg-white/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
         
         <div className="max-w-lg text-white relative z-10">
@@ -191,7 +191,7 @@ const AdminLogin = () => {
           {/* Header */}
           <div className="text-center mb-8">
             <div className="flex items-center justify-center mb-4">
-              <img src={Logo} alt="Fine Fish Logo" className="h-32 -mb-10" />
+              <img src={Logo} alt="Fine Fish Logo" className=" h-16" />
             </div>
             <h2 className="text-3xl font-bold text-gray-800 mt-4">Welcome Back</h2>
             <p className="text-gray-500 mt-2">Sign in to access your admin dashboard</p>
@@ -271,22 +271,13 @@ const AdminLogin = () => {
                 )}
               </div>
 
-              {/* Forgot Password */}
-              <div className="flex justify-end">
-                <button
-                  type="button"
-                  className="text-sm text-[#0c62c3] hover:text-[#084c98] font-semibold transition-colors"
-                  onClick={() => console.log('Forgot password clicked')}
-                >
-                  Forgot Password?
-                </button>
-              </div>
+            
 
               {/* Submit Button */}
               <button
                 type="submit"
                 disabled={isLoading || authLoading || !isFormValid()}
-                className="w-full bg-gradient-to-r from-[#0c62c3] to-[#578bc3] text-white py-4 px-4 rounded-xl font-semibold hover:from-[#0a56ae] hover:to-[#0c62c3] focus:outline-none focus:ring-4 focus:ring-[#adc7e9] transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                className="w-full bg-gradient-to-br from-purple-900 via-blue-900 to-purple-900 text-white py-4 px-4 rounded-xl font-semibold hover:from-[#0a56ae] hover:to-[#0c62c3] focus:outline-none focus:ring-4 focus:ring-[#adc7e9] transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
               >
                 {isLoading || authLoading ? (
                   <div className="flex items-center justify-center">
@@ -299,7 +290,7 @@ const AdminLogin = () => {
               </button>
 
               {/* Divider */}
-              <div className="relative my-8">
+              <div className="relative my-1">
                 <div className="absolute inset-0 flex items-center">
                   <div className="w-full border-t border-gray-200"></div>
                 </div>
@@ -350,12 +341,6 @@ const AdminLogin = () => {
             </button>
           </div>
 
-          {/* Footer */}
-          <div className="text-center mt-8">
-            <p className="text-sm text-gray-500">
-              Copyright © 2024 - <span className="font-semibold text-[#0c62c3]">Fine Fish</span>
-            </p>
-          </div>
         </div>
       </div>
     </div>

@@ -39,11 +39,7 @@ const BlogPage = () => {
           ))}
         </div>
       </div>
-<div className="div">
-  
-      <Testimonials />
-</div>
-      <SubscribeSection />
+
     </div>
   );
 };
