@@ -36,7 +36,7 @@ jobs:
         password: ABYRIDEllc12@
         protocol: ftps
         local-dir: ./frontend/dist/   # Path to frontend build output
-        server-dir: /     # Path on cPanel for frontend
+        server-dir: /frontend     # Path on cPanel for frontend
         exclude: |
           **/.git*
           **/node_modules/**
