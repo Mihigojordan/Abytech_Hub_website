@@ -75,11 +75,11 @@ function NavBar() {
           <div className="container mx-auto flex justify-between items-center text-sm">
             <div className="flex items-center space-x-6">
               <a
-                href="tel:+250788888888"
+                href="tel:+250792888980"
                 className="flex items-center space-x-2 hover:text-blue-300 transition-colors"
               >
                 <FiPhone className="w-4 h-4" />
-                <span>+250 791813289</span>
+                <span>+250 792888980</span>
               </a>
               <p>|</p>
               <a

@@ -30,43 +30,41 @@ const ContactUs = () => {
       [name]: value,
     }));
   };
+const sendEmail = async (e) => {
+  e.preventDefault();
+  setLoading(true);
 
-  const sendEmail = (e) => {
-    e.preventDefault();
-    setLoading(true);
+  try {
+    const result = await emailjs.sendForm(
+      import.meta.env.VITE_EMAILJS_SERVICE_ID,
+      import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
+      form.current,
+      import.meta.env.VITE_EMAILJS_PUBLIC_KEY
+    );
+    console.log("Email sent:", result.text);
+    alert("Message sent successfully! ✅");
 
-    emailjs
-      .sendForm(
-        "service_kwzng64",
-        "template_bz2mb97",
-        form.current,
-        "GbB192kAFStZjdFfT"
-      )
-      .then(
-        (result) => {
-          console.log("Success:", result.text);
-          alert("Message sent successfully!");
-          setFormData({
-            from_name: "",
-            user_email: "",
-            subject: "",
-            message: "",
-          });
-        },
-        (error) => {
-          console.log("Error:", error.text);
-          alert("Failed to send message.");
-        }
-      )
-      .finally(() => setLoading(false));
-  };
+    // Reset form
+    setFormData({
+      from_name: "",
+      user_email: "",
+      subject: "",
+      message: "",
+    });
+  } catch (error) {
+    console.error("Email error:", error.text || error);
+    alert("Failed to send message. ❌");
+  } finally {
+    setLoading(false);
+  }
+};
 
   const contactInfo = [
     {
       icon: <Phone className="w-6 h-6" />,
       title: "Phone",
-      detail: "+250 791813289",
-      link: "tel:+250791813289",
+      detail: "+250 792888980",
+      link: "tel:+250792888980",
       color: "from-blue-500 to-blue-600"
     },
     {
@@ -200,6 +198,10 @@ const ContactUs = () => {
                     className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-primary-500 focus:bg-white transition duration-200"
                   />
                 </div>
+
+
+                <input name="subject" hidden />
+                <input name="year" value={new Date().getFullYear()} hidden />
 
                 {/* Email Field */}
                 <div className="flex flex-col">
