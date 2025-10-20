@@ -20,6 +20,7 @@ import AdminProfilePage from "./pages/dashboard/AdminProfile";
 import UnlockScreen from "./pages/auth/admin/UnlockScreen";
 import ExpenseDashboard from "./pages/dashboard/ExpenseDashboard";
 import ReportDashboard from "./pages/dashboard/ReportManagement";
+import AbyTechLocations from "./pages/Location";
 
 
 
@@ -49,6 +50,7 @@ const router = createBrowserRouter([
       { path: '/service/:id', element: <SuspenseWrapper><ServiceSingle /> </SuspenseWrapper> },
       { path: '/project', element: <SuspenseWrapper><ProjectsPage /> </SuspenseWrapper> },
       { path: '/team-member', element: <SuspenseWrapper><TeamMember /> </SuspenseWrapper> },
+      { path: '/location', element: <SuspenseWrapper><AbyTechLocations /> </SuspenseWrapper> },
     ]
   },
   {
