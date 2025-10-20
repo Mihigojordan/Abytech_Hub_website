@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-vars */
 import { useState, useEffect } from "react";
-import { NavLink } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 import {
   FiMenu,
   FiX,
@@ -93,10 +93,12 @@ function NavBar() {
             </div>
 
             <div className="flex items-center space-x-4">
-                <div className="flex items-center space-x-2">
+              <Link to="/location" className="flex items-center space-x-2 hover:text-blue-300 transition-colors">
+                <div  className="flex items-center space-x-2">
                 <FiMapPin className="w-4 h-4" />
-                <span>Kigali, Rwanda</span>
+                <span>Location</span>
               </div>
+              </Link>
               <p>|</p>
                     {socialLinks.map(({ icon: Icon, href }, i) => (
         <a
