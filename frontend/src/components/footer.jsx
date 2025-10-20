@@ -71,7 +71,7 @@ const FooterContent = () => {
           </a>
 
           <a 
-            href="https://wa.me/+250791813289" 
+            href="https://wa.me/+250792888980" 
             target="_blank" 
             rel="noopener noreferrer"
             className="w-10 h-10 flex items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-purple-500 text-white hover:scale-110 hover:shadow-lg transition-all duration-300"
