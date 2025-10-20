@@ -45,7 +45,7 @@ const LocationsMap = () => {
     },
     {
       id: 5,
-      city: 'Kigali (Nyarugenge)',
+      city: 'Kigali',
       country: 'Rwanda',
       region: 'Africa',
       lat: -1.9536,
