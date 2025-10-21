@@ -96,7 +96,7 @@ function NavBar() {
               <Link to="/location" className="flex items-center space-x-2 hover:text-blue-300 transition-colors">
                 <div className="flex items-center space-x-2">
                   <FiMapPin className="w-4 h-4" />
-                  <span>Location</span>
+                  <span>Locations</span>
                 </div>
               </Link>
               <p>|</p>
