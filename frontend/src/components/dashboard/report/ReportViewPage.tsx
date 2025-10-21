@@ -19,6 +19,7 @@ import {
 import Quill from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css";
 import reportService from "../../../services/reportService";
+import useAdminAuth from "../../../context/AdminAuthContext";
 
 interface Report {
   id: string;
@@ -42,6 +43,7 @@ interface OperationStatus {
 
 const ReportViewPage = () => {
   const { id: reportId } = useParams<{ id?: string }>();
+  const {user} =useAdminAuth();   
   const navigate = useNavigate();
 
   const [reports, setReports] = useState<Report[]>([]);
@@ -118,7 +120,7 @@ const ReportViewPage = () => {
           navigate(`${url}${remainingReports[0].id}`);
         } else {
           setSelectedReport(null);
-          navigate(url);
+          navigate('/admin/dashboard/report');
         }
       }
 
@@ -456,14 +458,16 @@ const ReportViewPage = () => {
                   <Edit className="w-4 h-4" />
                   <span>Edit</span>
                 </button>
-                {/* <button
+
+
+{      user?.id === selectedReport.adminId &&          <button
                   onClick={() => setDeleteConfirm(selectedReport)}
                   disabled={operationLoading}
                   className="flex items-center space-x-2 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Trash2 className="w-4 h-4" />
                   <span>Delete</span>
-                </button> */}
+                </button>}
           
             </div>
           </div>
