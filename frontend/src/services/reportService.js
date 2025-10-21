@@ -1,24 +1,10 @@
 import api from '../api/api'; // your configured Axios instance with JWT support
 
 class ReportService {
-  // ✅ Create report (with optional file upload)
-  async createReport(reportData, file) {
+  // ✅ Create report (adminId comes from backend token)
+  async createReport(reportData) {
     try {
-      const formData = new FormData();
-      Object.entries(reportData).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) {
-          formData.append(key, value);
-        }
-      });
-
-      // If a file is attached, include it
-      if (file) {
-        formData.append('reportUrl', file);
-      }
-
-      const response = await api.post('/report', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      const response = await api.post('/report', reportData);
       return response.data;
     } catch (error) {
       const msg =
@@ -51,23 +37,10 @@ class ReportService {
     }
   }
 
-  // ✅ Update report (supports optional new file upload)
-  async updateReport(id, updatedData, file) {
+  // ✅ Update report (no file upload)
+  async updateReport(id, updatedData) {
     try {
-      const formData = new FormData();
-      Object.entries(updatedData).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) {
-          formData.append(key, value);
-        }
-      });
-
-      if (file) {
-        formData.append('reportUrl', file);
-      }
-
-      const response = await api.put(`/report/${id}`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      const response = await api.put(`/report/${id}`, updatedData);
       return response.data;
     } catch (error) {
       const msg =
