@@ -59,6 +59,7 @@ const ReportViewPage = () => {
   const [deleteConfirm, setDeleteConfirm] = useState<Report | null>(null);
 
   const url ="/admin/dashboard/report/view/";
+  const root_url ="/admin/dashboard/report/";
 
   // Fetch reports
   useEffect(() => {
@@ -288,7 +289,7 @@ const ReportViewPage = () => {
           <h2 className="text-xl font-semibold text-gray-900 mb-2">Error Loading Reports</h2>
           <p className="text-gray-600 mb-4">{error}</p>
           <button
-            onClick={() => navigate(url)}
+            onClick={() => navigate(root_url)}
             className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
           >
             Back to Reports
@@ -308,7 +309,7 @@ const ReportViewPage = () => {
           <h2 className="text-xl font-semibold text-gray-900 mb-2">No Reports Found</h2>
           <p className="text-gray-600 mb-4">There are no reports available.</p>
           <button
-            onClick={() => navigate(url)}
+            onClick={() => navigate(root_url)}
             className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
           >
             Back to Reports
@@ -323,7 +324,7 @@ const ReportViewPage = () => {
       <div className="bg-white border-b">
         <div className="mx-auto px-4 sm:px-6 py-4">
           <button
-            onClick={() => navigate(url)}
+            onClick={() => navigate(root_url)}
             className="flex items-center text-gray-600 hover:text-gray-900 transition-colors"
           >
             <ArrowLeft className="w-5 h-5 mr-1" />
