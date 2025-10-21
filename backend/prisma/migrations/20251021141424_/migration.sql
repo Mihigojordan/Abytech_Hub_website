@@ -6,5 +6,5 @@
 
 */
 -- AlterTable
-ALTER TABLE `report` DROP COLUMN `reportUrl`,
+ALTER TABLE `Report` DROP COLUMN `reportUrl`,
     ADD COLUMN `content` JSON NOT NULL;
