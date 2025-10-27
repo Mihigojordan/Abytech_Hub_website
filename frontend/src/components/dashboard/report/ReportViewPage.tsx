@@ -15,16 +15,19 @@ import {
   Trash2,
   Filter,
   Edit,
+  Download,
 } from "lucide-react";
 import Quill from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css";
 import reportService from "../../../services/reportService";
 import useAdminAuth from "../../../context/AdminAuthContext";
+import { API_URL } from '../../../api/api';
 
 interface Report {
   id: string;
   title: string;
-  content: any;
+  content?: any;
+  reportUrl?: string;
   createdAt: string;
   adminId: string;
   admin?: {
@@ -43,9 +46,8 @@ interface OperationStatus {
 
 const ReportViewPage = () => {
   const { id: reportId } = useParams<{ id?: string }>();
-  const {user} =useAdminAuth();   
+  const { user } = useAdminAuth();
   const navigate = useNavigate();
-
   const [reports, setReports] = useState<Report[]>([]);
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -57,9 +59,8 @@ const ReportViewPage = () => {
   const [operationStatus, setOperationStatus] = useState<OperationStatus | null>(null);
   const [operationLoading, setOperationLoading] = useState<boolean>(false);
   const [deleteConfirm, setDeleteConfirm] = useState<Report | null>(null);
-
-  const url ="/admin/dashboard/report/view/";
-  const root_url ="/admin/dashboard/report/";
+  const url = "/admin/dashboard/report/view/";
+  const root_url = "/admin/dashboard/report/";
 
   // Fetch reports
   useEffect(() => {
@@ -67,10 +68,8 @@ const ReportViewPage = () => {
       try {
         setLoading(true);
         setError(null);
-
         const reportsData = await reportService.getAllReports();
         if (reportsData && reportsData.length > 0) {
-          // Sort by createdAt descending (most recent first)
           const sortedReports = reportsData.sort(
             (a: Report, b: Report) =>
               new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
@@ -87,7 +86,6 @@ const ReportViewPage = () => {
         setLoading(false);
       }
     };
-
     loadReports();
   }, []);
 
@@ -109,11 +107,9 @@ const ReportViewPage = () => {
     try {
       setOperationLoading(true);
       setDeleteConfirm(null);
-
       await reportService.deleteReport(report.id);
-
       setReports((prev) => prev.filter((r) => r.id !== report.id));
-      
+
       if (selectedReport?.id === report.id) {
         const remainingReports = reports.filter((r) => r.id !== report.id);
         if (remainingReports.length > 0) {
@@ -121,15 +117,32 @@ const ReportViewPage = () => {
           navigate(`${url}${remainingReports[0].id}`);
         } else {
           setSelectedReport(null);
-          navigate('/admin/dashboard/report');
+          navigate(root_url);
         }
       }
-
       showOperationStatus("success", `Report "${report.title}" has been deleted successfully!`);
     } catch (err: any) {
       showOperationStatus("error", err.message || "Failed to delete report");
     } finally {
       setOperationLoading(false);
+    }
+  };
+
+  const handleDownloadReport = (report: Report) => {
+    if (report.reportUrl) {
+      try {
+        const fullUrl = `${API_URL}${report.reportUrl}`;
+        const link = document.createElement('a');
+        link.href = fullUrl;
+        link.download = report.title || 'report';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } catch (err) {
+        showOperationStatus("error", "Failed to download report file");
+      }
+    } else {
+      showOperationStatus("error", "No file available for download");
     }
   };
 
@@ -159,7 +172,6 @@ const ReportViewPage = () => {
     const diffInMs = now.getTime() - date.getTime();
     const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
     const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
-
     if (diffInHours < 1) return "Just now";
     if (diffInHours < 24) return `${diffInHours}h ago`;
     if (diffInDays === 1) return "Yesterday";
@@ -169,7 +181,6 @@ const ReportViewPage = () => {
 
   const isDateInRange = (dateString: string, range: FilterType): boolean => {
     if (range === "all") return true;
-
     const date = new Date(dateString);
     const now = new Date();
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -179,7 +190,6 @@ const ReportViewPage = () => {
     weekStart.setDate(weekStart.getDate() - 7);
     const monthStart = new Date(todayStart);
     monthStart.setMonth(monthStart.getMonth() - 1);
-
     switch (range) {
       case "today":
         return date >= todayStart;
@@ -216,24 +226,17 @@ const ReportViewPage = () => {
     return plainText.substring(0, maxLength) + "...";
   };
 
-  // Filtered reports for search and date range
   const filteredReports = useMemo(() => {
     let filtered = reports;
-
-    // Apply date filter
     filtered = filtered.filter((report) => isDateInRange(report.createdAt, filterType));
-
-    // Apply search filter
     if (searchTerm.trim()) {
       filtered = filtered.filter((report) =>
         report.title?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
-
     return filtered;
   }, [reports, searchTerm, filterType]);
 
-  // Select report based on URL parameter
   useEffect(() => {
     if (reports.length > 0) {
       if (reportId) {
@@ -258,7 +261,6 @@ const ReportViewPage = () => {
     }
   }, [reports, reportId, navigate, filteredReports, sidebarItemsPerPage, loading, url]);
 
-  // Sidebar pagination calculations
   const sidebarTotalPages = Math.ceil(filteredReports.length / sidebarItemsPerPage);
   const sidebarStartIndex = (sidebarCurrentPage - 1) * sidebarItemsPerPage;
   const sidebarEndIndex = sidebarStartIndex + sidebarItemsPerPage;
@@ -332,7 +334,6 @@ const ReportViewPage = () => {
           </button>
         </div>
       </div>
-
       <div className="grid grid-cols-12 gap-6 mt-6">
         {/* Reports List Sidebar */}
         <div className="col-span-3 sticky top-0">
@@ -340,8 +341,6 @@ const ReportViewPage = () => {
             <div className="p-4 border-b border-gray-300">
               <div className="flex flex-col space-y-4">
                 <h2 className="text-lg font-semibold text-gray-900">Reports</h2>
-                
-                {/* Search */}
                 <div className="relative">
                   <input
                     type="text"
@@ -352,8 +351,6 @@ const ReportViewPage = () => {
                   />
                   <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
                 </div>
-
-                {/* Filter Buttons */}
                 <div className="flex items-center space-x-1">
                   <Filter className="w-4 h-4 text-gray-500" />
                   <div className="flex flex-wrap gap-2">
@@ -375,7 +372,6 @@ const ReportViewPage = () => {
               </div>
               <p className="text-sm text-gray-600 mt-2">{filteredReports.length} reports</p>
             </div>
-            
             <div className="divide-y max-h-[calc(100vh-400px)] overflow-y-auto">
               {currentSidebarReports.map((report) => (
                 <div
@@ -389,10 +385,12 @@ const ReportViewPage = () => {
                     <div className="flex-1 min-w-0">
                       <h3 className="text-sm font-medium text-gray-900 truncate">{report.title}</h3>
                       <p className="text-xs text-gray-600 mt-1 line-clamp-2">
-                        {truncateText(
-                          typeof report.content === "string" ? report.content : JSON.stringify(report.content),
-                          80
-                        )}
+                        {report.reportUrl
+                          ? `File: ${report.title}`
+                          : truncateText(
+                              typeof report.content === "string" ? report.content : JSON.stringify(report.content || ''),
+                              80
+                            )}
                       </p>
                       <p className="text-xs text-gray-500 mt-2">{getRelativeTime(report.createdAt)}</p>
                     </div>
@@ -401,8 +399,6 @@ const ReportViewPage = () => {
                 </div>
               ))}
             </div>
-            
-            {/* Sidebar Pagination */}
             {sidebarTotalPages > 1 && (
               <div className="p-4 border-t border-gray-400 flex justify-center space-x-2">
                 <button
@@ -426,10 +422,8 @@ const ReportViewPage = () => {
             )}
           </div>
         </div>
-
         {/* Main Report Detail View */}
         <div className="col-span-9 space-y-6">
-          {/* Header */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-300 p-6">
             <div className="flex items-start justify-between">
               <div className="flex items-center space-x-4">
@@ -450,7 +444,7 @@ const ReportViewPage = () => {
                   </div>
                 </div>
               </div>
-              
+              <div className="flex flex-wrap gap-4 items-center">
                 <button
                   onClick={() => navigate('/admin/dashboard/report/edit/' + selectedReport.id)}
                   disabled={operationLoading}
@@ -459,32 +453,60 @@ const ReportViewPage = () => {
                   <Edit className="w-4 h-4" />
                   <span>Edit</span>
                 </button>
-
-
-{      user?.id === selectedReport.adminId &&          <button
-                  onClick={() => setDeleteConfirm(selectedReport)}
-                  disabled={operationLoading}
-                  className="flex items-center space-x-2 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <Trash2 className="w-4 h-4" />
-                  <span>Delete</span>
-                </button>}
-          
+                {user?.id === selectedReport.adminId && (
+                  <button
+                    onClick={() => setDeleteConfirm(selectedReport)}
+                    disabled={operationLoading}
+                    className="flex items-center space-x-2 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    <span>Delete</span>
+                  </button>
+                )}
+                {selectedReport.reportUrl && (
+                  <button
+                    onClick={() => handleDownloadReport(selectedReport)}
+                    disabled={operationLoading}
+                    className="flex items-center space-x-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Download className="w-4 h-4" />
+                    <span>Download</span>
+                  </button>
+                )}
+              </div>
             </div>
           </div>
-
-          {/* Report Content */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-300 p-6">
             <h3 className="text-lg font-medium text-gray-900 mb-4">Report Content</h3>
             <div className="swal-preview-container">
-              
-            <div className= " ql-editor  text-left text-gray-800 " dangerouslySetInnerHTML={{ __html: typeof selectedReport.content === "string" ? selectedReport.content : JSON.stringify(selectedReport.content) }}>
-            </div>
-              
+              {selectedReport.reportUrl ? (
+                <div className="text-left">
+                  <p className="text-gray-700 mb-4">
+                    This report is a file. You can download it using the button above or view it below.
+                  </p>
+                  <a
+                    href={`${API_URL}${selectedReport.reportUrl}?inline=true`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline"
+                  >
+                    View file in new tab
+                  </a>
+                </div>
+              ) : selectedReport.content ? (
+                <div
+                  className="ql-editor text-left text-gray-800"
+                  dangerouslySetInnerHTML={{
+                    __html: typeof selectedReport.content === "string"
+                      ? selectedReport.content
+                      : JSON.stringify(selectedReport.content)
+                  }}
+                />
+              ) : (
+                <p className="text-gray-600">No content or file available for this report.</p>
+              )}
             </div>
           </div>
-
-          {/* Metadata */}
           <div className="bg-white rounded-lg shadow-sm p-6">
             <h3 className="text-lg font-medium text-gray-900 mb-4">Report Information</h3>
             <div className="grid grid-cols-2 gap-6">
@@ -506,8 +528,6 @@ const ReportViewPage = () => {
           </div>
         </div>
       </div>
-
-      {/* Operation Status Toast */}
       {operationStatus && (
         <div className="fixed top-4 right-4 z-50 transform transition-all duration-300 ease-in-out">
           <div
@@ -529,8 +549,6 @@ const ReportViewPage = () => {
           </div>
         </div>
       )}
-
-      {/* Operation Loading Overlay */}
       {operationLoading && (
         <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-40">
           <div className="bg-white rounded-lg p-6 shadow-xl">
@@ -541,8 +559,6 @@ const ReportViewPage = () => {
           </div>
         </div>
       )}
-
-      {/* Delete Confirmation Modal */}
       {deleteConfirm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg p-6 w-full max-w-md">
@@ -580,78 +596,62 @@ const ReportViewPage = () => {
           </div>
         </div>
       )}
-
       <style jsx>{`
         .swal-preview-container .ql-editor {
           padding: 1rem;
-          // max-height: 500px;
-          // overflow-y: auto;
         }
-        
         .swal-preview-container .ql-editor h1 {
           font-size: 2em;
           font-weight: bold;
           margin-top: 0.67em;
           margin-bottom: 0.67em;
         }
-        
         .swal-preview-container .ql-editor h2 {
           font-size: 1.5em;
           font-weight: bold;
           margin-top: 0.83em;
           margin-bottom: 0.83em;
         }
-        
         .swal-preview-container .ql-editor h3 {
           font-size: 1.17em;
           font-weight: bold;
           margin-top: 1em;
           margin-bottom: 1em;
         }
-        
         .swal-preview-container .ql-editor ul,
         .swal-preview-container .ql-editor ol {
           padding-left: 1.5em;
           margin-bottom: 1em;
         }
-        
         .swal-preview-container .ql-editor ul {
           list-style-type: disc;
         }
-        
         .swal-preview-container .ql-editor ol {
           list-style-type: decimal;
         }
-        
         .swal-preview-container .ql-editor li {
           margin-bottom: 0.5em;
         }
-        
         .swal-preview-container .ql-editor p {
           margin-bottom: 1em;
         }
-        
         .swal-preview-container .ql-editor strong {
           font-weight: bold;
         }
-        
         .swal-preview-container .ql-editor em {
           font-style: italic;
         }
-        
         .swal-preview-container .ql-editor blockquote {
           border-left: 4px solid #ccc;
           padding-left: 1em;
           margin-left: 0;
           font-style: italic;
         }
-
         .ql-container {
-          min-height: 400px;
+          minHeight: 400px;
         }
-        
         .ql-editor {
-          min-height: 400px;
+          minHeight: 400px;
         }
       `}</style>
     </div>

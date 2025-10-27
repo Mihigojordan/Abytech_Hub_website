@@ -4,6 +4,7 @@ import reportService from '../../services/reportService';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import html2pdf from 'html2pdf.js';
+import { API_URL } from '../../api/api';
 
 const ReportDashboard = () => {
   const [viewMode, setViewMode] = useState('grid');
@@ -25,7 +26,6 @@ const ReportDashboard = () => {
       setIsLoading(true);
       try {
         const data = await reportService.getAllReports();
-        // Sort reports by createdAt descending (most recent first)
         const sortedReports = data.sort(
           (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         );
@@ -62,114 +62,128 @@ const ReportDashboard = () => {
     navigate(`/admin/dashboard/report/view/${report.id}`);
   };
 
-  // Handle report download as PDF
-  const handleDownloadReport = (report) => {
+  // Handle report download
+  const handleDownloadReport = async (report) => {
     if (!report.id) return Swal.fire('Error', 'Invalid report ID', 'error');
 
-    // Assuming report.content is a JSON object containing HTML content
-    const content = typeof report.content === 'string' ? report.content : JSON.stringify(report.content);
-
-    // Create HTML content for PDF
-    const htmlContent = `
-      <!DOCTYPE html>
-      <html lang="en">
-      <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>${report.title}</title>
-        <style>
-          body { font-family: Arial, sans-serif; margin: 20px; }
-          .swal-preview-container .ql-editor {
-            padding: 1rem;
-          }
-          .swal-preview-container .ql-editor h1 {
-            font-size: 2em;
-            font-weight: bold;
-            margin-top: 0.67em;
-            margin-bottom: 0.67em;
-          }
-          .swal-preview-container .ql-editor h2 {
-            font-size: 1.5em;
-            font-weight: bold;
-            margin-top: 0.83em;
-            margin-bottom: 0.83em;
-          }
-          .swal-preview-container .ql-editor h3 {
-            font-size: 1.17em;
-            font-weight: bold;
-            margin-top: 1em;
-            margin-bottom: 1em;
-          }
-          .swal-preview-container .ql-editor ul,
-          .swal-preview-container .ql-editor ol {
-            padding-left: 1.5em;
-            margin-bottom: 1em;
-          }
-          .swal-preview-container .ql-editor ul {
-            list-style-type: disc;
-          }
-          .swal-preview-container .ql-editor ol {
-            list-style-type: decimal;
-          }
-          .swal-preview-container .ql-editor li {
-            margin-bottom: 0.5em;
-          }
-          .swal-preview-container .ql-editor p {
-            margin-bottom: 1em;
-          }
-          .swal-preview-container .ql-editor strong {
-            font-weight: bold;
-          }
-          .swal-preview-container .ql-editor em {
-            font-style: italic;
-          }
-          .swal-preview-container .ql-editor blockquote {
-            border-left: 4px solid #ccc;
-            padding-left: 1em;
-            margin-left: 0;
-            font-style: italic;
-          }
-          .ql-container {
-            min-height: 400px;
-          }
-          .ql-editor {
-            min-height: 400px;
-          }
-          .text-left { text-align: left; }
-        </style>
-      </head>
-      <body>
-        <div class="swal-preview-container text-left">
-          <div class="ql-editor">
-            ${content}
+    // Check if report.content exists and is not null
+    if (report.content) {
+      // Assuming report.content is a JSON object containing HTML content
+      const content = typeof report.content === 'string' ? report.content : JSON.stringify(report.content);
+      // Create HTML content for PDF
+      const htmlContent = `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>${report.title}</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            .swal-preview-container .ql-editor {
+              padding: 1rem;
+            }
+            .swal-preview-container .ql-editor h1 {
+              font-size: 2em;
+              font-weight: bold;
+              margin-top: 0.67em;
+              margin-bottom: 0.67em;
+            }
+            .swal-preview-container .ql-editor h2 {
+              font-size: 1.5em;
+              font-weight: bold;
+              margin-top: 0.83em;
+              margin-bottom: 0.83em;
+            }
+            .swal-preview-container .ql-editor h3 {
+              font-size: 1.17em;
+              font-weight: bold;
+              margin-top: 1em;
+              margin-bottom: 1em;
+            }
+            .swal-preview-container .ql-editor ul,
+            .swal-preview-container .ql-editor ol {
+              padding-left: 1.5em;
+              margin-bottom: 1em;
+            }
+            .swal-preview-container .ql-editor ul {
+              list-style-type: disc;
+            }
+            .swal-preview-container .ql-editor ol {
+              list-style-type: decimal;
+            }
+            .swal-preview-container .ql-editor li {
+              margin-bottom: 0.5em;
+            }
+            .swal-preview-container .ql-editor p {
+              margin-bottom: 1em;
+            }
+            .swal-preview-container .ql-editor strong {
+              font-weight: bold;
+            }
+            .swal-preview-container .ql-editor em {
+              font-style: italic;
+            }
+            .swal-preview-container .ql-editor blockquote {
+              border-left: 4px solid #ccc;
+              padding-left: 1em;
+              margin-left: 0;
+              font-style: italic;
+            }
+            .ql-container {
+              min-height: 400px;
+            }
+            .ql-editor {
+              min-height: 400px;
+            }
+            .text-left { text-align: left; }
+          </style>
+        </head>
+        <body>
+          <div class="swal-preview-container text-left">
+            <div class="ql-editor">
+              ${content}
+            </div>
           </div>
-        </div>
-      </body>
-      </html>
-    `;
-
-    // Configure html2pdf options
-    const options = {
-      margin: 10,
-      filename: `${report.title}.pdf`,
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2 },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-    };
-
-    // Generate and download PDF
-    const element = document.createElement('div');
-    element.innerHTML = htmlContent;
-    html2pdf().set(options).from(element).save();
+        </body>
+        </html>
+      `;
+      // Configure html2pdf options
+      const options = {
+        margin: 10,
+        filename: `${report.title}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      };
+      // Generate and download PDF
+      const element = document.createElement('div');
+      element.innerHTML = htmlContent;
+      html2pdf().set(options).from(element).save();
+    } else if (report.reportUrl) {
+      // Handle download using reportUrl
+      try {
+        const fullUrl = `${API_URL}${report.reportUrl}`;
+        // Create a temporary anchor element to trigger the download
+        const link = document.createElement('a');
+        link.href = fullUrl;
+        link.download = report.title || 'report'; // Fallback to 'report' if title is not available
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } catch (err) {
+        Swal.fire('Error', 'Failed to download report from URL', 'error');
+      }
+    } else {
+      Swal.fire('Error', 'No report content or URL available for download', 'error');
+    }
   };
 
-  // Date range filter function (inspired by ReportViewPage)
+  // Date range filter function
   const isDateInRange = (dateString, range) => {
     if (range === 'all') return true;
-
     const date = new Date(dateString);
-    if (isNaN(date.getTime())) return false; // Invalid date check
-
+    if (isNaN(date.getTime())) return false;
     const now = new Date();
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const weekStart = new Date(todayStart);
@@ -177,7 +191,6 @@ const ReportDashboard = () => {
     const monthStart = new Date(todayStart.getFullYear(), todayStart.getMonth(), 1);
     const customStart = customStartDate ? new Date(customStartDate) : null;
     const customEnd = customEndDate ? new Date(customEndDate) : null;
-
     switch (range) {
       case 'today':
         return date >= todayStart && date < new Date(todayStart.getTime() + 24 * 60 * 60 * 1000);
@@ -189,7 +202,6 @@ const ReportDashboard = () => {
         if (!customStart || !customEnd || isNaN(customStart.getTime()) || isNaN(customEnd.getTime())) {
           return false;
         }
-        // Ensure customEnd includes the entire day
         const customEndWithTime = new Date(customEnd);
         customEndWithTime.setHours(23, 59, 59, 999);
         return date >= customStart && date <= customEndWithTime;
@@ -200,11 +212,7 @@ const ReportDashboard = () => {
 
   const filteredReports = useMemo(() => {
     let filtered = reports;
-
-    // Apply date filter
     filtered = filtered.filter((report) => isDateInRange(report.createdAt, filterType));
-
-    // Apply search filter
     if (searchTerm.trim()) {
       filtered = filtered.filter(
         (report) =>
@@ -212,7 +220,6 @@ const ReportDashboard = () => {
           report.admin?.adminName?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
-
     return filtered;
   }, [reports, filterType, searchTerm, customStartDate, customEndDate]);
 
@@ -232,7 +239,7 @@ const ReportDashboard = () => {
 
   const handleItemsPerPageChange = (e) => {
     setItemsPerPage(Number(e.target.value));
-    setCurrentPage(1); // Reset to first page when items per page changes
+    setCurrentPage(1);
   };
 
   const formatDate = (date) => {
@@ -248,31 +255,24 @@ const ReportDashboard = () => {
   const getStats = useMemo(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-
     const weekStart = new Date(today);
     weekStart.setDate(today.getDate() - 7);
-
     const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
-
     const totalReports = reports.length;
     const todayReports = reports.filter((r) => {
       const reportDate = new Date(r.createdAt);
       reportDate.setHours(0, 0, 0, 0);
       return reportDate.getTime() === today.getTime();
     }).length;
-
     const weekReports = reports.filter((r) => {
       const reportDate = new Date(r.createdAt);
       return reportDate >= weekStart;
     }).length;
-
     const monthReports = reports.filter((r) => {
       const reportDate = new Date(r.createdAt);
       return reportDate >= monthStart;
     }).length;
-
     const uniqueAdmins = new Set(reports.map((r) => r.admin?.id)).size;
-
     return { totalReports, todayReports, weekReports, monthReports, uniqueAdmins };
   }, [reports]);
 
@@ -369,21 +369,18 @@ const ReportDashboard = () => {
             Create Report
           </button>
         </div>
-
         {/* Error Message */}
         {error && (
           <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
             <p className="text-sm text-red-800">{error}</p>
           </div>
         )}
-
         {/* Loading State */}
         {isLoading && (
           <div className="text-center py-12">
             <p className="text-gray-500 text-lg">Loading reports...</p>
           </div>
         )}
-
         {!isLoading && (
           <>
             {/* Stats Cards */}
@@ -444,7 +441,6 @@ const ReportDashboard = () => {
                 </div>
               </div>
             </div>
-
             {/* Controls */}
             <div className="bg-white rounded-lg shadow-md p-6 mb-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -514,7 +510,7 @@ const ReportDashboard = () => {
                       } else {
                         setShowCustomFilter(true);
                       }
-                      setCurrentPage(1); // Reset to first page on filter change
+                      setCurrentPage(1);
                     }}
                     className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${
                       filterType === btn.value
@@ -567,7 +563,7 @@ const ReportDashboard = () => {
                           return;
                         }
                         setFilterType('custom');
-                        setCurrentPage(1); // Reset to first page on custom filter apply
+                        setCurrentPage(1);
                       }}
                       className="px-4 py-2 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700 transition-colors"
                     >
@@ -579,7 +575,7 @@ const ReportDashboard = () => {
                         setFilterType('all');
                         setCustomStartDate('');
                         setCustomEndDate('');
-                        setCurrentPage(1); // Reset to first page on clear
+                        setCurrentPage(1);
                       }}
                       className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-400 transition-colors"
                     >
@@ -589,7 +585,6 @@ const ReportDashboard = () => {
                 </div>
               )}
             </div>
-
             {/* Grid View */}
             {viewMode === 'grid' && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -602,7 +597,6 @@ const ReportDashboard = () => {
                 )}
               </div>
             )}
-
             {/* List View */}
             {viewMode === 'list' && (
               <div className="bg-white rounded-lg shadow-md overflow-hidden">
@@ -630,7 +624,6 @@ const ReportDashboard = () => {
                 )}
               </div>
             )}
-
             {/* Pagination Controls (Bottom) */}
             {paginatedReports.length > 0 && (
               <div className="mt-4 flex justify-between items-center text-sm text-gray-600">

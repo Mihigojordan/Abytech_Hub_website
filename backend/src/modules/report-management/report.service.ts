@@ -8,11 +8,14 @@ export class ReportService {
 
   // ✅ Create report with adminId
   async create(data: any, adminId: string) {
+    console.log(data);
+    
     try {
       return await this.prisma.report.create({
         data: {
           ...data,
-          admin: { connect: { id: adminId } }
+          admin: { connect: { id: adminId } },
+          createdAt:  new Date(data.createdAt) 
         },
       });
     } catch (error) {
@@ -53,10 +56,20 @@ export class ReportService {
       const report = await this.prisma.report.findUnique({ where: { id } })
       if (!report) throw new BadRequestException('Report not found');
 
-      return await this.prisma.report.update({
+      
+      const updatedData = await this.prisma.report.update({
         where: { id },
-        data,
+        data:{
+          ...data,
+          createdAt: new Date(data.createdAt) 
+        },
       });
+      if(data.reportUrl && report.reportUrl){
+        
+        deleteFile(report.reportUrl)
+      }
+      return updatedData;
+
     } catch (error) {
       throw new BadRequestException('Failed to update report: ' + error.message);
     }
