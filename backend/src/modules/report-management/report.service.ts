@@ -15,7 +15,7 @@ export class ReportService {
         data: {
           ...data,
           admin: { connect: { id: adminId } },
-          createdAt:  new Date(data.createdAt) 
+          createdAt: data.createdAt || new Date() 
         },
       });
     } catch (error) {
@@ -61,7 +61,7 @@ export class ReportService {
         where: { id },
         data:{
           ...data,
-          createdAt: new Date(data.createdAt) 
+          createdAt: data.createdAt || new Date() 
         },
       });
       if(data.reportUrl && report.reportUrl){
