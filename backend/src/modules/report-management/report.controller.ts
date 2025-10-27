@@ -25,10 +25,15 @@ export class ReportController {
   // ✅ Create a new report (uses admin ID from req.user)
   @Post()
   @UseGuards(AdminJwtAuthGuard)
-
-  async create(@Body() data: any, @Req() req: RequestWithAdmin, ) {
+  @UseInterceptors(
+    FileFieldsInterceptor(ReportFileFields,ReportUploadConfig)
+  )
+  async create(@Body() data: any, @Req() req: RequestWithAdmin, @UploadedFiles() files:{ reportUrl: Express.Multer.File[] }  ) {
      const adminId = req.admin?.id;
     if (!adminId) throw new HttpException('Unauthorized admin', 401);
+    if(!data.content && files.reportUrl){
+      data.reportUrl = `/uploads/reports/${files.reportUrl[0].filename}`
+    }
     
     return this.reportService.create(data, adminId);
   }
@@ -47,8 +52,16 @@ export class ReportController {
 
   // ✅ Update report
   @Put(':id')
+    @UseInterceptors(
+    FileFieldsInterceptor(ReportFileFields,ReportUploadConfig)
+  )
  
-  async update(@Param('id') id: string, @Body() data: any, ) {
+  async update(@Param('id') id: string, @Body() data: any,@UploadedFiles() files:{ reportUrl: Express.Multer.File[] } ) {
+
+     if(!data.content && files.reportUrl){
+      data.reportUrl = `/uploads/reports/${files.reportUrl[0].filename}`
+    }
+    
   
     return this.reportService.update(id, data);
   }
