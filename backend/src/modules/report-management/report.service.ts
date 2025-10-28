@@ -4,15 +4,18 @@ import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class ReportService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   // ✅ Create report with adminId
   async create(data: any, adminId: string) {
+    console.log(data);
+    
     try {
       return await this.prisma.report.create({
         data: {
           ...data,
-          admin: { connect: { id: adminId } }
+          admin: { connect: { id: adminId } },
+          createdAt: data.createdAt || new Date() 
         },
       });
     } catch (error) {
@@ -49,21 +52,24 @@ export class ReportService {
   // ✅ Update report
   async update(id: string, data: any) {
     try {
-      if(data.reportUrl){
-        const report =  await this.prisma.report.findUnique({ where : { id }})
-        if(!report) {
-           deleteFile(data.reportUrl)
-           throw new BadRequestException('Report not found'); 
-          }
-          deleteFile(report.reportUrl)
-          console.log('Deleted the previews report file Succesfully');
-          
-      }
 
-      return await this.prisma.report.update({
+      const report = await this.prisma.report.findUnique({ where: { id } })
+      if (!report) throw new BadRequestException('Report not found');
+
+      
+      const updatedData = await this.prisma.report.update({
         where: { id },
-        data,
+        data:{
+          ...data,
+          createdAt: data.createdAt || new Date() 
+        },
       });
+      if(data.reportUrl && report.reportUrl){
+        
+        deleteFile(report.reportUrl)
+      }
+      return updatedData;
+
     } catch (error) {
       throw new BadRequestException('Failed to update report: ' + error.message);
     }

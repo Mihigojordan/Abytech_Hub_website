@@ -21,6 +21,9 @@ import UnlockScreen from "./pages/auth/admin/UnlockScreen";
 import ExpenseDashboard from "./pages/dashboard/ExpenseDashboard";
 import ReportDashboard from "./pages/dashboard/ReportManagement";
 import AbyTechLocations from "./pages/Location";
+import RichTextEditor from "./components/RichTextEditor";
+import UpsertReportPage from "./components/dashboard/report/UpsertReportPage";
+import ReportViewPage from "./components/dashboard/report/ReportViewPage";
 
 
 
@@ -51,8 +54,10 @@ const router = createBrowserRouter([
       { path: '/project', element: <SuspenseWrapper><ProjectsPage /> </SuspenseWrapper> },
       { path: '/team-member', element: <SuspenseWrapper><TeamMember /> </SuspenseWrapper> },
       { path: '/location', element: <SuspenseWrapper><AbyTechLocations /> </SuspenseWrapper> },
+      ,
     ]
   },
+  { path: '/text', element: <SuspenseWrapper><RichTextEditor /> </SuspenseWrapper> },
   {
     path:'/admin',
     element: <ProtectPrivateAdminRoute><Outlet /></ProtectPrivateAdminRoute>,
@@ -65,6 +70,9 @@ const router = createBrowserRouter([
           {index:true , element:<DashboardHome />},
           {path:'expense' , element:<ExpenseDashboard />},
           {path:'report' , element:<ReportDashboard />},
+          {path:'report/create' , element:<UpsertReportPage />},
+          {path:'report/edit/:id' , element:<UpsertReportPage />},
+          {path:'report/view/:id' , element:<ReportViewPage />},
           {path:'profile' , element:<AdminProfilePage />},
           
         ]

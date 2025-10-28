@@ -1,24 +1,30 @@
-import api from '../api/api'; // your configured Axios instance with JWT support
+import api from '../api/api';
 
 class ReportService {
-  // ✅ Create report (with optional file upload)
-  async createReport(reportData, file) {
+  // ✅ Create report (with file or content)
+  async createReport(data) {
     try {
       const formData = new FormData();
-      Object.entries(reportData).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) {
-          formData.append(key, value);
-        }
-      });
 
-      // If a file is attached, include it
-      if (file) {
-        formData.append('reportUrl', file);
+      if (data.title) formData.append('title', data.title);
+
+      if (data.content) {
+        // stringify JSON content since FormData only supports text
+        formData.append('content', JSON.stringify(data.content));
+      }
+      
+       if (data.createdAt) {
+        formData.append('createdAt', data.createdAt);
+      }
+
+      if (data.reportFile) {
+        formData.append('reportUrl', data.reportFile);
       }
 
       const response = await api.post('/report', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
+        headers: { 'Content-Type': 'multipart/form-data' }
       });
+
       return response.data;
     } catch (error) {
       const msg =
@@ -51,23 +57,30 @@ class ReportService {
     }
   }
 
-  // ✅ Update report (supports optional new file upload)
-  async updateReport(id, updatedData, file) {
+  // ✅ Update report (handles file or text)
+  async updateReport(id, data) {
     try {
       const formData = new FormData();
-      Object.entries(updatedData).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) {
-          formData.append(key, value);
-        }
-      });
 
-      if (file) {
-        formData.append('reportUrl', file);
+      
+      if (data.title) formData.append('title', data.title);
+
+      if (data.content) {
+        formData.append('content', JSON.stringify(data.content));
+      }
+
+      if (data.createdAt) {
+        formData.append('createdAt', data.createdAt);
+      }
+
+      if (data.reportFile) {
+        formData.append('reportUrl', data.reportFile);
       }
 
       const response = await api.put(`/report/${id}`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
+        headers: { 'Content-Type': 'multipart/form-data' }
       });
+
       return response.data;
     } catch (error) {
       const msg =
@@ -91,12 +104,10 @@ class ReportService {
 
 const reportService = new ReportService();
 export default reportService;
-
-// Optional named exports
 export const {
   createReport,
   getAllReports,
   getReportById,
   updateReport,
-  deleteReport,
+  deleteReport
 } = reportService;

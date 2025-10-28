@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Calendar, Grid3x3, List, Search, Download, Eye, FileText, TrendingUp, Clock, Users, Plus, ChevronLeft, ChevronRight, Edit } from 'lucide-react';
-import { API_URL } from '../../api/api';
+import { Calendar, Grid3x3, List, Search, Eye, FileText, TrendingUp, Clock, Users, Plus, ChevronLeft, ChevronRight, Edit, Download } from 'lucide-react';
 import reportService from '../../services/reportService';
-import ReportModal from '../../components/dashboard/report/ReportModal';
+import { useNavigate } from 'react-router-dom';
+import Swal from 'sweetalert2';
+import html2pdf from 'html2pdf.js';
+import { API_URL } from '../../api/api';
 
 const ReportDashboard = () => {
   const [viewMode, setViewMode] = useState('grid');
@@ -14,10 +16,9 @@ const ReportDashboard = () => {
   const [reports, setReports] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedReport, setSelectedReport] = useState(null); // State for selected report to edit
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(viewMode === 'grid' ? 1 : 7);
+  const [itemsPerPage, setItemsPerPage] = useState(viewMode === 'grid' ? 9 : 7);
+  const navigate = useNavigate();
 
   // Fetch all reports on component mount
   useEffect(() => {
@@ -25,7 +26,10 @@ const ReportDashboard = () => {
       setIsLoading(true);
       try {
         const data = await reportService.getAllReports();
-        setReports(data);
+        const sortedReports = data.sort(
+          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+        setReports(sortedReports);
       } catch (err) {
         setError(err.message || 'Failed to fetch reports');
       } finally {
@@ -35,83 +39,187 @@ const ReportDashboard = () => {
     fetchReports();
   }, []);
 
-  // Reset current page when view mode changes and update items per page
+  // Reset current page when view mode, search term, or filter type changes
   useEffect(() => {
     setCurrentPage(1);
-    setItemsPerPage(viewMode === 'grid' ? 1 : 10);
-  }, [viewMode]);
+    setItemsPerPage(viewMode === 'grid' ? 9 : 7);
+  }, [viewMode, searchTerm, filterType]);
 
   // Handle successful report creation/update
-  const handleReportSuccess = async () => {
-    setIsLoading(true);
-    try {
-      const data = await reportService.getAllReports();
-      setReports(data);
-      setCurrentPage(1); // Reset to first page after new report
-    } catch (err) {
-      setError(err.message || 'Failed to refresh reports');
-    } finally {
-      setIsLoading(false);
-    }
+  const handleCreateReport = () => {
+    navigate('/admin/dashboard/report/create');
   };
 
   // Handle opening the modal for updating a report
   const handleUpdateReport = (report) => {
-    setSelectedReport(report);
-    setIsModalOpen(true);
+    if (!report.id) return Swal.fire('Error', 'Invalid report ID', 'error');
+    navigate(`/admin/dashboard/report/edit/${report.id}`);
   };
 
-  const getDateRange = (type) => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    let startDate, endDate = new Date(today);
-    endDate.setHours(23, 59, 59, 999);
+  // Handle report preview
+  const handlePreviewReport = (report) => {
+    if (!report.id) return Swal.fire('Error', 'Invalid report ID', 'error');
+    navigate(`/admin/dashboard/report/view/${report.id}`);
+  };
 
-    switch (type) {
-      case 'today':
-        startDate = new Date(today);
-        break;
-      case 'week':
-        startDate = new Date(today);
-        startDate.setDate(today.getDate() - today.getDay());
-        break;
-      case 'month':
-        startDate = new Date(today.getFullYear(), today.getMonth(), 1);
-        break;
-      case 'custom':
-        startDate = new Date(customStartDate);
-        endDate = new Date(customEndDate);
-        endDate.setHours(23, 59, 59, 999);
-        break;
-      default:
-        return null;
+  // Handle report download
+  const handleDownloadReport = async (report) => {
+    if (!report.id) return Swal.fire('Error', 'Invalid report ID', 'error');
+
+    // Check if report.content exists and is not null
+    if (report.content) {
+      // Assuming report.content is a JSON object containing HTML content
+      const content = typeof report.content === 'string' ? report.content : JSON.stringify(report.content);
+      // Create HTML content for PDF
+      const htmlContent = `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>${report.title}</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            .swal-preview-container .ql-editor {
+              padding: 1rem;
+            }
+            .swal-preview-container .ql-editor h1 {
+              font-size: 2em;
+              font-weight: bold;
+              margin-top: 0.67em;
+              margin-bottom: 0.67em;
+            }
+            .swal-preview-container .ql-editor h2 {
+              font-size: 1.5em;
+              font-weight: bold;
+              margin-top: 0.83em;
+              margin-bottom: 0.83em;
+            }
+            .swal-preview-container .ql-editor h3 {
+              font-size: 1.17em;
+              font-weight: bold;
+              margin-top: 1em;
+              margin-bottom: 1em;
+            }
+            .swal-preview-container .ql-editor ul,
+            .swal-preview-container .ql-editor ol {
+              padding-left: 1.5em;
+              margin-bottom: 1em;
+            }
+            .swal-preview-container .ql-editor ul {
+              list-style-type: disc;
+            }
+            .swal-preview-container .ql-editor ol {
+              list-style-type: decimal;
+            }
+            .swal-preview-container .ql-editor li {
+              margin-bottom: 0.5em;
+            }
+            .swal-preview-container .ql-editor p {
+              margin-bottom: 1em;
+            }
+            .swal-preview-container .ql-editor strong {
+              font-weight: bold;
+            }
+            .swal-preview-container .ql-editor em {
+              font-style: italic;
+            }
+            .swal-preview-container .ql-editor blockquote {
+              border-left: 4px solid #ccc;
+              padding-left: 1em;
+              margin-left: 0;
+              font-style: italic;
+            }
+            .ql-container {
+              min-height: 400px;
+            }
+            .ql-editor {
+              min-height: 400px;
+            }
+            .text-left { text-align: left; }
+          </style>
+        </head>
+        <body>
+          <div class="swal-preview-container text-left">
+            <div class="ql-editor">
+              ${content}
+            </div>
+          </div>
+        </body>
+        </html>
+      `;
+      // Configure html2pdf options
+      const options = {
+        margin: 10,
+        filename: `${report.title}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      };
+      // Generate and download PDF
+      const element = document.createElement('div');
+      element.innerHTML = htmlContent;
+      html2pdf().set(options).from(element).save();
+    } else if (report.reportUrl) {
+      // Handle download using reportUrl
+      try {
+        const fullUrl = `${API_URL}${report.reportUrl}`;
+        // Create a temporary anchor element to trigger the download
+        const link = document.createElement('a');
+        link.href = fullUrl;
+        link.download = report.title || 'report'; // Fallback to 'report' if title is not available
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } catch (err) {
+        Swal.fire('Error', 'Failed to download report from URL', 'error');
+      }
+    } else {
+      Swal.fire('Error', 'No report content or URL available for download', 'error');
     }
+  };
 
-    return { startDate, endDate };
+  // Date range filter function
+  const isDateInRange = (dateString, range) => {
+    if (range === 'all') return true;
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return false;
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const weekStart = new Date(todayStart);
+    weekStart.setDate(weekStart.getDate() - 7);
+    const monthStart = new Date(todayStart.getFullYear(), todayStart.getMonth(), 1);
+    const customStart = customStartDate ? new Date(customStartDate) : null;
+    const customEnd = customEndDate ? new Date(customEndDate) : null;
+    switch (range) {
+      case 'today':
+        return date >= todayStart && date < new Date(todayStart.getTime() + 24 * 60 * 60 * 1000);
+      case 'week':
+        return date >= weekStart;
+      case 'month':
+        return date >= monthStart;
+      case 'custom':
+        if (!customStart || !customEnd || isNaN(customStart.getTime()) || isNaN(customEnd.getTime())) {
+          return false;
+        }
+        const customEndWithTime = new Date(customEnd);
+        customEndWithTime.setHours(23, 59, 59, 999);
+        return date >= customStart && date <= customEndWithTime;
+      default:
+        return true;
+    }
   };
 
   const filteredReports = useMemo(() => {
     let filtered = reports;
-
-    // Filter by date range
-    if (filterType !== 'all') {
-      const range = getDateRange(filterType);
-      if (range) {
-        filtered = filtered.filter(report => {
-          const reportDate = new Date(report.createdAt);
-          return reportDate >= range.startDate && reportDate <= range.endDate;
-        });
-      }
-    }
-
-    // Filter by search term
-    if (searchTerm) {
-      filtered = filtered.filter(report =>
-        report.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        report.admin.adminName?.toLowerCase().includes(searchTerm.toLowerCase())
+    filtered = filtered.filter((report) => isDateInRange(report.createdAt, filterType));
+    if (searchTerm.trim()) {
+      filtered = filtered.filter(
+        (report) =>
+          report.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          report.admin?.adminName?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
-
     return filtered;
   }, [reports, filterType, searchTerm, customStartDate, customEndDate]);
 
@@ -131,7 +239,7 @@ const ReportDashboard = () => {
 
   const handleItemsPerPageChange = (e) => {
     setItemsPerPage(Number(e.target.value));
-    setCurrentPage(1); // Reset to first page when items per page changes
+    setCurrentPage(1);
   };
 
   const formatDate = (date) => {
@@ -140,50 +248,33 @@ const ReportDashboard = () => {
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
     });
   };
 
   const getStats = useMemo(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
     const weekStart = new Date(today);
-    weekStart.setDate(today.getDate() - today.getDay());
-    
+    weekStart.setDate(today.getDate() - 7);
     const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
-
     const totalReports = reports.length;
-    const todayReports = reports.filter(r => {
+    const todayReports = reports.filter((r) => {
       const reportDate = new Date(r.createdAt);
       reportDate.setHours(0, 0, 0, 0);
       return reportDate.getTime() === today.getTime();
     }).length;
-
-    const weekReports = reports.filter(r => {
+    const weekReports = reports.filter((r) => {
       const reportDate = new Date(r.createdAt);
       return reportDate >= weekStart;
     }).length;
-
-    const monthReports = reports.filter(r => {
+    const monthReports = reports.filter((r) => {
       const reportDate = new Date(r.createdAt);
       return reportDate >= monthStart;
     }).length;
-
-    const uniqueAdmins = new Set(reports.map(r => r.admin.id)).size;
-
+    const uniqueAdmins = new Set(reports.map((r) => r.admin?.id)).size;
     return { totalReports, todayReports, weekReports, monthReports, uniqueAdmins };
   }, [reports]);
-
-  const handleReportUrl = (url) => {
-    if (!url) return null;
-    if (url.includes('http')) return url;
-    return `${API_URL}${url}`;
-  };
-
-  const handlePreviewReport = (reportUrl) => {
-    window.open(reportUrl, '_blank', 'width=900,height=700');
-  };
 
   const ReportCard = ({ report }) => (
     <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow p-5 border border-gray-200">
@@ -191,7 +282,7 @@ const ReportDashboard = () => {
         <h3 className="font-semibold text-gray-900 flex-1 line-clamp-2">{report.title}</h3>
         <div className="flex gap-2 ml-2 flex-shrink-0">
           <button
-            onClick={() => handlePreviewReport(handleReportUrl(report.reportUrl))}
+            onClick={() => handlePreviewReport(report)}
             className="p-2 text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
             title="Preview Report"
           >
@@ -204,19 +295,22 @@ const ReportDashboard = () => {
           >
             <Edit size={18} />
           </button>
-          <a
-            href={handleReportUrl(report.reportUrl)}
-            download
+          <button
+            onClick={() => handleDownloadReport(report)}
             className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
             title="Download Report"
           >
             <Download size={18} />
-          </a>
+          </button>
         </div>
       </div>
       <div className="space-y-2 text-sm text-gray-600">
-        <p><span className="font-medium">Created:</span> {formatDate(report.createdAt)}</p>
-        <p><span className="font-medium">By:</span> {report.admin.adminName || 'Unknown'}</p>
+        <p>
+          <span className="font-medium">Created:</span> {formatDate(report.createdAt)}
+        </p>
+        <p>
+          <span className="font-medium">By:</span> {report.admin?.adminName || 'Unknown'}
+        </p>
       </div>
     </div>
   );
@@ -225,12 +319,12 @@ const ReportDashboard = () => {
     <tr className="hover:bg-gray-50 border-b border-gray-200 transition-colors">
       <td className="px-6 py-4 font-medium text-gray-900">{(currentPage - 1) * itemsPerPage + index + 1}</td>
       <td className="px-6 py-4 font-medium text-gray-900">{report.title}</td>
-      <td className="px-6 py-4 text-gray-600">{report.admin.adminName || 'Unknown'}</td>
+      <td className="px-6 py-4 text-gray-600">{report.admin?.adminName || 'Unknown'}</td>
       <td className="px-6 py-4 text-gray-600">{formatDate(report.createdAt)}</td>
       <td className="px-6 py-4">
         <div className="flex gap-3">
           <button
-            onClick={() => handlePreviewReport(handleReportUrl(report.reportUrl))}
+            onClick={() => handlePreviewReport(report)}
             className="flex items-center gap-1 px-3 py-1 text-primary-600 hover:bg-primary-50 rounded transition-colors text-sm font-medium"
             title="Preview Report"
           >
@@ -245,15 +339,14 @@ const ReportDashboard = () => {
             <Edit size={16} />
             Update
           </button>
-          <a
-            href={handleReportUrl(report.reportUrl)}
-            download
+          <button
+            onClick={() => handleDownloadReport(report)}
             className="flex items-center gap-1 px-3 py-1 text-green-600 hover:bg-green-50 rounded transition-colors text-sm font-medium"
             title="Download Report"
           >
             <Download size={16} />
             Download
-          </a>
+          </button>
         </div>
       </td>
     </tr>
@@ -269,31 +362,25 @@ const ReportDashboard = () => {
             <p className="text-gray-600">Manage and view all system reports</p>
           </div>
           <button
-            onClick={() => {
-              setSelectedReport(null); // Clear selected report for creating new
-              setIsModalOpen(true);
-            }}
+            onClick={handleCreateReport}
             className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
           >
             <Plus size={18} />
             Create Report
           </button>
         </div>
-
         {/* Error Message */}
         {error && (
           <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
             <p className="text-sm text-red-800">{error}</p>
           </div>
         )}
-
         {/* Loading State */}
         {isLoading && (
           <div className="text-center py-12">
             <p className="text-gray-500 text-lg">Loading reports...</p>
           </div>
         )}
-
         {!isLoading && (
           <>
             {/* Stats Cards */}
@@ -354,7 +441,6 @@ const ReportDashboard = () => {
                 </div>
               </div>
             </div>
-
             {/* Controls */}
             <div className="bg-white rounded-lg shadow-md p-6 mb-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -411,42 +497,37 @@ const ReportDashboard = () => {
                   { value: 'today', label: 'Today' },
                   { value: 'week', label: 'This Week' },
                   { value: 'month', label: 'This Month' },
-                ].map(btn => (
+                  { value: 'custom', label: 'Custom Range' },
+                ].map((btn) => (
                   <button
                     key={btn.value}
                     onClick={() => {
                       setFilterType(btn.value);
-                      setShowCustomFilter(false);
-                      setCurrentPage(1); // Reset to first page on filter change
+                      if (btn.value !== 'custom') {
+                        setShowCustomFilter(false);
+                        setCustomStartDate('');
+                        setCustomEndDate('');
+                      } else {
+                        setShowCustomFilter(true);
+                      }
+                      setCurrentPage(1);
                     }}
-                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                    className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${
                       filterType === btn.value
                         ? 'bg-primary-600 text-white'
                         : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                     }`}
                   >
+                    {btn.value === 'custom' && <Calendar size={18} />}
                     {btn.label}
                   </button>
                 ))}
-                <button
-                  onClick={() => setShowCustomFilter(!showCustomFilter)}
-                  className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${
-                    filterType === 'custom'
-                      ? 'bg-primary-600 text-white'
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                    }`}
-                >
-                  <Calendar size={18} />
-                  Custom Range
-                </button>
               </div>
               {showCustomFilter && (
                 <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-300">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Start Date
-                      </label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
                       <input
                         type="date"
                         value={customStartDate}
@@ -455,9 +536,7 @@ const ReportDashboard = () => {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        End Date
-                      </label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">End Date</label>
                       <input
                         type="date"
                         value={customEndDate}
@@ -469,10 +548,22 @@ const ReportDashboard = () => {
                   <div className="flex gap-2 mt-3">
                     <button
                       onClick={() => {
-                        if (customStartDate && customEndDate) {
-                          setFilterType('custom');
-                          setCurrentPage(1); // Reset to first page on custom filter apply
+                        if (!customStartDate || !customEndDate) {
+                          Swal.fire('Error', 'Please select both start and end dates', 'error');
+                          return;
                         }
+                        const start = new Date(customStartDate);
+                        const end = new Date(customEndDate);
+                        if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+                          Swal.fire('Error', 'Invalid date format', 'error');
+                          return;
+                        }
+                        if (start > end) {
+                          Swal.fire('Error', 'Start date must be before or equal to end date', 'error');
+                          return;
+                        }
+                        setFilterType('custom');
+                        setCurrentPage(1);
                       }}
                       className="px-4 py-2 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700 transition-colors"
                     >
@@ -484,7 +575,7 @@ const ReportDashboard = () => {
                         setFilterType('all');
                         setCustomStartDate('');
                         setCustomEndDate('');
-                        setCurrentPage(1); // Reset to first page on clear
+                        setCurrentPage(1);
                       }}
                       className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-400 transition-colors"
                     >
@@ -494,16 +585,11 @@ const ReportDashboard = () => {
                 </div>
               )}
             </div>
-
-            
-
             {/* Grid View */}
             {viewMode === 'grid' && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {paginatedReports.length > 0 ? (
-                  paginatedReports.map(report => (
-                    <ReportCard key={report.id} report={report} />
-                  ))
+                  paginatedReports.map((report) => <ReportCard key={report.id} report={report} />)
                 ) : (
                   <div className="col-span-full text-center py-12">
                     <p className="text-gray-500 text-lg">No reports found</p>
@@ -511,7 +597,6 @@ const ReportDashboard = () => {
                 )}
               </div>
             )}
-
             {/* List View */}
             {viewMode === 'list' && (
               <div className="bg-white rounded-lg shadow-md overflow-hidden">
@@ -519,21 +604,11 @@ const ReportDashboard = () => {
                   <table className="w-full">
                     <thead className="bg-gray-100 border-b border-gray-200">
                       <tr>
-                        <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                          #
-                        </th>
-                        <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                          Report Title
-                        </th>
-                        <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                          Created By
-                        </th>
-                        <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                          Created At
-                        </th>
-                        <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                          Actions
-                        </th>
+                        <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">#</th>
+                        <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Report Title</th>
+                        <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Created By</th>
+                        <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Created At</th>
+                        <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -549,7 +624,6 @@ const ReportDashboard = () => {
                 )}
               </div>
             )}
-
             {/* Pagination Controls (Bottom) */}
             {paginatedReports.length > 0 && (
               <div className="mt-4 flex justify-between items-center text-sm text-gray-600">
@@ -581,17 +655,6 @@ const ReportDashboard = () => {
             )}
           </>
         )}
-
-        {/* Report Modal for Creating/Updating Reports */}
-        <ReportModal
-          isOpen={isModalOpen}
-          onClose={() => {
-            setIsModalOpen(false);
-            setSelectedReport(null); // Clear selected report on close
-          }}
-          report={selectedReport}
-          onSuccess={handleReportSuccess}
-        />
       </div>
     </div>
   );
