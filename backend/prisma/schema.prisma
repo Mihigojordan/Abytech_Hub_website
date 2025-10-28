@@ -10,7 +10,7 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -51,8 +51,9 @@ model Expense {
 model Report{
   id         String   @id @default(uuid())
   title       String
-  reportUrl    String
-  createdAt   DateTime @default(now())
+  content     Json?
+  reportUrl   String?
+  createdAt   DateTime 
   adminId    String
   admin   Admin    @relation(fields: [adminId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 }

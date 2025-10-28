@@ -128,7 +128,7 @@ const AdminLogin = () => {
   };
 
   return (
-    <div className=" flex bg-white">
+    <div className=" min-h-screen flex bg-white">
       {/* Left side - Brand with Background Image */}
       <div 
         className="w-5/12 flex items-center justify-center p-8 relative overflow-hidden"
