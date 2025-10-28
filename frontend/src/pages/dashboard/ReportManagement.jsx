@@ -6,6 +6,40 @@ import Swal from 'sweetalert2';
 import html2pdf from 'html2pdf.js';
 import { API_URL } from '../../api/api';
 
+// Helper function to handle reportUrl
+function handleReportUrl(reportUrl) {
+  if (!reportUrl) return null;
+  const trimmedUrl = reportUrl.trim();
+  // If it already starts with http or https, return as-is
+  if (trimmedUrl.startsWith('http')) return trimmedUrl;
+  // Ensure API_URL does not end with slash and reportUrl starts with slash
+  const baseUrl = API_URL.endsWith('/') ? API_URL.slice(0, -1) : API_URL;
+  const path = trimmedUrl.startsWith('/') ? trimmedUrl : '/' + trimmedUrl;
+  return baseUrl + path;
+}
+
+async function downloadFile(url, fileName) {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error('Failed to fetch file');
+    }
+    const blob = await response.blob();
+    const downloadUrl = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = downloadUrl;
+    link.download = fileName || 'downloaded-file'; // Custom filename
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(downloadUrl); // Clean up
+  } catch (error) {
+    console.error('Download error:', error);
+    // Handle error (e.g., show alert to user)
+    Swal.fire('Error', 'Failed to download report from URL', 'error');
+  }
+}
+
 const ReportDashboard = () => {
   const [viewMode, setViewMode] = useState('grid');
   const [filterType, setFilterType] = useState('all');
@@ -17,7 +51,8 @@ const ReportDashboard = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(viewMode === 'grid' ? 9 : 7);
+  const [itemsPerPage, setItemsPerPage] = useState(9); // Default for grid
+
   const navigate = useNavigate();
 
   // Fetch all reports on component mount
@@ -39,7 +74,7 @@ const ReportDashboard = () => {
     fetchReports();
   }, []);
 
-  // Reset current page when view mode, search term, or filter type changes
+  // Reset current page and items per page when view mode changes
   useEffect(() => {
     setCurrentPage(1);
     setItemsPerPage(viewMode === 'grid' ? 9 : 7);
@@ -66,11 +101,10 @@ const ReportDashboard = () => {
   const handleDownloadReport = async (report) => {
     if (!report.id) return Swal.fire('Error', 'Invalid report ID', 'error');
 
-    // Check if report.content exists and is not null
+    // Case 1: Use report.content (HTML string) to generate PDF
     if (report.content) {
-      // Assuming report.content is a JSON object containing HTML content
       const content = typeof report.content === 'string' ? report.content : JSON.stringify(report.content);
-      // Create HTML content for PDF
+
       const htmlContent = `
         <!DOCTYPE html>
         <html lang="en">
@@ -84,58 +118,28 @@ const ReportDashboard = () => {
               padding: 1rem;
             }
             .swal-preview-container .ql-editor h1 {
-              font-size: 2em;
-              font-weight: bold;
-              margin-top: 0.67em;
-              margin-bottom: 0.67em;
+              font-size: 2em; font-weight: bold; margin: 0.67em 0;
             }
             .swal-preview-container .ql-editor h2 {
-              font-size: 1.5em;
-              font-weight: bold;
-              margin-top: 0.83em;
-              margin-bottom: 0.83em;
+              font-size: 1.5em; font-weight: bold; margin: 0.83em 0;
             }
             .swal-preview-container .ql-editor h3 {
-              font-size: 1.17em;
-              font-weight: bold;
-              margin-top: 1em;
-              margin-bottom: 1em;
+              font-size: 1.17em; font-weight: bold; margin: 1em 0;
             }
             .swal-preview-container .ql-editor ul,
             .swal-preview-container .ql-editor ol {
-              padding-left: 1.5em;
-              margin-bottom: 1em;
+              padding-left: 1.5em; margin-bottom: 1em;
             }
-            .swal-preview-container .ql-editor ul {
-              list-style-type: disc;
-            }
-            .swal-preview-container .ql-editor ol {
-              list-style-type: decimal;
-            }
-            .swal-preview-container .ql-editor li {
-              margin-bottom: 0.5em;
-            }
-            .swal-preview-container .ql-editor p {
-              margin-bottom: 1em;
-            }
-            .swal-preview-container .ql-editor strong {
-              font-weight: bold;
-            }
-            .swal-preview-container .ql-editor em {
-              font-style: italic;
-            }
+            .swal-preview-container .ql-editor ul { list-style-type: disc; }
+            .swal-preview-container .ql-editor ol { list-style-type: decimal; }
+            .swal-preview-container .ql-editor li { margin-bottom: 0.5em; }
+            .swal-preview-container .ql-editor p { margin-bottom: 1em; }
+            .swal-preview-container .ql-editor strong { font-weight: bold; }
+            .swal-preview-container .ql-editor em { font-style: italic; }
             .swal-preview-container .ql-editor blockquote {
-              border-left: 4px solid #ccc;
-              padding-left: 1em;
-              margin-left: 0;
-              font-style: italic;
+              border-left: 4px solid #ccc; padding-left: 1em; margin-left: 0; font-style: italic;
             }
-            .ql-container {
-              min-height: 400px;
-            }
-            .ql-editor {
-              min-height: 400px;
-            }
+            .ql-container, .ql-editor { min-height: 400px; }
             .text-left { text-align: left; }
           </style>
         </head>
@@ -148,7 +152,7 @@ const ReportDashboard = () => {
         </body>
         </html>
       `;
-      // Configure html2pdf options
+
       const options = {
         margin: 10,
         filename: `${report.title}.pdf`,
@@ -156,25 +160,22 @@ const ReportDashboard = () => {
         html2canvas: { scale: 2 },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
       };
-      // Generate and download PDF
+
       const element = document.createElement('div');
       element.innerHTML = htmlContent;
       html2pdf().set(options).from(element).save();
-    } else if (report.reportUrl) {
-      // Handle download using reportUrl
-      try {
-        const fullUrl = `${API_URL}${report.reportUrl}`;
-        // Create a temporary anchor element to trigger the download
-        const link = document.createElement('a');
-        link.href = fullUrl;
-        link.download = report.title || 'report'; // Fallback to 'report' if title is not available
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      } catch (err) {
-        Swal.fire('Error', 'Failed to download report from URL', 'error');
+    }
+    // Case 2: Use reportUrl to download file
+    else if (report.reportUrl) {
+      const fullUrl = handleReportUrl(report.reportUrl);
+      if (!fullUrl) {
+        Swal.fire('Error', 'Invalid report URL', 'error');
+        return;
       }
-    } else {
+      await downloadFile(fullUrl, report.title || 'report');
+    }
+    // Case 3: No content or URL
+    else {
       Swal.fire('Error', 'No report content or URL available for download', 'error');
     }
   };
@@ -184,6 +185,7 @@ const ReportDashboard = () => {
     if (range === 'all') return true;
     const date = new Date(dateString);
     if (isNaN(date.getTime())) return false;
+
     const now = new Date();
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const weekStart = new Date(todayStart);
@@ -191,6 +193,7 @@ const ReportDashboard = () => {
     const monthStart = new Date(todayStart.getFullYear(), todayStart.getMonth(), 1);
     const customStart = customStartDate ? new Date(customStartDate) : null;
     const customEnd = customEndDate ? new Date(customEndDate) : null;
+
     switch (range) {
       case 'today':
         return date >= todayStart && date < new Date(todayStart.getTime() + 24 * 60 * 60 * 1000);
@@ -258,21 +261,17 @@ const ReportDashboard = () => {
     const weekStart = new Date(today);
     weekStart.setDate(today.getDate() - 7);
     const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+
     const totalReports = reports.length;
     const todayReports = reports.filter((r) => {
       const reportDate = new Date(r.createdAt);
       reportDate.setHours(0, 0, 0, 0);
       return reportDate.getTime() === today.getTime();
     }).length;
-    const weekReports = reports.filter((r) => {
-      const reportDate = new Date(r.createdAt);
-      return reportDate >= weekStart;
-    }).length;
-    const monthReports = reports.filter((r) => {
-      const reportDate = new Date(r.createdAt);
-      return reportDate >= monthStart;
-    }).length;
+    const weekReports = reports.filter((r) => new Date(r.createdAt) >= weekStart).length;
+    const monthReports = reports.filter((r) => new Date(r.createdAt) >= monthStart).length;
     const uniqueAdmins = new Set(reports.map((r) => r.admin?.id)).size;
+
     return { totalReports, todayReports, weekReports, monthReports, uniqueAdmins };
   }, [reports]);
 
@@ -328,24 +327,21 @@ const ReportDashboard = () => {
             className="flex items-center gap-1 px-3 py-1 text-primary-600 hover:bg-primary-50 rounded transition-colors text-sm font-medium"
             title="Preview Report"
           >
-            <Eye size={16} />
-            Preview
+            <Eye size={16} /> Preview
           </button>
           <button
             onClick={() => handleUpdateReport(report)}
             className="flex items-center gap-1 px-3 py-1 text-yellow-600 hover:bg-yellow-50 rounded transition-colors text-sm font-medium"
             title="Update Report"
           >
-            <Edit size={16} />
-            Update
+            <Edit size={16} /> Update
           </button>
           <button
             onClick={() => handleDownloadReport(report)}
             className="flex items-center gap-1 px-3 py-1 text-green-600 hover:bg-green-50 rounded transition-colors text-sm font-medium"
             title="Download Report"
           >
-            <Download size={16} />
-            Download
+            <Download size={16} /> Download
           </button>
         </div>
       </td>
@@ -369,18 +365,21 @@ const ReportDashboard = () => {
             Create Report
           </button>
         </div>
+
         {/* Error Message */}
         {error && (
           <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
             <p className="text-sm text-red-800">{error}</p>
           </div>
         )}
+
         {/* Loading State */}
         {isLoading && (
           <div className="text-center py-12">
             <p className="text-gray-500 text-lg">Loading reports...</p>
           </div>
         )}
+
         {!isLoading && (
           <>
             {/* Stats Cards */}
@@ -441,6 +440,7 @@ const ReportDashboard = () => {
                 </div>
               </div>
             </div>
+
             {/* Controls */}
             <div className="bg-white rounded-lg shadow-md p-6 mb-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -491,6 +491,7 @@ const ReportDashboard = () => {
                   </button>
                 </div>
               </div>
+
               <div className="flex flex-wrap gap-2">
                 {[
                   { value: 'all', label: 'All Reports' },
@@ -523,6 +524,7 @@ const ReportDashboard = () => {
                   </button>
                 ))}
               </div>
+
               {showCustomFilter && (
                 <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-300">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -585,6 +587,7 @@ const ReportDashboard = () => {
                 </div>
               )}
             </div>
+
             {/* Grid View */}
             {viewMode === 'grid' && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -597,6 +600,7 @@ const ReportDashboard = () => {
                 )}
               </div>
             )}
+
             {/* List View */}
             {viewMode === 'list' && (
               <div className="bg-white rounded-lg shadow-md overflow-hidden">
@@ -624,7 +628,8 @@ const ReportDashboard = () => {
                 )}
               </div>
             )}
-            {/* Pagination Controls (Bottom) */}
+
+            {/* Pagination Controls */}
             {paginatedReports.length > 0 && (
               <div className="mt-4 flex justify-between items-center text-sm text-gray-600">
                 <div>

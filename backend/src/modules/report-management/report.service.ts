@@ -1,27 +1,39 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { deleteFile } from 'src/common/utils/file-upload.utils';
+import { CloudinaryService } from 'src/global/cloudinary/cloudinary.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class ReportService {
-  constructor(private prisma: PrismaService) { }
+  constructor(
+    private prisma: PrismaService,
+    private cloudinaryService: CloudinaryService,
+
+  ) { }
 
   // ✅ Create report with adminId
-  async create(data: any, adminId: string) {
-    console.log(data);
-    
-    try {
-      return await this.prisma.report.create({
-        data: {
-          ...data,
-          admin: { connect: { id: adminId } },
-          createdAt: data.createdAt || new Date() 
-        },
-      });
-    } catch (error) {
-      throw new BadRequestException('Failed to create report: ' + error.message);
+async create(data: any, adminId: string) {
+  try {
+    let cloudinaryResult: any = null;
+
+    // Upload file to Cloudinary if present
+    if (data.reportUrl) {
+      cloudinaryResult = await this.cloudinaryService.uploadImage(data.reportUrl);
+      data.reportUrl = cloudinaryResult.secure_url;
+      data.publicId = cloudinaryResult.public_id;
     }
+
+    return await this.prisma.report.create({
+      data: {
+        ...data,
+        admin: { connect: { id: adminId } },
+        createdAt: data.createdAt || new Date(),
+      },
+    });
+  } catch (error) {
+    throw new BadRequestException('Failed to create report: ' + error.message);
   }
+}
 
   // ✅ Fetch all reports
   async findAll() {
@@ -50,30 +62,43 @@ export class ReportService {
   }
 
   // ✅ Update report
-  async update(id: string, data: any) {
-    try {
+async update(id: string, data: any) {
+  try {
+    const report = await this.prisma.report.findUnique({ where: { id } });
+    if (!report) throw new BadRequestException('Report not found');
 
-      const report = await this.prisma.report.findUnique({ where: { id } })
-      if (!report) throw new BadRequestException('Report not found');
+    let cloudinaryResult: any = null;
 
-      
-      const updatedData = await this.prisma.report.update({
-        where: { id },
-        data:{
-          ...data,
-          createdAt: data.createdAt || new Date() 
-        },
-      });
-      if(data.reportUrl && report.reportUrl){
-        
-        deleteFile(report.reportUrl)
-      }
-      return updatedData;
-
-    } catch (error) {
-      throw new BadRequestException('Failed to update report: ' + error.message);
+    // If there is a new report file or URL, upload it to Cloudinary
+    if (data.reportUrl) {
+      cloudinaryResult = await this.cloudinaryService.uploadImage(data.reportUrl);
+      data.reportUrl = cloudinaryResult.secure_url;
+      data.publicId = cloudinaryResult.public_id;
     }
+
+    // Update report in DB
+    const updatedData = await this.prisma.report.update({
+      where: { id },
+      data: {
+        ...data,
+        createdAt: data.createdAt || new Date(),
+      },
+    });
+
+    // Clean up old file if new one uploaded
+    if (cloudinaryResult && report.reportUrl) {
+      if (report.publicId) {
+        await this.cloudinaryService.deleteImage(report.publicId);
+      } else {
+        deleteFile(report.reportUrl); // local file fallback
+      }
+    }
+
+    return updatedData;
+  } catch (error) {
+    throw new BadRequestException('Failed to update report: ' + error.message);
   }
+}
 
   // ✅ Delete report
   async remove(id: string) {

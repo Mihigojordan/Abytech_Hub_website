@@ -657,6 +657,8 @@ const ExpenseDashboard = () => {
                 >
                   <Grid3X3 className="w-4 h-4" />
                 </motion.button>
+
+
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   onClick={() => setViewMode('list')}
