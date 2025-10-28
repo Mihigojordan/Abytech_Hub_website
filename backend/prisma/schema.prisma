@@ -53,6 +53,7 @@ model Report{
   title       String
   content     Json?
   reportUrl   String?
+  publicId    String?
   createdAt   DateTime 
   adminId    String
   admin   Admin    @relation(fields: [adminId], references: [id], onDelete: Cascade, onUpdate: Cascade)

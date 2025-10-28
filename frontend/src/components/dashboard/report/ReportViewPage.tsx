@@ -44,6 +44,40 @@ interface OperationStatus {
   message: string;
 }
 
+// Helper function to handle reportUrl
+function handleReportUrl(reportUrl) {
+  if (!reportUrl) return null;
+  const trimmedUrl = reportUrl.trim();
+  // If it already starts with http or https, return as-is
+  if (trimmedUrl.startsWith('http')) return trimmedUrl;
+  // Ensure API_URL does not end with slash and reportUrl starts with slash
+  const baseUrl = API_URL.endsWith('/') ? API_URL.slice(0, -1) : API_URL;
+  const path = trimmedUrl.startsWith('/') ? trimmedUrl : '/' + trimmedUrl;
+  return baseUrl + path;
+}
+
+async function downloadFile(url, fileName) {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error('Failed to fetch file');
+    }
+    const blob = await response.blob();
+    const downloadUrl = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = downloadUrl;
+    link.download = fileName || 'downloaded-file'; // Custom filename
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(downloadUrl); // Clean up
+  } catch (error) {
+    console.error('Download error:', error);
+    // Handle error (e.g., show alert to user)
+    throw error; // Let caller handle
+  }
+}
+
 const ReportViewPage = () => {
   const { id: reportId } = useParams<{ id?: string }>();
   const { user } = useAdminAuth();
@@ -109,7 +143,6 @@ const ReportViewPage = () => {
       setDeleteConfirm(null);
       await reportService.deleteReport(report.id);
       setReports((prev) => prev.filter((r) => r.id !== report.id));
-
       if (selectedReport?.id === report.id) {
         const remainingReports = reports.filter((r) => r.id !== report.id);
         if (remainingReports.length > 0) {
@@ -128,16 +161,14 @@ const ReportViewPage = () => {
     }
   };
 
-  const handleDownloadReport = (report: Report) => {
+  const handleDownloadReport = async (report: Report) => {
     if (report.reportUrl) {
       try {
-        const fullUrl = `${API_URL}${report.reportUrl}`;
-        const link = document.createElement('a');
-        link.href = fullUrl;
-        link.download = report.title || 'report';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        const fullUrl = handleReportUrl(report.reportUrl);
+        if (!fullUrl) {
+          throw new Error('Invalid report URL');
+        }
+        await downloadFile(fullUrl, report.title || 'report');
       } catch (err) {
         showOperationStatus("error", "Failed to download report file");
       }
@@ -485,7 +516,7 @@ const ReportViewPage = () => {
                     This report is a file. You can download it using the button above or view it below.
                   </p>
                   <a
-                    href={`${API_URL}${selectedReport.reportUrl}?inline=true`}
+                    href={`${handleReportUrl(selectedReport.reportUrl)}?inline=true`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-blue-600 hover:underline"
@@ -550,7 +581,7 @@ const ReportViewPage = () => {
         </div>
       )}
       {operationLoading && (
-        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-40">
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-40">
           <div className="bg-white rounded-lg p-6 shadow-xl">
             <div className="flex items-center space-x-3">
               <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
@@ -560,7 +591,7 @@ const ReportViewPage = () => {
         </div>
       )}
       {deleteConfirm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg p-6 w-full max-w-md">
             <div className="flex items-center space-x-3 mb-4">
               <div className="w-10 h-10 rounded-full flex items-center justify-center bg-red-100">
