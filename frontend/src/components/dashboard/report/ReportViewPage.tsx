@@ -48,13 +48,12 @@ interface OperationStatus {
 function handleReportUrl(reportUrl) {
   if (!reportUrl) return null;
   const trimmedUrl = reportUrl.trim();
-  // If it already starts with http or https, return as-is
-  if (trimmedUrl.startsWith('http')) return trimmedUrl;
-  // Ensure API_URL does not end with slash and reportUrl starts with slash
+  if (trimmedUrl.includes('://')) return trimmedUrl; // handles https:// or http://
   const baseUrl = API_URL.endsWith('/') ? API_URL.slice(0, -1) : API_URL;
   const path = trimmedUrl.startsWith('/') ? trimmedUrl : '/' + trimmedUrl;
   return baseUrl + path;
 }
+
 
 async function downloadFile(url, fileName) {
   try {

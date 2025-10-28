@@ -11,20 +11,23 @@ const AboutUs = lazy(() => import('./pages/about us/aboutUs'));
 const TeamMember = lazy(() => import('./pages/Team'))
 
 import MainLayout from "./layouts/MainLayout";
-import ProjectsPage from "./pages/Projects/ProjectPages";
-import AdminLogin from "./pages/auth/admin/Login";
-import ProtectPrivateAdminRoute from "./components/protectors/ProtectPrivateAdminRoute";
 import DashboardLayout from "./layouts/DashboardLayout";
-import DashboardHome from "./pages/dashboard/DashboardHome";
-import AdminProfilePage from "./pages/dashboard/AdminProfile";
-import UnlockScreen from "./pages/auth/admin/UnlockScreen";
-import ExpenseDashboard from "./pages/dashboard/ExpenseDashboard";
-import ReportDashboard from "./pages/dashboard/ReportManagement";
-import AbyTechLocations from "./pages/Location";
-import RichTextEditor from "./components/RichTextEditor";
-import UpsertReportPage from "./components/dashboard/report/UpsertReportPage";
-import ReportViewPage from "./components/dashboard/report/ReportViewPage";
+import ProtectPrivateAdminRoute from "./components/protectors/ProtectPrivateAdminRoute";
 
+// Lazy-loaded pages
+const ProjectsPage = lazy(() => import("./pages/Projects/ProjectPages"));
+const AdminLogin = lazy(() => import("./pages/auth/admin/Login"));
+const DashboardHome = lazy(() => import("./pages/dashboard/DashboardHome"));
+const AdminProfilePage = lazy(() => import("./pages/dashboard/AdminProfile"));
+const UnlockScreen = lazy(() => import("./pages/auth/admin/UnlockScreen"));
+const ExpenseDashboard = lazy(() => import("./pages/dashboard/ExpenseDashboard"));
+const ReportDashboard = lazy(() => import("./pages/dashboard/ReportManagement"));
+
+// Lazy-loaded components
+const AbyTechLocations = lazy(() => import("./pages/Location"));
+const RichTextEditor = lazy(() => import("./components/RichTextEditor"));
+const UpsertReportPage = lazy(() => import("./components/dashboard/report/UpsertReportPage"));
+const ReportViewPage = lazy(() => import("./components/dashboard/report/ReportViewPage"));
 
 
 // Loading component
