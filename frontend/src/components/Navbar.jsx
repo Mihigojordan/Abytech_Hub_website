@@ -13,7 +13,7 @@ import {
   FiLinkedin,
 } from "react-icons/fi";
 import React from "react";
-import Logo from "../assets/trans.png";
+import Logo from "../assets/tran.png";
 
 function NavBar() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -30,7 +30,7 @@ function NavBar() {
   const socialLinks = [
     { icon: FiFacebook, href: "https://www.facebook.com/profile.php?id=61561463187987" },
     { icon: FiTwitter, href: "https://x.com/AbytechHUB" },
-    { icon: FiInstagram, href: "https://www.instagram.com/explore/locations/383650954824335/abytech-hub/?hl=en" },
+    { icon: FiInstagram, href: "https://www.instagram.com/abytechhubltd" },
     { icon: FiLinkedin, href: "https://www.linkedin.com/in/abytech-hub-754226354/" },
   ];
 
