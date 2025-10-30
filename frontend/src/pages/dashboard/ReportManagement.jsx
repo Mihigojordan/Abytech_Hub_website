@@ -98,86 +98,173 @@ const ReportDashboard = () => {
 
   // Handle report download
   const handleDownloadReport = async (report) => {
-    if (!report.id) return Swal.fire('Error', 'Invalid report ID', 'error');
-
-    // Case 1: Use report.content (HTML string) to generate PDF
-    if (report.content) {
-      const content = typeof report.content === 'string' ? report.content : JSON.stringify(report.content);
-
-      const htmlContent = `
-        <!DOCTYPE html>
-        <html lang="en">
-        <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>${report.title}</title>
-          <style>
-            body { font-family: Arial, sans-serif; margin: 20px; }
-            .swal-preview-container .ql-editor {
-              padding: 1rem;
-            }
-            .swal-preview-container .ql-editor h1 {
-              font-size: 2em; font-weight: bold; margin: 0.67em 0;
-            }
-            .swal-preview-container .ql-editor h2 {
-              font-size: 1.5em; font-weight: bold; margin: 0.83em 0;
-            }
-            .swal-preview-container .ql-editor h3 {
-              font-size: 1.17em; font-weight: bold; margin: 1em 0;
-            }
-            .swal-preview-container .ql-editor ul,
-            .swal-preview-container .ql-editor ol {
-              padding-left: 1.5em; margin-bottom: 1em;
-            }
-            .swal-preview-container .ql-editor ul { list-style-type: disc; }
-            .swal-preview-container .ql-editor ol { list-style-type: decimal; }
-            .swal-preview-container .ql-editor li { margin-bottom: 0.5em; }
-            .swal-preview-container .ql-editor p { margin-bottom: 1em; }
-            .swal-preview-container .ql-editor strong { font-weight: bold; }
-            .swal-preview-container .ql-editor em { font-style: italic; }
-            .swal-preview-container .ql-editor blockquote {
-              border-left: 4px solid #ccc; padding-left: 1em; margin-left: 0; font-style: italic;
-            }
-            .ql-container, .ql-editor { min-height: 400px; }
-            .text-left { text-align: left; }
-          </style>
-        </head>
-        <body>
-          <div class="swal-preview-container text-left">
-            <div class="ql-editor">
-              ${content}
-            </div>
+  if (!report.id) return Swal.fire('Error', 'Invalid report ID', 'error');
+  
+  // Case 1: Use report.content (HTML string) to generate PDF
+  if (report.content) {
+    const content = typeof report.content === 'string' ? report.content : JSON.stringify(report.content);
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>${report.title}</title>
+        <style>
+          body { 
+            font-family: Arial, sans-serif; 
+            margin: 20px;
+            line-height: 1.6;
+          }
+          
+          /* Prevent page breaks inside elements */
+          * {
+            page-break-inside: avoid;
+            break-inside: avoid;
+          }
+          
+          /* Allow page breaks only before certain elements */
+          h1, h2, h3, h4, h5, h6 {
+            page-break-after: avoid;
+            break-after: avoid;
+            page-break-inside: avoid;
+            break-inside: avoid;
+          }
+          
+          p, li, blockquote {
+            page-break-inside: avoid;
+            break-inside: avoid;
+            orphans: 3;
+            widows: 3;
+          }
+          
+          ul, ol {
+            page-break-inside: avoid;
+            break-inside: avoid;
+          }
+          
+          img {
+            page-break-inside: avoid;
+            break-inside: avoid;
+            page-break-after: avoid;
+            break-after: avoid;
+          }
+          
+          .swal-preview-container .ql-editor {
+            padding: 1rem;
+          }
+          
+          .swal-preview-container .ql-editor h1 {
+            font-size: 2em; 
+            font-weight: bold; 
+            margin: 0.67em 0;
+          }
+          
+          .swal-preview-container .ql-editor h2 {
+            font-size: 1.5em; 
+            font-weight: bold; 
+            margin: 0.83em 0;
+          }
+          
+          .swal-preview-container .ql-editor h3 {
+            font-size: 1.17em; 
+            font-weight: bold; 
+            margin: 1em 0;
+          }
+          
+          .swal-preview-container .ql-editor ul,
+          .swal-preview-container .ql-editor ol {
+            padding-left: 1.5em; 
+            margin-bottom: 1em;
+          }
+          
+          .swal-preview-container .ql-editor ul { 
+            list-style-type: disc; 
+          }
+          
+          .swal-preview-container .ql-editor ol { 
+            list-style-type: decimal; 
+          }
+          
+          .swal-preview-container .ql-editor li { 
+            margin-bottom: 0.5em; 
+          }
+          
+          .swal-preview-container .ql-editor p { 
+            margin-bottom: 1em; 
+          }
+          
+          .swal-preview-container .ql-editor strong { 
+            font-weight: bold; 
+          }
+          
+          .swal-preview-container .ql-editor em { 
+            font-style: italic; 
+          }
+          
+          .swal-preview-container .ql-editor blockquote {
+            border-left: 4px solid #ccc; 
+            padding-left: 1em; 
+            margin-left: 0; 
+            font-style: italic;
+          }
+          
+          .ql-container, .ql-editor { 
+            min-height: 400px; 
+          }
+          
+          .text-left { 
+            text-align: left; 
+          }
+        </style>
+      </head>
+      <body>
+        <div class="swal-preview-container text-left">
+          <div class="ql-editor">
+            ${content}
           </div>
-        </body>
-        </html>
-      `;
-
-      const options = {
-        margin: 10,
-        filename: `${report.title}.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2 },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-      };
-
-      const element = document.createElement('div');
-      element.innerHTML = htmlContent;
-      html2pdf().set(options).from(element).save();
-    }
-    // Case 2: Use reportUrl to download file
-    else if (report.reportUrl) {
-      const fullUrl = handleReportUrl(report.reportUrl);
-      if (!fullUrl) {
-        Swal.fire('Error', 'Invalid report URL', 'error');
-        return;
+        </div>
+      </body>
+      </html>
+    `;
+    
+    const options = {
+      margin: 10,
+      filename: `${report.title}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { 
+        scale: 2,
+        useCORS: true,
+        logging: false
+      },
+      jsPDF: { 
+        unit: 'mm', 
+        format: 'a4', 
+        orientation: 'portrait' 
+      },
+      pagebreak: { 
+        mode: ['avoid-all', 'css', 'legacy'] 
       }
-      await downloadFile(fullUrl, report.title || 'report');
+    };
+    
+    const element = document.createElement('div');
+    element.innerHTML = htmlContent;
+    html2pdf().set(options).from(element).save();
+  }
+  // Case 2: Use reportUrl to download file
+  else if (report.reportUrl) {
+    const fullUrl = handleReportUrl(report.reportUrl);
+    if (!fullUrl) {
+      Swal.fire('Error', 'Invalid report URL', 'error');
+      return;
     }
-    // Case 3: No content or URL
-    else {
-      Swal.fire('Error', 'No report content or URL available for download', 'error');
-    }
-  };
+    await downloadFile(fullUrl, report.title || 'report');
+  }
+  // Case 3: No content or URL
+  else {
+    Swal.fire('Error', 'No report content or URL available for download', 'error');
+  }
+};
 
   // Date range filter function
   const isDateInRange = (dateString, range) => {
