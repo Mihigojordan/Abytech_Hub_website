@@ -45,6 +45,18 @@ export class AdminController {
     }
   }
 
+    @Get()
+    async findAll() {
+        try {
+     return this.adminServices.findAll();
+    } catch (error) {
+      console.log('error getting all admin', error);
+      throw new HttpException(error.message, error.status);
+    }
+    }
+
+
+
   /**
    * Login endpoint
    * @body { adminEmail: string, password: string }
@@ -325,7 +337,7 @@ export class AdminController {
       return value;
     }
     if (files?.profileImg?.[0]?.filename) {
-      body['profileImage'] = `/uploads/profile_images/${files.profileImg[0].filename}`;
+      body['profileImage'] = files.profileImg[0].path;
     }
     if (body['is2FA']) {
       body['is2FA'] = parseBoolean(body['is2FA'])

@@ -11,6 +11,7 @@ import {
   HttpException,
   UseInterceptors,
   UploadedFiles,
+  Query,
 } from '@nestjs/common';
 import { ReportService } from './report.service';
 import { AdminJwtAuthGuard } from 'src/guards/adminGuard.guard';
@@ -43,10 +44,19 @@ export class ReportController {
   }
 
   // ✅ Get all reports
-  @Get()
-  async findAll() {
-    return this.reportService.findAll();
-  }
+@Get()
+async findAll(
+  @Query('page') page = '1',
+  @Query('limit') limit = '10',
+  @Query('search') search = '',
+  @Query('filter') filter?: string,
+  @Query('from') from?: string,
+  @Query('to') to?: string,
+) {
+  const pageNum = parseInt(page, 10);
+  const limitNum = parseInt(limit, 10);
+  return this.reportService.findAll(pageNum, limitNum, search, filter, from, to);
+}
 
   // ✅ Get one report
   @Get(':id')

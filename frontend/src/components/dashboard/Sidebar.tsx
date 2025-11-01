@@ -105,6 +105,13 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onToggle, }) => {
         
       },
       {
+        id: "employee",
+        label: "Employee Management",
+        icon: ShoppingBag,
+        path: `${basePath}/employee`,
+        
+      },
+      {
         id: "report",
         label: "Report Management ",
         icon: File,

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   FileText,
@@ -17,7 +17,6 @@ import {
   Edit,
   Download,
 } from "lucide-react";
-import Quill from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css";
 import reportService from "../../../services/reportService";
 import useAdminAuth from "../../../context/AdminAuthContext";
@@ -54,7 +53,6 @@ function handleReportUrl(reportUrl) {
   return baseUrl + path;
 }
 
-
 async function downloadFile(url, fileName) {
   try {
     const response = await fetch(url);
@@ -81,7 +79,6 @@ const ReportViewPage = () => {
   const { id: reportId } = useParams<{ id?: string }>();
   const { user } = useAdminAuth();
   const navigate = useNavigate();
-  const [reports, setReports] = useState<Report[]>([]);
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -92,35 +89,81 @@ const ReportViewPage = () => {
   const [operationStatus, setOperationStatus] = useState<OperationStatus | null>(null);
   const [operationLoading, setOperationLoading] = useState<boolean>(false);
   const [deleteConfirm, setDeleteConfirm] = useState<Report | null>(null);
+  const [currentSidebarReports, setCurrentSidebarReports] = useState<Report[]>([]);
+  const [totalSidebarReports, setTotalSidebarReports] = useState<number>(0);
+  const [sidebarTotalPages, setSidebarTotalPages] = useState<number>(1);
   const url = "/admin/dashboard/report/view/";
   const root_url = "/admin/dashboard/report/";
 
-  // Fetch reports
+  // Fetch selected report
   useEffect(() => {
-    const loadReports = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const reportsData = await reportService.getAllReports();
-        if (reportsData && reportsData.length > 0) {
-          const sortedReports = reportsData.sort(
-            (a: Report, b: Report) =>
-              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-          );
-          setReports(sortedReports);
-        } else {
-          setReports([]);
-          setError("No reports found");
+    if (reportId) {
+      const loadSelected = async () => {
+        try {
+          const response = await reportService.getReportById(reportId); // Assuming getReport is implemented as api.get(`/report/${id}`)
+          setSelectedReport(response);
+        } catch (err: unknown) {
+          const errorMessage = err instanceof Error ? err.message : "Failed to load report";
+          setError(errorMessage);
         }
-      } catch (err: unknown) {
-        const errorMessage = err instanceof Error ? err.message : "Failed to load reports";
-        setError(errorMessage);
-      } finally {
-        setLoading(false);
+      };
+      loadSelected();
+    }
+  }, [reportId]);
+
+  // Fetch sidebar reports with server-side pagination
+  const fetchSidebarReports = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const now = new Date();
+      const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const yesterdayStart = new Date(todayStart);
+      yesterdayStart.setDate(yesterdayStart.getDate() - 1);
+
+      const params: any = {
+        page: sidebarCurrentPage,
+        limit: sidebarItemsPerPage,
+        search: searchTerm.trim(),
+      };
+
+      if (filterType !== 'all') {
+        if (filterType === 'today') {
+          params.filter = 'today';
+        } else if (filterType === 'week') {
+          params.filter = 'weekly';
+        } else if (filterType === 'month') {
+          params.filter = 'monthly';
+        } else if (filterType === 'yesterday') {
+          params.filter = 'custom';
+          params.from = yesterdayStart.toISOString().split('T')[0];
+          params.to = todayStart.toISOString().split('T')[0];
+        }
       }
-    };
-    loadReports();
-  }, []);
+
+      const data = await reportService.getAllReports(params);
+      const sortedReports = (data.data || []).sort(
+        (a: Report, b: Report) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+      setCurrentSidebarReports(sortedReports);
+      setTotalSidebarReports(data.pagination?.total || 0);
+      setSidebarTotalPages(data.pagination?.totalPages || Math.ceil((data.pagination?.total || 0) / sidebarItemsPerPage));
+      if (sortedReports.length === 0 && sidebarCurrentPage > 1) {
+        setSidebarCurrentPage(1);
+      }
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to load reports";
+      setError(errorMessage);
+      setCurrentSidebarReports([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchSidebarReports();
+  }, [sidebarCurrentPage, searchTerm, filterType]);
 
   // Reset page to 1 when search term or filter changes
   useEffect(() => {
@@ -141,12 +184,11 @@ const ReportViewPage = () => {
       setOperationLoading(true);
       setDeleteConfirm(null);
       await reportService.deleteReport(report.id);
-      setReports((prev) => prev.filter((r) => r.id !== report.id));
+      await fetchSidebarReports();
       if (selectedReport?.id === report.id) {
-        const remainingReports = reports.filter((r) => r.id !== report.id);
-        if (remainingReports.length > 0) {
-          setSelectedReport(remainingReports[0]);
-          navigate(`${url}${remainingReports[0].id}`);
+        if (currentSidebarReports.length > 0) {
+          setSelectedReport(currentSidebarReports[0]);
+          navigate(`${url}${currentSidebarReports[0].id}`);
         } else {
           setSelectedReport(null);
           navigate(root_url);
@@ -209,39 +251,9 @@ const ReportViewPage = () => {
     return formatDate(dateString);
   };
 
-  const isDateInRange = (dateString: string, range: FilterType): boolean => {
-    if (range === "all") return true;
-    const date = new Date(dateString);
-    const now = new Date();
-    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const yesterdayStart = new Date(todayStart);
-    yesterdayStart.setDate(yesterdayStart.getDate() - 1);
-    const weekStart = new Date(todayStart);
-    weekStart.setDate(weekStart.getDate() - 7);
-    const monthStart = new Date(todayStart);
-    monthStart.setMonth(monthStart.getMonth() - 1);
-    switch (range) {
-      case "today":
-        return date >= todayStart;
-      case "yesterday":
-        return date >= yesterdayStart && date < todayStart;
-      case "week":
-        return date >= weekStart;
-      case "month":
-        return date >= monthStart;
-      default:
-        return true;
-    }
-  };
-
   const handleReportSelect = (report: Report) => {
     setSelectedReport(report);
     navigate(`${url}${report.id}`);
-    const indexInFiltered = filteredReports.findIndex((r) => r.id === report.id);
-    if (indexInFiltered !== -1) {
-      const targetPage = Math.floor(indexInFiltered / sidebarItemsPerPage) + 1;
-      setSidebarCurrentPage(targetPage);
-    }
   };
 
   const stripHtml = (html: string): string => {
@@ -256,48 +268,10 @@ const ReportViewPage = () => {
     return plainText.substring(0, maxLength) + "...";
   };
 
-  const filteredReports = useMemo(() => {
-    let filtered = reports;
-    filtered = filtered.filter((report) => isDateInRange(report.createdAt, filterType));
-    if (searchTerm.trim()) {
-      filtered = filtered.filter((report) =>
-        report.title?.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-    return filtered;
-  }, [reports, searchTerm, filterType]);
-
-  useEffect(() => {
-    if (reports.length > 0) {
-      if (reportId) {
-        const foundReport = reports.find((report) => report.id === reportId);
-        if (foundReport) {
-          setSelectedReport(foundReport);
-          const indexInFiltered = filteredReports.findIndex((report) => report.id === reportId);
-          if (indexInFiltered !== -1) {
-            const targetPage = Math.floor(indexInFiltered / sidebarItemsPerPage) + 1;
-            setSidebarCurrentPage(targetPage);
-          }
-        } else {
-          setError("Report not found");
-        }
-      } else {
-        setSelectedReport(reports[0]);
-        navigate(`${url}${reports[0].id}`);
-        setSidebarCurrentPage(1);
-      }
-    } else if (!loading && reports.length === 0) {
-      setError("No reports found");
-    }
-  }, [reports, reportId, navigate, filteredReports, sidebarItemsPerPage, loading, url]);
-
-  const sidebarTotalPages = Math.ceil(filteredReports.length / sidebarItemsPerPage);
-  const sidebarStartIndex = (sidebarCurrentPage - 1) * sidebarItemsPerPage;
-  const sidebarEndIndex = sidebarStartIndex + sidebarItemsPerPage;
-  const currentSidebarReports = filteredReports.slice(sidebarStartIndex, sidebarEndIndex);
-
   const handleSidebarPageChange = (page: number) => {
-    setSidebarCurrentPage(page);
+    if (page >= 1 && page <= sidebarTotalPages) {
+      setSidebarCurrentPage(page);
+    }
   };
 
   if (loading) {
@@ -311,7 +285,7 @@ const ReportViewPage = () => {
     );
   }
 
-  if (error && reports.length === 0) {
+  if (error && currentSidebarReports.length === 0) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -400,7 +374,7 @@ const ReportViewPage = () => {
                   </div>
                 </div>
               </div>
-              <p className="text-sm text-gray-600 mt-2">{filteredReports.length} reports</p>
+              <p className="text-sm text-gray-600 mt-2">{totalSidebarReports} reports</p>
             </div>
             <div className="divide-y max-h-[calc(100vh-400px)] overflow-y-auto">
               {currentSidebarReports.map((report) => (

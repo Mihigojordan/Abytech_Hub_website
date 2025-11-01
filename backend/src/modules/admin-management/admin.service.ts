@@ -11,6 +11,8 @@ import { JwtService } from '@nestjs/jwt';
 import { Response } from 'express';
 
 import { EmailService } from 'src/global/email/email.service';
+import { CloudinaryService } from 'src/global/cloudinary/cloudinary.service';
+import { deleteFile } from 'src/common/utils/file-upload.utils';
 
 @Injectable()
 export class AdminService {
@@ -19,6 +21,8 @@ export class AdminService {
     private readonly prisma: PrismaService,
     private readonly jwtServices: JwtService,
     private readonly email: EmailService,
+    private readonly cloudinaryService : CloudinaryService,
+
   ) { }
 
   async findAdminById(id: string) {
@@ -93,6 +97,19 @@ export class AdminService {
     }
   }
 
+
+      async findAll() {
+        try {
+          return await this.prisma.admin.findMany({
+           
+            orderBy: { createdAt: 'desc' },
+          });
+        } catch (error) {
+          throw new BadRequestException('Failed to fetch all admins : ' + error.message);
+        }
+      }
+    
+
   async findAdminByLogin(login: string) {
     const admin = await this.prisma.admin.findFirst({
       where: { OR: [{ adminEmail: login }, { phone: login }] },
@@ -100,6 +117,8 @@ export class AdminService {
     if (!admin) throw new UnauthorizedException('Admin not found');
     return admin;
   }
+
+
   async adminLogin(data: { adminEmail: string; password: string }) {
     const { adminEmail, password } = data;
     const admin = await this.findAdminByLogin(adminEmail);
@@ -109,6 +128,8 @@ export class AdminService {
     const token = this.jwtServices.sign({ id: admin.id, role: 'admin' });
     return { token, twoFARequired: false, authenticated: true, message: 'Login successful' };
   }
+
+  
 
   // async verifyOTP(adminId: string, otp: string) {
   //   await this.otpService.verifyOTP(adminId, otp);
@@ -228,6 +249,7 @@ export class AdminService {
       password?: string;
       profileImage?: string;
       status?: 'ACTIVE' | 'INACTIVE';
+      publicId?:string;
     },
   ) {
     try {
@@ -247,12 +269,33 @@ export class AdminService {
         if (emailExists) throw new ConflictException('Email already taken');
       }
 
+      let cloudinaryResult;
+
+       if (data.profileImage) {
+      cloudinaryResult = await this.cloudinaryService.uploadImage(data.profileImage);
+      data.profileImage = cloudinaryResult.secure_url;
+      data.publicId = cloudinaryResult.public_id;
+    }
+
+
       // Hash password if provided
 
       const updatedAdmin = await this.prisma.admin.update({
         where: { id },
         data,
       });
+
+
+       if (cloudinaryResult && existing.profileImage) {
+            if (existing.publicId) {
+              await this.cloudinaryService.deleteImage(existing.publicId);
+            } else {
+              deleteFile(existing.profileImage); // local file fallback
+            }
+          }
+
+
+
 
       return {
         message: 'Admin updated successfully',

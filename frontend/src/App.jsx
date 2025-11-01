@@ -13,6 +13,7 @@ const TeamMember = lazy(() => import('./pages/Team'))
 import MainLayout from "./layouts/MainLayout";
 import DashboardLayout from "./layouts/DashboardLayout";
 import ProtectPrivateAdminRoute from "./components/protectors/ProtectPrivateAdminRoute";
+import EmployeeeDashboard from "./pages/dashboard/EmployeeManagement";
 
 // Lazy-loaded pages
 const ProjectsPage = lazy(() => import("./pages/Projects/ProjectPages"));
@@ -72,6 +73,7 @@ const router = createBrowserRouter([
         children:[
           {index:true , element:<DashboardHome />},
           {path:'expense' , element:<ExpenseDashboard />},
+          {path:'employee' , element:<EmployeeeDashboard />},
           {path:'report' , element:<ReportDashboard />},
           {path:'report/create' , element:<UpsertReportPage />},
           {path:'report/edit/:id' , element:<UpsertReportPage />},
