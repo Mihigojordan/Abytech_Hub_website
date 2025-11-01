@@ -43,6 +43,7 @@ import {
   Milk,
   ShoppingBag,
   File,
+  Users2,
 } from "lucide-react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 
@@ -107,7 +108,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onToggle, }) => {
       {
         id: "employee",
         label: "Employee Management",
-        icon: ShoppingBag,
+        icon: Users2,
         path: `${basePath}/employee`,
         
       },
