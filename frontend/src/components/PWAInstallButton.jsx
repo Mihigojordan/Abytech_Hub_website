@@ -78,7 +78,7 @@ const PWAInstallButton = () => {
 
   return (
     <div className="fixed bottom-6 right-6 z-50">
-      <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-4 max-w-sm animate-bounce relative">
+      <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-4 max-w-sm  animate-float relative">
         {/* Close button */}
         <button
           onClick={handleDismiss}

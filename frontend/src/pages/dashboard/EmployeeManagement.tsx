@@ -2,25 +2,80 @@ import React, { useState, useEffect } from 'react';
 import {
   Search, ChevronDown, ChevronLeft, ChevronRight,
   RefreshCw, Filter, Grid3X3, List, Minimize2, Phone,
-  AlertCircle, X
+  XCircle,CheckCircle,
+  AlertCircle, X, User
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import adminAuthService from '../../services/adminAuthService'; // Adjust path as needed
+import adminAuthService from '../../services/adminAuthService';
 import { useNavigate } from 'react-router-dom';
+import { API_URL } from '../../api/api';
 
-const EmployeeeDashboard = () => {
-  const [admins, setAdmins] = useState([]);
-  const [allAdmins, setAllAdmins] = useState([]);
+// === Add this function at the top of the file (or in a utils file) ===
+
+
+function handleReportUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  const trimmedUrl = url.trim();
+  if (trimmedUrl.includes('://')) return trimmedUrl; // Full URL
+  const baseUrl = API_URL.endsWith('/') ? API_URL.slice(0, -1) : API_URL;
+  const path = trimmedUrl.startsWith('/') ? trimmedUrl : '/' + trimmedUrl;
+  return baseUrl + path;
+}
+
+interface AdminAvatarProps {
+  admin: any;
+  size?: 'sm' | 'md' | 'lg';
+}
+
+const AdminAvatar = ({ admin, size = 'md' }: AdminAvatarProps) => {
+  const imageUrl = handleReportUrl(admin.profileImage);
+  const [hasError, setHasError] = useState(false);
+
+  const sizeClass =
+    size === 'sm' ? 'w-8 h-8' :
+    size === 'lg' ? 'w-12 h-12' :
+    'w-10 h-10';
+
+  // If image exists and didn't error, show it
+  if (imageUrl && !hasError) {
+    return (
+      <img
+        src={imageUrl}
+        alt={admin.adminName || 'Admin'}
+        className={`${sizeClass} rounded-full object-cover border border-gray-200`}
+        onError={() => setHasError(true)}
+      />
+    );
+  }
+
+  // Fallback to icon
+  return (
+    <div className={`${sizeClass} bg-primary-100 rounded-full flex items-center justify-center`}>
+      <User
+        className={`text-primary-600 ${
+          size === 'sm' ? 'w-4 h-4' :
+          size === 'lg' ? 'w-6 h-6' :
+          'w-5 h-5'
+        }`}
+      />
+    </div>
+  );
+};
+
+
+
+const EmployeeDashboard = () => {
+  const [admins, setAdmins] = useState<any[]>([]);
+  const [allAdmins, setAllAdmins] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('adminName');
-  const [sortOrder, setSortOrder] = useState('asc');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(8);
-  const [operationStatus, setOperationStatus] = useState(null);
-  const [viewMode, setViewMode] = useState('table');
-  const [showFilters, setShowFilters] = useState(false);
+  const [operationStatus, setOperationStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [viewMode, setViewMode] = useState<'table' | 'grid' | 'list'>('table');
   const [isCollapsed, setIsCollapsed] = useState(false);
   const navigate = useNavigate();
 
@@ -40,7 +95,7 @@ const EmployeeeDashboard = () => {
       setAllAdmins(adminList);
       setAdmins(adminList);
       setError(null);
-    } catch (err) {
+    } catch (err: any) {
       setError(err.message || 'Failed to load admins');
       setAllAdmins([]);
       setAdmins([]);
@@ -49,7 +104,7 @@ const EmployeeeDashboard = () => {
     }
   };
 
-  const showOperationStatus = (type, message, duration = 3000) => {
+  const showOperationStatus = (type: 'success' | 'error', message: string, duration = 3000) => {
     setOperationStatus({ type, message });
     setTimeout(() => setOperationStatus(null), duration);
   };
@@ -71,7 +126,7 @@ const EmployeeeDashboard = () => {
       if (sortBy === 'createdAt') {
         const aDate = new Date(aValue);
         const bDate = new Date(bValue);
-        return sortOrder === 'asc' ? aDate - bDate : bDate - aDate;
+        return sortOrder === 'asc' ? aDate.getTime() - bDate.getTime() : bDate.getTime() - aDate.getTime();
       }
       const aStr = aValue.toString().toLowerCase();
       const bStr = bValue.toString().toLowerCase();
@@ -82,13 +137,13 @@ const EmployeeeDashboard = () => {
     setCurrentPage(1);
   };
 
-  const formatDate = (date) => {
+  const formatDate = (date: string) => {
     if (!date) return '—';
     const d = new Date(date);
     return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
   };
 
-  const openWhatsApp = (phone) => {
+  const openWhatsApp = (phone: string) => {
     if (!phone) {
       showOperationStatus('error', 'Phone number not available');
       return;
@@ -106,34 +161,17 @@ const EmployeeeDashboard = () => {
   const endIndex = startIndex + itemsPerPage;
   const currentAdmins = admins.slice(startIndex, endIndex);
 
+  // === TABLE VIEW ===
   const renderTableView = () => (
     <div className="bg-white rounded-lg shadow border border-gray-100">
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
-              <th className="text-left py-3 px-4 text-gray-600 font-semibold cursor-pointer hover:bg-gray-100"
-                  onClick={() => { setSortBy('adminName'); setSortOrder(sortBy === 'adminName' ? (sortOrder === 'asc' ? 'desc' : 'asc') : 'asc'); }}>
-                <div className="flex items-center space-x-1">
-                  <span>Name</span>
-                  <ChevronDown className={`w-4 h-4 ${sortBy === 'adminName' ? 'text-primary-600' : 'text-gray-400'}`} />
-                </div>
-              </th>
-              <th className="text-left py-3 px-4 text-gray-600 font-semibold cursor-pointer hover:bg-gray-100"
-                  onClick={() => { setSortBy('adminEmail'); setSortOrder(sortBy === 'adminEmail' ? (sortOrder === 'asc' ? 'desc' : 'asc') : 'asc'); }}>
-                <div className="flex items-center space-x-1">
-                  <span>Email</span>
-                  <ChevronDown className={`w-4 h-4 ${sortBy === 'adminEmail' ? 'text-primary-600' : 'text-gray-400'}`} />
-                </div>
-              </th>
-              <th className="text-left py-3 px-4 text-gray-600 font-semibold hidden md:table-cell">Phone</th>
-              <th className="text-left py-3 px-4 text-gray-600 font-semibold hidden lg:table-cell cursor-pointer hover:bg-gray-100"
-                  onClick={() => { setSortBy('createdAt'); setSortOrder(sortBy === 'createdAt' ? (sortOrder === 'asc' ? 'desc' : 'asc') : 'asc'); }}>
-                <div className="flex items-center space-x-1">
-                  <span>Created</span>
-                  <ChevronDown className={`w-4 h-4 ${sortBy === 'createdAt' ? 'text-primary-600' : 'text-gray-400'}`} />
-                </div>
-              </th>
+              <th className="text-left py-3 px-4 text-gray-600 font-semibold">Admin</th>
+              <th className="text-left py-3 px-4 text-gray-600 font-semibold hidden md:table-cell">Email</th>
+              <th className="text-left py-3 px-4 text-gray-600 font-semibold hidden lg:table-cell">Phone</th>
+              <th className="text-left py-3 px-4 text-gray-600 font-semibold hidden xl:table-cell">Created</th>
               <th className="text-left py-3 px-4 text-gray-600 font-semibold">Status</th>
               <th className="text-right py-3 px-4 text-gray-600 font-semibold">Action</th>
             </tr>
@@ -141,17 +179,25 @@ const EmployeeeDashboard = () => {
           <tbody className="divide-y divide-gray-100">
             {currentAdmins.map((admin) => (
               <motion.tr key={admin.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="hover:bg-gray-50">
-                <td className="py-3 px-4 font-medium text-gray-900">{admin.adminName || '—'}</td>
-                <td className="py-3 px-4 text-gray-600">{admin.adminEmail || '—'}</td>
-                <td className="py-3 px-4 text-gray-600 hidden md:table-cell">{admin.phone || '—'}</td>
-                <td className="py-3 px-4 text-gray-600 hidden lg:table-cell">{formatDate(admin.createdAt)}</td>
+                <td className="py-3 px-4">
+                  <div className="flex items-center space-x-3">
+                    <AdminAvatar admin={admin} size="md" />
+                    <div>
+                      <div className="font-medium text-gray-900">{admin.adminName || '—'}</div>
+                      <div className="text-xs text-gray-500 md:hidden">{admin.adminEmail}</div>
+                    </div>
+                  </div>
+                </td>
+                <td className="py-3 px-4 text-gray-600 hidden md:table-cell">{admin.adminEmail || '—'}</td>
+                <td className="py-3 px-4 text-gray-600 hidden lg:table-cell">{admin.phone || '—'}</td>
+                <td className="py-3 px-4 text-gray-600 hidden xl:table-cell">{formatDate(admin.createdAt)}</td>
                 <td className="py-3 px-4">
                   <span className={`px-2 py-1 text-xs font-medium rounded-full ${
                     admin.status === 'ACTIVE' 
                       ? 'bg-green-100 text-green-700' 
                       : 'bg-red-100 text-red-700'
                   }`}>
-                    {admin.status || '—'}
+                    { admin.status}
                   </span>
                 </td>
                 <td className="py-3 px-4 text-right">
@@ -165,7 +211,7 @@ const EmployeeeDashboard = () => {
                         ? 'text-green-600 hover:bg-green-50 hover:text-green-700' 
                         : 'text-gray-400 cursor-not-allowed'
                     }`}
-                    title={admin.phone ? `Message ${admin.adminName} on WhatsApp` : 'No phone number'}
+                    title={admin.phone ? `Message ${admin.adminName}` : 'No phone'}
                   >
                     <Phone className="w-4 h-4" />
                   </motion.button>
@@ -178,6 +224,7 @@ const EmployeeeDashboard = () => {
     </div>
   );
 
+  // === GRID VIEW ===
   const renderGridView = () => (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
       {currentAdmins.map((admin) => (
@@ -187,36 +234,38 @@ const EmployeeeDashboard = () => {
           animate={{ opacity: 1, y: 0 }}
           className="bg-white rounded-lg shadow border border-gray-100 p-4 hover:shadow-md transition-shadow"
         >
-          <div className="flex items-center justify-between mb-3">
-            <div className="font-semibold text-gray-900 truncate">{admin.adminName || 'Unnamed'}</div>
-            <span className={`text-xs px-2 py-1 rounded-full ${
-              admin.status === 'ACTIVE' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-            }`}>
-              {admin.status}
-            </span>
-          </div>
-          <div className="text-sm text-gray-600 mb-1">{admin.adminEmail}</div>
-          <div className="text-sm text-gray-500 mb-3">{admin.phone || 'No phone'}</div>
-          <div className="flex justify-end">
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => openWhatsApp(admin.phone)}
-              disabled={!admin.phone}
-              className={`p-2 rounded-full ${
-                admin.phone 
-                  ? 'text-green-600 hover:bg-green-50' 
-                  : 'text-gray-400 cursor-not-allowed'
-              }`}
-            >
-              <Phone className="w-4 h-4" />
-            </motion.button>
+          <div className="flex flex-col items-center text-center">
+            <AdminAvatar admin={admin} size="lg" />
+            <div className="mt-3">
+              <div className="font-semibold text-gray-900">{admin.adminName || 'Unnamed'}</div>
+              <div className="text-sm text-gray-600">{admin.adminEmail}</div>
+              <div className="text-xs text-gray-500 mt-1">{admin.phone || 'No phone'}</div>
+            </div>
+            <div className="mt-3 flex items-center space-x-2">
+              <span className={`text-xs px-2 py-1 rounded-full ${
+                admin.status === 'ACTIVE' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+              }`}>
+                {admin.status}
+              </span>
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => openWhatsApp(admin.phone)}
+                disabled={!admin.phone}
+                className={`p-2 rounded-full ${
+                  admin.phone ? 'text-green-600 hover:bg-green-50' : 'text-gray-400 cursor-not-allowed'
+                }`}
+              >
+                <Phone className="w-4 h-4" />
+              </motion.button>
+            </div>
           </div>
         </motion.div>
       ))}
     </div>
   );
 
+  // === LIST VIEW ===
   const renderListView = () => (
     <div className="bg-white rounded-lg shadow border border-gray-100 divide-y divide-gray-100">
       {currentAdmins.map((admin) => (
@@ -226,10 +275,13 @@ const EmployeeeDashboard = () => {
           animate={{ opacity: 1, y: 0 }}
           className="px-4 py-4 hover:bg-gray-50 flex items-center justify-between"
         >
-          <div className="flex-1 min-w-0">
-            <div className="font-semibold text-gray-900 truncate">{admin.adminName || '—'}</div>
-            <div className="text-sm text-gray-600">{admin.adminEmail}</div>
-            <div className="text-xs text-gray-500 mt-1">{admin.phone || 'No phone'}</div>
+          <div className="flex items-center space-x-3 flex-1 min-w-0">
+            <AdminAvatar admin={admin} size="md" />
+            <div className="flex-1 min-w-0">
+              <div className="font-semibold text-gray-900 truncate">{admin.adminName || '—'}</div>
+              <div className="text-sm text-gray-600 truncate">{admin.adminEmail}</div>
+              <div className="text-xs text-gray-500 mt-1">{admin.phone || 'No phone'}</div>
+            </div>
           </div>
           <div className="flex items-center space-x-3">
             <span className={`text-xs px-2 py-1 rounded-full ${
@@ -254,6 +306,7 @@ const EmployeeeDashboard = () => {
     </div>
   );
 
+  // === PAGINATION ===
   const renderPagination = () => {
     const pages = [];
     const maxVisible = 5;
@@ -318,8 +371,8 @@ const EmployeeeDashboard = () => {
                 <Minimize2 className="w-5 h-5" />
               </motion.button>
               <div>
-                <h1 className="text-xl font-semibold text-gray-900">Employee Directory</h1>
-                <p className="text-sm text-gray-500">Contact employee via WhatsApp</p>
+                <h1 className="text-xl font-semibold text-gray-900">Admin Directory</h1>
+                <p className="text-sm text-gray-500">Contact admins via WhatsApp</p>
               </div>
             </div>
             <motion.button
@@ -356,14 +409,14 @@ const EmployeeeDashboard = () => {
                   <p className="text-2xl font-bold text-gray-900">{stat.count}</p>
                 </div>
                 <div className={`w-10 h-10 bg-${stat.color.replace('600', '50')} rounded-full flex items-center justify-center`}>
-                  <Phone className={`w-5 h-5 text-${stat.color}`} />
+                  <User className={`w-5 h-5 text-${stat.color}`} />
                 </div>
               </div>
             </motion.div>
           ))}
         </div>
 
-        {/* Search & Filters */}
+        {/* Search & View Mode */}
         <div className="bg-white rounded-lg shadow border border-gray-100 p-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div className="flex items-center space-x-3">
@@ -384,7 +437,7 @@ const EmployeeeDashboard = () => {
                 onChange={(e) => {
                   const [field, order] = e.target.value.split('-');
                   setSortBy(field);
-                  setSortOrder(order);
+                  setSortOrder(order as 'asc' | 'desc');
                 }}
                 className="text-sm border border-gray-200 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
               >
@@ -414,7 +467,7 @@ const EmployeeeDashboard = () => {
           </div>
         </div>
 
-        {/* Error */}
+        {/* Error / Loading / Empty */}
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700 text-sm flex items-center space-x-2">
             <AlertCircle className="w-5 h-5" />
@@ -422,7 +475,6 @@ const EmployeeeDashboard = () => {
           </div>
         )}
 
-        {/* Loading */}
         {loading ? (
           <div className="bg-white rounded-lg shadow border border-gray-100 p-12 text-center">
             <div className="inline-flex items-center space-x-2">
@@ -480,4 +532,4 @@ const EmployeeeDashboard = () => {
   );
 };
 
-export default EmployeeeDashboard;
+export default EmployeeDashboard;

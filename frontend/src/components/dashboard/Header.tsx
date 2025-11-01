@@ -18,6 +18,15 @@ interface HeaderProps {
   role: string;
 }
 
+function handleReportUrl(url:string) {
+  if (!url) return null;
+  const trimmedUrl = url.trim();
+  if (trimmedUrl.includes('://')) return trimmedUrl; // handles https:// or http://
+  const baseUrl = API_URL.endsWith('/') ? API_URL.slice(0, -1) : API_URL;
+  const path = trimmedUrl.startsWith('/') ? trimmedUrl : '/' + trimmedUrl;
+  return baseUrl + path;
+}
+
 const useEmployeeAuth = ()=>{
   return{
     user:{},
@@ -76,7 +85,8 @@ const Header: React.FC<HeaderProps> = ({ onToggle}) => {
 
   // Get profile image and email based on role
   const getProfileImage = (): string | undefined => {
-    return role === "admin" ? adminUser?.profileImage : employeeUser?.profile_image ;
+    
+    return role === "admin" ? handleReportUrl(adminUser?.profileImage) : employeeUser?.profile_image ;
   };
 
   const getEmail = (): string | undefined => {
@@ -141,7 +151,7 @@ const Header: React.FC<HeaderProps> = ({ onToggle}) => {
                 <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center overflow-hidden">
                   {getProfileImage() ? (
                     <img
-                      src={`${API_URL}${getProfileImage()}`}
+                      src={`${getProfileImage()}`}
                       alt="Profile"
                       className="w-8 h-8 rounded-full object-cover"
                     />
