@@ -42,46 +42,10 @@ const DashboardHome = ({ role }) => {
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
 
-  // Date range filter function
-  const isDateInRange = (dateString, range) => {
-    if (range === 'all') return true;
-
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return false; // Invalid date check
-
-    const now = new Date();
-    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const weekStart = new Date(todayStart);
-    weekStart.setDate(weekStart.getDate() - 7);
-    const monthStart = new Date(todayStart.getFullYear(), todayStart.getMonth(), 1);
-    const customStart = customStartDate ? new Date(customStartDate) : null;
-    const customEnd = customEndDate ? new Date(customEndDate) : null;
-
-    switch (range) {
-      case 'today':
-        return date >= todayStart && date < new Date(todayStart.getTime() + 24 * 60 * 60 * 1000);
-      case 'week':
-        return date >= weekStart;
-      case 'month':
-        return date >= monthStart;
-      case 'custom':
-        if (!customStart || !customEnd || isNaN(customStart.getTime()) || isNaN(customEnd.getTime())) {
-          return false;
-        }
-        const customEndWithTime = new Date(customEnd);
-        customEndWithTime.setHours(23, 59, 59, 999);
-        return date >= customStart && date <= customEndWithTime;
-      default:
-        return true;
-    }
-  };
-
   // Handle report download as PDF
   const handleDownloadReport = (report) => {
     if (!report.id) return Swal.fire('Error', 'Invalid report ID', 'error');
-
     const content = typeof report.content === 'string' ? report.content : JSON.stringify(report.content);
-
     const htmlContent = `
       <!DOCTYPE html>
       <html lang="en">
@@ -159,7 +123,6 @@ const DashboardHome = ({ role }) => {
       </body>
       </html>
     `;
-
     const options = {
       margin: 10,
       filename: `${report.title}.pdf`,
@@ -167,7 +130,6 @@ const DashboardHome = ({ role }) => {
       html2canvas: { scale: 2 },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
     };
-
     const element = document.createElement('div');
     element.innerHTML = htmlContent;
     html2pdf().set(options).from(element).save();
@@ -178,24 +140,34 @@ const DashboardHome = ({ role }) => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const [reportData, expenseData] = await Promise.all([
-          reportService.getAllReports(),
-          expenseService.getAllExpenses(),
+        const getFilterParams = () => {
+          const params = { search: searchTerm.trim() };
+          if (filterType && filterType !== 'all') {
+            params.filter = filterType === 'week' ? 'weekly' : filterType === 'month' ? 'monthly' : filterType;
+            if (filterType === 'custom' && customStartDate && customEndDate) {
+              params.from = customStartDate;
+              params.to = customEndDate;
+            }
+          }
+          return params;
+        };
+        const filterParams = getFilterParams();
+
+        const [reportResponse, expenseResponse] = await Promise.all([
+          reportService.getAllReports({ ...filterParams, page: 1, limit: 9999 }),
+          expenseService.getAllExpenses({ ...filterParams, page: 1, limit: 9999 }),
         ]);
 
-        // Sort by createdAt descending to get most recent
-        const sortedReports = reportData.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-        const sortedExpenses = expenseData.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        const reportData = reportResponse.data || reportResponse || [];
+        const expenseData = expenseResponse.data || expenseResponse || [];
 
-        // Apply date filter
-        const filteredReports = sortedReports.filter((report) => isDateInRange(report.createdAt, filterType));
-        const filteredExpenses = sortedExpenses.filter((expense) => isDateInRange(expense.createdAt, filterType));
+        // Assuming backend sorts by createdAt desc, no need to sort again
 
         // Get recent activity count based on filter
-        const recentActivity = [...filteredReports, ...filteredExpenses].length;
+        const recentActivity = reportData.length + expenseData.length;
 
         // Get key metrics (top 3 expenses by amount)
-        const keyMetrics = filteredExpenses
+        const keyMetrics = expenseData
           .sort((a, b) => b.amount - a.amount)
           .slice(0, 3)
           .map(expense => ({
@@ -207,15 +179,15 @@ const DashboardHome = ({ role }) => {
           }));
 
         setDashboardData({
-          reports: filteredReports.slice(0, 3), // Limit to 3 recent reports
-          expenses: filteredExpenses.slice(0, 3), // Limit to 3 recent expenses
+          reports: reportData.slice(0, 3), // Limit to 3 recent reports
+          expenses: expenseData.slice(0, 3), // Limit to 3 recent expenses
           keyMetrics,
           stats: {
-            totalReports: filteredReports.length,
-            totalExpenses: filteredExpenses.length,
-            totalAmount: filteredExpenses.reduce((sum, expense) => sum + expense.amount, 0),
+            totalReports: reportResponse.pagination ? reportResponse.pagination.total : reportData.length,
+            totalExpenses: expenseResponse.pagination ? expenseResponse.pagination.total : expenseData.length,
+            totalAmount: expenseData.reduce((sum, expense) => sum + expense.amount, 0),
             recentActivity,
-            uniqueAdmins: new Set([...filteredReports, ...filteredExpenses].map(item => item.admin?.id)).size
+            uniqueAdmins: new Set([...reportData, ...expenseData].map(item => item.admin?.id)).size
           }
         });
         setLoading(false);
@@ -302,7 +274,6 @@ const DashboardHome = ({ role }) => {
           </div>
         </div>
       </div>
-
       <div className="p-6 space-y-6">
         {/* Filter Controls */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
@@ -409,7 +380,6 @@ const DashboardHome = ({ role }) => {
             </div>
           )}
         </div>
-
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {statsCards.map((stat, index) => (
@@ -437,7 +407,6 @@ const DashboardHome = ({ role }) => {
             </div>
           ))}
         </div>
-
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Recent Reports */}
@@ -497,7 +466,6 @@ const DashboardHome = ({ role }) => {
               </div>
             </div>
           </div>
-
           {/* Recent Expenses */}
           <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
             <div className="p-6 border-b border-gray-200">
@@ -551,7 +519,6 @@ const DashboardHome = ({ role }) => {
             </div>
           </div>
         </div>
-
         {/* Bottom Section */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Admin Overview */}
@@ -599,7 +566,6 @@ const DashboardHome = ({ role }) => {
               </div>
             </div>
           </div>
-
           {/* Key Metrics */}
           <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
             <div className="p-6 border-b border-gray-200">

@@ -6,10 +6,11 @@ import { JwtModule } from '@nestjs/jwt';
 import { EmailModule } from 'src/global/email/email.module';
 
 import { GoogleAdminStrategy } from './google.strategy';
+import { CloudinaryService } from 'src/global/cloudinary/cloudinary.service';
 
 @Module({
   controllers: [AdminController,],
-  providers: [AdminService,GoogleAdminStrategy],
+  providers: [AdminService,GoogleAdminStrategy,CloudinaryService],
   imports: [
     JwtModule.register({
       secret: process.env.Jwt_SECRET_KEY,

@@ -36,16 +36,108 @@ async create(data: any, adminId: string) {
 }
 
   // ✅ Fetch all reports
-  async findAll() {
-    try {
-      return await this.prisma.report.findMany({
+async findAll(
+  page = 1,
+  limit = 10,
+  search = '',
+  filter?: string,
+  from?: string,
+  to?: string,
+) {
+  try {
+    const skip = (page - 1) * limit;
+
+    // base search filter
+    const where: any = search
+      ? {
+          OR: [
+            {
+              title: {
+                contains: search,
+                mode: 'insensitive',
+              },
+            },
+            {
+              admin: {
+                is: {
+                  adminName: {
+                    contains: search,
+                    mode: 'insensitive',
+                  },
+                },
+              },
+            },
+          ],
+        }
+      : {};
+
+    // apply time filters if provided
+    if (filter) {
+      const now = new Date();
+      let startDate: Date | undefined;
+      let endDate: Date | undefined = now;
+
+      switch (filter.toLowerCase()) {
+        case 'today':
+          startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+          break;
+
+        case 'weekly':
+          startDate = new Date(now);
+          startDate.setDate(now.getDate() - now.getDay()); // start of week (Sunday)
+          startDate.setHours(0, 0, 0, 0);
+          break;
+
+        case 'monthly':
+          startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+          break;
+
+        case 'custom':
+          if (from && to) {
+            startDate = new Date(from);
+            endDate = new Date(to);
+          }
+          break;
+
+        default:
+          break;
+      }
+
+      if (startDate) {
+        where.createdAt = { gte: startDate };
+      }
+      if (endDate) {
+        where.createdAt = { ...(where.createdAt || {}), lte: endDate };
+      }
+    }
+
+    const [reports, total] = await Promise.all([
+      this.prisma.report.findMany({
+        where,
         include: { admin: true },
         orderBy: { createdAt: 'desc' },
-      });
-    } catch (error) {
-      throw new BadRequestException('Failed to fetch reports: ' + error.message);
-    }
+        skip,
+        take: limit,
+      }),
+      this.prisma.report.count({ where }),
+    ]);
+
+    return {
+      data: reports,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+      filter: filter || 'all',
+    };
+  } catch (error) {
+    throw new BadRequestException('Failed to fetch reports: ' + error.message);
   }
+}
+
+
 
   // ✅ Fetch one report by ID
   async findOne(id: string) {

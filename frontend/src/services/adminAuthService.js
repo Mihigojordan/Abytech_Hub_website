@@ -46,6 +46,18 @@ class AdminAuthService {
     }
   }
 
+   async getAllAdmins() {
+      try {
+        const response = await api.get('/admin');
+        return response.data;
+      } catch (error) {
+        const msg =
+          error.response?.data?.message || error.message || 'Failed to fetch admins';
+        throw new Error(msg);
+      }
+    }
+  
+
   async lockAdmin() {
     try {
       const response = await this.api.post('/admin/lock');

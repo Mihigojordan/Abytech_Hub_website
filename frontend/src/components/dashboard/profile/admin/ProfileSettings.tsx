@@ -22,6 +22,15 @@ interface FormData {
   profileImage: string;
 }
 
+function handleReportUrl(reportUrl:string | undefined) {
+  if (!reportUrl) return null;
+  const trimmedUrl = reportUrl.trim();
+  if (trimmedUrl.includes('://')) return trimmedUrl; // handles https:// or http://
+  const baseUrl = API_URL.endsWith('/') ? API_URL.slice(0, -1) : API_URL;
+  const path = trimmedUrl.startsWith('/') ? trimmedUrl : '/' + trimmedUrl;
+  return baseUrl + path;
+}
+
 const ProfileSettings: React.FC = () => {
   const { user, updateAdmin } = useAdminAuth() as {
     user: AdminUser | null;
@@ -34,7 +43,7 @@ const ProfileSettings: React.FC = () => {
     adminEmail: user?.adminEmail || '',
     phone: user?.phone || '',
     createdAt: user?.createdAt || '',
-    profileImage: `${API_URL}${user?.profileImage}` || '',
+    profileImage: handleReportUrl(user?.profileImage) || '',
   });
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -46,7 +55,7 @@ const ProfileSettings: React.FC = () => {
       adminEmail: user?.adminEmail || '',
       phone: user?.phone || '',
       createdAt: user?.createdAt || '',
-      profileImage: `${API_URL}${user?.profileImage}` || '',
+      profileImage: handleReportUrl(user?.profileImage) || '',
     });
   }, [user]);
 

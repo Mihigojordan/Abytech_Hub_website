@@ -33,17 +33,55 @@ class ReportService {
     }
   }
 
-  // ✅ Get all reports
-  async getAllReports() {
-    try {
-      const response = await api.get('/report');
-      return response.data;
-    } catch (error) {
-      const msg =
-        error.response?.data?.message || error.message || 'Failed to fetch reports';
-      throw new Error(msg);
+  // ✅ Get count for specific filter
+async getReportCount(filter, from = '', to = '') {
+  try {
+    const params = { page: 1, limit: 8, filter };
+    if (filter === 'custom' && from && to) {
+      params.from = from;
+      params.to = to;
     }
+    const response = await api.get('/report', { params });
+    return response.data.total || 0;
+  } catch (error) {
+    throw new Error('Failed to fetch report count');
   }
+}
+
+  // ✅ Get all reports
+async getAllReports({
+  page = 1,
+  limit = 10,
+  search = '',
+  filter = '',
+  from = '',
+  to = '',
+} = {}) {
+  try {
+    const params = {
+      page,
+      limit,
+      search,
+    };
+
+    // Add filters only if provided
+    if (filter) params.filter = filter;
+    if (filter === 'custom' && from && to) {
+      params.from = from;
+      params.to = to;
+    }
+
+    const response = await api.get('/report', { params });
+    return response.data;
+  } catch (error) {
+    const msg =
+      error.response?.data?.message ||
+      error.message ||
+      'Failed to fetch reports';
+    throw new Error(msg);
+  }
+}
+
 
   // ✅ Get one report by ID
   async getReportById(id) {
