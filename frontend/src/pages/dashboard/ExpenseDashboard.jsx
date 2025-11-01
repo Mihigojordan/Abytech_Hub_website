@@ -226,7 +226,7 @@ const ExpenseDashboard = () => {
   };
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'RWF' }).format(amount);
   };
 
   const totalPages = Math.ceil(expenses.length / itemsPerPage);
