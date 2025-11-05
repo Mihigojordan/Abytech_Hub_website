@@ -626,8 +626,8 @@ const ReportDashboard = () => {
                 {[
                   { value: 'all', label: 'All Reports', statKey: 'total', filter: '' },
                   { value: 'today', label: 'Today', statKey: 'today', filter: 'today' },
-                  { value: 'week', label: 'This Week', statKey: 'week', filter: 'weekly' },
-                  { value: 'month', label: 'This Month', statKey: 'month', filter: 'monthly' },
+                  { value: 'weekly', label: 'This Week', statKey: 'weekly', filter: 'weekly' },
+                  { value: 'monthly', label: 'This Month', statKey: 'monthly', filter: 'monthly' },
                   { value: 'custom', label: 'Custom Range', statKey: null, filter: 'custom' },
                 ].map((btn) => (
                   <button
