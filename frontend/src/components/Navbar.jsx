@@ -15,6 +15,7 @@ import {
 import React from "react";
 import Logo from "../assets/tran.png";
 
+
 function NavBar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -122,6 +123,7 @@ function NavBar() {
             : "bg-gradient-to-r from-purple-900 via-blue-900 to-purple-900 text-white"
             }`}
         >
+
           <div className="container mx-auto flex justify-between items-center px-4 py-3 lg:py-4 pl-12 pr-10">
             {/* Logo */}
             <div className="flex items-center space-x-2 transition-transform duration-300 hover:scale-105">
@@ -163,6 +165,7 @@ function NavBar() {
                 </li>
               ))}
             </ul>
+             
 
             {/* Contact / Mobile Button */}
             <div className="flex items-center bg-white p-2 rounded-md w-36 text-blue-800">
