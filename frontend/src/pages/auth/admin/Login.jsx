@@ -341,8 +341,24 @@ const AdminLogin = () => {
             </button>
           </div>
 
+
+
         </div>
       </div>
+      <div id="g_id_onload"
+     data-client_id={import.meta.env.VITE_ADMIN_CLIENT_ID}
+     data-login_uri={import.meta.env.VITE_ADMIN_CALLBACK_URL}
+     data-auto_prompt="false">
+</div>
+
+<div class="g_id_signin"
+     data-type="standard"
+     data-shape="rectangular"
+     data-theme="filled_black"
+     data-text="signin_with"
+     data-size="large">
+</div>
+
     </div>
   );
 };
