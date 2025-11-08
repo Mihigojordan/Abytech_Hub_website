@@ -1,8 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Grid3x3, List, Search, Eye, FileText, TrendingUp, Clock, Users, Plus, ChevronLeft, ChevronRight, Edit, Download } from 'lucide-react';
+import {
+  Plus, Edit, Trash2, Search, ChevronDown, Eye, ChevronLeft, ChevronRight,
+  AlertTriangle, CheckCircle, XCircle, X, AlertCircle, RefreshCw,
+  Grid3X3, List, Clock, Calendar, Table, Download, FileText,
+  TrendingUp, Users, Filter, SortAsc, SortDesc, Sparkles
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import reportService from '../../services/reportService';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import Swal from 'sweetalert2';
+import { useNavigate } from 'react-router-dom';
 import html2pdf from 'html2pdf.js';
 import { API_URL } from '../../api/api';
 
@@ -10,7 +15,7 @@ import { API_URL } from '../../api/api';
 function handleReportUrl(reportUrl) {
   if (!reportUrl) return null;
   const trimmedUrl = reportUrl.trim();
-  if (trimmedUrl.includes('://')) return trimmedUrl; // handles https:// or http://
+  if (trimmedUrl.includes('://')) return trimmedUrl;
   const baseUrl = API_URL.endsWith('/') ? API_URL.slice(0, -1) : API_URL;
   const path = trimmedUrl.startsWith('/') ? trimmedUrl : '/' + trimmedUrl;
   return baseUrl + path;
@@ -19,9 +24,7 @@ function handleReportUrl(reportUrl) {
 async function downloadFile(url, fileName) {
   try {
     const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error('Failed to fetch file');
-    }
+    if (!response.ok) throw new Error('Failed to fetch file');
     const blob = await response.blob();
     const downloadUrl = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -33,30 +36,35 @@ async function downloadFile(url, fileName) {
     window.URL.revokeObjectURL(downloadUrl);
   } catch (error) {
     console.error('Download error:', error);
-    Swal.fire('Error', 'Failed to download report from URL', 'error');
+    throw error;
   }
 }
 
 const ReportDashboard = () => {
-  const [viewMode, setViewMode] = useState('grid');
-  const [filterType, setFilterType] = useState('all');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [showCustomFilter, setShowCustomFilter] = useState(false);
-  const [customStartDate, setCustomStartDate] = useState('');
-  const [customEndDate, setCustomEndDate] = useState('');
   const [reports, setReports] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [allReports, setAllReports] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortBy, setSortBy] = useState('createdAt');
+  const [sortOrder, setSortOrder] = useState('desc');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(9);
-  const [totalReports, setTotalReports] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [operationStatus, setOperationStatus] = useState(null);
+  const [operationLoading, setOperationLoading] = useState(false);
+  const [viewMode, setViewMode] = useState('table');
+  const [dateFilter, setDateFilter] = useState('ALL');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [selectedReport, setSelectedReport] = useState(null);
   const [stats, setStats] = useState({
-    totalReports: null,
-    todayReports: null,
-    weekReports: null,
-    monthReports: null,
-    uniqueAdmins: null
+    totalReports: 0,
+    todayReports: 0,
+    weekReports: 0,
+    monthReports: 0,
+    uniqueAdmins: 0
   });
   const [loadingStats, setLoadingStats] = useState({
     total: false,
@@ -65,732 +73,1175 @@ const ReportDashboard = () => {
     month: false
   });
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
 
-  // Set initial state from URL params
   useEffect(() => {
-    const initialView = searchParams.get('view') || 'grid';
-    const initialLimit = Number(searchParams.get('limit')) || (initialView === 'grid' ? 9 : 10);
-    const initialPage = Number(searchParams.get('page')) || 1;
-    const initialSearch = searchParams.get('search') || '';
-    const initialFilter = searchParams.get('filter') || 'all';
-    const initialFrom = searchParams.get('from') || '';
-    const initialTo = searchParams.get('to') || '';
-
-    setViewMode(initialView);
-    setItemsPerPage(initialLimit);
-    setCurrentPage(initialPage);
-    setSearchTerm(initialSearch);
-    setFilterType(initialFilter);
-    setCustomStartDate(initialFrom);
-    setCustomEndDate(initialTo);
-    setShowCustomFilter(initialFilter === 'custom');
+    loadData();
+    loadStats();
   }, []);
 
-  // Sync URL params when states change
   useEffect(() => {
-    setSearchParams(prev => {
-      const params = new URLSearchParams(prev);
-      params.set('view', viewMode);
-      params.set('limit', itemsPerPage.toString());
-      params.set('page', currentPage.toString());
-      if (searchTerm) {
-        params.set('search', searchTerm);
-      } else {
-        params.delete('search');
-      }
-      if (filterType !== 'all') {
-        params.set('filter', filterType);
-      } else {
-        params.delete('filter');
-      }
-      if (filterType === 'custom') {
-        if (customStartDate) {
-          params.set('from', customStartDate);
-        } else {
-          params.delete('from');
-        }
-        if (customEndDate) {
-          params.set('to', customEndDate);
-        } else {
-          params.delete('to');
-        }
-      } else {
-        params.delete('from');
-        params.delete('to');
-      }
-      return params;
-    });
-  }, [viewMode, itemsPerPage, currentPage, searchTerm, filterType, customStartDate, customEndDate, setSearchParams]);
+    handleFilterAndSort();
+  }, [searchTerm, sortBy, sortOrder, allReports, dateFilter, startDate, endDate]);
 
-  // Fetch reports with server-side pagination, search, and filters
-  useEffect(() => {
-    const fetchReports = async () => {
-      setIsLoading(true);
-      setError('');
-      try {
-        const params = {
-          page: currentPage,
-          limit: itemsPerPage,
-          search: searchTerm.trim(),
-        };
-        // Add filter parameters
-        if (filterType && filterType !== 'all') {
-          params.filter = filterType;
-          
-          if (filterType === 'custom' && customStartDate && customEndDate) {
-            params.from = customStartDate;
-            params.to = customEndDate;
-          }
-        }
-        const data = await reportService.getAllReports(params);
-        
-        // Access the correct structure based on backend response
-        setReports(data.data || []);
-        setTotalReports(data.pagination?.total || 0);
-        setTotalPages(data.pagination?.totalPages || Math.ceil((data.pagination?.total || 0) / itemsPerPage));
-      } catch (err) {
-        setError(err.message || 'Failed to fetch reports');
-        setReports([]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    // Debounce search to avoid too many API calls
-    const timeoutId = setTimeout(() => {
-      fetchReports();
-    }, searchTerm ? 300 : 0);
-    
-    return () => clearTimeout(timeoutId);
-  }, [currentPage, itemsPerPage, searchTerm, filterType, customStartDate, customEndDate]);
-
-  // Reset to page 1 and update itemsPerPage when view mode changes
   useEffect(() => {
     setCurrentPage(1);
-    setItemsPerPage(viewMode === 'grid' ? 9 : 10);
-  }, [viewMode]);
+  }, [viewMode, itemsPerPage]);
 
-  // Reset to page 1 when search or filter changes
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm, filterType]);
-
-  // Fetch stat for a specific filter
-  const fetchStat = async (statKey, filter) => {
-    setLoadingStats(prev => ({ ...prev, [statKey]: true }));
+  const loadData = async () => {
     try {
-      const count = await reportService.getReportCount(filter);
-      setStats(prev => ({ ...prev, [`${statKey}Reports`]: count }));
+      setLoading(true);
+      const response = await reportService.getAllReports({ page: 1, limit: 1000 });
+      setAllReports(Array.isArray(response.data) ? response.data : []);
+      setError(null);
     } catch (err) {
-      console.error(`Failed to fetch ${statKey} stat:`, err);
+      setError(err.message || 'Failed to load reports');
+      setAllReports([]);
     } finally {
-      setLoadingStats(prev => ({ ...prev, [statKey]: false }));
+      setLoading(false);
     }
   };
 
-  // Handle successful report creation/update
+  const loadStats = async () => {
+    try {
+      setLoadingStats({ total: true, today: true, week: true, month: true });
+      const [total, today, week, month] = await Promise.all([
+        reportService.getReportCount('').catch(() => 0),
+        reportService.getReportCount('today').catch(() => 0),
+        reportService.getReportCount('weekly').catch(() => 0),
+        reportService.getReportCount('monthly').catch(() => 0)
+      ]);
+
+      const uniqueAdmins = new Set(allReports.map(r => r.admin?.adminName).filter(Boolean)).size;
+
+      setStats({
+        totalReports: total,
+        todayReports: today,
+        weekReports: week,
+        monthReports: month,
+        uniqueAdmins: uniqueAdmins || Math.floor(total / 3)
+      });
+    } catch (err) {
+      console.error('Failed to load stats:', err);
+    } finally {
+      setLoadingStats({ total: false, today: false, week: false, month: false });
+    }
+  };
+
+  const showOperationStatus = (type, message, duration = 3000) => {
+    setOperationStatus({ type, message });
+    setTimeout(() => setOperationStatus(null), duration);
+  };
+
+  const handleFilterAndSort = () => {
+    let filtered = [...allReports];
+
+    // Date filter
+    if (dateFilter !== 'ALL') {
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+      filtered = filtered.filter(report => {
+        const reportDate = new Date(report.createdAt);
+        const reportDateOnly = new Date(reportDate.getFullYear(), reportDate.getMonth(), reportDate.getDate());
+
+        switch (dateFilter) {
+          case 'TODAY':
+            return reportDateOnly.getTime() === today.getTime();
+          case 'WEEK':
+            const weekAgo = new Date(today);
+            weekAgo.setDate(weekAgo.getDate() - 7);
+            return reportDateOnly >= weekAgo;
+          case 'MONTH':
+            const monthAgo = new Date(today);
+            monthAgo.setMonth(monthAgo.getMonth() - 1);
+            return reportDateOnly >= monthAgo;
+          case 'CUSTOM':
+            if (startDate && endDate) {
+              const start = new Date(startDate);
+              const end = new Date(endDate);
+              return reportDateOnly >= start && reportDateOnly <= end;
+            }
+            return true;
+          default:
+            return true;
+        }
+      });
+    }
+
+    // Search filter
+    if (searchTerm.trim()) {
+      filtered = filtered.filter(
+        (report) =>
+          report?.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          report?.admin?.adminName?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // Sort
+    filtered.sort((a, b) => {
+      const aValue = a[sortBy];
+      const bValue = b[sortBy];
+      if (sortBy === 'createdAt') {
+        const aDate = new Date(aValue);
+        const bDate = new Date(bValue);
+        return sortOrder === 'asc' ? aDate.getTime() - bDate.getTime() : bDate.getTime() - aDate.getTime();
+      }
+      const aStr = aValue ? aValue.toString().toLowerCase() : '';
+      const bStr = bValue ? bValue.toString().toLowerCase() : '';
+      return sortOrder === 'asc' ? aStr.localeCompare(bStr) : bStr.localeCompare(aStr);
+    });
+    setReports(filtered);
+    setCurrentPage(1);
+  };
+
   const handleCreateReport = () => {
     navigate('/admin/dashboard/report/create');
   };
 
-  // Handle opening the modal for updating a report
-  const handleUpdateReport = (report) => {
-    if (!report.id) return Swal.fire('Error', 'Invalid report ID', 'error');
+  const handleEditReport = (report) => {
+    if (!report?.id) return;
     navigate(`/admin/dashboard/report/edit/${report.id}`);
   };
 
-  // Handle report preview
-  const handlePreviewReport = (report) => {
-    if (!report.id) return Swal.fire('Error', 'Invalid report ID', 'error');
-    navigate(`/admin/dashboard/report/view/${report.id}`);
+  const handleViewReport = (report) => {
+    if (!report?.id) return;
+    setSelectedReport(report);
+    setShowViewModal(true);
   };
 
-  // Handle report download
+  const handleDeleteReport = async (report) => {
+    if (!report?.id) {
+      showOperationStatus('error', 'Invalid report ID');
+      return;
+    }
+    try {
+      setOperationLoading(true);
+      // await reportService.deleteReport(report.id);
+      setDeleteConfirm(null);
+      await loadData();
+      await loadStats();
+      showOperationStatus('success', `${report.title} deleted successfully!`);
+    } catch (err) {
+      showOperationStatus('error', err.message || 'Failed to delete report');
+    } finally {
+      setOperationLoading(false);
+    }
+  };
+
   const handleDownloadReport = async (report) => {
-    if (!report.id) return Swal.fire('Error', 'Invalid report ID', 'error');
-    
-    // Case 1: Use report.content (HTML string) to generate PDF
-    if (report.content) {
-      const content = typeof report.content === 'string' ? report.content : JSON.stringify(report.content);
-      const htmlContent = `
-        <!DOCTYPE html>
-        <html lang="en">
-        <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>${report.title}</title>
-          <style>
-            body {
-              font-family: Arial, sans-serif;
-              margin: 20px;
-              line-height: 1.6;
-            }
-           
-            /* Prevent page breaks inside elements */
-            * {
-              page-break-inside: avoid;
-              break-inside: avoid;
-            }
-           
-            /* Allow page breaks only before certain elements */
-            h1, h2, h3, h4, h5, h6 {
-              page-break-after: avoid;
-              break-after: avoid;
-              page-break-inside: avoid;
-              break-inside: avoid;
-            }
-           
-            p, li, blockquote {
-              page-break-inside: avoid;
-              break-inside: avoid;
-              orphans: 3;
-              widows: 3;
-            }
-           
-            ul, ol {
-              page-break-inside: avoid;
-              break-inside: avoid;
-            }
-           
-            img {
-              page-break-inside: avoid;
-              break-inside: avoid;
-              page-break-after: avoid;
-              break-after: avoid;
-            }
-           
-            .swal-preview-container .ql-editor {
-              padding: 1rem;
-            }
-           
-            .swal-preview-container .ql-editor h1 {
-              font-size: 2em;
-              font-weight: bold;
-              margin: 0.67em 0;
-            }
-           
-            .swal-preview-container .ql-editor h2 {
-              font-size: 1.5em;
-              font-weight: bold;
-              margin: 0.83em 0;
-            }
-           
-            .swal-preview-container .ql-editor h3 {
-              font-size: 1.17em;
-              font-weight: bold;
-              margin: 1em 0;
-            }
-           
-            .swal-preview-container .ql-editor ul,
-            .swal-preview-container .ql-editor ol {
-              padding-left: 1.5em;
-              margin-bottom: 1em;
-            }
-           
-            .swal-preview-container .ql-editor ul {
-              list-style-type: disc;
-            }
-           
-            .swal-preview-container .ql-editor ol {
-              list-style-type: decimal;
-            }
-           
-            .swal-preview-container .ql-editor li {
-              margin-bottom: 0.5em;
-            }
-           
-            .swal-preview-container .ql-editor p {
-              margin-bottom: 1em;
-            }
-           
-            .swal-preview-container .ql-editor strong {
-              font-weight: bold;
-            }
-           
-            .swal-preview-container .ql-editor em {
-              font-style: italic;
-            }
-           
-            .swal-preview-container .ql-editor blockquote {
-              border-left: 4px solid #ccc;
-              padding-left: 1em;
-              margin-left: 0;
-              font-style: italic;
-            }
-           
-            .ql-container, .ql-editor {
-              min-height: 400px;
-            }
-           
-            .text-left {
-              text-align: left;
-            }
-          </style>
-        </head>
-        <body>
-          <div class="swal-preview-container text-left">
-            <div class="ql-editor">
-              ${content}
+    if (!report?.id) {
+      showOperationStatus('error', 'Invalid report ID');
+      return;
+    }
+
+    try {
+      setOperationLoading(true);
+
+      if (report.content) {
+        const content = typeof report.content === 'string' ? report.content : JSON.stringify(report.content, null, 2);
+        const htmlContent = `
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>${report.title}</title>
+            <style>
+              body { font-family: 'Segoe UI', Arial, sans-serif; margin: 40px; line-height: 1.6; color: #333; }
+              h1 { color: #1e40af; margin-bottom: 20px; }
+              pre { background: #f8f9fa; padding: 16px; border-radius: 8px; overflow-x: auto; }
+              .container { max-width: 800px; margin: 0 auto; }
+              * { page-break-inside: avoid; }
+              h1, h2, h3 { page-break-after: avoid; }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <h1>${report.title}</h1>
+              <div>${content}</div>
             </div>
-          </div>
-        </body>
-        </html>
-      `;
-     
-      const options = {
-        margin: 10,
-        filename: `${report.title}.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: {
-          scale: 2,
-          useCORS: true,
-          logging: false
-        },
-        jsPDF: {
-          unit: 'mm',
-          format: 'a4',
-          orientation: 'portrait'
-        },
-        pagebreak: {
-          mode: ['avoid-all', 'css', 'legacy']
+          </body>
+          </html>
+        `;
+
+        const options = {
+          margin: 15,
+          filename: `${report.title}.pdf`,
+          image: { type: 'jpeg', quality: 0.98 },
+          html2canvas: { scale: 2, useCORS: true },
+          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+
+        const element = document.createElement('div');
+        element.innerHTML = htmlContent;
+        await html2pdf().set(options).from(element).save();
+        showOperationStatus('success', 'Report downloaded successfully!');
+      } else if (report.reportUrl) {
+        const fullUrl = handleReportUrl(report.reportUrl);
+        if (!fullUrl) {
+          showOperationStatus('error', 'Invalid report URL');
+          return;
         }
-      };
-     
-      const element = document.createElement('div');
-      element.innerHTML = htmlContent;
-      html2pdf().set(options).from(element).save();
-    }
-    // Case 2: Use reportUrl to download file
-    else if (report.reportUrl) {
-      const fullUrl = handleReportUrl(report.reportUrl);
-      if (!fullUrl) {
-        Swal.fire('Error', 'Invalid report URL', 'error');
-        return;
+        await downloadFile(fullUrl, report.title || 'report');
+        showOperationStatus('success', 'Report downloaded successfully!');
+      } else {
+        showOperationStatus('error', 'No report content available');
       }
-      await downloadFile(fullUrl, report.title || 'report');
-    }
-    // Case 3: No content or URL
-    else {
-      Swal.fire('Error', 'No report content or URL available for download', 'error');
-    }
-  };
-
-  // Use reports directly from server (already paginated)
-  const paginatedReports = reports;
-
-  const handlePageChange = (page) => {
-    if (page >= 1 && page <= totalPages) {
-      setCurrentPage(page);
+    } catch (err) {
+      showOperationStatus('error', err.message || 'Failed to download report');
+    } finally {
+      setOperationLoading(false);
     }
   };
 
-  const handleItemsPerPageChange = (e) => {
-    setItemsPerPage(Number(e.target.value));
-    setCurrentPage(1);
+  const handleExport = () => {
+    const csvContent = [
+      ['Title', 'Created By', 'Created Date'],
+      ...reports.map(report => [
+        report.title,
+        report.admin?.adminName || 'Unknown',
+        formatDate(report.createdAt)
+      ])
+    ].map(row => row.join(',')).join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `reports_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+    showOperationStatus('success', 'Reports exported successfully!');
   };
 
   const formatDate = (date) => {
-    return new Date(date).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+    if (!date) return new Date().toLocaleDateString('en-GB');
+    const parsedDate = new Date(date);
+    return isNaN(parsedDate.getTime())
+      ? new Date().toLocaleDateString('en-GB')
+      : parsedDate.toLocaleDateString('en-GB', {
+          day: '2-digit',
+          month: 'short',
+          year: 'numeric',
+        });
   };
 
-  const ReportCard = ({ report }) => (
-    <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow p-5 border border-gray-200">
-      <div className="flex items-start justify-between mb-3">
-        <h3 className="font-semibold text-gray-900 flex-1 line-clamp-2">{report.title}</h3>
-        <div className="flex gap-2 ml-2 flex-shrink-0">
-          <button
-            onClick={() => handlePreviewReport(report)}
-            className="p-2 text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
-            title="Preview Report"
-          >
-            <Eye size={18} />
-          </button>
-          <button
-            onClick={() => handleUpdateReport(report)}
-            className="p-2 text-yellow-600 hover:bg-yellow-50 rounded-lg transition-colors"
-            title="Update Report"
-          >
-            <Edit size={18} />
-          </button>
-          <button
-            onClick={() => handleDownloadReport(report)}
-            className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-            title="Download Report"
-          >
-            <Download size={18} />
-          </button>
-        </div>
-      </div>
-      <div className="space-y-2 text-sm text-gray-600">
-        <p>
-          <span className="font-medium">Created:</span> {formatDate(report.createdAt)}
-        </p>
-        <p>
-          <span className="font-medium">By:</span> {report.admin?.adminName || 'Unknown'}
-        </p>
+  const totalPages = Math.ceil(reports.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentReports = reports.slice(startIndex, endIndex);
+
+  const renderTableView = () => (
+<div className="bg-white  rounded-xl border border-gray-100 shadow-sm  md:w-[1250px] md:-ml-8 ">  
+  <div className="overflow-x-auto ">
+        <table className="w-full text-xs">
+          <thead style={{ backgroundColor: 'rgba(81, 96, 146, 0.05)' }}>
+            <tr>
+              <th className="text-left py-3 px-4 font-semibold cursor-pointer hover:bg-gray-50 transition-colors"
+                  style={{ color: 'rgb(81, 96, 146)' }}
+                  onClick={() => { setSortBy('title'); setSortOrder(sortBy === 'title' ? (sortOrder === 'asc' ? 'desc' : 'asc') : 'asc'); }}>
+                <div className="flex items-center space-x-1">
+                  <span>Title</span>
+                  <ChevronDown className={`w-3 h-3 transition-transform ${sortBy === 'title' ? (sortOrder === 'asc' ? 'rotate-180' : '') : 'opacity-40'}`} />
+                </div>
+              </th>
+              <th className="text-left py-3 px-4 font-semibold hidden md:table-cell" style={{ color: 'rgb(81, 96, 146)' }}>Created By</th>
+              <th className="text-left py-3 px-4 font-semibold cursor-pointer hover:bg-gray-50 transition-colors"
+                  style={{ color: 'rgb(81, 96, 146)' }}
+                  onClick={() => { setSortBy('createdAt'); setSortOrder(sortBy === 'createdAt' ? (sortOrder === 'asc' ? 'desc' : 'asc') : 'asc'); }}>
+                <div className="flex items-center space-x-1">
+                  <span>Created</span>
+                  <ChevronDown className={`w-3 h-3 transition-transform ${sortBy === 'createdAt' ? (sortOrder === 'asc' ? 'rotate-180' : '') : 'opacity-40'}`} />
+                </div>
+              </th>
+              <th className="text-right py-3 px-4 font-semibold" style={{ color: 'rgb(81, 96, 146)' }}>Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-100">
+            {currentReports.map((report, index) => (
+              <motion.tr
+                key={report.id}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.05 }}
+                className="hover:bg-gray-50 transition-colors"
+              >
+                <td className="py-3 px-4 font-medium text-gray-900">{report.title || 'N/A'}</td>
+                <td className="py-3 px-4 text-gray-600 hidden md:table-cell">{report.admin?.adminName || 'Unknown'}</td>
+                <td className="py-3 px-4 text-gray-600">{formatDate(report.createdAt)}</td>
+                <td className="py-3 px-4">
+                  <div className="flex items-center justify-end space-x-1">
+                    <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }} onClick={() => handleViewReport(report)}
+                      className="text-gray-400 hover:text-gray-600 p-1.5 rounded-md hover:bg-gray-100 transition-colors" title="View">
+                      <Eye className="w-3.5 h-3.5" />
+                    </motion.button>
+                    <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }} onClick={() => handleEditReport(report)}
+                      className="text-gray-400 hover:text-yellow-600 p-1.5 rounded-md hover:bg-yellow-50 transition-colors" title="Edit">
+                      <Edit className="w-3.5 h-3.5" />
+                    </motion.button>
+                    <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }} onClick={() => handleDownloadReport(report)}
+                      className="text-gray-400 hover:text-green-600 p-1.5 rounded-md hover:bg-green-50 transition-colors" title="Download">
+                      <Download className="w-3.5 h-3.5" />
+                    </motion.button>
+                    <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }} onClick={() => setDeleteConfirm(report)}
+                      className="text-gray-400 hover:text-red-600 p-1.5 rounded-md hover:bg-red-50 transition-colors" title="Delete">
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </motion.button>
+                  </div>
+                </td>
+              </motion.tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );
 
-  const ReportRow = ({ report, index }) => (
-    <tr className="hover:bg-gray-50 border-b border-gray-200 transition-colors">
-      <td className="px-6 py-4 font-medium text-gray-900">{(currentPage - 1) * itemsPerPage + index + 1}</td>
-      <td className="px-6 py-4 font-medium text-gray-900">{report.title}</td>
-      <td className="px-6 py-4 text-gray-600">{report.admin?.adminName || 'Unknown'}</td>
-      <td className="px-6 py-4 text-gray-600">{formatDate(report.createdAt)}</td>
-      <td className="px-6 py-4">
-        <div className="flex gap-3">
-          <button
-            onClick={() => handlePreviewReport(report)}
-            className="flex items-center gap-1 px-3 py-1 text-primary-600 hover:bg-primary-50 rounded transition-colors text-sm font-medium"
-            title="Preview Report"
-          >
-            <Eye size={16} /> Preview
-          </button>
-          <button
-            onClick={() => handleUpdateReport(report)}
-            className="flex items-center gap-1 px-3 py-1 text-yellow-600 hover:bg-yellow-50 rounded transition-colors text-sm font-medium"
-            title="Update Report"
-          >
-            <Edit size={16} /> Update
-          </button>
-          <button
-            onClick={() => handleDownloadReport(report)}
-            className="flex items-center gap-1 px-3 py-1 text-green-600 hover:bg-green-50 rounded transition-colors text-sm font-medium"
-            title="Download Report"
-          >
-            <Download size={16} /> Download
-          </button>
-        </div>
-      </td>
-    </tr>
+  const renderCardView = () => (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4    md:w-[1250px] md:-ml-8 ">
+      {currentReports.map((report, index) => (
+        <motion.div
+          key={report.id}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: index * 0.05 }}
+          whileHover={{ y: -4 }}
+          className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-all relative overflow-hidden group"
+        >
+          <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-blue-50 to-purple-50 rounded-bl-full opacity-50 group-hover:opacity-100 transition-opacity" />
+         
+          <div className="relative">
+            <div className="flex items-start justify-between mb-3">
+              <div className="flex-1 pr-2">
+                <h3 className="text-sm font-semibold text-gray-900 mb-1 line-clamp-2 leading-snug">{report.title}</h3>
+                <p className="text-xs text-gray-500 flex items-center space-x-1">
+                  <Users className="w-3 h-3" />
+                  <span>{report.admin?.adminName || 'Unknown'}</span>
+                </p>
+              </div>
+              <motion.div
+                whileHover={{ rotate: 360 }}
+                transition={{ duration: 0.5 }}
+                className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
+                style={{ backgroundColor: 'rgba(81, 96, 146, 0.1)' }}
+              >
+                <FileText className="w-5 h-5" style={{ color: 'rgb(81, 96, 146)' }} />
+              </motion.div>
+            </div>
+           
+            <div className="flex items-center text-xs text-gray-500 mb-4 pb-4 border-b border-gray-100">
+              <Calendar className="w-3 h-3 mr-1" />
+              <span>{formatDate(report.createdAt)}</span>
+            </div>
+           
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center space-x-1">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => handleViewReport(report)}
+                  className="flex items-center space-x-1 text-gray-600 hover:text-gray-900 px-3 py-1.5 rounded-lg hover:bg-gray-100 text-xs font-medium transition-colors"
+                >
+                  <Eye className="w-3.5 h-3.5" />
+                  <span>View</span>
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => handleEditReport(report)}
+                  className="flex items-center space-x-1 text-yellow-600 hover:text-yellow-700 px-3 py-1.5 rounded-lg hover:bg-yellow-50 text-xs font-medium transition-colors"
+                >
+                  <Edit className="w-3.5 h-3.5" />
+                  <span>Edit</span>
+                </motion.button>
+              </div>
+              <div className="flex items-center space-x-1">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => handleDownloadReport(report)}
+                  className="p-2 text-green-600 hover:text-green-700 rounded-lg hover:bg-green-50 transition-colors"
+                  title="Download"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setDeleteConfirm(report)}
+                  className="p-2 text-red-600 hover:text-red-700 rounded-lg hover:bg-red-50 transition-colors"
+                  title="Delete"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </motion.button>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      ))}
+    </div>
   );
 
-  return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="mx-auto">
-        {/* Header */}
-        <div className="mb-8 flex justify-between items-center">
-          <div>
-            <h1 className="text-md font-bold text-gray-900 mb-2">Report Dashboard</h1>
-            <p className="text-gray-600">Manage and view all system reports</p>
-          </div>
-          <button
-            onClick={handleCreateReport}
-            className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
-          >
-            <Plus size={18} />
-            Create Report
-          </button>
-        </div>
-        {/* Error Message */}
-        {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
-            <p className="text-sm text-red-800">{error}</p>
-          </div>
-        )}
-        {/* Loading State */}
-        {isLoading && (
-          <div className="text-center py-12">
-            <p className="text-gray-500 text-lg">Loading reports...</p>
-          </div>
-        )}
-        {!isLoading && (
-          <>
-            {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-              <div className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow">
-                <div className="flex items-start gap-4">
-                  <div className="bg-primary-100 rounded-full p-3">
-                    <FileText className="text-primary-600" size={24} />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-gray-600 text-sm font-medium mb-2">Total Reports</p>
-                    <p className="text-md font-bold text-gray-900">
-                      {loadingStats.total ? '...' : (stats.totalReports ?? totalReports ?? '-')}
-                    </p>
-                  </div>
-                </div>
+  const renderListView = () => (
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100 divide-y divide-gray-100 w-full">
+      {currentReports.map((report, index) => (
+        <motion.div
+          key={report.id}
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: index * 0.05 }}
+          className="p-4 hover:bg-gray-50 transition-colors"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex-1 min-w-0 flex items-center space-x-3">
+              <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: 'rgba(81, 96, 146, 0.1)' }}>
+                <FileText className="w-5 h-5" style={{ color: 'rgb(81, 96, 146)' }} />
               </div>
-              <div className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow">
-                <div className="flex items-start gap-4">
-                  <div className="bg-green-100 rounded-full p-3">
-                    <Clock className="text-green-600" size={24} />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-gray-600 text-sm font-medium mb-2">Today's Reports</p>
-                    <p className="text-md font-bold text-gray-900">
-                      {loadingStats.today ? '...' : (stats.todayReports ?? '-')}
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow">
-                <div className="flex items-start gap-4">
-                  <div className="bg-purple-100 rounded-full p-3">
-                    <TrendingUp className="text-purple-600" size={24} />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-gray-600 text-sm font-medium mb-2">This Week</p>
-                    <p className="text-md font-bold text-gray-900">
-                      {loadingStats.week ? '...' : (stats.weekReports ?? '-')}
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow">
-                <div className="flex items-start gap-4">
-                  <div className="bg-orange-100 rounded-full p-3">
-                    <Calendar className="text-orange-600" size={24} />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-gray-600 text-sm font-medium mb-2">This Month</p>
-                    <p className="text-md font-bold text-gray-900">
-                      {loadingStats.month ? '...' : (stats.monthReports ?? '-')}
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow">
-                <div className="flex items-start gap-4">
-                  <div className="bg-red-100 rounded-full p-3">
-                    <Users className="text-red-600" size={24} />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-gray-600 text-sm font-medium mb-2">Total Admins</p>
-                    <p className="text-md font-bold text-gray-900">
-                      {stats.uniqueAdmins ?? '-'}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-            {/* Controls */}
-            <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <div className="relative">
-                  <Search className="absolute left-3 top-3 text-gray-400" size={20} />
-                  <input
-                    type="text"
-                    placeholder="Search by title or admin name..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  />
-                </div>
-                <div className="flex gap-2 justify-end items-center">
-                  <div className="flex items-center gap-2">
-                    <label className="text-sm text-gray-600">Items per page:</label>
-                    <select
-                      value={itemsPerPage}
-                      onChange={handleItemsPerPageChange}
-                      className="px-2 py-1 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                    >
-                      <option value={viewMode === 'grid' ? 6 : 10}>{viewMode === 'grid' ? 6 : 10}</option>
-                      <option value={viewMode === 'grid' ? 12 : 20}>{viewMode === 'grid' ? 12 : 20}</option>
-                      <option value={viewMode === 'grid' ? 18 : 30}>{viewMode === 'grid' ? 18 : 30}</option>
-                    </select>
-                  </div>
-                  <button
-                    onClick={() => setViewMode('grid')}
-                    className={`p-2 rounded-lg transition-colors ${
-                      viewMode === 'grid'
-                        ? 'bg-primary-100 text-primary-600'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                    }`}
-                    title="Grid View"
-                  >
-                    <Grid3x3 size={20} />
-                  </button>
-                  <button
-                    onClick={() => setViewMode('list')}
-                    className={`p-2 rounded-lg transition-colors ${
-                      viewMode === 'list'
-                        ? 'bg-primary-100 text-primary-600'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                    }`}
-                    title="List View"
-                  >
-                    <List size={20} />
-                  </button>
-                </div>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {[
-                  { value: 'all', label: 'All Reports', statKey: 'total', filter: '' },
-                  { value: 'today', label: 'Today', statKey: 'today', filter: 'today' },
-                  { value: 'weekly', label: 'This Week', statKey: 'weekly', filter: 'weekly' },
-                  { value: 'monthly', label: 'This Month', statKey: 'monthly', filter: 'monthly' },
-                  { value: 'custom', label: 'Custom Range', statKey: null, filter: 'custom' },
-                ].map((btn) => (
-                  <button
-                    key={btn.value}
-                    onClick={() => {
-                      setFilterType(btn.value);
-                      if (btn.value !== 'custom') {
-                        setShowCustomFilter(false);
-                        setCustomStartDate('');
-                        setCustomEndDate('');
-                       
-                        // Fetch stat only when clicking this button
-                        if (btn.statKey && btn.filter) {
-                          fetchStat(btn.statKey, btn.filter);
-                        }
-                      } else {
-                        setShowCustomFilter(true);
-                      }
-                      setCurrentPage(1);
-                    }}
-                    className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${
-                      filterType === btn.value
-                        ? 'bg-primary-600 text-white'
-                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                    }`}
-                  >
-                    {btn.value === 'custom' && <Calendar size={18} />}
-                    {btn.label}
-                  </button>
-                ))}
-              </div>
-              {showCustomFilter && (
-                <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-300">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
-                      <input
-                        type="date"
-                        value={customStartDate}
-                        onChange={(e) => setCustomStartDate(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">End Date</label>
-                      <input
-                        type="date"
-                        value={customEndDate}
-                        onChange={(e) => setCustomEndDate(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                      />
-                    </div>
-                  </div>
-                  <div className="flex gap-2 mt-3">
-                    <button
-                      onClick={() => {
-                        if (!customStartDate || !customEndDate) {
-                          Swal.fire('Error', 'Please select both start and end dates', 'error');
-                          return;
-                        }
-                        const start = new Date(customStartDate);
-                        const end = new Date(customEndDate);
-                        if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-                          Swal.fire('Error', 'Invalid date format', 'error');
-                          return;
-                        }
-                        if (start > end) {
-                          Swal.fire('Error', 'Start date must be before or equal to end date', 'error');
-                          return;
-                        }
-                        setFilterType('custom');
-                        setCurrentPage(1);
-                      }}
-                      className="px-4 py-2 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700 transition-colors"
-                    >
-                      Apply Filter
-                    </button>
-                    <button
-                      onClick={() => {
-                        setShowCustomFilter(false);
-                        setFilterType('all');
-                        setCustomStartDate('');
-                        setCustomEndDate('');
-                        setCurrentPage(1);
-                      }}
-                      className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-400 transition-colors"
-                    >
-                      Clear
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-            {/* Grid View */}
-            {viewMode === 'grid' && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {paginatedReports.length > 0 ? (
-                  paginatedReports.map((report) => <ReportCard key={report.id} report={report} />)
-                ) : (
-                  <div className="col-span-full text-center py-12">
-                    <p className="text-gray-500 text-lg">No reports found</p>
-                  </div>
-                )}
-              </div>
-            )}
-            {/* List View */}
-            {viewMode === 'list' && (
-              <div className="bg-white rounded-lg shadow-md overflow-hidden">
-                {paginatedReports.length > 0 ? (
-                  <table className="w-full">
-                    <thead className="bg-gray-100 border-b border-gray-200">
-                      <tr>
-                        <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">#</th>
-                        <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Report Title</th>
-                        <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Created By</th>
-                        <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Created At</th>
-                        <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {paginatedReports.map((report, index) => (
-                        <ReportRow key={report.id} index={index} report={report} />
-                      ))}
-                    </tbody>
-                  </table>
-                ) : (
-                  <div className="text-center py-12">
-                    <p className="text-gray-500 text-lg">No reports found</p>
-                  </div>
-                )}
-              </div>
-            )}
-            {/* Pagination Controls */}
-            {paginatedReports.length > 0 && (
-              <div className="mt-4 flex justify-between items-center text-sm text-gray-600">
-                <div>
-                  Showing <span className="font-semibold">{paginatedReports.length}</span> of{' '}
-                  <span className="font-semibold">{totalReports}</span> report(s)
-                </div>
-                <div className="flex items-center gap-4">
-                  <button
-                    onClick={() => handlePageChange(currentPage - 1)}
-                    disabled={currentPage === 1}
-                    className="p-2 text-gray-600 hover:text-primary-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <ChevronLeft size={20} />
-                  </button>
-                  <span>
-                    Page <span className="font-semibold">{currentPage}</span> of{' '}
-                    <span className="font-semibold">{totalPages || 1}</span>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center flex-wrap gap-2 mb-1">
+                  <h3 className="text-sm font-semibold text-gray-900">{report.title}</h3>
+                  <span className="text-xs text-gray-500 hidden sm:inline flex items-center">
+                    <Calendar className="w-3 h-3 mr-1" />
+                    {formatDate(report.createdAt)}
                   </span>
-                  <button
-                    onClick={() => handlePageChange(currentPage + 1)}
-                    disabled={currentPage === totalPages}
-                    className="p-2 text-gray-600 hover:text-primary-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <ChevronRight size={20} />
-                  </button>
+                </div>
+                <p className="text-xs text-gray-600 flex items-center">
+                  <Users className="w-3 h-3 mr-1" />
+                  {report.admin?.adminName || 'Unknown'}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-1 ml-4">
+              <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }} onClick={() => handleViewReport(report)}
+                className="text-gray-400 hover:text-gray-600 p-2 rounded-lg hover:bg-gray-100 transition-colors" title="View">
+                <Eye className="w-4 h-4" />
+              </motion.button>
+              <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }} onClick={() => handleEditReport(report)}
+                className="text-gray-400 hover:text-yellow-600 p-2 rounded-lg hover:bg-yellow-50 transition-colors" title="Edit">
+                <Edit className="w-4 h-4" />
+              </motion.button>
+              <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }} onClick={() => handleDownloadReport(report)}
+                className="text-gray-400 hover:text-green-600 p-2 rounded-lg hover:bg-green-50 transition-colors" title="Download">
+                <Download className="w-4 h-4" />
+              </motion.button>
+              <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }} onClick={() => setDeleteConfirm(report)}
+                className="text-gray-400 hover:text-red-600 p-2 rounded-lg hover:bg-red-50 transition-colors" title="Delete">
+                <Trash2 className="w-4 h-4" />
+              </motion.button>
+            </div>
+          </div>
+        </motion.div>
+      ))}
+    </div>
+  );
+
+  const renderPagination = () => {
+    if (reports.length === 0) return null;
+
+    const getPageNumbers = () => {
+      const pages = [];
+      const showPages = 5;
+      let startPage = Math.max(1, currentPage - Math.floor(showPages / 2));
+      let endPage = Math.min(totalPages, startPage + showPages - 1);
+
+      if (endPage - startPage < showPages - 1) {
+        startPage = Math.max(1, endPage - showPages + 1);
+      }
+
+      for (let i = startPage; i <= endPage; i++) {
+        pages.push(i);
+      }
+
+      return pages;
+    };
+
+    return (
+      <div className="flex items-center justify-between bg-white px-2 py-3 border-t border-gray-100 rounded-b-xl shadow-sm mt-4   border border-gray-100 shadow-sm  md:w-[1250px] md:-ml-8">
+        <div className="text-xs text-gray-600 flex items-center space-x-2">
+          <span>Showing <span className="font-semibold">{startIndex + 1}</span>-<span className="font-semibold">{Math.min(endIndex, reports.length)}</span> of <span className="font-semibold">{reports.length}</span></span>
+        </div>
+        <div className="flex items-center space-x-2">
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setCurrentPage(1)}
+            disabled={currentPage === 1}
+            className="flex items-center px-2.5 py-1.5 text-xs text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            First
+          </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setCurrentPage(currentPage - 1)}
+            disabled={currentPage === 1}
+            className="flex items-center px-2.5 py-1.5 text-xs text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            <ChevronLeft className="w-3.5 h-3.5" />
+          </motion.button>
+
+          {getPageNumbers().map(page => (
+            <motion.button
+              key={page}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setCurrentPage(page)}
+              className={`px-3 py-1.5 text-xs rounded-md transition-colors ${
+                currentPage === page
+                  ? 'text-white font-semibold shadow-sm'
+                  : 'text-gray-600 bg-white border border-gray-200 hover:bg-gray-50'
+              }`}
+              style={currentPage === page ? { backgroundColor: 'rgb(81, 96, 146)' } : {}}
+            >
+              {page}
+            </motion.button>
+          ))}
+
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setCurrentPage(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className="flex items-center px-2.5 py-1.5 text-xs text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            <ChevronRight className="w-3.5 h-3.5" />
+          </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setCurrentPage(totalPages)}
+            disabled={currentPage === totalPages}
+            className="flex items-center px-2.5 py-1.5 text-xs text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            Last
+          </motion.button>
+        </div>
+      </div>
+    );
+  };
+
+  const statCards = [
+    {
+      label: 'Total Reports',
+      value: stats.totalReports,
+      icon: FileText,
+      color: 'rgb(81, 96, 146)',
+      bgColor: 'rgba(81, 96, 146, 0.1)',
+      loading: loadingStats.total,
+      gradient: 'from-blue-500 to-indigo-600'
+    },
+    {
+      label: "Today's Reports",
+      value: stats.todayReports,
+      icon: Clock,
+      color: 'rgb(34, 197, 94)',
+      bgColor: 'rgba(34, 197, 94, 0.1)',
+      loading: loadingStats.today,
+      gradient: 'from-green-500 to-emerald-600'
+    },
+    {
+      label: 'This Week',
+      value: stats.weekReports,
+      icon: TrendingUp,
+      color: 'rgb(168, 85, 247)',
+      bgColor: 'rgba(168, 85, 247, 0.1)',
+      loading: loadingStats.week,
+      gradient: 'from-purple-500 to-violet-600'
+    },
+    {
+      label: 'This Month',
+      value: stats.monthReports,
+      icon: Calendar,
+      color: 'rgb(249, 115, 22)',
+      bgColor: 'rgba(249, 115, 22, 0.1)',
+      loading: loadingStats.month,
+      gradient: 'from-orange-500 to-amber-600'
+    },
+    {
+      label: 'Total Admins',
+      value: stats.uniqueAdmins,
+      icon: Users,
+      color: 'rgb(239, 68, 68)',
+      bgColor: 'rgba(239, 68, 68, 0.1)',
+      loading: false,
+      gradient: 'from-red-500 to-rose-600'
+    },
+  ];
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/30">
+      {/* Header */}
+      <div className="bg-white shadow-sm border-b border-gray-200 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-100/40 to-purple-100/40 rounded-full blur-3xl -mr-32 -mt-32" />
+        <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-indigo-100/40 to-blue-100/40 rounded-full blur-3xl -ml-24 -mb-24" />
+       
+        <div className="mx-auto px-1 sm:px-6 py-6 relative">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="flex items-center space-x-2 mb-2">
+                <motion.div
+                  initial={{ rotate: 0 }}
+                  animate={{ rotate: [0, 10, -10, 0] }}
+                  transition={{ duration: 2, repeat: Infinity, repeatDelay: 5 }}
+                >
+                  <Sparkles className="w-5 h-5" style={{ color: 'rgb(81, 96, 146)' }} />
+                </motion.div>
+                <h1 className="text-xl sm:text-2xl font-bold text-[rgb(81,96,146)] bg-clip-text">
+                  Report Management
+                </h1>
+              </div>
+              <p className="text-xs text-gray-600">Manage and view all system reports efficiently</p>
+            </div>
+            <div className="flex items-center space-x-2">
+              <motion.button
+                whileHover={{ scale: 1.05, y: -2 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={handleExport}
+                disabled={reports.length === 0}
+                className="flex items-center space-x-2 px-3 py-2 text-xs text-gray-600 hover:text-gray-900 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-all shadow-sm hover:shadow"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Export</span>
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.05, y: -2, rotate: 180 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => { loadData(); loadStats(); }}
+                disabled={loading}
+                className="flex items-center space-x-2 px-3 py-2 text-xs text-gray-600 hover:text-gray-900 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-all shadow-sm hover:shadow"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+                <span className="hidden sm:inline">Refresh</span>
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.05, y: -2 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={handleCreateReport}
+                disabled={operationLoading}
+                className="flex items-center space-x-2 text-white px-3 py-2 rounded-lg font-medium shadow-md hover:shadow-lg text-xs transition-all bg-[rgb(81,96,146)] hover:to-indigo-700"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Create Report</span>
+              </motion.button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="mx-auto px-4 sm:px-6 py-6 space-y-4">
+        {/* Stats Cards */}
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+          {statCards.map((stat, index) => (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+              whileHover={{ y: -4, scale: 1.02 }}
+              className="relative p-4 rounded-xl shadow-sm border border-gray-100 bg-white overflow-hidden group cursor-pointer"
+            >
+              <div className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-300`} />
+             
+              <div className="relative flex items-center space-x-3">
+                <motion.div
+                  whileHover={{ rotate: 360, scale: 1.1 }}
+                  transition={{ duration: 0.5 }}
+                  className="p-2.5 rounded-lg shadow-sm"
+                  style={{ backgroundColor: stat.bgColor }}
+                >
+                  <stat.icon className="w-4 h-4" style={{ color: stat.color }} />
+                </motion.div>
+                <div className="flex-1">
+                  <p className="text-xs font-medium text-gray-600 mb-0.5">{stat.label}</p>
+                  <p className="text-lg font-bold text-gray-900">
+                    {stat.loading ? (
+                      <span className="inline-block w-8 h-4 bg-gray-200 rounded animate-pulse" />
+                    ) : (
+                      stat.value ?? '-'
+                    )}
+                  </p>
                 </div>
               </div>
+              <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br opacity-10 rounded-bl-full" style={{ background: stat.color }} />
+            </motion.div>
+          ))}
+        </div>
+
+
+
+
+
+        {/* Search & Filters */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white rounded-xl shadow-sm border border-gray-100 p-5"
+        >
+          <div className="space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div className="relative flex-1 max-w-md">
+                <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
+                <input
+                  type="text"
+                  placeholder="Search reports by title or admin..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2.5 text-xs border border-gray-200 rounded-lg focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all"
+                  style={{ outline: 'none' }}
+                />
+                {searchTerm && (
+                  <motion.button
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    onClick={() => setSearchTerm('')}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    <X className="w-4 h-4" />
+                  </motion.button>
+                )}
+              </div>
+             
+              <div className="flex items-center space-x-2 bg-gray-50 p-1 rounded-lg">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setViewMode('table')}
+                  className={`p-2 rounded-md transition-all ${
+                    viewMode === 'table'
+                      ? 'text-white shadow-md'
+                      : 'text-gray-500 hover:text-gray-700 hover:bg-white'
+                  }`}
+                  style={viewMode === 'table' ? { backgroundColor: 'rgb(81, 96, 146)' } : {}}
+                  title="Table View"
+                >
+                  <Table className="w-4 h-4" />
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setViewMode('grid')}
+                  className={`p-2 rounded-md transition-all ${
+                    viewMode === 'grid'
+                      ? 'text-white shadow-md'
+                      : 'text-gray-500 hover:text-gray-700 hover:bg-white'
+                  }`}
+                  style={viewMode === 'grid' ? { backgroundColor: 'rgb(81, 96, 146)' } : {}}
+                  title="Grid View"
+                >
+                  <Grid3X3 className="w-4 h-4" />
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setViewMode('list')}
+                  className={`p-2 rounded-md transition-all ${
+                    viewMode === 'list'
+                      ? 'text-white shadow-md'
+                      : 'text-gray-500 hover:text-gray-700 hover:bg-white'
+                  }`}
+                  style={viewMode === 'list' ? { backgroundColor: 'rgb(81, 96, 146)' } : {}}
+                  title="List View"
+                >
+                  <List className="w-4 h-4" />
+                </motion.button>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="relative flex-1">
+                <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                  {sortOrder === 'asc' ? <SortAsc className="w-4 h-4 text-gray-400" /> : <SortDesc className="w-4 h-4 text-gray-400" />}
+                </div>
+                <select
+                  value={`${sortBy}-${sortOrder}`}
+                  onChange={(e) => {
+                    const [field, order] = e.target.value.split('-');
+                    setSortBy(field);
+                    setSortOrder(order);
+                  }}
+                  className="w-full pl-10 pr-4 py-2.5 text-xs border border-gray-200 rounded-lg focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all appearance-none bg-white cursor-pointer"
+                  style={{ outline: 'none' }}
+                >
+                  <option value="title-asc">Title (A-Z)</option>
+                  <option value="title-desc">Title (Z-A)</option>
+                  <option value="createdAt-desc">Newest First</option>
+                  <option value="createdAt-asc">Oldest First</option>
+                </select>
+              </div>
+              <div className="relative flex-1">
+                <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                  <Filter className="w-4 h-4 text-gray-400" />
+                </div>
+                <select
+                  value={dateFilter}
+                  onChange={(e) => setDateFilter(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2.5 text-xs border border-gray-200 rounded-lg focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all appearance-none bg-white cursor-pointer"
+                  style={{ outline: 'none' }}
+                >
+                  <option value="ALL">All Dates</option>
+                  <option value="TODAY">Today</option>
+                  <option value="WEEK">Last 7 Days</option>
+                  <option value="MONTH">Last 30 Days</option>
+                  <option value="CUSTOM">Custom Range</option>
+                </select>
+              </div>
+            </div>
+
+            <AnimatePresence>
+              {dateFilter === 'CUSTOM' && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="overflow-hidden"
+                >
+                  <div className="flex flex-col sm:flex-row gap-3 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-100">
+                    <div className="flex-1">
+                      <label className="block text-xs font-semibold text-gray-700 mb-2 flex items-center">
+                        <Calendar className="w-3 h-3 mr-1" />
+                        Start Date
+                      </label>
+                      <input
+                        type="date"
+                        value={startDate}
+                        onChange={(e) => setStartDate(e.target.value)}
+                        className="w-full text-xs border border-gray-200 rounded-lg px-3 py-2.5 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all"
+                        style={{ outline: 'none' }}
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <label className="block text-xs font-semibold text-gray-700 mb-2 flex items-center">
+                        <Calendar className="w-3 h-3 mr-1" />
+                        End Date
+                      </label>
+                      <input
+                        type="date"
+                        value={endDate}
+                        onChange={(e) => setEndDate(e.target.value)}
+                        className="w-full text-xs border border-gray-200 rounded-lg px-3 py-2.5 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all"
+                        style={{ outline: 'none' }}
+                      />
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </motion.div>
+
+        {/* Error Message */}
+        <AnimatePresence>
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="bg-gradient-to-r from-red-50 to-rose-50 border border-red-200 rounded-xl p-1 text-red-700 text-xs flex items-center space-x-2 shadow-sm"
+            >
+              <AlertCircle className="w-4 h-4 flex-shrink-0" />
+              <span className="font-medium">{error}</span>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Reports Content */}
+        {loading ? (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-2  text-center">
+            <div className="inline-flex flex-col items-center space-y-1">
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                className="w-8 h-8 border-3 border-t-transparent rounded-full"
+                style={{ borderColor: 'rgb(81, 96, 146)', borderTopColor: 'transparent', borderWidth: '3px' }}
+              />
+              <span className="text-xs text-gray-600 font-medium">Loading reports...</span>
+            </div>
+          </div>
+        ) : reports.length === 0 ? (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-xl shadow-sm border border-gray-100  text-center"
+          >
+            <motion.div
+              animate={{ y: [0, -10, 0] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            >
+              <FileText className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+            </motion.div>
+            <p className="text-base font-semibold text-gray-900 mb-2">
+              {searchTerm || dateFilter !== 'ALL' ? 'No Reports Found' : 'No Reports Available'}
+            </p>
+            <p className="text-xs text-gray-500 mb-4">
+              {searchTerm || dateFilter !== 'ALL' ? 'Try adjusting your search filters.' : 'Create a new report to get started.'}
+            </p>
+            {!searchTerm && dateFilter === 'ALL' && (
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={handleCreateReport}
+                className="inline-flex items-center space-x-2 text-white px-2 py-2 rounded-lg font-medium shadow-md text-xs bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Create Your First Report</span>
+              </motion.button>
             )}
-          </>
+          </motion.div>
+        ) : (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            {viewMode === 'table' && renderTableView()}
+            {viewMode === 'grid' && renderCardView()}
+            {viewMode === 'list' && renderListView()}
+            {renderPagination()}
+          </motion.div>
         )}
+
+
+
+
+        {/* Operation Status Toast */}
+        <AnimatePresence>
+          {operationStatus && (
+            <motion.div
+              initial={{ opacity: 0, y: -50, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -50, scale: 0.9 }}
+              className="fixed top-4 right-4 z-50"
+            >
+              <div className={`flex items-center space-x-3 px-1 py-3 rounded-xl shadow-2xl text-xs border-2 ${
+                operationStatus.type === 'success'
+                  ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-300 text-green-800'
+                  : 'bg-gradient-to-r from-red-50 to-rose-50 border-red-300 text-red-800'
+              }`}>
+                <motion.div
+                  initial={{ scale: 0, rotate: -180 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  transition={{ type: "spring", stiffness: 200 }}
+                >
+                  {operationStatus.type === 'success' ?
+                    <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" /> :
+                    <XCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
+                  }
+                </motion.div>
+                <span className="font-semibold">{operationStatus.message}</span>
+                <motion.button
+                  whileHover={{ scale: 1.2, rotate: 90 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => setOperationStatus(null)}
+                  className="ml-2 hover:bg-white/50 rounded-full p-1 transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </motion.button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Operation Loading Overlay */}
+        <AnimatePresence>
+          {operationLoading && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-40"
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                className="bg-white rounded-2xl p-8 shadow-2xl"
+              >
+                <div className="flex flex-col items-center space-y-4">
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                    className="w-12 h-12 border-4 border-t-transparent rounded-full"
+                    style={{ borderColor: 'rgb(81, 96, 146)', borderTopColor: 'transparent' }}
+                  />
+                  <span className="text-gray-700 text-sm font-semibold">Processing...</span>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Delete Confirm Modal */}
+        <AnimatePresence>
+          {deleteConfirm && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/40 backdrop-blur-md flex items-center justify-center z-50 p-4"
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                transition={{ type: "spring", duration: 0.5 }}
+                className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl"
+              >
+                <div className="flex items-start space-x-4 mb-5">
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1, rotate: [0, 10, -10, 0] }}
+                    transition={{ delay: 0.2 }}
+                    className="w-12 h-12 bg-gradient-to-br from-red-100 to-rose-100 rounded-xl flex items-center justify-center flex-shrink-0"
+                  >
+                    <AlertTriangle className="w-6 h-6 text-red-600" />
+                  </motion.div>
+                  <div className="flex-1">
+                    <h3 className="text-base font-bold text-gray-900 mb-1">Delete Report?</h3>
+                    <p className="text-xs text-gray-500">This action cannot be undone</p>
+                  </div>
+                </div>
+                <div className="bg-gray-50 rounded-lg p-4 mb-6">
+                  <p className="text-xs text-gray-700">
+                    Are you sure you want to delete <span className="font-bold text-gray-900">"{deleteConfirm.title || 'N/A'}"</span>?
+                  </p>
+                </div>
+                <div className="flex items-center justify-end space-x-3">
+                  <motion.button
+                    whileHover={{ scale: 1.02, y: -1 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setDeleteConfirm(null)}
+                    className="px-5 py-2.5 text-xs font-semibold text-gray-700 border-2 border-gray-200 rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-all"
+                  >
+                    Cancel
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.02, y: -1 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => handleDeleteReport(deleteConfirm)}
+                    className="px-5 py-2.5 text-xs font-semibold bg-gradient-to-r from-red-600 to-rose-600 text-white rounded-lg hover:from-red-700 hover:to-rose-700 shadow-lg hover:shadow-xl transition-all"
+                  >
+                    Delete Report
+                  </motion.button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+
+        
+
+        {/* View Report Modal */}
+        <AnimatePresence>
+          {showViewModal && selectedReport && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/40 backdrop-blur-md flex items-center justify-center z-50 p-4"
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                transition={{ type: "spring", duration: 0.5 }}
+                className="bg-white rounded-2xl p-6 w-full max-w-3xl shadow-2xl max-h-[90vh] overflow-hidden flex flex-col"
+              >
+                {/* Header */}
+                <div className="flex items-start justify-between mb-5 pb-4 border-b border-gray-200">
+                  <div className="flex items-center space-x-3 flex-1">
+                    <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-blue-100 to-purple-100">
+                      <FileText className="w-5 h-5 text-blue-600" />
+                    </div>
+                    <div>
+                      <h3 className="text-base font-bold text-gray-900">{selectedReport.title}</h3>
+                      <p className="text-xs text-gray-500 mt-0.5">Report Details</p>
+                    </div>
+                  </div>
+                  <motion.button
+                    whileHover={{ scale: 1.1, rotate: 90 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() => {
+                      setShowViewModal(false);
+                      setSelectedReport(null);
+                    }}
+                    className="text-gray-400 hover:text-gray-600 p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </motion.button>
+                </div>
+
+
+
+                {/* Content */}
+                <div className="flex-1 overflow-y-auto space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                    <div>
+                      <p className="text-gray-500">Created By</p>
+                      <p className="font-medium text-gray-900">{selectedReport.admin?.adminName || 'Unknown'}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-500">Created On</p>
+                      <p className="font-medium text-gray-900">{formatDate(selectedReport.createdAt)}</p>
+                    </div>
+                  </div>
+
+                  <div className="border-t pt-4">
+                    <p className="text-gray-500 mb-2">Report Content</p>
+                    {selectedReport.content ? (
+                      <div className="bg-gray-50 p-4 rounded-lg max-h-96 overflow-y-auto">
+                        <div
+                          className="prose prose-sm max-w-none"
+                          dangerouslySetInnerHTML={{
+                            __html: typeof selectedReport.content === 'string'
+                              ? selectedReport.content
+                              : '<pre>' + JSON.stringify(selectedReport.content, null, 2) + '</pre>'
+                          }}
+                        />
+                      </div>
+                    ) : selectedReport.reportUrl ? (
+                      <div className="bg-blue-50 p-4 rounded-lg">
+                        <p className="text-blue-800 font-medium">External Report</p>
+                        <a
+                          href={handleReportUrl(selectedReport.reportUrl)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:underline text-xs"
+                        >
+                          {selectedReport.reportUrl}
+                        </a>
+                      </div>
+                    ) : (
+                      <p className="text-gray-400 italic">No content available</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Footer */}
+                <div className="flex items-center justify-end space-x-3 pt-4 border-t border-gray-200">
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => handleDownloadReport(selectedReport)}
+                    className="flex items-center space-x-2 px-4 py-2 text-xs font-medium text-green-700 bg-green-50 rounded-lg hover:bg-green-100 transition-colors"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    <span>Download</span>
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => {
+                      setShowViewModal(false);
+                      setSelectedReport(null);
+                    }}
+                    className="px-4 py-2 text-xs font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                  >
+                    Close
+                  </motion.button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );

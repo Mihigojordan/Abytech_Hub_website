@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
-import { Eye, EyeOff, Users, Building2, Shield, Zap } from 'lucide-react';
+import { Eye, EyeOff, Shield, Lock } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import useAdminAuth from '../../../context/AdminAuthContext';
-import Logo from '../../../assets/trans.png';
+import Logo from '../../../assets/tran.png';
 
 const AdminLogin = () => {
   const { login, loginWithGoogle, isLoading: authLoading, isAuthenticated } = useAdminAuth();
@@ -128,237 +128,222 @@ const AdminLogin = () => {
   };
 
   return (
-    <div className=" min-h-screen flex bg-white">
-      {/* Left side - Brand with Background Image */}
-      <div 
-        className="w-5/12 flex items-center justify-center p-8 relative overflow-hidden"
-        style={{
-          backgroundImage: 'url(https://images.unsplash.com/photo-1559827260-dc66d52bef19?q=80&w=2070&auto=format&fit=crop)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-        }}
-      >
-        {/* Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-900 via-blue-900 to-purple-900"></div>
-        
-        {/* Animated circles */}
-        <div className="absolute top-20 right-20 w-64 h-32 bg-white/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-20 left-20 w-80 h-80 bg-white/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
-        
-        <div className="max-w-lg text-white relative z-10">
-          <div className="backdrop-blur-sm bg-white/10 border border-white/20 rounded-3xl p-10 shadow-2xl" data-aos="fade-up">
-            <div className="mb-6">
-              <Shield className="w-16 h-16 text-white mb-4" />
-            </div>
-            <h1 className="text-4xl font-bold mb-6 leading-tight">
-              Empowering People with <span className="text-[#d6e2f4]">Fine Fish</span>
-            </h1>
-            
-            <div className="mb-8 flex justify-start">
-              <div className="flex items-center space-x-3">
-                <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/30 shadow-lg">
-                  <Users className="w-7 h-7 text-white" />
-                </div>
-                <div className="w-12 h-12 bg-white/15 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/30 shadow-lg">
-                  <Building2 className="w-6 h-6 text-white" />
-                </div>
-                <div className="w-10 h-10 bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/30 shadow-lg">
-                  <Zap className="w-5 h-5 text-white" />
-                </div>
-              </div>
-            </div>
-            
-            <p className="text-white/90 text-lg leading-relaxed mb-6">
-              Simplify workforce management, empower growth, and foster harmony across your organization.
-            </p>
-            
-            <div className="flex items-center space-x-2">
-              <div className="w-16 h-1.5 bg-white/80 rounded-full"></div>
-              <div className="w-8 h-1.5 bg-white/60 rounded-full"></div>
-              <div className="w-4 h-1.5 bg-white/40 rounded-full"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Right side - Login form */}
-      <div className="w-7/12 flex flex-col justify-center p-8 bg-gradient-to-br from-gray-50 to-white relative">
-        {/* Decorative elements */}
-        <div className="absolute top-10 right-10 w-32 h-32 bg-[#e7eff8] rounded-full blur-2xl opacity-50"></div>
-        <div className="absolute bottom-10 left-10 w-40 h-40 bg-[#d6e2f4] rounded-full blur-3xl opacity-40"></div>
-        
-        <div className="w-full max-w-xl mx-auto relative z-10" data-aos="zoom-in">
+    <div className="min-h-screen flex items-center justify-center bg-white p-3 sm:p-4">
+      <div className=" w-[500px]">
+        <div className="bg-white rounded-3xl shadow-2xl border border-gray-200 p-6 sm:p-8">
           {/* Header */}
-          <div className="text-center mb-8">
+          <div className="text-center mb-6">
             <div className="flex items-center justify-center mb-4">
-              <img src={Logo} alt="Fine Fish Logo" className=" h-16" />
+              <img src={Logo} alt="Fine Fish Logo" className="h-12 sm:h-14" />
             </div>
-            <h2 className="text-3xl font-bold text-gray-800 mt-4">Welcome Back</h2>
-            <p className="text-gray-500 mt-2">Sign in to access your admin dashboard</p>
+         
+            <h2 className="text-2xl sm:text-3xl font-bold mb-1" style={{ color: 'rgb(81, 96, 146)' }}>
+              Admin Login
+            </h2>
+            <p className="text-sm text-gray-600">Sign in to access your dashboard</p>
           </div>
 
-          {/* Error message */}
+          {/* Error Message */}
           {errors.general && (
-            <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-lg shadow-sm">
-              <p className="text-red-700 text-sm font-medium">{errors.general}</p>
+            <div className="mb-4 p-2.5 bg-red-50 border border-red-200 rounded-xl flex items-start space-x-2">
+              <span className="text-red-500 text-sm mt-0.5">⚠</span>
+              <p className="text-xs text-red-700 flex-1">{errors.general}</p>
             </div>
           )}
 
           {/* Login Form */}
-          <div className="bg-white border border-gray-200 rounded-3xl p-10 shadow-xl hover:shadow-2xl transition-all duration-500">
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Email Field */}
-              <div>
-                <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
-                  Email Address
-                </label>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Email Field */}
+            <div>
+              <label htmlFor="email" className="block text-xs font-semibold text-gray-700 mb-1.5">
+                Email Address
+              </label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                value={formData.email}
+                onChange={handleInputChange}
+                onBlur={handleBlur}
+                disabled={isLoading || authLoading}
+                className={`w-full px-3 py-2.5 text-sm border rounded-xl transition-all disabled:bg-gray-50 disabled:cursor-not-allowed ${
+                  errors.email && touched.email
+                    ? 'border-red-300 bg-red-50 focus:border-red-500'
+                    : 'border-gray-300'
+                }`}
+                style={!(errors.email && touched.email) ? {} : {}}
+                onFocus={(e) => {
+                  if (!(errors.email && touched.email)) {
+                    e.target.style.borderColor = 'rgb(81, 96, 146)';
+                    e.target.style.outline = 'none';
+                    e.target.style.boxShadow = '0 0 0 3px rgba(81, 96, 146, 0.1)';
+                  }
+                }}
+                onBlur={(e) => {
+                  handleBlur(e);
+                  if (!(errors.email && touched.email)) {
+                    e.target.style.borderColor = '';
+                    e.target.style.boxShadow = '';
+                  }
+                }}
+                placeholder="admin@example.com"
+              />
+              {errors.email && touched.email && (
+                <p className="mt-1.5 text-xs text-red-600 flex items-center">
+                  <span className="mr-1">⚠</span> {errors.email}
+                </p>
+              )}
+            </div>
+
+            {/* Password Field */}
+            <div>
+              <label htmlFor="password" className="block text-xs font-semibold text-gray-700 mb-1.5">
+                Password
+              </label>
+              <div className="relative">
                 <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  value={formData.email}
+                  type={showPassword ? 'text' : 'password'}
+                  id="password"
+                  name="password"
+                  value={formData.password}
                   onChange={handleInputChange}
                   onBlur={handleBlur}
-                  className={`w-full px-4 py-3.5 rounded-xl border-2 transition-all duration-200 ${
-                    errors.email
-                      ? 'border-red-300 bg-red-50 focus:border-red-500 focus:ring-4 focus:ring-red-500/20'
-                      : 'border-gray-200 focus:border-[#0c62c3] focus:ring-4 focus:ring-[#e7eff8]'
-                  } focus:outline-none`}
-                  placeholder="Enter your email"
                   disabled={isLoading || authLoading}
+                  className={`w-full px-3 py-2.5 pr-10 text-sm border rounded-xl transition-all disabled:bg-gray-50 disabled:cursor-not-allowed ${
+                    errors.password && touched.password
+                      ? 'border-red-300 bg-red-50 focus:border-red-500'
+                      : 'border-gray-300'
+                  }`}
+                  onFocus={(e) => {
+                    if (!(errors.password && touched.password)) {
+                      e.target.style.borderColor = 'rgb(81, 96, 146)';
+                      e.target.style.outline = 'none';
+                      e.target.style.boxShadow = '0 0 0 3px rgba(81, 96, 146, 0.1)';
+                    }
+                  }}
+                  onBlur={(e) => {
+                    handleBlur(e);
+                    if (!(errors.password && touched.password)) {
+                      e.target.style.borderColor = '';
+                      e.target.style.boxShadow = '';
+                    }
+                  }}
+                  placeholder="••••••••"
                 />
-                {errors.email && touched.email && (
-                  <p className="mt-2 text-sm text-red-600 flex items-center">
-                    <span className="mr-1">⚠</span> {errors.email}
-                  </p>
-                )}
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  disabled={isLoading || authLoading}
+                  className="absolute right-2.5 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 disabled:cursor-not-allowed transition-colors"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
               </div>
+              {errors.password && touched.password && (
+                <p className="mt-1.5 text-xs text-red-600 flex items-center">
+                  <span className="mr-1">⚠</span> {errors.password}
+                </p>
+              )}
+            </div>
 
-              {/* Password Field */}
-              <div>
-                <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-2">
-                  Password
-                </label>
-                <div className="relative">
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    id="password"
-                    name="password"
-                    value={formData.password}
-                    onChange={handleInputChange}
-                    onBlur={handleBlur}
-                    className={`w-full px-4 py-3.5 pr-12 rounded-xl border-2 transition-all duration-200 ${
-                      errors.password
-                        ? 'border-red-300 bg-red-50 focus:border-red-500 focus:ring-4 focus:ring-red-500/20'
-                        : 'border-gray-200 focus:border-[#0c62c3] focus:ring-4 focus:ring-[#e7eff8]'
-                    } focus:outline-none`}
-                    placeholder="Enter your password"
-                    disabled={isLoading || authLoading}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-[#0c62c3] transition-colors disabled:opacity-50"
-                    disabled={isLoading || authLoading}
-                  >
-                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                  </button>
-                </div>
-                {errors.password && touched.password && (
-                  <p className="mt-2 text-sm text-red-600 flex items-center">
-                    <span className="mr-1">⚠</span> {errors.password}
-                  </p>
-                )}
-              </div>
-
-            
-
-              {/* Submit Button */}
-              <button
-                type="submit"
-                disabled={isLoading || authLoading || !isFormValid()}
-                className="w-full bg-gradient-to-br from-purple-900 via-blue-900 to-purple-900 text-white py-4 px-4 rounded-xl font-semibold hover:from-[#0a56ae] hover:to-[#0c62c3] focus:outline-none focus:ring-4 focus:ring-[#adc7e9] transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-              >
-                {isLoading || authLoading ? (
-                  <div className="flex items-center justify-center">
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                    Signing in...
-                  </div>
-                ) : (
-                  'Sign In'
-                )}
-              </button>
-
-              {/* Divider */}
-              <div className="relative my-1">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-200"></div>
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-4 bg-white text-gray-500 font-medium">OR</span>
-                </div>
-              </div>
-            </form>
-
-            {/* Google Login Button */}
+            {/* Submit Button */}
             <button
-              type="button"
-              onClick={handleGoogleLogin}
-              disabled={isLoading || authLoading}
-              className="w-full flex items-center justify-center bg-white border-2 border-gray-200 text-gray-700 py-4 px-4 rounded-xl font-semibold hover:bg-gray-50 hover:border-[#0c62c3] hover:text-[#0c62c3] focus:outline-none focus:ring-4 focus:ring-[#e7eff8] transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+              type="submit"
+              disabled={isLoading || authLoading || !isFormValid()}
+              className="w-full text-white py-2.5 px-4 rounded-xl transition-all font-semibold text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shadow-lg"
+              style={{ 
+                backgroundColor: 'rgb(81, 96, 146)',
+                boxShadow: '0 10px 25px -5px rgba(81, 96, 146, 0.3)'
+              }}
+              onMouseEnter={(e) => {
+                if (!isLoading && !authLoading && isFormValid()) {
+                  e.target.style.backgroundColor = 'rgb(71, 86, 136)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.backgroundColor = 'rgb(81, 96, 146)';
+              }}
             >
-              <svg
-                className="w-5 h-5 mr-3"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                  fill="#4285F4"
-                />
-                <path
-                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-1.02.68-2.33 1.08-3.71 1.08-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                  fill="#34A853"
-                />
-                <path
-                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"
-                  fill="#FBBC05"
-                />
-                <path
-                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                  fill="#EA4335"
-                />
-              </svg>
               {isLoading || authLoading ? (
-                <span className="flex items-center">
-                  <div className="w-5 h-5 border-2 border-gray-500 border-t-transparent rounded-full animate-spin mr-2"></div>
-                  Signing in with Google...
-                </span>
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                  Signing in...
+                </>
               ) : (
-                'Sign in with Google'
+                <>
+                  <Lock className="w-4 h-4 mr-2" />
+                  Sign In
+                </>
               )}
             </button>
-          </div>
 
+            {/* Divider */}
+            <div className="relative my-4">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-200"></div>
+              </div>
+              <div className="relative flex justify-center text-xs">
+                <span className="px-3 bg-white text-gray-500 font-medium">OR</span>
+              </div>
+            </div>
+          </form>
 
-
+          {/* Google Login Button */}
+          <button
+            type="button"
+            onClick={handleGoogleLogin}
+            disabled={isLoading || authLoading}
+            className="w-full flex items-center justify-center bg-white border-2 border-gray-300 text-gray-700 py-2.5 px-4 rounded-xl font-semibold hover:border-gray-400 focus:outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md text-sm"
+          >
+            <svg
+              className="w-4 h-4 mr-2"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                fill="#4285F4"
+              />
+              <path
+                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-1.02.68-2.33 1.08-3.71 1.08-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                fill="#34A853"
+              />
+              <path
+                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"
+                fill="#FBBC05"
+              />
+              <path
+                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                fill="#EA4335"
+              />
+            </svg>
+            {isLoading || authLoading ? (
+              <>
+                <div className="w-4 h-4 border-2 border-gray-500 border-t-transparent rounded-full animate-spin mr-2"></div>
+                Signing in...
+              </>
+            ) : (
+              'Sign in with Google'
+            )}
+          </button>
         </div>
       </div>
+
+      {/* Google One Tap */}
       <div id="g_id_onload"
-     data-client_id={import.meta.env.VITE_ADMIN_CLIENT_ID}
-     data-login_uri={import.meta.env.VITE_ADMIN_CALLBACK_URL}
-     data-auto_prompt="false">
-</div>
+        data-client_id={import.meta.env.VITE_ADMIN_CLIENT_ID}
+        data-login_uri={import.meta.env.VITE_ADMIN_CALLBACK_URL}
+        data-auto_prompt="false">
+      </div>
 
-<div class="g_id_signin"
-     data-type="standard"
-     data-shape="rectangular"
-     data-theme="filled_black"
-     data-text="signin_with"
-     data-size="large">
-</div>
-
+      <div className="g_id_signin"
+        data-type="standard"
+        data-shape="rectangular"
+        data-theme="filled_black"
+        data-text="signin_with"
+        data-size="large">
+      </div>
     </div>
   );
 };
