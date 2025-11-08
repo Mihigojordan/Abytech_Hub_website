@@ -48,6 +48,19 @@ async getReportCount(filter, from = '', to = '') {
   }
 }
 
+  // ✅ Reply to a report
+  async replyToReport(reportId, content) {
+    try {
+      const response = await api.post(`/report/${reportId}/reply`, { content });
+      return response.data;
+    } catch (error) {
+      const msg =
+        error.response?.data?.message || error.message || 'Failed to reply to report';
+      throw new Error(msg);
+    }
+  }
+
+
   // ✅ Get all reports
 async getAllReports({
   page = 1,
@@ -147,5 +160,6 @@ export const {
   getAllReports,
   getReportById,
   updateReport,
-  deleteReport
+  deleteReport,
+  replyToReport,
 } = reportService;
