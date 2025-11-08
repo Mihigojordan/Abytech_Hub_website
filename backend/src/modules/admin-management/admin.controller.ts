@@ -267,6 +267,7 @@ export class AdminController {
       throw new HttpException(error.message, error.status);
     }
   }
+  
       @Get(':id')
     async findAdminById(@Param('id') id:string) {
         try {
