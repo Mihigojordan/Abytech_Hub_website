@@ -1,6 +1,5 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Header from "../components/header";
-import { useRef, useState } from "react";
 import emailjs from "@emailjs/browser";
 import { Mail, Phone, MapPin, Clock, Send } from "lucide-react";
 
@@ -12,6 +11,7 @@ const ContactUs = () => {
     message: "",
   });
   const [loading, setLoading] = useState(false);
+  const form = useRef();
 
   useEffect(() => {
     document.documentElement.scrollIntoView({
@@ -21,8 +21,6 @@ const ContactUs = () => {
     });
   }, []);
 
-  const form = useRef();
-
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -30,34 +28,34 @@ const ContactUs = () => {
       [name]: value,
     }));
   };
-const sendEmail = async (e) => {
-  e.preventDefault();
-  setLoading(true);
 
-  try {
-    const result = await emailjs.sendForm(
+  const sendEmail = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const result = await emailjs.sendForm(
         import.meta.env.VITE_EMAILJS_SERVICE_ID,
         import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
         form.current,
         import.meta.env.VITE_EMAILJS_PUBLIC_KEY
-    );
-    console.log("Email sent:", result.text);
-    alert("Message sent successfully! ✅");
+      );
+      console.log("Email sent:", result.text);
+      alert("Message sent successfully!");
 
-    // Reset form
-    setFormData({
-      from_name: "",
-      user_email: "",
-      subject: "",
-      message: "",
-    });
-  } catch (error) {
-    console.error("Email error:", error.text || error);
-    alert("Failed to send message. ❌");
-  } finally {
-    setLoading(false);
-  }
-};
+      setFormData({
+        from_name: "",
+        user_email: "",
+        subject: "",
+        message: "",
+      });
+    } catch (error) {
+      console.error("Email error:", error.text || error);
+      alert("Failed to send message.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const contactInfo = [
     {
@@ -65,52 +63,45 @@ const sendEmail = async (e) => {
       title: "Phone",
       detail: "+250 792888980",
       link: "tel:+250792888980",
-      color: "from-blue-500 to-blue-600"
     },
     {
       icon: <Mail className="w-6 h-6" />,
       title: "Email",
       detail: "info@abytechhub.com",
       link: "mailto:info@abytechhub.com",
-      color: "from-purple-500 to-purple-600"
     },
     {
       icon: <MapPin className="w-6 h-6" />,
       title: "Location",
-      detail: " KN 3 Rd, Kigali",
+      detail: "KN 3 Rd, Kigali",
       link: "https://share.google/zMIUGhrORT3Knc0xA",
-      color: "from-pink-500 to-pink-600"
     },
     {
       icon: <Clock className="w-6 h-6" />,
       title: "Working Hours",
       detail: "24/7 Available",
       link: null,
-      color: "from-orange-500 to-orange-600"
-    }
+    },
   ];
 
   return (
-    <div className="w-full flex flex-col pb-16 items-center gap-12 bg-gradient-to-b from-gray-50 to-white">
-      {/* Header */}
+    <div className="w-full flex flex-col pb-16 items-center gap-12 bg-white">
       <Header title="Contact Us" path="contact us" />
 
       {/* Company Info Cards */}
-      <div className="w-full px-4 lg:px-14 max-w-8xl mx-auto -mt-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+      <div className="w-full px-4 lg:px-14 max-w-8xl mx-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {contactInfo.map((info, index) => (
             <div
               key={index}
-              className="group relative bg-white rounded-2xl p-6 shadow-md hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100"
+              className="group relative bg-white rounded-2xl p-6 shadow-md hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border border-[#37517e]/10"
             >
-              {/* Gradient Background on Hover */}
-              <div className={`absolute inset-0 bg-gradient-to-br ${info.color} opacity-0 group-hover:opacity-5 rounded-2xl transition-opacity duration-300`}></div>
-              
-              {/* Icon Container */}
-              <div className={`relative w-14 h-14 rounded-xl bg-gradient-to-br ${info.color} flex items-center justify-center mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300`}>
-                <div className="text-white">
-                  {info.icon}
-                </div>
+              {/* Subtle hover glow */}
+              <div className="absolute inset-0 bg-[#37517e] opacity-0 group-hover:opacity-5 rounded-2xl transition-opacity duration-300"></div>
+
+              {/* Icon */}
+              <div className="relative w-14 h-14 rounded-xl bg-[#37517e] flex items-center justify-center mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300">
+                <div className="text-white">{info.icon}</div>
               </div>
 
               {/* Content */}
@@ -121,21 +112,16 @@ const sendEmail = async (e) => {
                 {info.link ? (
                   <a
                     href={info.link}
-                    target={info.link.startsWith('http') ? "_blank" : undefined}
-                    rel={info.link.startsWith('http') ? "noopener noreferrer" : undefined}
-                    className="text-gray-900 font-bold text-lg hover:text-primary-600 transition-colors duration-200 block"
+                    target={info.link.startsWith("http") ? "_blank" : undefined}
+                    rel={info.link.startsWith("http") ? "noopener noreferrer" : undefined}
+                    className="text-gray-900 font-bold text-lg hover:text-[#37517e] transition-colors duration-200 block"
                   >
                     {info.detail}
                   </a>
                 ) : (
-                  <p className="text-gray-900 font-bold text-lg">
-                    {info.detail}
-                  </p>
+                  <p className="text-gray-900 font-bold text-lg">{info.detail}</p>
                 )}
               </div>
-
-              {/* Decorative Element */}
-              <div className={`absolute -bottom-1 -right-1 w-20 h-20 bg-gradient-to-br ${info.color} opacity-5 rounded-full blur-2xl group-hover:opacity-10 transition-opacity duration-300`}></div>
             </div>
           ))}
         </div>
@@ -144,16 +130,15 @@ const sendEmail = async (e) => {
       {/* Form & Map Section */}
       <div className="flex flex-col lg:flex-row justify-center gap-8 lg:gap-12 w-full px-4 lg:px-14 max-w-8xl mx-auto">
         {/* Google Map */}
-        <div className="w-full lg:w-1/2 flex items-center">
+        <div className="w-full lg:w-1/2">
           <div className="w-full rounded-2xl overflow-hidden shadow-xl border-4 border-white relative group">
-            {/* Map Overlay Label */}
             <div className="absolute top-4 left-4 z-10 bg-white/95 backdrop-blur-sm px-4 py-2 rounded-lg shadow-lg">
               <div className="flex items-center gap-2">
-                <MapPin className="w-5 h-5 text-primary-600" />
+                <MapPin className="w-5 h-5 text-[#37517e]" />
                 <span className="font-semibold text-gray-900">Our Location</span>
               </div>
             </div>
-            
+
             <iframe
               src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2922.2939038340305!2d-85.6696030232607!3d42.90884217114711!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x8819b394c0d8cd01%3A0x24e9c42fcca37dc!2sAbyRide%20taxi%20service!5e0!3m2!1sen!2srw!4v1740779811412!5m2!1sen!2srw"
               className="w-full border-0 aspect-[16/9] lg:aspect-square"
@@ -165,27 +150,29 @@ const sendEmail = async (e) => {
         </div>
 
         {/* Contact Form */}
-        <div className="w-full lg:w-1/2 flex flex-col justify-center">
-          <div className="relative bg-white p-8 lg:p-10 rounded-2xl shadow-xl border border-gray-100">
-            {/* Decorative gradient blob */}
-            <div className="absolute -top-2 -right-2 w-32 h-32 bg-gradient-to-br from-purple-900 to-blue-900 opacity-10 rounded-full blur-3xl"></div>
-            <div className="absolute -bottom-2 -left-2 w-32 h-32 bg-gradient-to-br from-purple-900 to-blue-900 opacity-10 rounded-full blur-3xl"></div>
-            
+        <div className="w-full lg:w-1/2">
+          <div className="relative bg-white p-8 lg:p-10 rounded-2xl shadow-xl border border-[#37517e]/10">
+            {/* Subtle accent */}
+            <div className="absolute -top-2 -right-2 w-32 h-32 bg-[#37517e] opacity-5 rounded-full blur-3xl"></div>
+            <div className="absolute -bottom-2 -left-2 w-32 h-32 bg-[#37517e] opacity-5 rounded-full blur-3xl"></div>
+
             <div className="relative">
               <div className="flex items-center gap-3 mb-2">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-900 to-blue-900 flex items-center justify-center shadow-lg">
+                <div className="w-12 h-12 rounded-xl bg-[#37517e] flex items-center justify-center shadow-lg">
                   <Send className="w-6 h-6 text-white" />
                 </div>
                 <h2 className="text-3xl lg:text-4xl font-bold text-gray-900">
                   Get in Touch
                 </h2>
               </div>
-              <p className="text-gray-600 mb-6">We'd love to hear from you. Send us a message and we'll respond as soon as possible.</p>
+              <p className="text-gray-600 mb-6">
+                We'd love to hear from you. Send us a message and we'll respond as soon as possible.
+              </p>
 
               <form ref={form} onSubmit={sendEmail} className="flex flex-col gap-5">
-                {/* Name Field */}
-                <div className="flex flex-col">
-                  <label className="text-sm font-semibold text-gray-700 mb-2">
+                {/* Name */}
+                <div>
+                  <label className="text-sm font-semibold text-gray-700 mb-2 block">
                     Full Name
                   </label>
                   <input
@@ -195,17 +182,16 @@ const sendEmail = async (e) => {
                     onChange={handleChange}
                     placeholder="John Doe"
                     required
-                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-primary-500 focus:bg-white transition duration-200"
+                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#37517e] focus:bg-white transition duration-200"
                   />
                 </div>
-
 
                 <input name="subject" hidden />
                 <input name="year" value={new Date().getFullYear()} hidden />
 
-                {/* Email Field */}
-                <div className="flex flex-col">
-                  <label className="text-sm font-semibold text-gray-700 mb-2">
+                {/* Email */}
+                <div>
+                  <label className="text-sm font-semibold text-gray-700 mb-2 block">
                     Email Address
                   </label>
                   <input
@@ -215,15 +201,13 @@ const sendEmail = async (e) => {
                     onChange={handleChange}
                     placeholder="you@example.com"
                     required
-                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-primary-500 focus:bg-white transition duration-200"
+                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#37517e] focus:bg-white transition duration-200"
                   />
                 </div>
 
-              
-
-                {/* Message Field */}
-                <div className="flex flex-col">
-                  <label className="text-sm font-semibold text-gray-700 mb-2">
+                {/* Message */}
+                <div>
+                  <label className="text-sm font-semibold text-gray-700 mb-2 block">
                     Message
                   </label>
                   <textarea
@@ -233,7 +217,7 @@ const sendEmail = async (e) => {
                     placeholder="Tell us more about your inquiry..."
                     required
                     rows="5"
-                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-primary-500 focus:bg-white transition duration-200 resize-none"
+                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#37517e] focus:bg-white transition duration-200 resize-none"
                   ></textarea>
                 </div>
 
@@ -241,7 +225,7 @@ const sendEmail = async (e) => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="group relative w-full py-3.5 mt-2 bg-gradient-to-r from-purple-900 to-blue-900 text-white font-bold text-lg rounded-xl hover:from-primary-700 hover:to-primary-800 transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden"
+                  className="group relative w-full py-3.5 mt-2 bg-[#37517e] text-white font-bold text-lg rounded-xl hover:bg-[#2c4166] transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden"
                 >
                   <span className="relative z-10 flex items-center justify-center gap-2">
                     {loading ? (

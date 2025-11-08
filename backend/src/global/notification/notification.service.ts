@@ -19,27 +19,26 @@ export class NotificationService {
     });
     return { message: 'Subscription saved successfully' };
   }
+async sendNotification(adminId: string, payload: any) {
+  const admin = await this.prisma.admin.findUnique({ where: { id: adminId } });
+  if (!admin?.subscription) return;
 
-  async sendNotification(adminId: string, payload: any) {
-    const admin = await this.prisma.admin.findUnique({ where: { id: adminId } });
-    if (!admin?.subscription) return;
-    
+  const cleanPayload = JSON.parse(JSON.stringify(payload)); // removes undefined, functions
 
-    try {
-        console.log('send the notification',admin.subscription);
-      await webpush.sendNotification(admin.subscription as any, JSON.stringify(payload));
-      
-      return { message: 'Notification sent!' };
-    } catch (err: any) {
-      if (err.statusCode === 410 || err.statusCode === 404) {
-        const subscription :any = null 
-        // Subscription expired
-        await this.prisma.admin.update({
-          where: { id: adminId },
-          data: { subscription },
-        });
-      }
-      throw err;
+  try {
+    console.log('Sending payload:', cleanPayload);
+    await webpush.sendNotification(admin.subscription as any, JSON.stringify(cleanPayload));
+    return { message: 'Notification sent!' };
+  } catch (err: any) {
+    console.error('Push failed:', err.statusCode, err.body);
+    if (err.statusCode === 410 || err.statusCode === 404) {
+        const sub = null as any
+      await this.prisma.admin.update({
+        where: { id: adminId },
+        data: { subscription: sub },
+      });
     }
+    throw err;
   }
+}
 }
