@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   FileText,
@@ -16,11 +16,16 @@ import {
   Filter,
   Edit,
   Download,
+  Send,
+  MessageCircle,
+  Clock,
 } from "lucide-react";
 import "react-quill-new/dist/quill.snow.css";
+import ReactQuill from "react-quill-new";
 import reportService from "../../../services/reportService";
 import useAdminAuth from "../../../context/AdminAuthContext";
 import { API_URL } from '../../../api/api';
+import { useSocketEvent } from "../../../context/SocketContext";
 
 interface Report {
   id: string;
@@ -34,10 +39,21 @@ interface Report {
     name?: string;
     email?: string;
   };
+  replies?: ReplyReport[]; // <-- Added from model
+}
+
+interface ReplyReport {
+  id: string;
+  content: string;
+  createdAt: string;
+  adminId: string;
+  reportId:string;
+  admin?: {
+    name?: string;
+  };
 }
 
 type FilterType = "all" | "today" | "yesterday" | "week" | "month";
-
 interface OperationStatus {
   type: "success" | "error" | "info";
   message: string;
@@ -47,7 +63,7 @@ interface OperationStatus {
 function handleReportUrl(reportUrl) {
   if (!reportUrl) return null;
   const trimmedUrl = reportUrl.trim();
-  if (trimmedUrl.includes('://')) return trimmedUrl; // handles https:// or http://
+  if (trimmedUrl.includes('://')) return trimmedUrl;
   const baseUrl = API_URL.endsWith('/') ? API_URL.slice(0, -1) : API_URL;
   const path = trimmedUrl.startsWith('/') ? trimmedUrl : '/' + trimmedUrl;
   return baseUrl + path;
@@ -56,22 +72,19 @@ function handleReportUrl(reportUrl) {
 async function downloadFile(url, fileName) {
   try {
     const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error('Failed to fetch file');
-    }
+    if (!response.ok) throw new Error('Failed to fetch file');
     const blob = await response.blob();
     const downloadUrl = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = downloadUrl;
-    link.download = fileName || 'downloaded-file'; // Custom filename
+    link.download = fileName || 'downloaded-file';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    window.URL.revokeObjectURL(downloadUrl); // Clean up
+    window.URL.revokeObjectURL(downloadUrl);
   } catch (error) {
     console.error('Download error:', error);
-    // Handle error (e.g., show alert to user)
-    throw error; // Let caller handle
+    throw error;
   }
 }
 
@@ -79,6 +92,7 @@ const ReportViewPage = () => {
   const { id: reportId } = useParams<{ id?: string }>();
   const { user } = useAdminAuth();
   const navigate = useNavigate();
+
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -92,15 +106,26 @@ const ReportViewPage = () => {
   const [currentSidebarReports, setCurrentSidebarReports] = useState<Report[]>([]);
   const [totalSidebarReports, setTotalSidebarReports] = useState<number>(0);
   const [sidebarTotalPages, setSidebarTotalPages] = useState<number>(1);
+
+  // === REPLY STATE ===
+  const [replyContent, setReplyContent] = useState<string>("");
+  const [replying, setReplying] = useState<boolean>(false);
+
   const url = "/admin/dashboard/report/view/";
   const root_url = "/admin/dashboard/report/";
+
+  const repliesEndRef = useRef<HTMLDivElement>(null);
+
+useEffect(() => {
+  repliesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+}, [selectedReport?.replies?.length]);
 
   // Fetch selected report
   useEffect(() => {
     if (reportId) {
       const loadSelected = async () => {
         try {
-          const response = await reportService.getReportById(reportId); // Assuming getReport is implemented as api.get(`/report/${id}`)
+          const response = await reportService.getReportById(reportId);
           setSelectedReport(response);
         } catch (err: unknown) {
           const errorMessage = err instanceof Error ? err.message : "Failed to load report";
@@ -111,6 +136,23 @@ const ReportViewPage = () => {
     }
   }, [reportId]);
 
+  useSocketEvent(
+  'reportReplyCreated',
+  (newReply: ReplyReport) => {
+    if (selectedReport?.id === newReply.reportId && newReply.adminId !== user?.id) {
+      showOperationStatus("info", `${newReply.admin?.name || 'Someone'} replied`);
+    }
+    // Still update UI
+    if (selectedReport?.id === newReply.reportId) {
+      setSelectedReport(prev => prev ? {
+        ...prev,
+        replies: [...(prev.replies || []), newReply]
+      } : null);
+    }
+  },
+  [selectedReport?.id, user?.id]
+);
+
   // Fetch sidebar reports with server-side pagination
   const fetchSidebarReports = async () => {
     setLoading(true);
@@ -120,13 +162,11 @@ const ReportViewPage = () => {
       const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
       const yesterdayStart = new Date(todayStart);
       yesterdayStart.setDate(yesterdayStart.getDate() - 1);
-
       const params: any = {
         page: sidebarCurrentPage,
         limit: sidebarItemsPerPage,
         search: searchTerm.trim(),
       };
-
       if (filterType !== 'all') {
         if (filterType === 'today') {
           params.filter = 'today';
@@ -140,7 +180,6 @@ const ReportViewPage = () => {
           params.to = todayStart.toISOString().split('T')[0];
         }
       }
-
       const data = await reportService.getAllReports(params);
       const sortedReports = (data.data || []).sort(
         (a: Report, b: Report) =>
@@ -165,7 +204,6 @@ const ReportViewPage = () => {
     fetchSidebarReports();
   }, [sidebarCurrentPage, searchTerm, filterType]);
 
-  // Reset page to 1 when search term or filter changes
   useEffect(() => {
     setSidebarCurrentPage(1);
   }, [searchTerm, filterType]);
@@ -206,15 +244,33 @@ const ReportViewPage = () => {
     if (report.reportUrl) {
       try {
         const fullUrl = handleReportUrl(report.reportUrl);
-        if (!fullUrl) {
-          throw new Error('Invalid report URL');
-        }
+        if (!fullUrl) throw new Error('Invalid report URL');
         await downloadFile(fullUrl, report.title || 'report');
       } catch (err) {
         showOperationStatus("error", "Failed to download report file");
       }
     } else {
       showOperationStatus("error", "No file available for download");
+    }
+  };
+
+  // === SEND REPLY ===
+  const handleSendReply = async () => {
+    if (!replyContent.trim() || !selectedReport) return;
+
+    try {
+      setReplying(true);
+      const newReply = await reportService.replyToReport(selectedReport.id,   replyContent );
+      
+      // Replace replies with new array including the new one
+      setSelectedReport(prev => prev ? { ...prev, replies: [...(prev.replies || []), newReply] } : null);
+
+      setReplyContent("");
+      showOperationStatus("success", "Reply sent successfully!");
+    } catch (err: any) {
+      showOperationStatus("error", err.message || "Failed to send reply");
+    } finally {
+      setReplying(false);
     }
   };
 
@@ -338,6 +394,7 @@ const ReportViewPage = () => {
           </button>
         </div>
       </div>
+
       <div className="grid grid-cols-12 gap-6 mt-6">
         {/* Reports List Sidebar */}
         <div className="col-span-3 sticky top-0">
@@ -426,6 +483,7 @@ const ReportViewPage = () => {
             )}
           </div>
         </div>
+
         {/* Main Report Detail View */}
         <div className="col-span-9 space-y-6">
           <div className="bg-white rounded-lg shadow-sm border border-gray-300 p-6">
@@ -480,6 +538,7 @@ const ReportViewPage = () => {
               </div>
             </div>
           </div>
+
           <div className="bg-white rounded-lg shadow-sm border border-gray-300 p-6">
             <h3 className="text-lg font-medium text-gray-900 mb-4">Report Content</h3>
             <div className="swal-preview-container">
@@ -511,6 +570,7 @@ const ReportViewPage = () => {
               )}
             </div>
           </div>
+
           <div className="bg-white rounded-lg shadow-sm p-6">
             <h3 className="text-lg font-medium text-gray-900 mb-4">Report Information</h3>
             <div className="grid grid-cols-2 gap-6">
@@ -530,8 +590,83 @@ const ReportViewPage = () => {
               </div>
             </div>
           </div>
+
+          {/* === REPLIES SECTION === */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-300 p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <MessageCircle className="w-5 h-5 text-blue-600" />
+              <h3 className="text-lg font-medium text-gray-900">
+                Replies ({selectedReport.replies?.length || 0})
+              </h3>
+            </div>
+
+            {/* Reply Input */}
+            <div className="mb-6">
+              <ReactQuill
+                value={replyContent}
+                onChange={setReplyContent}
+                placeholder="Write your reply..."
+                className="bg-gray-50"
+                modules={{
+                  toolbar: [
+                    [{ 'header': [1, 2, false] }],
+                    ['bold', 'italic', 'underline'],
+                    ['link'],
+                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                    ['clean']
+                  ],
+                }}
+              />
+              <div className="mt-3 flex justify-end">
+                <button
+                  onClick={handleSendReply}
+                  disabled={replying || !replyContent.trim()}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+                >
+                  {replying ? (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <Send className="w-4 h-4" />
+                  )}
+                  Send Reply
+                </button>
+              </div>
+            </div>
+
+            {/* Replies List */}
+            <div className="space-y-4">
+              {selectedReport.replies && selectedReport.replies.length > 0 ? (
+                selectedReport.replies.map((reply) => (
+                  <div key={reply.id} className="border border-gray-200 rounded-lg p-4">
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-semibold text-sm">
+                          {reply.admin?.name?.[0]?.toUpperCase() || 'A'}
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">{reply.admin?.adminName || 'Admin'}</p>
+                          <p className="text-xs text-gray-500 flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            {getRelativeTime(reply.createdAt)}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    <div
+                      className="ql-editor max-h-[50px] text-sm text-gray-700 prose prose-sm max-w-none"
+                      dangerouslySetInnerHTML={{ __html: reply.content }}
+                    />
+                  </div>
+                ))
+              ) : (
+                <p className="text-center text-gray-500 py-6">No replies yet. Be the first to reply!</p>
+              )}
+            </div>
+          </div>
         </div>
       </div>
+
+      {/* === TOASTS & MODALS (unchanged) === */}
       {operationStatus && (
         <div className="fixed top-4 right-4 z-50 transform transition-all duration-300 ease-in-out">
           <div
@@ -553,6 +688,7 @@ const ReportViewPage = () => {
           </div>
         </div>
       )}
+
       {operationLoading && (
         <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-40">
           <div className="bg-white rounded-lg p-6 shadow-xl">
@@ -563,6 +699,7 @@ const ReportViewPage = () => {
           </div>
         </div>
       )}
+
       {deleteConfirm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg p-6 w-full max-w-md">
@@ -600,6 +737,7 @@ const ReportViewPage = () => {
           </div>
         </div>
       )}
+
       <style jsx>{`
         .swal-preview-container .ql-editor {
           padding: 1rem;
@@ -652,10 +790,10 @@ const ReportViewPage = () => {
           font-style: italic;
         }
         .ql-container {
-          minHeight: 400px;
+          min-height: 150px;
         }
         .ql-editor {
-          minHeight: 400px;
+          min-height: 150px;
         }
       `}</style>
     </div>

@@ -2,12 +2,16 @@ import { Injectable, BadRequestException } from '@nestjs/common';
 import { deleteFile } from 'src/common/utils/file-upload.utils';
 import { CloudinaryService } from 'src/global/cloudinary/cloudinary.service';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { NotificationService } from 'src/global/notification/notification.service';
+import { ReportGateway } from './report.gateway';
 
 @Injectable()
 export class ReportService {
   constructor(
     private prisma: PrismaService,
     private cloudinaryService: CloudinaryService,
+     private readonly notification: NotificationService,
+    private readonly reportGateway: ReportGateway,
 
   ) { }
 
@@ -114,7 +118,7 @@ async findAll(
     const [reports, total] = await Promise.all([
       this.prisma.report.findMany({
         where,
-        include: { admin: true },
+        include: { admin: true,replies:true },
         orderBy: { createdAt: 'desc' },
         skip,
         take: limit,
@@ -143,6 +147,10 @@ async replyToReport(reportId: string, adminId: string, content: string) {
     // Check if report exists
     const report = await this.prisma.report.findUnique({ where: { id: reportId } });
     if (!report) throw new BadRequestException('Report not found');
+    const admin = await this.prisma.admin.findUnique({ where: { id: adminId } });
+    if (!admin) throw new BadRequestException('Admin not found');
+
+    
 
     // Create the reply
     const reply = await this.prisma.replyReport.create({
@@ -157,6 +165,17 @@ async replyToReport(reportId: string, adminId: string, content: string) {
       },
     });
 
+
+     const payload = {
+  title:`${admin.adminName} just replied to your report`,
+  body: content,
+  icon: `${admin.profileImage}` || '',
+  url: `${process.env.FRONTEND_URL_ONLY}/admin/dashboard/report/view/${reportId}`,
+};
+
+   await this.notification.sendNotification(report.adminId,payload)
+    this.reportGateway.emitReplyCreated(reply)
+
     return reply;
   } catch (error) {
     throw new BadRequestException('Failed to reply to report: ' + error.message);
@@ -170,7 +189,7 @@ async replyToReport(reportId: string, adminId: string, content: string) {
     try {
       const report = await this.prisma.report.findUnique({
         where: { id },
-        include: { admin: true },
+        include: { admin: true,replies:true },
       });
       if (!report) throw new BadRequestException('Report not found');
       return report;

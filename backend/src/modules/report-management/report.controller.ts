@@ -19,9 +19,13 @@ import { RequestWithAdmin } from 'src/common/interfaces/admin.interface';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { ReportFileFields, ReportUploadConfig } from 'src/common/utils/file-upload.utils';
 
+
 @Controller('report')
 export class ReportController {
-  constructor(private readonly reportService: ReportService) { }
+  constructor(
+    private readonly reportService: ReportService,
+    
+  ) { }
 
   // ✅ Create a new report (uses admin ID from req.user)
   @Post()
