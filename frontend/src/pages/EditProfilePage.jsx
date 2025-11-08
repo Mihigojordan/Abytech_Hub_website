@@ -231,7 +231,7 @@ export default function AdminProfileEdit() {
                   {/* )} */}
                 </div>
                 <div className="text-white mb-4">
-                  <h1 className="text-3xl font-bold mb-1">{personalInfo.adminName || '—'}</h1>
+                  <h1 className="text-3xl font-bold mb-1">  {personalInfo.adminName || '—'}</h1>
                   <p className="text-blue-100 mb-2">Owner & Founder</p>
                   <div className="flex items-center gap-4 text-sm">
                     <div className="flex items-center gap-1">
@@ -250,8 +250,8 @@ export default function AdminProfileEdit() {
           </div>
         </div>
         {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Edit Profile</h1>
+        <div className=" my-6">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2"></h1>
           <p className="text-gray-600">Update your profile information and settings</p>
         </div>
 

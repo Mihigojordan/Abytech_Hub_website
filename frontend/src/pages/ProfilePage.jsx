@@ -1,6 +1,6 @@
 // AdminProfile.jsx
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import {
   User, Globe, Calendar, Mail, Phone, MapPin, Briefcase,
   FileText, Download, Lock, Loader2
@@ -17,12 +17,41 @@ const formatDate = (iso) => {
   });
 };
 
+/* --------------------------------------------------------------
+   PROFILE COMPLETION CALCULATOR
+   -------------------------------------------------------------- */
+const calculateProfileCompletion = (admin) => {
+  // 1. List every field you consider required for a “100%” profile
+  const fields = [
+    admin.adminName,               // Full name
+    admin.adminEmail,              // Email
+    admin.phone,                   // Phone
+    admin.location,                // Location
+    admin.profileImage,            // Profile picture
+    admin.bio,                     // Bio
+    admin.joinedDate,              // Joined date
+    admin.skills?.length,          // At least one skill
+    admin.portifilio?.length,      // At least one portfolio link
+    admin.experience?.length,      // At least one experience entry
+    admin.cv,                      // CV / Resume
+    admin.passport,                // Passport
+    admin.identityCard,            // Identity Card
+  ];
+
+  // 2. Count how many are filled (truthy)
+  const filled = fields.filter(Boolean).length;
+
+  // 3. Return percentage (rounded)
+  return Math.round((filled / fields.length) * 100);
+};
+
 export default function AdminProfile() {
   const { id } = useParams();                     // <-- id from URL
   const [admin, setAdmin] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('overview');
+  const navigate = useNavigate()
 
   // -------------------------------------------------
   // Fetch admin when component mounts or id changes
@@ -98,7 +127,7 @@ export default function AdminProfile() {
   // -------------------------------------------------
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
-      <div className="mx-auto max-w-7xl">
+      <div className="mx-auto ">
         {/* Header Section */}
         <div className="relative rounded-t-2xl overflow-hidden h-64">
           <div
@@ -171,7 +200,7 @@ export default function AdminProfile() {
             Documents
           </button>
           <button 
-          onClick={()=> navigate('/admin/dashboard/edit-profile')}
+          onClick={()=> navigate('/admin/dashboard/edit-profile/'+id)}
           className="ml-auto px-6 py-2 my-2 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600 transition-colors text-sm font-medium">
             Edit Profile
           </button>
@@ -183,22 +212,42 @@ export default function AdminProfile() {
             {/* Left Sidebar */}
             <div className="space-y-6">
               {/* Profile Completion (static 90% for demo) */}
-              <div className="bg-white rounded-xl shadow-sm p-6">
-                <h3 className="font-semibold text-gray-900 mb-4">Complete Your Profile</h3>
-                <div className="relative pt-1">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-blue-600 bg-blue-200">
-                      90%
-                    </span>
-                  </div>
-                  <div className="overflow-hidden h-2 text-xs flex rounded bg-blue-200">
-                    <div
-                      style={{ width: '90%' }}
-                      className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-gradient-to-r from-blue-500 to-cyan-500"
-                    />
-                  </div>
-                </div>
-              </div>
+            {admin && (
+  <div className="bg-white rounded-xl shadow-sm p-6">
+    <h3 className="font-semibold text-gray-900 mb-4">
+      Complete Your Profile
+    </h3>
+
+    {/* ---- calculate % ---- */}
+    {(() => {
+      const pct = calculateProfileCompletion(admin);
+      return (
+        <>
+          <div className="flex items-center justify-between mb-2">
+            <span
+              className={`text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full
+                ${pct === 100 ? 'text-indigo-600 bg-indigo-200' :
+                  pct >= 70 ? 'text-blue-600 bg-blue-200' :
+                  'text-amber-600 bg-amber-200'}`}
+            >
+              {pct}%
+            </span>
+          </div>
+
+          <div className="overflow-hidden h-2 text-xs flex rounded bg-gray-200">
+            <div
+              style={{ width: `${pct}%` }}
+              className={`shadow-none flex flex-col justify-center text-center whitespace-nowrap text-white
+                ${pct === 100 ? 'bg-gradient-to-r from-blue-500 to-indigo-500' :
+                  pct >= 70 ? 'bg-gradient-to-r from-blue-500 to-cyan-500' :
+                  'bg-gradient-to-r from-amber-500 to-orange-500'}`}
+            />
+          </div>
+        </>
+      );
+    })()}
+  </div>
+)}
 
               {/* Info Card */}
               <div className="bg-white rounded-xl shadow-sm p-6">
@@ -242,7 +291,9 @@ export default function AdminProfile() {
                         rel="noopener noreferrer"
                         className={`${link.color || 'bg-gray-700'} w-10 h-10 rounded-lg flex items-center justify-center text-white hover:opacity-80 transition-opacity`}
                       >
-                        <div className="w-5 h-5 bg-white rounded-full" />
+
+        
+                        <p className='capitalize'>{link?.platform?.trim()?.slice(0,1)}</p>
                       </a>
                     ))}
                   </div>

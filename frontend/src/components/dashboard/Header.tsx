@@ -187,7 +187,7 @@ const Header: React.FC<HeaderProps> = ({ onToggle}) => {
                     <div className="py-1">
                       <button
                         onClick={() => {
-                          navigate(role === "admin" ? "/admin/dashboard/profile" : "/employee/dashboard/profile");
+                          navigate(role === "admin" ? `/admin/dashboard/profile/${user.id}` : "/employee/dashboard/profile");
                           setIsDropdownOpen(false);
                         }}
                         className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-primary-50 transition-colors"
