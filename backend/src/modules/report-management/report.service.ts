@@ -137,6 +137,32 @@ async findAll(
   }
 }
 
+// ✅ Create a reply for a report
+async replyToReport(reportId: string, adminId: string, content: string) {
+  try {
+    // Check if report exists
+    const report = await this.prisma.report.findUnique({ where: { id: reportId } });
+    if (!report) throw new BadRequestException('Report not found');
+
+    // Create the reply
+    const reply = await this.prisma.replyReport.create({
+      data: {
+        content,
+        report: { connect: { id: reportId } },
+        admin: { connect: { id: adminId } },
+      },
+      include: {
+        admin: true,
+        report: true,
+      },
+    });
+
+    return reply;
+  } catch (error) {
+    throw new BadRequestException('Failed to reply to report: ' + error.message);
+  }
+}
+
 
 
   // ✅ Fetch one report by ID

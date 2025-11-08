@@ -238,74 +238,120 @@ export class AdminService {
       throw new Error(error.message);
     }
   }
+// admin.service.ts
+async updateAdmin(
+  id: string,
+  data: {
+    adminName?: string;
+    adminEmail?: string;
+    currentPassword?: string; // 🆕 add this for password check
+    newPassword?: string; 
+    password?:string    // 🆕 new password field
+    profileImage?: string;
+    cv?: string;
+    passport?: string;
+    identityCard?: string;
+    publicId?: string;
+    status?: 'ACTIVE' | 'INACTIVE';
+    is2FA?: boolean;
+    skills?: any;
+    experience?: any;
+    portifilio?: any;
+  },
+) {
+  try {
+    if (!id) throw new BadRequestException('Admin ID is required');
 
+    const existing = await this.findAdminById(id);
+    if (!existing) throw new NotFoundException('Admin not found');
 
-  // admin.service.ts
-  async updateAdmin(
-    id: string,
-    data: {
-      adminName?: string;
-      adminEmail?: string;
-      password?: string;
-      profileImage?: string;
-      status?: 'ACTIVE' | 'INACTIVE';
-      publicId?:string;
-    },
-  ) {
-    try {
-      if (!id) throw new BadRequestException('Admin ID is required');
+    // ✅ Validate email
+    if (data.adminEmail) {
+      if (!this.emailRegex.test(data.adminEmail)) {
+        throw new BadRequestException('Invalid email format');
+      }
+      const emailExists = await this.prisma.admin.findFirst({
+        where: { adminEmail: data.adminEmail, NOT: { id } },
+      });
+      if (emailExists) throw new ConflictException('Email already taken');
+    }
 
-      const existing = await this.findAdminById(id);
-      if (!existing) throw new NotFoundException('Admin not found');
-
-      // Prevent duplicate email
-      if (data.adminEmail) {
-        if (!this.emailRegex.test(data.adminEmail)) {
-          throw new BadRequestException('Invalid email format');
+    // ✅ Convert JSON fields (if sent as strings)
+    ['skills', 'experience', 'portifilio'].forEach((field) => {
+      if (typeof data[field] === 'string') {
+        try {
+          data[field] = JSON.parse(data[field]);
+        } catch (e) {
+          // ignore invalid JSON
         }
-        const emailExists = await this.prisma.admin.findFirst({
-          where: { adminEmail: data.adminEmail, NOT: { id } },
-        });
-        if (emailExists) throw new ConflictException('Email already taken');
+      }
+    });
+
+    // ✅ Password update logic
+    if (data.newPassword || data.currentPassword) {
+      if ( !existing.password || !data.currentPassword || !data.newPassword) {
+        throw new BadRequestException(
+          'Both current and new passwords are required to update your password.',
+        );
+      }
+    
+      const passwordMatch = await bcrypt.compare(
+        data.currentPassword,
+        existing.password,
+      );
+      if (!passwordMatch) {
+        throw new BadRequestException('Current password is incorrect.');
       }
 
-      let cloudinaryResult;
+      const hashed = await bcrypt.hash(data.newPassword, 10);
+      data.password = hashed;
 
-       if (data.profileImage) {
-      cloudinaryResult = await this.cloudinaryService.uploadImage(data.profileImage);
-      data.profileImage = cloudinaryResult.secure_url;
-      data.publicId = cloudinaryResult.public_id;
+      // Remove these so they aren't accidentally persisted as columns
+      delete data.currentPassword;
+      delete data.newPassword;
     }
 
+    // ✅ Handle Cloudinary uploads for multiple files
+    const fileFields = ['profileImage', 'cv', 'passport', 'identityCard'];
+    const uploadedResults: Record<string, any> = {};
 
-      // Hash password if provided
+    for (const field of fileFields) {
+      if (data[field]) {
+        const uploadResult = await this.cloudinaryService.uploadImage(data[field]);
+        uploadedResults[field] = uploadResult;
 
-      const updatedAdmin = await this.prisma.admin.update({
-        where: { id },
-        data,
-      });
-
-
-       if (cloudinaryResult && existing.profileImage) {
-            if (existing.publicId) {
-              await this.cloudinaryService.deleteImage(existing.publicId);
-            } else {
-              deleteFile(existing.profileImage); // local file fallback
-            }
-          }
-
-
-
-
-      return {
-        message: 'Admin updated successfully',
-        admin: updatedAdmin,
-      };
-    } catch (error) {
-      console.error('Error updating admin:', error);
-      throw new Error(error.message);
+        data[field] = uploadResult.secure_url;
+        data[`${field}PublicId`] = uploadResult.public_id;
+      }
     }
+
+    // ✅ Update admin in DB
+    const updatedAdmin = await this.prisma.admin.update({
+      where: { id },
+      data,
+    });
+
+    // ✅ Clean up old Cloudinary files if replaced
+    for (const field of fileFields) {
+      if (uploadedResults[field] && existing[field]) {
+        const oldPublicId = existing[`${field}PublicId`];
+        if (oldPublicId) {
+          await this.cloudinaryService.deleteImage(oldPublicId);
+        } else {
+          deleteFile(existing[field]); // local fallback
+        }
+      }
+    }
+
+    return {
+      message: 'Admin updated successfully',
+      admin: updatedAdmin,
+    };
+  } catch (error) {
+    console.error('Error updating admin:', error);
+    throw new BadRequestException(error.message || 'Failed to update admin');
   }
+}
 
   async deleteAdmin(id: string) {
     try {

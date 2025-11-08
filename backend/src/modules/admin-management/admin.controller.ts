@@ -267,6 +267,16 @@ export class AdminController {
       throw new HttpException(error.message, error.status);
     }
   }
+      @Get(':id')
+    async findAdminById(@Param('id') id:string) {
+        try {
+     return this.adminServices.findAdminById(id);
+    } catch (error) {
+      console.log('error getting all admin', error);
+      throw new HttpException(error.message, error.status);
+    }
+    }
+
 
 
   @Patch('change-password')
@@ -321,7 +331,12 @@ export class AdminController {
   )
   async updateAdmin(
     @Param('id') id: string,
-    @UploadedFiles() files: { profileImg?: Express.Multer.File[] },
+    @UploadedFiles() files: { 
+      profileImage?: Express.Multer.File[] , 
+       passport?: Express.Multer.File[] , 
+       cv?: Express.Multer.File[],
+       identityCard?: Express.Multer.File[],
+       },
     @Body()
     body: {
       adminName?: string;
@@ -336,8 +351,17 @@ export class AdminController {
       if (typeof value === 'string') return JSON.parse(value);
       return value;
     }
-    if (files?.profileImg?.[0]?.filename) {
-      body['profileImage'] = files.profileImg[0].path;
+    if (files?.profileImage?.[0]?.filename) {
+      body['profileImage'] = files.profileImage[0].path;
+    }
+    if (files?.cv?.[0]?.filename) {
+      body['cv'] = files.cv[0].path;
+    }
+    if (files?.passport?.[0]?.filename) {
+      body['passport'] = files.passport[0].path;
+    }
+    if (files?.identityCard?.[0]?.filename) {
+      body['identityCard'] = files.identityCard[0].path;
     }
     if (body['is2FA']) {
       body['is2FA'] = parseBoolean(body['is2FA'])
