@@ -14,12 +14,14 @@ import MainLayout from "./layouts/MainLayout";
 import DashboardLayout from "./layouts/DashboardLayout";
 import ProtectPrivateAdminRoute from "./components/protectors/ProtectPrivateAdminRoute";
 import EmployeeeDashboard from "./pages/dashboard/EmployeeManagement";
+import AdminProfilePage from "./pages/ProfilePage";
+import AdminProfileEdit from "./pages/EditProfilePage";
 
 // Lazy-loaded pages
 const ProjectsPage = lazy(() => import("./pages/Projects/ProjectPages"));
 const AdminLogin = lazy(() => import("./pages/auth/admin/Login"));
 const DashboardHome = lazy(() => import("./pages/dashboard/DashboardHome"));
-const AdminProfilePage = lazy(() => import("./pages/dashboard/AdminProfile"));
+// const AdminProfilePage = lazy(() => import("./pages/dashboard/AdminProfile"));
 const UnlockScreen = lazy(() => import("./pages/auth/admin/UnlockScreen"));
 const ExpenseDashboard = lazy(() => import("./pages/dashboard/ExpenseDashboard"));
 const ReportDashboard = lazy(() => import("./pages/dashboard/ReportManagement"));
@@ -78,7 +80,9 @@ const router = createBrowserRouter([
           {path:'report/create' , element:<UpsertReportPage />},
           {path:'report/edit/:id' , element:<UpsertReportPage />},
           {path:'report/view/:id' , element:<ReportViewPage />},
-          {path:'profile' , element:<AdminProfilePage />},
+          {path:'profile/:id' , element:<AdminProfilePage />},
+          {path:'edit-profile/:id' , element:<AdminProfileEdit />},
+          // {path:'profile' , element:<AdminProfilePage />},
           
         ]
        },
