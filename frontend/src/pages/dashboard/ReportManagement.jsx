@@ -205,8 +205,7 @@ const ReportDashboard = () => {
 
   const handleViewReport = (report) => {
     if (!report?.id) return;
-    setSelectedReport(report);
-    setShowViewModal(true);
+   navigate(`/admin/dashboard/report/view/${report?.id}`)
   };
 
   const handleDeleteReport = async (report) => {
@@ -319,10 +318,10 @@ const ReportDashboard = () => {
     return isNaN(parsedDate.getTime())
       ? new Date().toLocaleDateString('en-GB')
       : parsedDate.toLocaleDateString('en-GB', {
-          day: '2-digit',
-          month: 'short',
-          year: 'numeric',
-        });
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+      });
   };
 
   const totalPages = Math.ceil(reports.length / itemsPerPage);
@@ -331,14 +330,14 @@ const ReportDashboard = () => {
   const currentReports = reports.slice(startIndex, endIndex);
 
   const renderTableView = () => (
-<div className="bg-white  rounded-xl border border-gray-100 shadow-sm  md:w-[1250px] md:-ml-8 ">  
-  <div className="overflow-x-auto ">
+    <div className="bg-white  rounded-xl border border-gray-100 shadow-sm w-full  ">
+      <div className="overflow-x-auto ">
         <table className="w-full text-xs">
           <thead style={{ backgroundColor: 'rgba(81, 96, 146, 0.05)' }}>
             <tr>
               <th className="text-left py-3 px-4 font-semibold cursor-pointer hover:bg-gray-50 transition-colors"
-                  style={{ color: 'rgb(81, 96, 146)' }}
-                  onClick={() => { setSortBy('title'); setSortOrder(sortBy === 'title' ? (sortOrder === 'asc' ? 'desc' : 'asc') : 'asc'); }}>
+                style={{ color: 'rgb(81, 96, 146)' }}
+                onClick={() => { setSortBy('title'); setSortOrder(sortBy === 'title' ? (sortOrder === 'asc' ? 'desc' : 'asc') : 'asc'); }}>
                 <div className="flex items-center space-x-1">
                   <span>Title</span>
                   <ChevronDown className={`w-3 h-3 transition-transform ${sortBy === 'title' ? (sortOrder === 'asc' ? 'rotate-180' : '') : 'opacity-40'}`} />
@@ -346,8 +345,8 @@ const ReportDashboard = () => {
               </th>
               <th className="text-left py-3 px-4 font-semibold hidden md:table-cell" style={{ color: 'rgb(81, 96, 146)' }}>Created By</th>
               <th className="text-left py-3 px-4 font-semibold cursor-pointer hover:bg-gray-50 transition-colors"
-                  style={{ color: 'rgb(81, 96, 146)' }}
-                  onClick={() => { setSortBy('createdAt'); setSortOrder(sortBy === 'createdAt' ? (sortOrder === 'asc' ? 'desc' : 'asc') : 'asc'); }}>
+                style={{ color: 'rgb(81, 96, 146)' }}
+                onClick={() => { setSortBy('createdAt'); setSortOrder(sortBy === 'createdAt' ? (sortOrder === 'asc' ? 'desc' : 'asc') : 'asc'); }}>
                 <div className="flex items-center space-x-1">
                   <span>Created</span>
                   <ChevronDown className={`w-3 h-3 transition-transform ${sortBy === 'createdAt' ? (sortOrder === 'asc' ? 'rotate-180' : '') : 'opacity-40'}`} />
@@ -397,7 +396,7 @@ const ReportDashboard = () => {
   );
 
   const renderCardView = () => (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4    md:w-[1250px] md:-ml-8 ">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4      ">
       {currentReports.map((report, index) => (
         <motion.div
           key={report.id}
@@ -408,7 +407,7 @@ const ReportDashboard = () => {
           className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-all relative overflow-hidden group"
         >
           <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-blue-50 to-purple-50 rounded-bl-full opacity-50 group-hover:opacity-100 transition-opacity" />
-         
+
           <div className="relative">
             <div className="flex items-start justify-between mb-3">
               <div className="flex-1 pr-2">
@@ -427,12 +426,12 @@ const ReportDashboard = () => {
                 <FileText className="w-5 h-5" style={{ color: 'rgb(81, 96, 146)' }} />
               </motion.div>
             </div>
-           
+
             <div className="flex items-center text-xs text-gray-500 mb-4 pb-4 border-b border-gray-100">
               <Calendar className="w-3 h-3 mr-1" />
               <span>{formatDate(report.createdAt)}</span>
             </div>
-           
+
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center space-x-1">
                 <motion.button
@@ -555,7 +554,7 @@ const ReportDashboard = () => {
     };
 
     return (
-      <div className="flex items-center justify-between bg-white px-2 py-3 border-t border-gray-100 rounded-b-xl shadow-sm mt-4   border border-gray-100 shadow-sm  md:w-[1250px] md:-ml-8">
+      <div className="flex items-center justify-between bg-white px-2 py-3 border-t border-gray-100 rounded-b-xl shadow-sm mt-4   border border-gray-100 shadow-sm  ">
         <div className="text-xs text-gray-600 flex items-center space-x-2">
           <span>Showing <span className="font-semibold">{startIndex + 1}</span>-<span className="font-semibold">{Math.min(endIndex, reports.length)}</span> of <span className="font-semibold">{reports.length}</span></span>
         </div>
@@ -585,11 +584,10 @@ const ReportDashboard = () => {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setCurrentPage(page)}
-              className={`px-3 py-1.5 text-xs rounded-md transition-colors ${
-                currentPage === page
-                  ? 'text-white font-semibold shadow-sm'
-                  : 'text-gray-600 bg-white border border-gray-200 hover:bg-gray-50'
-              }`}
+              className={`px-3 py-1.5 text-xs rounded-md transition-colors ${currentPage === page
+                ? 'text-white font-semibold shadow-sm'
+                : 'text-gray-600 bg-white border border-gray-200 hover:bg-gray-50'
+                }`}
               style={currentPage === page ? { backgroundColor: 'rgb(81, 96, 146)' } : {}}
             >
               {page}
@@ -673,7 +671,7 @@ const ReportDashboard = () => {
       <div className="bg-white shadow-sm border-b border-gray-200 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-100/40 to-purple-100/40 rounded-full blur-3xl -mr-32 -mt-32" />
         <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-indigo-100/40 to-blue-100/40 rounded-full blur-3xl -ml-24 -mb-24" />
-       
+
         <div className="mx-auto px-1 sm:px-6 py-6 relative">
           <div className="flex items-center justify-between">
             <div>
@@ -727,7 +725,7 @@ const ReportDashboard = () => {
         </div>
       </div>
 
-      <div className="mx-auto px-4 sm:px-6 py-6 space-y-4">
+      <div className="mx-auto px-4  sm:px-6 py-6 space-y-4">
         {/* Stats Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
           {statCards.map((stat, index) => (
@@ -740,7 +738,7 @@ const ReportDashboard = () => {
               className="relative p-4 rounded-xl shadow-sm border border-gray-100 bg-white overflow-hidden group cursor-pointer"
             >
               <div className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-300`} />
-             
+
               <div className="relative flex items-center space-x-3">
                 <motion.div
                   whileHover={{ rotate: 360, scale: 1.1 }}
@@ -799,17 +797,16 @@ const ReportDashboard = () => {
                   </motion.button>
                 )}
               </div>
-             
+
               <div className="flex items-center space-x-2 bg-gray-50 p-1 rounded-lg">
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setViewMode('table')}
-                  className={`p-2 rounded-md transition-all ${
-                    viewMode === 'table'
-                      ? 'text-white shadow-md'
-                      : 'text-gray-500 hover:text-gray-700 hover:bg-white'
-                  }`}
+                  className={`p-2 rounded-md transition-all ${viewMode === 'table'
+                    ? 'text-white shadow-md'
+                    : 'text-gray-500 hover:text-gray-700 hover:bg-white'
+                    }`}
                   style={viewMode === 'table' ? { backgroundColor: 'rgb(81, 96, 146)' } : {}}
                   title="Table View"
                 >
@@ -819,11 +816,10 @@ const ReportDashboard = () => {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setViewMode('grid')}
-                  className={`p-2 rounded-md transition-all ${
-                    viewMode === 'grid'
-                      ? 'text-white shadow-md'
-                      : 'text-gray-500 hover:text-gray-700 hover:bg-white'
-                  }`}
+                  className={`p-2 rounded-md transition-all ${viewMode === 'grid'
+                    ? 'text-white shadow-md'
+                    : 'text-gray-500 hover:text-gray-700 hover:bg-white'
+                    }`}
                   style={viewMode === 'grid' ? { backgroundColor: 'rgb(81, 96, 146)' } : {}}
                   title="Grid View"
                 >
@@ -833,11 +829,10 @@ const ReportDashboard = () => {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setViewMode('list')}
-                  className={`p-2 rounded-md transition-all ${
-                    viewMode === 'list'
-                      ? 'text-white shadow-md'
-                      : 'text-gray-500 hover:text-gray-700 hover:bg-white'
-                  }`}
+                  className={`p-2 rounded-md transition-all ${viewMode === 'list'
+                    ? 'text-white shadow-md'
+                    : 'text-gray-500 hover:text-gray-700 hover:bg-white'
+                    }`}
                   style={viewMode === 'list' ? { backgroundColor: 'rgb(81, 96, 146)' } : {}}
                   title="List View"
                 >
@@ -960,7 +955,7 @@ const ReportDashboard = () => {
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-xl shadow-sm border border-gray-100  text-center"
+            className="bg-white rounded-xl shadow-sm w-full border border-gray-100  text-center"
           >
             <motion.div
               animate={{ y: [0, -10, 0] }}
@@ -986,7 +981,11 @@ const ReportDashboard = () => {
               </motion.button>
             )}
           </motion.div>
-        ) : (
+        ) : (<></>)}
+
+        {
+          !loading &&  reports.length !== 0 &&
+
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -996,7 +995,7 @@ const ReportDashboard = () => {
             {viewMode === 'list' && renderListView()}
             {renderPagination()}
           </motion.div>
-        )}
+        } 
 
 
 
@@ -1010,11 +1009,10 @@ const ReportDashboard = () => {
               exit={{ opacity: 0, y: -50, scale: 0.9 }}
               className="fixed top-4 right-4 z-50"
             >
-              <div className={`flex items-center space-x-3 px-1 py-3 rounded-xl shadow-2xl text-xs border-2 ${
-                operationStatus.type === 'success'
-                  ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-300 text-green-800'
-                  : 'bg-gradient-to-r from-red-50 to-rose-50 border-red-300 text-red-800'
-              }`}>
+              <div className={`flex items-center space-x-3 px-1 py-3 rounded-xl shadow-2xl text-xs border-2 ${operationStatus.type === 'success'
+                ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-300 text-green-800'
+                : 'bg-gradient-to-r from-red-50 to-rose-50 border-red-300 text-red-800'
+                }`}>
                 <motion.div
                   initial={{ scale: 0, rotate: -180 }}
                   animate={{ scale: 1, rotate: 0 }}
@@ -1127,7 +1125,7 @@ const ReportDashboard = () => {
         </AnimatePresence>
 
 
-        
+
 
         {/* View Report Modal */}
         <AnimatePresence>
