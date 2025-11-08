@@ -1,19 +1,40 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import Navbar from '../components/Navbar'
 import { Outlet, useNavigate } from 'react-router-dom'
 import FooterContent from '../components/footer'
+function usePWA() {
+  const [isPWA, setIsPWA] = useState(false);
+
+  useEffect(() => {
+    const checkPWA = () => {
+      const standalone =
+        window.matchMedia('(display-mode: standalone)').matches ||
+        window.navigator.standalone === true;
+      setIsPWA(standalone);
+    };
+
+    checkPWA();
+
+    // Optional: listen for changes if display-mode changes dynamically
+    const mediaQuery = window.matchMedia('(display-mode: standalone)');
+    mediaQuery.addEventListener('change', checkPWA);
+
+    return () => mediaQuery.removeEventListener('change', checkPWA);
+  }, []);
+
+  return isPWA;
+}
+
 
 const MainLayout = () => {
 
   const navigate = useNavigate()
-
-  useEffect(() => {
-    const isPWA = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+const isPWA = usePWA();
+ useEffect(() => {
     if (isPWA) {
-      navigate('/admin/dashboard')
+      navigate('/admin/dashboard');
     }
-  }, [])
-
+  }, [isPWA, navigate]);
   useEffect(() => {
     document.documentElement.scrollIntoView({
       behavior: "smooth",
