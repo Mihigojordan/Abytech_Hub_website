@@ -80,6 +80,25 @@ async findAll(
     return this.reportService.update(id, data);
   }
 
+  // ✅ Reply to a report
+@Post(':id/reply')
+@UseGuards(AdminJwtAuthGuard)
+async replyToReport(
+  @Param('id') reportId: string,
+  @Body('content') content: string,
+  @Req() req: RequestWithAdmin,
+) {
+  const adminId = req.admin?.id;
+  if (!adminId) throw new HttpException('Unauthorized admin', 401);
+
+  if (!content || content.trim() === '') {
+    throw new HttpException('Reply content cannot be empty', 400);
+  }
+
+  return this.reportService.replyToReport(reportId, adminId, content);
+}
+
+
 
   // ✅ Delete report
   @Delete(':id')
