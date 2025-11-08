@@ -11,6 +11,8 @@ import {
 } from 'lucide-react';
 import useAdminAuth from '../../../context/AdminAuthContext';
 import { API_URL } from '../../../api/api';
+import Logo from '../../../assets/tran.png';
+
 
 const UnlockScreen = () => {
   const [password, setPassword] = useState('');
@@ -106,50 +108,51 @@ const UnlockScreen = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100 flex items-center justify-center p-4">
-      <div className="max-w-md w-full space-y-8">
-        <div className="bg-white rounded-2xl shadow-2xl p-8">
+    <div className="min-h-screen bg-white flex items-center justify-center p-3 sm:p-4">
+      <div className="w-full max-w-md">
+        <div className="bg-white rounded-3xl shadow-2xl border border-gray-200 p-6 sm:p-8">
           {/* Header */}
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-primary-600 rounded-2xl mb-4">
-              <Lock className="w-8 h-8 text-white" />
+          <div className="text-center mb-6">
+                <div className="flex items-center justify-center mb-4">
+              <img src={Logo} alt="Fine Fish Logo" className="h-12 sm:h-14" />
             </div>
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">Screen Locked</h2>
-            <p className="text-gray-600">Enter your password to unlock</p>
+            <h2 className="text-2xl sm:text-3xl font-bold mb-1" style={{ color: 'rgb(81, 96, 146)' }}>
+              Locked
+            </h2>
+            <p className="text-sm text-gray-600">Enter password to continue</p>
           </div>
 
           {/* User Info */}
-          <div className="flex items-center justify-center space-x-3 mb-6 p-4 bg-primary-50 rounded-xl">
-            <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center overflow-hidden">
+          <div className="flex items-center space-x-3 mb-5 p-3 rounded-2xl border" style={{ backgroundColor: 'rgba(81, 96, 146, 0.08)', borderColor: 'rgba(81, 96, 146, 0.2)' }}>
+            <div className="w-10 h-10 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0" style={{ backgroundColor: 'rgba(81, 96, 146, 0.15)' }}>
               {user?.profileImg ? (
                 <img 
                   src={`${API_URL}${user.profileImg}`} 
                   alt="Profile" 
-                  className="w-12 h-12 rounded-full object-cover"
+                  className="w-10 h-10 rounded-full object-cover"
                 />
               ) : (
-                <User className="w-6 h-6 text-primary-600" />
+                <User className="w-5 h-5" style={{ color: 'rgb(81, 96, 146)' }} />
               )}
             </div>
-            <div className="text-center">
-              <p className="font-medium text-gray-900">{user?.adminName || 'Admin'}</p>
-              <p className="text-sm text-gray-600">{user?.adminEmail}</p>
-              <p className="text-xs text-primary-600 font-medium">Administrator</p>
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-gray-900 text-sm truncate">{user?.adminName || 'Admin'}</p>
+              <p className="text-xs text-gray-600 truncate">{user?.adminEmail}</p>
             </div>
           </div>
 
           {/* Error Message */}
           {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-center space-x-2">
-              <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
-              <p className="text-sm text-red-700">{error}</p>
+            <div className="mb-4 p-2.5 bg-red-50 border border-red-200 rounded-xl flex items-center space-x-2">
+              <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0" />
+              <p className="text-xs text-red-700">{error}</p>
             </div>
           )}
 
           {/* Unlock Form */}
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="password" className="block text-xs font-semibold text-gray-700 mb-1.5">
                 Password
               </label>
               <div className="relative">
@@ -160,12 +163,29 @@ const UnlockScreen = () => {
                   onChange={handlePasswordChange}
                   onBlur={handlePasswordBlur}
                   disabled={isSubmitting}
-                  className={`w-full px-4 py-3 pr-12 border rounded-xl focus:ring-2 focus:ring-primary-500 transition-colors disabled:bg-gray-50 disabled:cursor-not-allowed ${
+                  className={`w-full px-3 py-2.5 pr-10 text-sm border rounded-xl outline-0 focus:ring-0 transition-all disabled:bg-gray-50 disabled:cursor-not-allowed ${
                     error && touched
                       ? 'border-red-300 bg-red-50 focus:border-red-500'
-                      : 'border-gray-300 focus:border-primary-500'
+                      : 'border-gray-300'
                   }`}
-                  placeholder="Enter your password"
+                  style={!(error && touched) ? { 
+                    '--tw-ring-color': 'rgba(81, 96, 146, 0.5)',
+                  } : {}}
+                  onFocus={(e) => {
+                    if (!(error && touched)) {
+                      e.target.style.borderColor = 'rgb(81, 96, 146)';
+                      e.target.style.outline = 'none';
+                      e.target.style.boxShadow = '0 0 0 3px rgba(81, 96, 146, 0.1)';
+                    }
+                  }}
+                  onBlur={(e) => {
+                    handlePasswordBlur();
+                    if (!(error && touched)) {
+                      e.target.style.borderColor = '';
+                      e.target.style.boxShadow = '';
+                    }
+                  }}
+                  placeholder="••••••••"
                   autoComplete="current-password"
                   autoFocus
                 />
@@ -173,9 +193,9 @@ const UnlockScreen = () => {
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   disabled={isSubmitting}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 disabled:cursor-not-allowed"
+                  className="absolute right-2.5 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 disabled:cursor-not-allowed transition-colors"
                 >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
             </div>
@@ -183,40 +203,42 @@ const UnlockScreen = () => {
             <button
               type="submit"
               disabled={isSubmitting || !isFormValid()}
-              className="w-full bg-primary-600 text-white py-3 px-4 rounded-xl hover:bg-primary-700 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors font-medium disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center"
+              className="w-full text-white py-2.5 px-4 rounded-xl focus:ring-2 focus:ring-offset-2 transition-all font-semibold text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shadow-lg"
+              style={{ 
+                backgroundColor: 'rgb(81, 96, 146)',
+                boxShadow: '0 10px 25px -5px rgba(81, 96, 146, 0.3)'
+              }}
+              onMouseEnter={(e) => {
+                if (!isSubmitting && isFormValid()) {
+                  e.target.style.backgroundColor = 'rgb(71, 86, 136)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.backgroundColor = 'rgb(81, 96, 146)';
+              }}
             >
               {isSubmitting ? (
                 <>
-                  <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
                   Unlocking...
                 </>
               ) : (
-                <>
-                  <Lock className="w-5 h-5 mr-2" />
-                  Unlock
-                </>
+                'Unlock'
               )}
             </button>
           </form>
 
           {/* Footer */}
-          <div className="mt-8 text-center">
+          <div className="mt-5 text-center">
             <button
               onClick={handleBackToLogin}
               disabled={isSubmitting}
-              className="inline-flex items-center text-sm text-primary-600 hover:text-primary-500 font-medium transition-colors disabled:cursor-not-allowed"
+              className="inline-flex items-center text-xs text-gray-500 hover:text-indigo-600 font-medium transition-colors disabled:cursor-not-allowed"
             >
-              <ArrowLeft className="w-4 h-4 mr-1" />
+              <ArrowLeft className="w-3.5 h-3.5 mr-1" />
               Back to Login
             </button>
           </div>
-        </div>
-
-        {/* Additional Info */}
-        <div className="text-center">
-          <p className="text-sm text-gray-500">
-            For security, your session was locked after a period of inactivity
-          </p>
         </div>
       </div>
     </div>
