@@ -366,6 +366,9 @@ export class AdminController {
     if (body['is2FA']) {
       body['is2FA'] = parseBoolean(body['is2FA'])
     }
+    if (body['joinedDate']) {
+      body['joinedDate'] = new Date(body['joinedDate'])
+    }
     return this.adminServices.updateAdmin(id, body);
   }
 
