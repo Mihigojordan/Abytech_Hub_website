@@ -51,13 +51,13 @@ export default function ServicesSection() {
   }, []);
 
   return (
-    <section className="bg-gradient-to-b from-gray-50 to-white py-16 md:py-24 px-4 md:px-8">
-      <div className=" mx-auto">
-        
+    <section className="bg-white py-16 md:py-24 px-4 md:px-8">
+      <div className="max-w-8xl px-6 mx-auto">
+
         {/* Header */}
         <div className="text-center mb-16 md:mb-20">
           <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-            Our <span className="text-primary-500">Services</span>
+            Our <span className="text-[#37517e]">Services</span>
           </h2>
           <p className="text-gray-600 text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
             We provide high-quality digital solutions tailored to your needs and business requirements.
@@ -73,20 +73,20 @@ export default function ServicesSection() {
               data-aos-delay={index * 100}
               className="group relative"
             >
-              <div className="h-full bg-white border-2 border-gray-200 rounded-2xl p-8 md:p-10 transition-all duration-300 hover:border-primary-500 hover:shadow-xl overflow-hidden">
+              <div className="h-full bg-white border-2 border-gray-200 rounded-2xl p-8 md:p-10 transition-all duration-300 hover:border-[#37517e] hover:shadow-xl overflow-hidden">
                 
-                {/* Background decoration */}
-                <div className="absolute top-10 right-10 w-16 h-16 bg-primary-50 rounded-full -mr-16 -mt-16 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                {/* Subtle hover decoration */}
+                <div className="absolute top-10 right-10 w-16 h-16 bg-[#37517e]/10 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 
                 {/* Icon Container */}
-                <div className="relative z-10 inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-primary-50 to-primary-100 rounded-xl mb-6 group-hover:from-primary-100 group-hover:to-primary-200 transition-all duration-300">
-                  <div className="text-primary-500">
+                <div className="relative z-10 inline-flex items-center justify-center w-16 h-16 bg-[#37517e] rounded-xl mb-6 shadow-md group-hover:bg-[#2c4166] group-hover:shadow-lg transition-all duration-300">
+                  <div className="text-white">
                     {service.icon}
                   </div>
                 </div>
 
                 {/* Title */}
-                <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 relative z-10">
+                <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 relative z-10 group-hover:text-[#37517e] transition-colors duration-300">
                   {service.title}
                 </h3>
 
@@ -97,8 +97,8 @@ export default function ServicesSection() {
 
                 {/* Arrow Button */}
                 <div className="absolute bottom-8 right-8 z-10">
-                  <div className="w-12 h-12 bg-gradient-to-br from-primary-400 to-primary-500 rounded-full flex items-center justify-center text-white shadow-lg group-hover:scale-110 group-hover:shadow-xl transition-all duration-300">
-                    <FaArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                  <div className="w-12 h-12 bg-[#37517e] rounded-full flex items-center justify-center text-white shadow-lg group-hover:bg-[#2c4166] group-hover:scale-110 group-hover:shadow-xl transition-all duration-300">
+                    <FaArrowRight size={18} className="group-hover:translate-x-1 transition-transform duration-300" />
                   </div>
                 </div>
               </div>

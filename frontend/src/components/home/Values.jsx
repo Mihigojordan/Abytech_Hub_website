@@ -1,10 +1,9 @@
 import React from 'react';
 import { Users, Shield, UserCheck } from 'lucide-react';
-import Image from '../../assets/images/values.png'
 
 function Values() {
   return (
-    <div className=" bg-gradient-to-br from-purple-900 via-blue-900 to-purple-900 relative overflow-hidden px-10 py-2">
+    <div className="relative overflow-hidden px-10 py-2" style={{backgroundColor: '#37517e'}}>
       {/* Background decorative elements */}
       <div className="absolute inset-0 opacity-10">
         <div className="absolute top-20 left-10 w-64 h-64 bg-blue-400 rounded-full blur-3xl"></div>
@@ -76,7 +75,7 @@ function Values() {
           <div className="relative">
             <div className="relative rounded-3xl overflow-hidden shadow-2xl border-8 border-white/10 backdrop-blur-sm">
               <img
-                src={Image}
+                src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&h=600&fit=crop"
                 alt="Professional team collaboration"
                 className="w-full object-cover h-[500px]"
               />
