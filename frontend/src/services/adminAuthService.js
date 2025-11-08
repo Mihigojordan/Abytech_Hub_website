@@ -99,32 +99,55 @@ class AdminAuthService {
       throw new Error(msg);
     }
   }
+  
+async updateAdmin(id, updateData) {
+  try {
+    let payload;
 
-  async updateAdmin(id, updateData) {
-    try {
-      let payload;
+    // ✅ If it's already FormData (e.g., from a form), use it directly
+    if (updateData instanceof FormData) {
+      payload = updateData;
+    } else {
+      // ✅ Otherwise, build FormData manually
+      payload = new FormData();
 
-      if (updateData instanceof FormData) {
-        payload = updateData;
-      } else {
-        payload = new FormData();
-        Object.entries(updateData).forEach(([key, value]) => {
-          if (value !== undefined && value !== null) {
-            payload.append(key, value);
-          }
-        });
-      }
+      Object.entries(updateData).forEach(([key, value]) => {
+        if (value === undefined || value === null) return;
 
-      const response = await this.api.put(`/admin/${id}`, payload, {
-        headers: { 'Content-Type': 'multipart/form-data' },
+        // ✅ Handle arrays or objects (skills, experience, etc.)
+        if (Array.isArray(value) || typeof value === 'object') {
+          payload.append(key, JSON.stringify(value));
+        }
+        // ✅ Handle single files
+        else if (value instanceof File) {
+          payload.append(key, value);
+        }
+        // ✅ Handle multiple files (FileList or array of File)
+        else if (Array.isArray(value) && value[0] instanceof File) {
+          value.forEach((file) => payload.append(key, file));
+        }
+        // ✅ Everything else (strings, booleans, etc.)
+        else {
+          payload.append(key, value);
+        }
       });
-
-      return response.data.admin;
-    } catch (error) {
-      const msg = error.response?.data?.message || error.message || 'Failed to update admin';
-      throw new Error(msg);
     }
+
+    // ✅ Make PUT request with multipart/form-data
+    const response = await this.api.put(`/admin/${id}`, payload, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+
+    return response.data.admin;
+  } catch (error) {
+    const msg =
+      error.response?.data?.message || error.message || 'Failed to update admin';
+    throw new Error(msg);
   }
+}
+
 
   async deleteAdmin(id) {
     try {

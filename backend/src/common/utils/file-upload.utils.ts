@@ -11,9 +11,19 @@ export const createUnifiedUploadConfig = (): MulterOptions => ({
 
       if (file.fieldname === 'reportUrl') {
         subFolder = 'reports';
-      } else if (file.fieldname === 'profileImg') {
+      } else if (file.fieldname === 'profileImage') {
         subFolder = 'profile_images';
       }
+       else if (file.fieldname === 'passport') {
+        subFolder = 'admin_files';
+      }
+       else if (file.fieldname === 'cv') {
+        subFolder = 'admin_files';
+      }
+       else if (file.fieldname === 'identityCard') {
+        subFolder = 'admin_files';
+      }
+
       console.log('Received file.fieldname:', file.fieldname);
 
       if (!subFolder) {
@@ -77,7 +87,13 @@ export const deleteFile = (filepath: string) => {
 };
 
 export const ReportFileFields = [{ name: 'reportUrl', maxCount: 1 }];
-export const AdminFileFields = [{ name: 'profileImg', maxCount: 1 }];
+export const AdminFileFields = [
+  { name: 'passport', maxCount: 1 },
+  { name: 'identityCard', maxCount: 1 },
+  { name: 'cv', maxCount: 1 },
+  { name: 'profileImage', maxCount: 1 },
+
+];
 
 export const ReportUploadConfig = createUnifiedUploadConfig();
 export const AdminUploadConfig = createUnifiedUploadConfig();

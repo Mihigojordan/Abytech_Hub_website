@@ -1,0 +1,596 @@
+// AdminProfileEdit.jsx
+import React, { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import {
+  User, Lock, Briefcase, Upload, Camera, Eye, EyeOff,
+  Plus, Trash2, Save, Loader2, CheckCircle, AlertCircle,
+  MapPin
+} from 'lucide-react';
+import adminAuthService from '../services/adminAuthService';
+
+export default function AdminProfileEdit() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+
+  const [activeTab, setActiveTab] = useState('personal');
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState(null);
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  // Form States
+  const [personalInfo, setPersonalInfo] = useState({
+    adminName: '', adminEmail: '', phone: '', location: '', bio: '',
+    profileImage: null, profileImageUrl: '', joinedDate: ''
+  });
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '', newPassword: '', confirmPassword: ''
+  });
+  const [experiences, setExperiences] = useState([]);
+  const [skills, setSkills] = useState([]);
+  const [newSkill, setNewSkill] = useState('');
+  const [portfolio, setPortfolio] = useState([]);
+  const [documents, setDocuments] = useState({
+    cv: null, passport: null, identityCard: null
+  });
+
+  // === Load Admin Data ===
+  useEffect(() => {
+    const loadAdmin = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const admin = await adminAuthService.findAdminById(id);
+        if (!admin) throw new Error('Admin not found');
+
+        setPersonalInfo({
+          adminName: admin.adminName || '',
+          adminEmail: admin.adminEmail || '',
+          phone: admin.phone || '',
+          location: admin.location || '',
+          bio: admin.bio || '',
+          profileImage: admin.profileImage || null,
+          profileImageUrl: admin.profileImage || '',
+          joinedDate: admin.joinedDate ? admin.joinedDate.split('T')[0] : ''
+        });
+
+        setExperiences(admin.experience || []);
+        setSkills(admin.skills || []);
+        setPortfolio(admin.portifilio || []);
+
+        setDocuments({
+          cv: admin.cv || null,
+          passport: admin.passport || null,
+          identityCard: admin.identityCard || null
+        });
+      } catch (err) {
+        setError(err.message || 'Failed to load admin');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (id) loadAdmin();
+  }, [id]);
+
+  // === Helpers ===
+  const addExperience = () => {
+    setExperiences([...experiences, {
+      id: Date.now(), from: '', to: '', companyName: '', jobTitle: '', jobDescription: ''
+    }]);
+  };
+
+  const removeExperience = (id) => {
+    setExperiences(experiences.filter(e => e.id !== id));
+  };
+
+  const updateExperience = (id, field, value) => {
+    setExperiences(experiences.map(e => e.id === id ? { ...e, [field]: value } : e));
+  };
+
+  const addSkill = () => {
+    if (newSkill.trim() && !skills.includes(newSkill.trim())) {
+      setSkills([...skills, newSkill.trim()]);
+      setNewSkill('');
+    }
+  };
+
+  const removeSkill = (skill) => {
+    setSkills(skills.filter(s => s !== skill));
+  };
+
+  const addPortfolio = () => {
+    setPortfolio([...portfolio, { id: Date.now(), platform: '', url: '' }]);
+  };
+
+  const removePortfolio = (id) => {
+    setPortfolio(portfolio.filter(p => p.id !== id));
+  };
+
+  const updatePortfolio = (id, field, value) => {
+    setPortfolio(portfolio.map(p => p.id === id ? { ...p, [field]: value } : p));
+  };
+
+  const handleFileChange = (type, file) => {
+    setDocuments(prev => ({ ...prev, [type]: file }));
+  };
+
+  const handleProfileImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const url = URL.createObjectURL(file);
+      setPersonalInfo(prev => ({ ...prev, profileImage: file, profileImageUrl: url }));
+    }
+  };
+
+  // === Submit Update (All Tabs) ===
+  const handleSubmit = async () => {
+    try {
+      setSaving(true);
+      setError(null);
+      setSuccess(false);
+
+      const formData = new FormData();
+
+      // Always include personal info if on personal tab
+      if (activeTab === 'personal') {
+        formData.append('adminName', personalInfo.adminName);
+        formData.append('adminEmail', personalInfo.adminEmail);
+        if (personalInfo.phone) formData.append('phone', personalInfo.phone);
+        if (personalInfo.location) formData.append('location', personalInfo.location);
+        if (personalInfo.bio) formData.append('bio', personalInfo.bio);
+        if (personalInfo.joinedDate) formData.append('joinedDate', personalInfo.joinedDate);
+
+        if (personalInfo.profileImage instanceof File) {
+          formData.append('profileImage', personalInfo.profileImage);
+        }
+        if (documents.cv instanceof File) formData.append('cv', documents.cv);
+        if (documents.passport instanceof File) formData.append('passport', documents.passport);
+        if (documents.identityCard instanceof File) formData.append('identityCard', documents.identityCard);
+
+        formData.append('skills', JSON.stringify(skills));
+        formData.append('experience', JSON.stringify(experiences));
+        formData.append('portifilio', JSON.stringify(portfolio));
+      }
+
+      // Password change (only if on password tab and fields filled)
+      if (activeTab === 'password') {
+        if (!passwordData.currentPassword || !passwordData.newPassword) {
+          throw new Error('Both current and new passwords are required');
+        }
+        if (passwordData.newPassword !== passwordData.confirmPassword) {
+          throw new Error('New passwords do not match');
+        }
+        formData.append('currentPassword', passwordData.currentPassword);
+        formData.append('newPassword', passwordData.newPassword);
+      }
+
+      // Experience & Files tabs use same fields as personal
+      if (['experience', 'files'].includes(activeTab)) {
+        formData.append('experience', JSON.stringify(experiences));
+        if (documents.cv instanceof File) formData.append('cv', documents.cv);
+        if (documents.passport instanceof File) formData.append('passport', documents.passport);
+        if (documents.identityCard instanceof File) formData.append('identityCard', documents.identityCard);
+      }
+
+      await adminAuthService.updateAdmin(id, formData);
+
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 3000);
+
+      // Reset password fields after success
+      if (activeTab === 'password') {
+        setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+      }
+    } catch (err) {
+      setError(err.message || 'Failed to update admin');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // === Loading UI ===
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-blue-50">
+        <Loader2 className="w-10 h-10 animate-spin text-blue-600" />
+      </div>
+    );
+  }
+
+  // === Main UI ===
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
+      <div className=" mx-auto">
+             <div className="relative rounded-t-2xl overflow-hidden h-64">
+          <div
+            className="absolute inset-0 bg-cover bg-center"
+            style={{
+              backgroundImage:
+                "url('https://images.unsplash.com/photo-1762422411505-c0cae1fb103c?ixlib=rb-4.1.0&auto=format&fit=crop&q=60&w=500')",
+            }}
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-900/80 to-indigo-900/80" />
+          </div>
+
+          <div className="relative h-full flex items-end p-8">
+            <div className="flex items-start justify-between w-full">
+              <div className="flex items-end gap-6">
+                <div className="relative mb-[-40px]">
+                 
+                  {/* 2FA Badge (if enabled) */}
+                  {/* Replace with real `is2FA` field if available */}
+                  {/* {admin.is2FA && ( */}
+                  {/*   <div className="absolute bottom-1 right-1 bg-green-500 rounded-full p-2 border-2 border-white"> */}
+                  {/*     <Lock className="w-4 h-4 text-white" /> */}
+                  {/*   </div> */}
+                  {/* )} */}
+                </div>
+                <div className="text-white mb-4">
+                  <h1 className="text-3xl font-bold mb-1">{personalInfo.adminName || '—'}</h1>
+                  <p className="text-blue-100 mb-2">Owner & Founder</p>
+                  <div className="flex items-center gap-4 text-sm">
+                    <div className="flex items-center gap-1">
+                      <MapPin className="w-4 h-4" />
+                      <span>{personalInfo.location || '—'}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Briefcase className="w-4 h-4" />
+                      <span>{experiences[0]?.companyName || '—'}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+            </div>
+          </div>
+        </div>
+        {/* Header */}
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Edit Profile</h1>
+          <p className="text-gray-600">Update your profile information and settings</p>
+        </div>
+
+        {/* Error Banner */}
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 text-red-800">
+            <AlertCircle className="w-5 h-5" />
+            {error}
+          </div>
+        )}
+
+        {/* Success Banner */}
+        {success && (
+          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2 text-green-800">
+            <CheckCircle className="w-5 h-5" />
+            {activeTab === 'password' ? 'Password changed successfully!' : 'Profile updated successfully!'}
+          </div>
+        )}
+
+        {/* Tabs */}
+        <div className="bg-white rounded-t-xl shadow-sm border-b">
+          <div className="flex gap-1 px-6">
+            {[
+              { key: 'personal', icon: User, label: 'Personal Details' },
+              { key: 'password', icon: Lock, label: 'Change Password' },
+              { key: 'experience', icon: Briefcase, label: 'Experience' },
+              { key: 'files', icon: Upload, label: 'Upload Files' },
+            ].map(tab => (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                className={`flex items-center gap-2 px-6 py-4 font-medium transition-colors ${
+                  activeTab === tab.key
+                    ? 'text-blue-600 border-b-2 border-blue-600'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                <tab.icon className="w-4 h-4" />
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="bg-white rounded-b-xl shadow-sm p-6">
+          {/* Personal Tab */}
+          {activeTab === 'personal' && (
+            <div className="space-y-6">
+              {/* Profile Picture */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">Profile Picture</label>
+                <div className="flex items-center gap-6">
+                  <div className="relative">
+                    <img
+                      src={personalInfo.profileImageUrl || 'https://via.placeholder.com/150'}
+                      alt="Profile"
+                      className="w-24 h-24 rounded-full object-cover border-4 border-gray-100"
+                    />
+                    <label
+                      htmlFor="profile-upload"
+                      className="absolute bottom-0 right-0 bg-blue-600 text-white p-2 rounded-full hover:bg-blue-700 cursor-pointer"
+                    >
+                      <Camera className="w-4 h-4" />
+                    </label>
+                    <input
+                      id="profile-upload"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleProfileImageChange}
+                      className="hidden"
+                    />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">JPG, PNG or GIF. Max size 2MB</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Basic Info + Joined Date */}
+              <div className="grid grid-cols-2 gap-6">
+                {[
+                  { label: 'Full Name *', key: 'adminName', type: 'text' },
+                  { label: 'Email *', key: 'adminEmail', type: 'email' },
+                  { label: 'Phone', key: 'phone', type: 'tel' },
+                  { label: 'Location', key: 'location', type: 'text' },
+                  { label: 'Joined Date', key: 'joinedDate', type: 'date' },
+                ].map(field => (
+                  <div key={field.key}>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">{field.label}</label>
+                    <input
+                      type={field.type}
+                      value={personalInfo[field.key]}
+                      onChange={e => setPersonalInfo({ ...personalInfo, [field.key]: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                ))}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Bio</label>
+                <textarea
+                  value={personalInfo.bio}
+                  onChange={e => setPersonalInfo({ ...personalInfo, bio: e.target.value })}
+                  rows="4"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              {/* Skills */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">Skills</label>
+                <div className="flex flex-wrap gap-2 mb-3">
+                  {skills.map((skill, i) => (
+                    <span key={i} className="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-sm font-medium flex items-center gap-2">
+                      {skill}
+                      <button onClick={() => removeSkill(skill)} className="text-blue-700 hover:text-red-600">
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newSkill}
+                    onChange={e => setNewSkill(e.target.value)}
+                    onKeyPress={e => e.key === 'Enter' && addSkill()}
+                    placeholder="Add a skill"
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                  <button onClick={addSkill} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                    <Plus className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Portfolio */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">Portfolio Links</label>
+                <div className="space-y-3">
+                  {portfolio.map(item => (
+                    <div key={item.id} className="flex gap-3">
+                      <input
+                        type="text"
+                        value={item.platform}
+                        onChange={e => updatePortfolio(item.id, 'platform', e.target.value)}
+                        placeholder="Platform (e.g., GitHub)"
+                        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                      <input
+                        type="url"
+                        value={item.url}
+                        onChange={e => updatePortfolio(item.id, 'url', e.target.value)}
+                        placeholder="URL"
+                        className="flex-[2] px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                      <button
+                        onClick={() => removePortfolio(item.id)}
+                        className="px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                  <button onClick={addPortfolio} className="flex items-center gap-2 px-4 py-2 text-blue-600 hover:bg-blue-50 rounded-lg text-sm font-medium">
+                    <Plus className="w-4 h-4" /> Add Portfolio Link
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Password Tab */}
+          {activeTab === 'password' && (
+            <div className="space-y-6 grid  grid-cols-1 lg:grid-cols-2 gap-4">
+              <div className="bg-amber-50 lg:col-span-2 border border-amber-200 rounded-lg p-4">
+                <p className="text-sm text-amber-800">
+                  <strong>Password Requirements:</strong> At least 8 characters, including uppercase, lowercase, number, and special character.
+                </p>
+              </div>
+              {[
+                { label: 'Current Password *', key: 'currentPassword', show: showPassword, setShow: setShowPassword },
+                { label: 'New Password *', key: 'newPassword', show: showNewPassword, setShow: setShowNewPassword },
+                { label: 'Confirm New Password *', key: 'confirmPassword', show: showConfirmPassword, setShow: setShowConfirmPassword },
+              ].map(field => (
+                <div key={field.key}>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">{field.label}</label>
+                  <div className="relative">
+                    <input
+                      type={field.show ? 'text' : 'password'}
+                      value={passwordData[field.key]}
+                      onChange={e => setPasswordData({ ...passwordData, [field.key]: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => field.setShow(!field.show)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                    >
+                      {field.show ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Experience Tab */}
+          {activeTab === 'experience' && (
+            <div className="space-y-6 grid  grid-cols-1 gap-3 xl:grid-cols-2">
+              {experiences.map((exp, i) => (
+                <div key={exp.id} className="border border-gray-200 rounded-lg p-6 relative">
+                  <button
+                    onClick={() => removeExperience(exp.id)}
+                    className="absolute top-4 right-4 text-red-600 hover:bg-red-50 p-2 rounded-lg"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Experience {i + 1}</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    {['jobTitle', 'companyName'].map(f => (
+                      <div key={f}>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          {f === 'jobTitle' ? 'Job Title *' : 'Company Name *'}
+                        </label>
+                        <input
+                          type="text"
+                          value={exp[f]}
+                          onChange={e => updateExperience(exp.id, f, e.target.value)}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                      </div>
+                    ))}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">From *</label>
+                      <input
+                        type="month"
+                        value={exp.from}
+                        onChange={e => updateExperience(exp.id, 'from', e.target.value)}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">To</label>
+                      <input
+                        type="text"
+                        value={exp.to}
+                        onChange={e => updateExperience(exp.id, 'to', e.target.value)}
+                        placeholder="Present"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+                  </div>
+                  <div className="mt-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Job Description</label>
+                    <textarea
+                      value={exp.jobDescription}
+                      onChange={e => updateExperience(exp.id, 'jobDescription', e.target.value)}
+                      rows="3"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                </div>
+              ))}
+              <button onClick={addExperience} className="flex items-center gap-2 px-4 py-2 text-blue-600 hover:bg-blue-50 rounded-lg text-sm font-medium">
+                <Plus className="w-4 h-4" /> Add Experience
+              </button>
+            </div>
+          )}
+
+          {/* Files Tab */}
+          {activeTab === 'files' && (
+            <div className="space-y-6 grid  grid-cols-1 gap-3 xl:grid-cols-2 ">
+              {[
+                { type: 'cv', name: 'CV / Resume' },
+                { type: 'passport', name: 'Passport' },
+                { type: 'identityCard', name: 'Identity Card' },
+              ].map(doc => (
+                <div key={doc.type} className="border border-gray-200 rounded-lg p-6">
+                  <div className="flex items-start justify-between mb-4">
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900">{doc.name}</h3>
+                      <p className="text-sm text-gray-500 mt-1">Upload your {doc.name.toLowerCase()}</p>
+                    </div>
+                    {documents[doc.type] && !(documents[doc.type] instanceof File) && (
+                      <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">Uploaded</span>
+                    )}
+                  </div>
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-400 transition-colors">
+                    <input
+                      type="file"
+                      id={doc.type}
+                      onChange={e => handleFileChange(doc.type, e.target.files[0])}
+                      className="hidden"
+                      accept=".pdf,.jpg,.jpeg,.png"
+                    />
+                    <label htmlFor={doc.type} className="cursor-pointer flex flex-col items-center">
+                      <Upload className="w-12 h-12 text-gray-400 mb-3" />
+                      {documents[doc.type] ? (
+                        <div>
+                          <p className="text-sm font-medium text-gray-900 mb-1">
+                            {documents[doc.type] instanceof File ? documents[doc.type].name : 'Already uploaded'}
+                          </p>
+                          <p className="text-xs text-gray-500">Click to change</p>
+                        </div>
+                      ) : (
+                        <div>
+                          <p className="text-sm font-medium text-gray-900 mb-1">Click to upload</p>
+                          <p className="text-xs text-gray-500">PDF, JPG or PNG (Max 5MB)</p>
+                        </div>
+                      )}
+                    </label>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Save / Cancel — Always shown */}
+          <div className="flex items-center gap-3 pt-6 border-t mt-6">
+            <button
+              onClick={handleSubmit}
+              disabled={saving}
+              className="flex items-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors font-medium"
+            >
+              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+              {saving ? 'Saving...' : 'Save Changes'}
+            </button>
+            <button
+              onClick={() => navigate(-1)}
+              className="px-6 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors font-medium"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
