@@ -343,7 +343,7 @@ const EmployeeDirectoryPage = () => {
   ] as const;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/30">
       {/* Header */}
       <div className="bg-white shadow-sm border-b border-gray-200">
         <div className="mx-auto px-4 sm:px-6 py-4">

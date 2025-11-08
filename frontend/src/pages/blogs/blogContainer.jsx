@@ -20,29 +20,48 @@ const NewsAndBlogs = () => {
   ];
 
   return (
-    <section className="bg-[#0e1323] py-12">
-      <div className="max-w-9xl mx-auto px-4">
-        <h2 className="text-4xl font-bold text-yellow-400 mb-8">News & Blogs</h2>
+    <section className="bg-[#37517e] py-12">
+      <div className="max-w-7xl mx-auto px-4">
+        <h2 className="text-4xl font-bold text-white mb-8">
+          News & Blogs
+        </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {posts.map((post, index) => (
-            <div key={index} className="bg-[#1a1f33] rounded-2xl overflow-hidden shadow-md">
+            <div 
+              key={index} 
+              className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 border border-[#37517e]/10 group"
+            >
               <div className="relative">
-                <img src={post.image} alt={post.title} className="w-full h-56 object-cover" />
-                <span className="absolute top-2 left-2 bg-yellow-400 text-black px-2 py-1 rounded-md text-sm font-semibold">
+                <img 
+                  src={post.image} 
+                  alt={post.title} 
+                  className="w-full h-56 object-cover group-hover:scale-105 transition-transform duration-300" 
+                />
+                <span className="absolute top-2 left-2 bg-[#37517e] text-white px-3 py-1 rounded-md text-xs font-semibold uppercase tracking-wider">
                   Content Tips
                 </span>
               </div>
               <div className="p-6">
-                <h3 className="text-white text-xl font-semibold mb-2">{post.title}</h3>
-                <p className="text-gray-400 text-sm leading-relaxed">{post.description}</p>
+                <h3 className="text-gray-900 text-xl font-bold mb-2 group-hover:text-[#37517e] transition-colors">
+                  {post.title}
+                </h3>
+                <p className="text-gray-600 text-sm leading-relaxed">
+                  {post.description}
+                </p>
               </div>
             </div>
           ))}
         </div>
       </div>
-      <div className="fixed bottom-4 right-4 bg-yellow-400 text-black p-2 rounded-full shadow-md cursor-pointer">
-        <span className="text-xl">↑</span>
-      </div>
+
+      {/* Scroll to Top Button */}
+      <button
+        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+        className="fixed bottom-6 right-6 bg-[#37517e] text-white p-3 rounded-full shadow-lg hover:bg-[#2c4166] hover:shadow-xl transition-all duration-300 z-50"
+        aria-label="Scroll to top"
+      >
+        <span className="text-xl">Up</span>
+      </button>
     </section>
   );
 };

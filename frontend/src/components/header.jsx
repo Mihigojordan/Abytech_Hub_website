@@ -6,8 +6,8 @@ const Header = ({title, path}) => {
         <div className='w-full h-[55vh] -mt-8' style={{
 background: `linear-gradient(
     to right, 
-    rgba(0, 0, 0, 0.6),  /* darker overlay */
-    rgba(0, 0, 0, 0.4)
+    rgba(0, 0, 0, 0.9),  /* darker overlay */
+    rgba(0, 0, 0, 0.5)
   ), 
   url(${HeaderImage})`,
             backgroundPosition: `center`,
@@ -19,7 +19,7 @@ background: `linear-gradient(
                     {title}
                 </h1>
                 <p className='capitalize'>
-                    <span style={{color: "#2563eb"}}>Home /</span> {path}
+                    <span style={{color: "#37517e"}}>Home /</span> {path}
                 </p>
             </div>
         </div>

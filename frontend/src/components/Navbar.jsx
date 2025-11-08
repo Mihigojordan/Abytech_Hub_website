@@ -61,7 +61,7 @@ function NavBar() {
           left: 50%;
           width: 0;
           height: 2px;
-          background: linear-gradient(90deg, #7e22ce, #2563eb);
+          background: #4668a2;
           transition: all 0.3s ease;
           transform: translateX(-50%);
         }
@@ -71,67 +71,24 @@ function NavBar() {
       `}</style>
 
       <header className="fixed top-0 left-0 w-full z-50">
-        {/* Top Info Bar */}
-        <div className="bg-gradient-to-r from-purple-900 via-blue-900 to-purple-900 text-white py-2 px-4 hidden lg:block pl-12 pr-10">
-          <div className="container mx-auto flex justify-between items-center text-sm">
-            <div className="flex items-center space-x-6">
-              <a
-                href="tel:+250792888980"
-                className="flex items-center space-x-2 hover:text-blue-300 transition-colors"
-              >
-                <FiPhone className="w-4 h-4" />
-                <span>+250 792888980</span>
-              </a>
-              <p>|</p>
-              <a
-                href="mailto:info@company.com"
-                className="flex items-center space-x-2 hover:text-blue-300 transition-colors"
-              >
-                <FiMail className="w-4 h-4" />
-                <span>info@abytechhub.com</span>
-              </a>
-
-            </div>
-
-            <div className="flex items-center space-x-4">
-              <Link to="/location" className="flex items-center space-x-2 hover:text-blue-300 transition-colors">
-                <div className="flex items-center space-x-2">
-                  <FiMapPin className="w-4 h-4" />
-                  <span>Locations</span>
-                </div>
-              </Link>
-              <p>|</p>
-              {socialLinks.map(({ icon: Icon, href }, i) => (
-                <a
-                  key={i}
-                  href={href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-white hover:text-blue-300 transition-all hover:scale-110"
-                >
-                  <Icon className="w-4 h-4" />
-                </a>
-              ))}
-            </div>
-          </div>
-        </div>
-
         {/* Main Navigation */}
         <nav
-          className={`shadow-md nav-transition ${scrolled
-            ? "bg-white text-gray-900"
-            : "bg-gradient-to-r from-purple-900 via-blue-900 to-purple-900 text-white"
-            }`}
+          className={`shadow-md nav-transition ${
+            scrolled
+              ? "text-white"
+              : "text-white"
+          }`}
+          style={{ backgroundColor: scrolled ? '#4668a2' : '#37517e' }}
         >
-
           <div className="container mx-auto flex justify-between items-center px-4 py-3 lg:py-4 pl-12 pr-10">
             {/* Logo */}
             <div className="flex items-center space-x-2 transition-transform duration-300 hover:scale-105">
               <img
                 src={Logo}
                 alt="Brand Logo"
-                className={`object-contain transition-all duration-300 ${scrolled ? "h-12" : "h-14"
-                  }`}
+                className={`object-contain transition-all duration-300 ${
+                  scrolled ? "h-12" : "h-14"
+                }`}
               />
             </div>
 
@@ -150,11 +107,8 @@ function NavBar() {
                   <NavLink
                     to={item.path}
                     className={({ isActive }) =>
-                      `nav-link block px-4 py-2 text-base font-semibold capitalize transition-all duration-200 rounded-lg ${scrolled
-                        ? isActive
-                          ? "text-blue-700"
-                          : "text-gray-700 hover:text-blue-700"
-                        : isActive
+                      `nav-link block px-4 py-2 text-base font-semibold capitalize transition-all duration-200 rounded-lg ${
+                        isActive
                           ? "text-blue-200"
                           : "text-white hover:text-blue-200"
                       }`
@@ -165,17 +119,13 @@ function NavBar() {
                 </li>
               ))}
             </ul>
-             
 
             {/* Contact / Mobile Button */}
             <div className="flex items-center bg-white p-2 rounded-md w-36 text-blue-800">
               <div className="hidden lg:block ml-4">
                 <NavLink
                   to="/contact-us"
-                  className={`block text-base font-bold transition-all duration-200 ${scrolled
-                    ? "text-blue-700 hover:text-blue-500"
-                    : "text-blue-700 hover:text-blue-500 "
-                    }`}
+                  className="block text-base font-bold transition-all duration-200 text-blue-700 hover:text-blue-500"
                 >
                   Get Quote
                 </NavLink>
@@ -185,10 +135,7 @@ function NavBar() {
               <div className="lg:hidden">
                 <button
                   onClick={() => setMenuOpen(!menuOpen)}
-                  className={`p-2 rounded-lg transition-all duration-300 ${scrolled
-                    ? "text-gray-800 hover:text-blue-700"
-                    : "text-white hover:text-blue-200"
-                    }`}
+                  className="p-2 rounded-lg transition-all duration-300 text-blue-700 hover:text-blue-500"
                 >
                   {menuOpen ? (
                     <FiX className="w-7 h-7" />
@@ -208,7 +155,10 @@ function NavBar() {
               className="lg:hidden fixed inset-0 bg-black bg-opacity-60 z-30 backdrop-blur-sm"
               onClick={() => setMenuOpen(false)}
             />
-            <div className="lg:hidden fixed top-0 left-0 w-4/5 max-w-sm h-full bg-gradient-to-br from-purple-900 via-blue-900 to-blue-800 z-40 slide-in-animation shadow-2xl">
+            <div 
+              className="lg:hidden fixed top-0 left-0 w-4/5 max-w-sm h-full z-40 slide-in-animation shadow-2xl"
+              style={{ backgroundColor: '#37517e' }}
+            >
               <div className="flex justify-between items-center p-6 border-b border-white border-opacity-10">
                 <img src={Logo} alt="Brand Logo" className="h-12 w-auto object-contain" />
                 <button
