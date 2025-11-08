@@ -159,7 +159,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onToggle, }) => {
     }
   }, [location.pathname]);
 
-  const getProfileRoute = () => `/${role}/dashboard/profile`;
+  const getProfileRoute = () => `/${role}/dashboard/profile/${user?.id}`;
 
   const handleNavigateProfile = () => {
     const route = getProfileRoute();
