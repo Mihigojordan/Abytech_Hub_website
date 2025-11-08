@@ -231,8 +231,8 @@ export default function AdminProfileEdit() {
                   {/* )} */}
                 </div>
                 <div className="text-white mb-4">
-                  <h1 className="text-3xl font-bold mb-1">  {personalInfo.adminName || '—'}</h1>
-                  <p className="text-blue-100 mb-2">Owner & Founder</p>
+                  <h1 className="text-3xl font-bold mb-1">  Edit Profile -  {personalInfo.adminName || '—'}</h1>
+                  <p className="text-blue-100 mb-2">Update your profile information and settings</p>
                   <div className="flex items-center gap-4 text-sm">
                     <div className="flex items-center gap-1">
                       <MapPin className="w-4 h-4" />
@@ -249,11 +249,7 @@ export default function AdminProfileEdit() {
             </div>
           </div>
         </div>
-        {/* Header */}
-        <div className=" my-6">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2"></h1>
-          <p className="text-gray-600">Update your profile information and settings</p>
-        </div>
+       
 
         {/* Error Banner */}
         {error && (
