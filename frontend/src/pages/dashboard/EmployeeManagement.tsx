@@ -117,7 +117,7 @@ const EmployeeDirectoryPage = () => {
 
   // Navigate to detail page
   const goToAdminDetail = (adminId: string) => {
-    navigate(`/admin/${adminId}`);
+    navigate(`/admin/dashboard/profile/${adminId}`);
   };
 
   const handleExport = () => {
