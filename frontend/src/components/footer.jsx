@@ -9,7 +9,7 @@ const FooterContent = () => {
   };
   
   return (
-    <footer className="bg-gradient-to-br from-purple-900 via-blue-900 to-purple-900 text-white relative">
+    <footer className="text-white relative" style={{ backgroundColor: '#37517e' }}>
       <section className="py-12 px-6 md:px-8 lg:px-14">
         <div className="container mx-auto flex flex-col lg:flex-row items-center justify-between">
           {/* Left Section */}
@@ -18,7 +18,7 @@ const FooterContent = () => {
               AbyTech Hub
             </span>
             <h2 className="text-5xl md:text-6xl font-bold leading-tight">
-              Let's Work <span className="text-yellow-300">Together</span>
+              Let's Work <span className="text-blue-300">Together</span>
             </h2>
             <p className="text-lg text-white/90 leading-relaxed" style={{lineHeight:"2"}}>
               Thank you for visiting AbyTech Hub! We are dedicated to delivering 
@@ -47,7 +47,8 @@ const FooterContent = () => {
             href="https://x.com/AbytechHUB" 
             target="_blank" 
             rel="noopener noreferrer"
-            className="w-10 h-10 flex items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-purple-500 text-white hover:scale-110 hover:shadow-lg transition-all duration-300"
+            className="w-10 h-10 flex items-center justify-center rounded-full text-white hover:scale-110 hover:shadow-lg transition-all duration-300"
+            style={{ backgroundColor: '#4668a2' }}
           >
             <RxCross2 className="text-lg" />
           </a>
@@ -56,7 +57,8 @@ const FooterContent = () => {
             href="https://www.linkedin.com/in/aby-tech-9b8947174/" 
             target="_blank" 
             rel="noopener noreferrer"
-            className="w-10 h-10 flex items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-purple-500 text-white hover:scale-110 hover:shadow-lg transition-all duration-300"
+            className="w-10 h-10 flex items-center justify-center rounded-full text-white hover:scale-110 hover:shadow-lg transition-all duration-300"
+            style={{ backgroundColor: '#4668a2' }}
           >
             <FaLinkedinIn className="text-lg" />
           </a>
@@ -65,7 +67,8 @@ const FooterContent = () => {
             href="https://www.instagram.com/abytechhubltd/" 
             target="_blank" 
             rel="noopener noreferrer"
-            className="w-10 h-10 flex items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-purple-500 text-white hover:scale-110 hover:shadow-lg transition-all duration-300"
+            className="w-10 h-10 flex items-center justify-center rounded-full text-white hover:scale-110 hover:shadow-lg transition-all duration-300"
+            style={{ backgroundColor: '#4668a2' }}
           >
             <FaInstagram className="text-lg" />
           </a>
@@ -74,7 +77,8 @@ const FooterContent = () => {
             href="https://wa.me/+250792888980" 
             target="_blank" 
             rel="noopener noreferrer"
-            className="w-10 h-10 flex items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-purple-500 text-white hover:scale-110 hover:shadow-lg transition-all duration-300"
+            className="w-10 h-10 flex items-center justify-center rounded-full text-white hover:scale-110 hover:shadow-lg transition-all duration-300"
+            style={{ backgroundColor: '#4668a2' }}
           >
             <FaWhatsapp className="text-lg" />
           </a>
@@ -83,7 +87,8 @@ const FooterContent = () => {
             href="mailto:abytechhubllc@gmail.com" 
             target="_blank" 
             rel="noopener noreferrer"
-            className="w-10 h-10 flex items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-purple-500 text-white hover:scale-110 hover:shadow-lg transition-all duration-300"
+            className="w-10 h-10 flex items-center justify-center rounded-full text-white hover:scale-110 hover:shadow-lg transition-all duration-300"
+            style={{ backgroundColor: '#4668a2' }}
           >
             <FaEnvelope className="text-lg" />
           </a>
@@ -98,7 +103,8 @@ const FooterContent = () => {
       {/* Scroll to Top */}
       <button
         onClick={scrollToTop}
-        className="fixed bottom-6 right-6 bg-gradient-to-br from-blue-500 to-purple-500 p-3 rounded-full shadow-lg hover:scale-110 hover:shadow-2xl transition-all duration-300"
+        className="fixed bottom-6 right-6 p-3 rounded-full shadow-lg hover:scale-110 hover:shadow-2xl transition-all duration-300"
+        style={{ backgroundColor: '#4668a2' }}
         aria-label="Scroll to Top"
       >
         <IoMdArrowRoundUp className="text-white text-xl" />

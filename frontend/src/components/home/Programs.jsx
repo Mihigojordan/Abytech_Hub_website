@@ -60,7 +60,7 @@ function Programs() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-purple-900">
+    <div className="min-h-screen" style={{backgroundColor: '#37517e'}}>
       {/* Header */}
       <div className="bg-white/10 backdrop-blur-sm border-b border-white/20">
         <div className="max-w-8xl mx-auto px-14 py-8">

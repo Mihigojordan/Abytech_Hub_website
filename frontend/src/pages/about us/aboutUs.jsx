@@ -18,25 +18,25 @@ const AboutUs = () => {
 
   const stats = [
     {
-      icon: <Award className="w-12 h-12 text-blue-500" />,
+      icon: <Award className="w-12 h-12" style={{ color: '#4668a2' }} />,
       number: "3+",
       label: "Years",
       subtitle: "On the market"
     },
     {
-      icon: <Users className="w-12 h-12 text-indigo-500" />,
+      icon: <Users className="w-12 h-12" style={{ color: '#4668a2' }} />,
       number: "10+",
       label: "Team members",
       subtitle: "Expert professionals"
     },
     {
-      icon: <TrendingUp className="w-12 h-12 text-purple-500" />,
+      icon: <TrendingUp className="w-12 h-12" style={{ color: '#4668a2' }} />,
       number: "98%",
       label: "Satisfaction rate",
       subtitle: "Happy clients"
     },
     {
-      icon: <Target className="w-12 h-12 text-cyan-500" />,
+      icon: <Target className="w-12 h-12" style={{ color: '#4668a2' }} />,
       number: "20+",
       label: "Projects",
       subtitle: "Successfully delivered"
@@ -44,14 +44,14 @@ const AboutUs = () => {
   ];
 
   return (
-    <div className="w-full min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+    <div className="w-full min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100">
        <Header title={`About Us `} path={`About Us`} />
 
 
 <div className="relative pt-10 pb-4 px-4 overflow-hidden">
   {/* Decorative Elements */}
-  <div className="absolute top-20 left-10 w-72 h-72 bg-blue-200/30 rounded-full blur-3xl"></div>
-  <div className="absolute bottom-0 right-10 w-96 h-96 bg-purple-200/30 rounded-full blur-3xl"></div>
+  <div className="absolute top-20 left-10 w-72 h-72 rounded-full blur-3xl" style={{ backgroundColor: 'rgba(70, 104, 162, 0.15)' }}></div>
+  <div className="absolute bottom-0 right-10 w-96 h-96 rounded-full blur-3xl" style={{ backgroundColor: 'rgba(70, 104, 162, 0.1)' }}></div>
 
   <div className="relative max-w-8xl mx-auto flex flex-col lg:flex-row items-center gap-12">
     {/* Left Side: Illustration */}
@@ -67,11 +67,11 @@ const AboutUs = () => {
     <div className="flex-1">
       <div className="flex items-center gap-2 mb-6">
         <div className="flex items-center gap-2">
-          <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-          <div className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse delay-100"></div>
-          <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse delay-200"></div>
+          <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: '#4668a2' }}></div>
+          <div className="w-2 h-2 rounded-full animate-pulse delay-100" style={{ backgroundColor: '#4668a2' }}></div>
+          <div className="w-2 h-2 rounded-full animate-pulse delay-200" style={{ backgroundColor: '#4668a2' }}></div>
         </div>
-        <span className="text-blue-600 font-semibold uppercase tracking-wider text-sm">
+        <span className="font-semibold uppercase tracking-wider text-sm" style={{ color: '#4668a2' }}>
           About Us
         </span>
       </div>
@@ -79,7 +79,7 @@ const AboutUs = () => {
       <h1 className="text-5xl md:text-4xl lg:text-4xl font-bold text-gray-900 mb-6 leading-tight">
         Drive Digital Revolution
         <br />
-        <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
+        <span style={{ color: '#4668a2' }}>
           Through Data Science
         </span>
       </h1>
@@ -150,7 +150,7 @@ const AboutUs = () => {
                 key={index}
                 className="group relative bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 border border-gray-100"
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-purple-500/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: 'linear-gradient(to bottom right, rgba(70, 104, 162, 0.05), rgba(70, 104, 162, 0.05))' }}></div>
                 
                 <div className="relative">
                   <div className="mb-4 transform group-hover:scale-110 transition-transform duration-300">
@@ -181,7 +181,7 @@ const AboutUs = () => {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             {/* Illustration Side */}
             <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-purple-400/20 rounded-3xl blur-2xl"></div>
+              <div className="absolute inset-0 rounded-3xl blur-2xl" style={{ background: 'linear-gradient(to right, rgba(70, 104, 162, 0.2), rgba(70, 104, 162, 0.2))' }}></div>
               <div className="relative bg-white/90 backdrop-blur-sm rounded-3xl p-8 shadow-2xl border border-gray-200">
                 <div className="space-y-6 h-[530px]">
                   {/* Main Image Grid */}
@@ -192,7 +192,7 @@ const AboutUs = () => {
                         alt="City transportation" 
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-blue-900/50 to-transparent "></div>
+                      <div className="absolute inset-0 bg-gradient-to-t from-gray-900/50 to-transparent"></div>
                     </div>
                     <div className="rounded-2xl h-[300px] overflow-hidden group">
                       <img 
@@ -217,7 +217,7 @@ const AboutUs = () => {
                         alt="Team collaboration" 
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-r from-indigo-900/40 to-transparent"></div>
+                      <div className="absolute inset-0 bg-gradient-to-r from-gray-900/40 to-transparent"></div>
                     </div>
                   </div>
                 </div>
@@ -238,7 +238,7 @@ const AboutUs = () => {
 
               <div className="space-y-6">
                 <div className="group flex gap-4 p-6 bg-white/80 backdrop-blur-sm rounded-xl hover:shadow-lg transition-all duration-300 border border-gray-100">
-                  <div className="flex-shrink-0 w-14 h-14 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <div className="flex-shrink-0 w-14 h-14 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform" style={{ backgroundColor: '#4668a2' }}>
                     <Award className="w-7 h-7 text-white" />
                   </div>
                   <div>
@@ -251,7 +251,7 @@ const AboutUs = () => {
                 </div>
 
                 <div className="group flex gap-4 p-6 bg-white/80 backdrop-blur-sm rounded-xl hover:shadow-lg transition-all duration-300 border border-gray-100">
-                  <div className="flex-shrink-0 w-14 h-14 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <div className="flex-shrink-0 w-14 h-14 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform" style={{ backgroundColor: '#4668a2' }}>
                     <Users className="w-7 h-7 text-white" />
                   </div>
                   <div>
@@ -264,7 +264,7 @@ const AboutUs = () => {
                 </div>
 
                 <div className="group flex gap-4 p-6 bg-white/80 backdrop-blur-sm rounded-xl hover:shadow-lg transition-all duration-300 border border-gray-100">
-                  <div className="flex-shrink-0 w-14 h-14 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <div className="flex-shrink-0 w-14 h-14 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform" style={{ backgroundColor: '#4668a2' }}>
                     <Target className="w-7 h-7 text-white" />
                   </div>
                   <div>
