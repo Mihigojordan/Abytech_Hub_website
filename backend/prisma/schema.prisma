@@ -19,21 +19,35 @@ model Admin {
   adminName  String?
   adminEmail String?  @unique
   phone     String?
-  publicId  String?
+  location     String?
+  identityCardPublicId  String?
+  passportPublicId  String?
+  cvPublicId  String?
+  profileImagePublicId  String?
   password   String?
   profileImage  String?
-  status       AdminStatus    @default(ACTIVE)
-  google_id    String?  @unique
-  is2FA   Boolean? @default(false)
-  isLocked   Boolean? @default(false)
+   status       AdminStatus    @default(ACTIVE)
+   google_id    String?  @unique
+   is2FA   Boolean? @default(false)
+   bio  String?
+   experience Json?  // array of {from,to,companyName,jobTitle,JobDescription}
+   joinedDate DateTime?
+   isLocked   Boolean? @default(false)
+   skills  Json?  //array
+   portifilio Json?  //array
+
+   // files 
+  cv String? 
+  passport String? 
+  identityCard String?
+  
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
-
    replies    ReplyReport[] 
-
   expenses     Expense[]
   report       Report[]
 }
+
 
 enum AdminStatus{
     ACTIVE

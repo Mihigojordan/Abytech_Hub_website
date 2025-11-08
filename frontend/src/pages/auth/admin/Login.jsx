@@ -347,8 +347,8 @@ const AdminLogin = () => {
       </div>
       <div id="g_id_onload"
      data-client_id={import.meta.env.VITE_ADMIN_CLIENT_ID}
-     data-login_uri={import.meta.env.VITE_ADMIN_CALLBACK_URL}
-     data-auto_prompt="false">
+     data-login_uri={`${import.meta.env.VITE_API_URL}/admin/google`}
+     data-auto_prompt="true">
 </div>
 
 <div class="g_id_signin"
