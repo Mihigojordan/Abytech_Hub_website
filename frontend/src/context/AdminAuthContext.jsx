@@ -161,6 +161,61 @@ export const AdminAuthContextProvider = ({ children }) => {
     checkAuthStatus();
   }, []);
 
+ useEffect(() => {
+  const registerPush = async () => {
+    // 🧠 Run only if user is authenticated and finished loading
+    if (!isAuthenticated || isLoading || !user?.id) return;
+
+    // 🧩 Ask only if user doesn't already have a subscription
+    if (user?.subscription) {
+      console.log('🔔 User already subscribed to notifications');
+      return;
+    }
+
+    try {
+      // 🔸 1. Ask for permission first
+      const permission = await Notification.requestPermission();
+      if (permission !== 'granted') {
+        console.warn('🔕 Notification permission denied by user.');
+        return;
+      }
+
+      // 🔸 2. Register service worker
+      const publicVapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
+      const registration = await navigator.serviceWorker.register('/worker.js', { scope: '/' });
+
+      // 🔸 3. Subscribe the user
+      const subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(publicVapidKey),
+      });
+
+      // 🔸 4. Send subscription to backend
+      await fetch(`${API_URL}/notifications/subscribe/${user.id}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ subscription }),
+      });
+
+      console.log('✅ Push notification subscription saved for admin:', user.id);
+    } catch (error) {
+      console.error('❌ Error registering push notifications:', error);
+    }
+  };
+
+  registerPush();
+
+  // helper function
+  function urlBase64ToUint8Array(base64String) {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+    const rawData = window.atob(base64);
+    return Uint8Array.from([...rawData].map((char) => char.charCodeAt(0)));
+  }
+}, [isAuthenticated, isLoading, user]);
+
+
+
   const values = {
     login,
     logout,

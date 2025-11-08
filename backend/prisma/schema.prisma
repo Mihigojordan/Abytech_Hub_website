@@ -18,41 +18,45 @@ model Admin {
   id         String   @id @unique @default(uuid())
   adminName  String?
   adminEmail String?  @unique
-  phone     String?
-  location     String?
-  identityCardPublicId  String?
-  passportPublicId  String?
-  cvPublicId  String?
-  profileImagePublicId  String?
+  phone      String?
+  location   String?
+  identityCardPublicId String?
+  passportPublicId     String?
+  cvPublicId           String?
+  profileImagePublicId String?
   password   String?
-  profileImage  String?
-   status       AdminStatus    @default(ACTIVE)
-   google_id    String?  @unique
-   is2FA   Boolean? @default(false)
-   bio  String?
-   experience Json?  // array of {from,to,companyName,jobTitle,JobDescription}
-   joinedDate DateTime?
-   isLocked   Boolean? @default(false)
-   skills  Json?  //array
-   portifilio Json?  //array
+  profileImage String?
+  status     AdminStatus @default(ACTIVE)
+  google_id  String?  @unique
+  is2FA      Boolean? @default(false)
+  bio        String?
+  experience Json?  // array of {from,to,companyName,jobTitle,JobDescription}
+  joinedDate DateTime?
+  isLocked   Boolean? @default(false)
+  skills     Json?  // array
+  portifilio Json?  // array
 
-   // files 
-  cv String? 
-  passport String? 
+  // files
+  cv          String?
+  passport    String?
   identityCard String?
-  
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-   replies    ReplyReport[] 
-  expenses     Expense[]
-  report       Report[]
+
+  // 🆕 Push notification subscription
+  subscription Json? // stores the push subscription object (endpoint + keys)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  replies     ReplyReport[]
+  expenses    Expense[]
+  report      Report[]
 }
 
-
-enum AdminStatus{
-    ACTIVE
-    INACTIVE
+enum AdminStatus {
+  ACTIVE
+  INACTIVE
 }
+
 
 model Expense {
   id          String   @id @default(uuid())
