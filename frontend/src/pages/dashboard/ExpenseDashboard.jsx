@@ -10,6 +10,62 @@ import { motion, AnimatePresence } from 'framer-motion';
 import expenseService from '../../services/expenseService';
 import { useNavigate } from 'react-router-dom';
 
+
+
+const RejectModal = ({ isOpen, onClose, onReject }) => {
+  const [reason, setReason] = useState("");
+
+  if (!isOpen) return null;
+
+  const handleReject = () => {
+    if (!reason.trim()) {
+      alert("Please enter a reason before rejecting.");
+      return;
+    }
+    onReject(reason);
+    setReason("");
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+      <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-md">
+        <h2 className="text-xl font-semibold text-gray-800 mb-3">Reject Request</h2>
+        <p className="text-gray-600 mb-4">
+          Please provide a reason for rejecting this request:
+        </p>
+
+        <textarea
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+          placeholder="Enter your reason here..."
+          className="w-full border border-gray-300 rounded-lg p-3 h-24 focus:outline-none focus:ring-2 focus:ring-red-500"
+        />
+
+        <div className="flex justify-end gap-3 mt-5">
+          <button
+            onClick={() => {
+              setReason("");
+              onClose();
+            }}
+            className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleReject}
+            className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700"
+          >
+            Reject
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+
+
+
 const ExpenseDashboard = () => {
   const [expenses, setExpenses] = useState([]);
   const [allExpenses, setAllExpenses] = useState([]);
@@ -25,6 +81,8 @@ const ExpenseDashboard = () => {
   const [operationLoading, setOperationLoading] = useState(false);
   const [viewMode, setViewMode] = useState('table');
   const [statusFilter, setStatusFilter] = useState('ALL');
+  const [IsRejecting,setIsRejecting] = useState(false)
+  const [rejectReason,setRejectReason] = useState(false)
   const [dateFilter, setDateFilter] = useState('ALL');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -32,6 +90,7 @@ const ExpenseDashboard = () => {
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedExpense, setSelectedExpense] = useState(null);
+  const [expenseId,setExpenseId] = useState(null)
   const [formData, setFormData] = useState({
     title: '',
     amount: 0,
@@ -266,6 +325,30 @@ const ExpenseDashboard = () => {
     }
   };
 
+  const handleRejection = (id)=>{
+    setExpenseId(id)
+    setIsRejecting(true)
+
+  }
+
+
+  const updateRejectedStatus = async ( newStatus,reason) => {
+    setOperationLoading(true);
+    try {
+      await expenseService.updateExpense(expenseId, { status: newStatus,reason });
+      setIsRejecting(false)
+      await loadData();
+      setExpenseId(null)
+      showOperationStatus('success', `Expense ${newStatus.toLowerCase()}!`);
+    } catch (err) {
+      showOperationStatus('error', err.message || `Failed to ${newStatus.toLowerCase()} expense`);
+    } finally {
+      setOperationLoading(false);
+    }
+  };
+
+
+
   const handleExport = () => {
     const csvContent = [
       ['Title', 'Amount', 'Description', 'Status', 'Created Date'],
@@ -317,6 +400,8 @@ const ExpenseDashboard = () => {
         return { bg: 'bg-green-100', text: 'text-green-700', border: 'border-green-200' };
       case 'COMPLETED':
         return { bg: 'bg-gray-100', text: 'text-gray-700', border: 'border-gray-200' };
+      case 'REJECTED':
+        return { bg: 'bg-red-100', text: 'text-red-700', border: 'border-red-200' };
       default:
         return { bg: 'bg-gray-100', text: 'text-gray-700', border: 'border-gray-200' };
     }
@@ -353,6 +438,19 @@ const ExpenseDashboard = () => {
             <span>Approve</span>
           </motion.button>
         )}
+        {isPending && (
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => handleRejection(id)}
+            disabled={operationLoading}
+            className="flex items-center bg-red-500 space-x-1 px-2 py-1 text-xs font-medium text-white rounded-md shadow-sm transition disabled:opacity-50"
+           
+          >
+            <XCircle className="w-3 h-3" />
+            <span>Rejected</span>
+          </motion.button>
+        )}
 
         {isApproved && (
           <motion.button
@@ -372,9 +470,9 @@ const ExpenseDashboard = () => {
   };
 
   const renderTableView = () => (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-      <div className="overflow-x-auto">
-        <table className=" text-xs">
+    <div className="bg-white rounded-xl shadow-sm w-full border border-gray-100 overflow-hidden">
+      <div className="overflow-x-auto w-full">
+        <table className=" text-xs w-full">
           <thead style={{ backgroundColor: 'rgba(81, 96, 146, 0.05)' }}>
             <tr>
               <th className="text-left py-2 px-3 font-semibold cursor-pointer hover:bg-gray-50"
@@ -1159,6 +1257,11 @@ const ExpenseDashboard = () => {
                     <label className="block text-xs font-semibold text-gray-700 mb-1">Description</label>
                     <p className="text-xs text-gray-900">{selectedExpense.description || '-'}</p>
                   </div>
+               { selectedExpense.reason &&  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">Reason of Rejection</label>
+                    <p className="text-xs text-gray-900">{selectedExpense.reason || '-'}</p>
+                  </div>}
+                  
                   <div>
                     <label className="block text-xs font-semibold text-gray-700 mb-1">Status</label>
                     <StatusBadge status={selectedExpense.status} />
@@ -1184,6 +1287,13 @@ const ExpenseDashboard = () => {
               </motion.div>
             </motion.div>
           )}
+        </AnimatePresence>
+        <AnimatePresence>
+          <RejectModal
+          isOpen={IsRejecting}
+          onClose={()=> setIsRejecting(false)}
+          onReject={(reason)=>updateRejectedStatus('REJECTED',reason)}
+          />
         </AnimatePresence>
       </div>
     </div>

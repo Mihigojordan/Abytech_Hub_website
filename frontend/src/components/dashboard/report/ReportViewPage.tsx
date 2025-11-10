@@ -26,6 +26,7 @@ import reportService from "../../../services/reportService";
 import useAdminAuth from "../../../context/AdminAuthContext";
 import { API_URL } from '../../../api/api';
 import { useSocketEvent } from "../../../context/SocketContext";
+import CalendarFilter from "./CalendarFilter";
 
 interface Report {
   id: string;
@@ -120,6 +121,27 @@ useEffect(() => {
   repliesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
 }, [selectedReport?.replies?.length]);
 
+// Add state for calendar visibility
+const [showCalendar, setShowCalendar] = useState(false);
+
+// Add handler for date range selection
+const handleDateRangeSelect = (startDate: Date | null, endDate: Date | null) => {
+  if (startDate && endDate) {
+    // Convert to ISO format for your API
+    const params = {
+      filter: 'custom',
+      from: startDate.toISOString().split('T')[0],
+      to: endDate.toISOString().split('T')[0]
+    };
+    // Call your fetchSidebarReports with custom date range
+    fetchSidebarReports(params);
+    setFilterType('custom')
+  } else {
+    // Clear custom filter
+    setFilterType('all');
+  }
+};
+
   // Fetch selected report
   useEffect(() => {
     if (reportId) {
@@ -154,7 +176,7 @@ useEffect(() => {
 );
 
   // Fetch sidebar reports with server-side pagination
-  const fetchSidebarReports = async () => {
+  const fetchSidebarReports = async (par?:any) => {
     setLoading(true);
     setError(null);
     try {
@@ -166,6 +188,7 @@ useEffect(() => {
         page: sidebarCurrentPage,
         limit: sidebarItemsPerPage,
         search: searchTerm.trim(),
+        ...par
       };
       if (filterType !== 'all') {
         if (filterType === 'today') {
@@ -428,6 +451,15 @@ useEffect(() => {
                         {filter.charAt(0).toUpperCase() + filter.slice(1)}
                       </button>
                     ))}
+                    <button
+  onClick={() => setShowCalendar(!showCalendar)}
+  className={`px-3 py-1 text-xs font-medium rounded-full transition-colors ${ filterType === 'custom'
+                            ? "bg-blue-500 text-white"
+                            : "bg-gray-100 text-gray-700 hover:bg-gray-200"} `}
+>
+  Custom Date
+</button>
+
                   </div>
                 </div>
               </div>
@@ -737,6 +769,15 @@ useEffect(() => {
           </div>
         </div>
       )}
+      {showCalendar && (
+  <div className="fixed top-0 left-0 w-screen h-screen flex justify-center items-center flex-col bg-black/50">
+    <X className="text-white w-16 h-16" onClick={()=>setShowCalendar(false)}></X>
+    <CalendarFilter 
+      onDateRangeSelect={handleDateRangeSelect}
+      onClose={() => setShowCalendar(false)}
+    />
+  </div>
+)}
 
       <style jsx>{`
         .swal-preview-container .ql-editor {
