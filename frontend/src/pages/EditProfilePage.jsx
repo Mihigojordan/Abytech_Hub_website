@@ -25,7 +25,7 @@ export default function AdminProfileEdit() {
   // Form States
   const [personalInfo, setPersonalInfo] = useState({
     adminName: '', adminEmail: '', phone: '', location: '', bio: '',
-    profileImage: null, profileImageUrl: '', joinedDate: ''
+    profileImage: null, profileImageUrl: '', joinedDate: '',idNumber:'',
   });
   const [passwordData, setPasswordData] = useState({
     currentPassword: '', newPassword: '', confirmPassword: ''
@@ -55,7 +55,8 @@ export default function AdminProfileEdit() {
           bio: admin.bio || '',
           profileImage: admin.profileImage || null,
           profileImageUrl: admin.profileImage || '',
-          joinedDate: admin.joinedDate ? admin.joinedDate.split('T')[0] : ''
+          joinedDate: admin.joinedDate ? admin.joinedDate.split('T')[0] : '',
+          idNumber: admin.idNumber || '',
         });
 
         setExperiences(admin.experience || []);
@@ -140,6 +141,7 @@ export default function AdminProfileEdit() {
       if (activeTab === 'personal') {
         formData.append('adminName', personalInfo.adminName);
         formData.append('adminEmail', personalInfo.adminEmail);
+        formData.append('idNumber', personalInfo.idNumber);
         if (personalInfo.phone) formData.append('phone', personalInfo.phone);
         if (personalInfo.location) formData.append('location', personalInfo.location);
         if (personalInfo.bio) formData.append('bio', personalInfo.bio);
@@ -326,6 +328,7 @@ export default function AdminProfileEdit() {
                   { label: 'Phone', key: 'phone', type: 'tel' },
                   { label: 'Location', key: 'location', type: 'text' },
                   { label: 'Joined Date', key: 'joinedDate', type: 'date' },
+                  { label: 'Identity Card Number', key: 'idNumber', type: 'number' },
                 ].map(field => (
                   <div key={field.key}>
                     <label className="block text-xs font-medium text-gray-700 mb-1.5">{field.label}</label>

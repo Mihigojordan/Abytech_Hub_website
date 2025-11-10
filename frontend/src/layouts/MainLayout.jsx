@@ -35,6 +35,7 @@ const isPWA = usePWA();
       navigate('/admin/dashboard');
     }
   }, [isPWA, navigate]);
+
   useEffect(() => {
     document.documentElement.scrollIntoView({
       behavior: "smooth",
@@ -42,6 +43,7 @@ const isPWA = usePWA();
       inline: "start",
     });
   }, []);
+  
   return (
     <div className='min-h-dvh text-white flex justify-between items-stretch flex-col bg-white'>
 
