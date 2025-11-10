@@ -1,6 +1,10 @@
 // AdminProfile.jsx
 import React, { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import {
+  useNavigate,
+  useParams,
+  useSearchParams, // ← NEW: for tab in URL
+} from 'react-router-dom';
 import {
   User, Globe, Calendar, Mail, Phone, MapPin, Briefcase,
   FileText, Download, Lock, Loader2
@@ -43,11 +47,33 @@ const calculateProfileCompletion = (admin) => {
 
 export default function AdminProfile() {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // ——————————————————————————————————————————————————————————————
+  // TAB MANAGEMENT: Keep tab in URL (?tab=overview|documents)
+  // ——————————————————————————————————————————————————————————————
+  const urlTab = searchParams.get('tab');
+  const validTabs = ['overview', 'documents'];
+  const activeTab = validTabs.includes(urlTab) ? urlTab : 'overview';
+
+  const setActiveTab = (newTab) => {
+    setSearchParams({ tab: newTab });
+  };
+
+  // Ensure a tab is always present in the URL
+  useEffect(() => {
+    if (!searchParams.has('tab')) {
+      setSearchParams({ tab: 'overview' });
+    }
+  }, [searchParams, setSearchParams]);
+
+  // ——————————————————————————————————————————————————————————————
+  // FETCH ADMIN DATA
+  // ——————————————————————————————————————————————————————————————
   const [admin, setAdmin] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState('overview');
-  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchAdmin = async () => {
@@ -66,6 +92,9 @@ export default function AdminProfile() {
     if (id) fetchAdmin();
   }, [id]);
 
+  // ——————————————————————————————————————————————————————————————
+  // LOADING & ERROR STATES
+  // ——————————————————————————————————————————————————————————————
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
@@ -85,6 +114,9 @@ export default function AdminProfile() {
     );
   }
 
+  // ——————————————————————————————————————————————————————————————
+  // PREPARE DOCUMENTS ARRAY
+  // ——————————————————————————————————————————————————————————————
   const documents = [
     admin.cv && {
       name: 'CV / Resume',
@@ -106,13 +138,16 @@ export default function AdminProfile() {
     },
   ].filter(Boolean);
 
+  // ——————————————————————————————————————————————————————————————
+  // RENDER
+  // ——————————————————————————————————————————————————————————————
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4">
       <div className="mx-auto">
         {/* Header Section */}
-        <div className="relative rounded-t-xl overflow-hidden h-46 pb-4 ">
+        <div className="relative rounded-t-xl overflow-hidden h-46 pb-4">
           <div
-            className="absolute inset-0 bg-cover bg-center "
+            className="absolute inset-0 bg-cover bg-center"
             style={{
               backgroundImage:
                 "url('https://images.unsplash.com/photo-1762422411505-c0cae1fb103c?ixlib=rb-4.1.0&auto=format&fit=crop&q=60&w=500')",
@@ -122,7 +157,7 @@ export default function AdminProfile() {
           </div>
 
           <div className="relative h-full flex items-end p-6">
-            <div className="flex items-center justify-between  w-full">
+            <div className="flex items-center justify-between w-full">
               <div className="flex items-end gap-4">
                 <div className="relative mb-[-32px]">
                   <img
@@ -137,7 +172,7 @@ export default function AdminProfile() {
                   )}
                 </div>
 
-                <div className="text-white ">
+                <div className="text-white">
                   <h1 className="text-2xl font-bold mb-0.5">{admin.adminName}</h1>
                   <p className="text-white/90 text-sm mb-1.5">Owner & Founder</p>
                   <div className="flex items-center gap-3 text-xs">
@@ -178,7 +213,7 @@ export default function AdminProfile() {
           >
             Documents
           </button>
-          <button 
+          <button
             onClick={() => navigate('/admin/dashboard/edit-profile/' + id)}
             className="ml-auto px-5 py-2 my-1.5 bg-[rgb(81,96,146)] text-white rounded-lg hover:bg-[rgb(71,86,136)] transition-colors text-sm font-medium"
           >
@@ -245,6 +280,10 @@ export default function AdminProfile() {
                     <p className="text-sm text-gray-900 font-medium">{admin.adminEmail}</p>
                   </div>
                   <div>
+                    <label className="text-xs text-gray-500">Identity-card Number :</label>
+                    <p className="text-sm text-gray-900 font-medium">{admin.idNumber}</p>
+                  </div>
+                  <div>
                     <label className="text-xs text-gray-500">Location :</label>
                     <p className="text-sm text-gray-900 font-medium">{admin.location || '—'}</p>
                   </div>
@@ -270,7 +309,7 @@ export default function AdminProfile() {
                         rel="noopener noreferrer"
                         className={`${link.color || 'bg-[rgb(81,96,146)]'} w-9 h-9 rounded-lg flex items-center justify-center text-white hover:opacity-80 transition-opacity text-sm font-medium`}
                       >
-                        <p className='capitalize'>{link?.platform?.trim()?.slice(0,1)}</p>
+                        <p className="capitalize">{link?.platform?.trim()?.slice(0, 1)}</p>
                       </a>
                     ))}
                   </div>
@@ -372,7 +411,9 @@ export default function AdminProfile() {
             <div className="bg-white rounded-lg shadow-sm p-5">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-base font-semibold text-gray-900">Uploaded Documents</h3>
-                <button className="px-4 py-2 bg-[rgb(81,96,146)] text-white rounded-lg hover:bg-[rgb(71,86,136)] transition-colors text-sm font-medium">
+                <button 
+                onClick={()=> navigate(`/admin/dashboard/edit-profile/${id}?tabs=files`)}
+                className="px-4 py-2 bg-[rgb(81,96,146)] text-white rounded-lg hover:bg-[rgb(71,86,136)] transition-colors text-sm font-medium">
                   Upload New
                 </button>
               </div>
