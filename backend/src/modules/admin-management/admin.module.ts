@@ -7,6 +7,7 @@ import { EmailModule } from 'src/global/email/email.module';
 
 import { GoogleAdminStrategy } from './google.strategy';
 import { CloudinaryService } from 'src/global/cloudinary/cloudinary.service';
+import { NotificationsModule } from './notification/notifications.module';
 
 @Module({
   controllers: [AdminController,],
@@ -20,6 +21,7 @@ import { CloudinaryService } from 'src/global/cloudinary/cloudinary.service';
       }
     }),
     EmailModule,
+    NotificationsModule,
   ]
 })
 export class AdminModule {}
