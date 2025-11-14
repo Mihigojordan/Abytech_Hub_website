@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { User, Lock, Bell, Link } from 'lucide-react';
 import ProfileSettings from '../../components/dashboard/profile/admin/ProfileSettings';
+import NotificationSettings from '../../components/dashboard/profile/admin/NotificationsSettings';
 
 
 const AdminProfilePage: React.FC = () => {
@@ -37,6 +38,17 @@ const AdminProfilePage: React.FC = () => {
                 <User className="w-4 h-4 mr-2" />
                 Profile Settings
               </button>
+              <button
+                onClick={() => setActiveTab('notifications')}
+                className={`w-full flex items-center px-3 py-2 text-xs font-medium rounded transition-colors ${
+                  activeTab === 'notifications'
+                    ? 'bg-primary-50 text-primary-600 border-r-4 border-primary-500'
+                    : 'text-gray-600 hover:bg-gray-50'
+                }`}
+              >
+                <User className="w-4 h-4 mr-2" />
+                Notifications Settings
+              </button>
              
             </nav>
           </div>
@@ -59,6 +71,7 @@ const AdminProfilePage: React.FC = () => {
               </div>
               <div className="p-4">
                 {activeTab === 'profile' && <ProfileSettings />}
+                {activeTab === 'notifications' && <NotificationSettings />}
                
               </div>
             </div>

@@ -164,7 +164,7 @@ const AdminLogin = () => {
                 name="email"
                 value={formData.email}
                 onChange={handleInputChange}
-                onBlur={handleBlur}
+                
                 disabled={isLoading || authLoading}
                 className={`w-full px-3 py-2.5 text-sm border rounded-xl transition-all disabled:bg-gray-50 disabled:cursor-not-allowed ${
                   errors.email && touched.email
@@ -207,7 +207,7 @@ const AdminLogin = () => {
                   name="password"
                   value={formData.password}
                   onChange={handleInputChange}
-                  onBlur={handleBlur}
+                  
                   disabled={isLoading || authLoading}
                   className={`w-full px-3 py-2.5 pr-10 text-sm border rounded-xl transition-all disabled:bg-gray-50 disabled:cursor-not-allowed ${
                     errors.password && touched.password

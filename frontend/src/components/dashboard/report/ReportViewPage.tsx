@@ -283,7 +283,7 @@ const handleDateRangeSelect = (startDate: Date | null, endDate: Date | null) => 
 
     try {
       setReplying(true);
-      const newReply = await reportService.replyToReport(selectedReport.id,   replyContent );
+      const newReply = await reportService.replyToReport(selectedReport.id,   replyContent , user?.id );
       
       // Replace replies with new array including the new one
       setSelectedReport(prev => prev ? { ...prev, replies: [...(prev.replies || []), newReply] } : null);
@@ -634,21 +634,14 @@ const handleDateRangeSelect = (startDate: Date | null, endDate: Date | null) => 
 
             {/* Reply Input */}
             <div className="mb-6">
-              <ReactQuill
+              <textarea
                 value={replyContent}
-                onChange={setReplyContent}
+                onChange={(e)=> setReplyContent(e.target.value)}
                 placeholder="Write your reply..."
-                className="bg-gray-50"
-                modules={{
-                  toolbar: [
-                    [{ 'header': [1, 2, false] }],
-                    ['bold', 'italic', 'underline'],
-                    ['link'],
-                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                    ['clean']
-                  ],
-                }}
-              />
+                className="bg-gray-50 w-full border-2 p-2 border-gray-300 rounded-lg"
+                rows={4}
+               
+              ></textarea>
               <div className="mt-3 flex justify-end">
                 <button
                   onClick={handleSendReply}
@@ -685,7 +678,7 @@ const handleDateRangeSelect = (startDate: Date | null, endDate: Date | null) => 
                       </div>
                     </div>
                     <div
-                      className="ql-editor max-h-[50px] text-sm text-gray-700 prose prose-sm max-w-none"
+                      className=" max-h-[50px] text-sm text-gray-700 prose prose-sm max-w-none"
                       dangerouslySetInnerHTML={{ __html: reply.content }}
                     />
                   </div>
