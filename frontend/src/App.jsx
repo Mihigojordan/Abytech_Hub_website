@@ -14,8 +14,10 @@ import MainLayout from "./layouts/MainLayout";
 import DashboardLayout from "./layouts/DashboardLayout";
 import ProtectPrivateAdminRoute from "./components/protectors/ProtectPrivateAdminRoute";
 import EmployeeeDashboard from "./pages/dashboard/EmployeeManagement";
-import AdminProfilePage from "./pages/ProfilePage";
+
 import AdminProfileEdit from "./pages/EditProfilePage";
+import PWAPushNotifications from "./pages/PWATestingPage";
+import AdminProfilePage from "./pages/dashboard/AdminProfile";
 
 // Lazy-loaded pages
 const ProjectsPage = lazy(() => import("./pages/Projects/ProjectPages"));
@@ -60,6 +62,7 @@ const router = createBrowserRouter([
       { path: '/project', element: <SuspenseWrapper><ProjectsPage /> </SuspenseWrapper> },
       { path: '/team-member', element: <SuspenseWrapper><TeamMember /> </SuspenseWrapper> },
       { path: '/location', element: <SuspenseWrapper><AbyTechLocations /> </SuspenseWrapper> },
+      { path: '/pwa', element: <SuspenseWrapper><PWAPushNotifications /> </SuspenseWrapper> },
       ,
     ]
   },

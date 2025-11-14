@@ -49,9 +49,9 @@ async getReportCount(filter, from = '', to = '') {
 }
 
   // ✅ Reply to a report
-  async replyToReport(reportId, content) {
+  async replyToReport(reportId, content,adminId) {
     try {
-      const response = await api.post(`/report/${reportId}/reply`, { content });
+      const response = await api.post(`/report/${reportId}/reply`, { content,adminId });
       return response.data;
     } catch (error) {
       const msg =

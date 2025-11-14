@@ -161,7 +161,7 @@ const UnlockScreen = () => {
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={handlePasswordChange}
-                  onBlur={handlePasswordBlur}
+                  
                   disabled={isSubmitting}
                   className={`w-full px-3 py-2.5 pr-10 text-sm border rounded-xl outline-0 focus:ring-0 transition-all disabled:bg-gray-50 disabled:cursor-not-allowed ${
                     error && touched
