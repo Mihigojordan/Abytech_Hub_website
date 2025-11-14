@@ -4,13 +4,14 @@ import { CloudinaryService } from 'src/global/cloudinary/cloudinary.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { NotificationService } from 'src/global/notification/notification.service';
 import { ReportGateway } from './report.gateway';
+import { NotificationsService } from '../admin-management/notification/notifications.service';
 
 @Injectable()
 export class ReportService {
   constructor(
     private prisma: PrismaService,
     private cloudinaryService: CloudinaryService,
-     private readonly notification: NotificationService,
+     private readonly notification: NotificationsService,
     private readonly reportGateway: ReportGateway,
 
   ) { }
@@ -173,7 +174,7 @@ async replyToReport(reportId: string, adminId: string, content: string) {
   url: `${process.env.FRONTEND_URL_ONLY}/admin/dashboard/report/view/${reportId}`,
 };
 
-   await this.notification.sendNotification(report.adminId,payload)
+   await this.notification.sendToAdmin(report.adminId,payload)
     this.reportGateway.emitReplyCreated(reply)
 
     return reply;

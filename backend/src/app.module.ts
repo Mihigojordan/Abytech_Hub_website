@@ -15,7 +15,7 @@ import { NotificationModule } from './global/notification/notification.module';
     ExpenseModule,
     ReportModule,
     DriveModule,
-    NotificationModule
+    // NotificationModule
   ],
   controllers: [AppController],
 })
