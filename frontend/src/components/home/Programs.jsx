@@ -60,7 +60,7 @@ function Programs() {
   };
 
   return (
-    <div className="min-h-screen" style={{backgroundColor: '#37517e'}}>
+    <div className="min-h-screen" style={{backgroundColor: '#101828'}}>
       {/* Header */}
       <div className="bg-white/10 backdrop-blur-sm border-b border-white/20">
         <div className="max-w-8xl mx-auto px-14 py-8">

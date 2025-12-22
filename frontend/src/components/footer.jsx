@@ -2,6 +2,7 @@ import React from "react";
 import { FaFacebookF, FaLinkedinIn, FaInstagram, FaWhatsapp, FaEnvelope } from "react-icons/fa";
 import { IoMdArrowRoundUp } from "react-icons/io";
 import { RxCross2 } from "react-icons/rx";
+import Image from '../assets/imigonga.png'
 
 const FooterContent = () => {
   const scrollToTop = () => {
@@ -9,7 +10,10 @@ const FooterContent = () => {
   };
   
   return (
-    <footer className="text-white relative" style={{ backgroundColor: '#37517e' }}>
+    <>
+   
+    <footer className="text-white relative" style={{ backgroundColor: '#101828' }}>
+       <img src={Image}  className="w-[100%] h-4"alt="" />
       <section className="py-12 px-6 md:px-8 lg:px-14">
         <div className="container mx-auto flex flex-col lg:flex-row items-center justify-between">
           {/* Left Section */}
@@ -110,6 +114,7 @@ const FooterContent = () => {
         <IoMdArrowRoundUp className="text-white text-xl" />
       </button>
     </footer>
+    </>
   );
 };
 

@@ -26,7 +26,7 @@ export default function WhyChooseUs() {
   ];
 
   return (
-    <div className="w-full bg-gradient-to-b from-gray-50 via-white to-gray-100 py-4 md:py-24 px-4 md:px-8">
+    <div className="w-full bg-gradient-to-b from-white to-primary-50 text-gray-900 shadow-2xl py-4 md:py-24 px-4 md:px-8">
       <div className="max-w-8xl px-6 mx-auto">
         {/* Header */}
         <div className="text-center mb-12 md:mb-20">
