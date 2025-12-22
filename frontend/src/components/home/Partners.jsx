@@ -1,189 +1,134 @@
-import React, { useEffect } from "react";
-import { ChevronLeft, ChevronRight, Award } from "lucide-react";
 
-// Partner logos - using placeholder images
+
+import Logo1 from '../../assets/partner/par1.png';
+import Logo2 from '../../assets/partner/par2.png';
+import Logo3 from '../../assets/partner/par3.png';
+import Logo4 from '../../assets/partner/par4.png';
+import Logo5 from '../../assets/partner/par5.png';
+import Logo6 from '../../assets/partner/par6.png';
+import Logo7 from '../../assets/partner/par7.png';
+import Logo8 from '../../assets/partner/par8.png';
+import Logo9 from '../../assets/partner/par9.png';
+import Logo10 from '../../assets/partner/par10.png';
+import Logo11 from '../../assets/partner/par11.png';
+import Logo12 from '../../assets/partner/par12.png';
+import Logo13 from '../../assets/partner/par13.png';
+import Logo14 from '../../assets/partner/par14.png';
+import Logo15 from '../../assets/partner/tran.png';
+
+
+function Partner() {
 const partners = [
-  { 
-    name: "AbyRide", 
-    logo: "https://via.placeholder.com/200x80/4F46E5/FFFFFF?text=AbyRide",
-    category: "Transportation"
-  },
-  { 
-    name: "Rent By Aby", 
-    logo: "https://via.placeholder.com/200x80/06B6D4/FFFFFF?text=RentByAby",
-    category: "Real Estate"
-  },
-  { 
-    name: "Aby Inventory", 
-    logo: "https://via.placeholder.com/200x80/8B5CF6/FFFFFF?text=AbyInventory",
-    category: "Technology"
-  },
-  { 
-    name: "Tech Solutions", 
-    logo: "https://via.placeholder.com/200x80/3B82F6/FFFFFF?text=TechSolutions",
-    category: "Technology"
-  },
-  { 
-    name: "Global Ventures", 
-    logo: "https://via.placeholder.com/200x80/10B981/FFFFFF?text=GlobalVentures",
-    category: "Investment"
-  },
-  { 
-    name: "Innovation Labs", 
-    logo: "https://via.placeholder.com/200x80/F59E0B/FFFFFF?text=InnovationLabs",
-    category: "Research"
-  },
+  { name: 'Shopify', logo: Logo1 },
+  { name: 'Shopify', logo: Logo2 },
+  { name: 'Shopify', logo: Logo3 },
+  { name: 'Shopify', logo: Logo4 },
+  { name: 'Shopify', logo: Logo5 },
+  { name: 'Shopify', logo: Logo6 },
+  { name: 'Shopify', logo: Logo7 },
+  { name: 'Shopify', logo: Logo8 },
+  { name: 'Shopify', logo: Logo9 },
+  { name: 'Shopify', logo: Logo10 },
+  { name: 'Shopify', logo: Logo11 },
+  { name: 'Shopify', logo: Logo12 },
+  { name: 'Shopify', logo: Logo13 },
+  { name: 'Shopify', logo: Logo14 },
+  { name: 'Shopify', logo: Logo15 },
 ];
 
-export default function Partners() {
-  const [currentIndex, setCurrentIndex] = React.useState(0);
-  const [isAutoPlaying, setIsAutoPlaying] = React.useState(true);
 
-  useEffect(() => {
-    if (!isAutoPlaying) return;
-    
-    const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % partners.length);
-    }, 4000);
-
-    return () => clearInterval(interval);
-  }, [isAutoPlaying]);
-
-  const nextSlide = () => {
-    setCurrentIndex((prev) => (prev + 1) % partners.length);
-    setIsAutoPlaying(false);
-  };
-
-  const prevSlide = () => {
-    setCurrentIndex((prev) => (prev - 1 + partners.length) % partners.length);
-    setIsAutoPlaying(false);
-  };
-
-  const getVisiblePartners = () => {
-    const visible = [];
-    for (let i = 0; i < 5; i++) {
-      visible.push(partners[(currentIndex + i) % partners.length]);
-    }
-    return visible;
-  };
+  // Duplicate the partners array for seamless loop
+  const allPartners = [...partners, ...partners];
 
   return (
-    <section className="py-16 md:py-24 px-4 md:px-8 relative overflow-hidden" style={{backgroundColor: '#37517e'}}>
-      {/* Subtle background pattern */}
-      <div className="absolute inset-0 opacity-5">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-white rounded-full blur-3xl"></div>
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-300 rounded-full blur-3xl"></div>
-      </div>
-
-      <div className="max-w-7xl mx-auto relative z-10">
+    <div className="w-full py-8 px-4" style={{ backgroundColor: '#f8fafc' }}>
+      <div className="max-w-7xl mx-auto">
         {/* Header Section */}
-        <div className="text-center mb-16">
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm px-5 py-2.5 rounded-full border border-white/20 mb-6">
-            <Award className="w-4 h-4 text-blue-200" />
-            <span className="text-white/90 font-medium text-sm tracking-wide">TRUSTED BY INDUSTRY LEADERS</span>
-          </div>
-
-          {/* Title */}
-          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6">
-            Our Strategic <span className="text-blue-200">Partners</span>
-          </h2>
-          
-          {/* Description */}
-          <p className="text-white/80 text-lg md:text-xl max-w-3xl mx-auto leading-relaxed">
-            Collaborating with innovative organizations across industries to deliver exceptional value and drive meaningful impact.
+        <div className="text-center mb-12 space-y-4">
+          <p className="text-gray-400 uppercase tracking-widest text-xs md:text-sm font-semibold letter-spacing-wide">
+            TRUSTED PARTNERS
           </p>
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900">
+            ABYTECH HUB is trusted by{' '}
+            <span className="text-gray-900 font-extrabold">10+ companies</span>{' '}
+            across the world
+          </h2>
         </div>
 
-        {/* Partners Carousel */}
-        <div className="relative">
-          {/* Navigation Buttons */}
-          <button
-            onClick={prevSlide}
-            className="absolute left-0 top-1/2 -translate-y-1/2 z-20 w-12 h-12 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center transition-all border border-white/20 hover:scale-110"
-            aria-label="Previous partners"
-          >
-            <ChevronLeft className="w-6 h-6 text-white" />
-          </button>
-
-          <button
-            onClick={nextSlide}
-            className="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-12 h-12 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center transition-all border border-white/20 hover:scale-110"
-            aria-label="Next partners"
-          >
-            <ChevronRight className="w-6 h-6 text-white" />
-          </button>
-
-          {/* Partners Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 px-16">
-            {getVisiblePartners().map((partner, index) => (
-              <div
-                key={`${partner.name}-${index}`}
-                className="group relative"
-              >
-                {/* Card */}
-                <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all duration-300 hover:scale-105 hover:shadow-2xl h-40 flex flex-col items-center justify-center">
-                  {/* Logo */}
-                  <div className="mb-3">
-                    <img
-                      src={partner.logo}
+        {/* Logos Slider */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 md:p-12 overflow-hidden">
+          <div className="relative">
+            <div className="slider-container">
+              <div className="slider-track">
+                {allPartners.map((partner, index) => (
+                  <div
+                    key={index}
+                    className="slider-item"
+                  >
+                    <img 
+                      src={partner.logo} 
                       alt={partner.name}
-                      className="max-h-16 w-auto object-contain opacity-90 group-hover:opacity-100 transition-opacity"
+                      className="max-h-12 max-w-40 object-contain  transition-all duration-300"
                     />
                   </div>
-                  
-                  {/* Category Badge */}
-                  <span className="text-xs text-blue-200/80 font-medium px-3 py-1 bg-white/5 rounded-full border border-white/10">
-                    {partner.category}
-                  </span>
-                </div>
-
-                {/* Hover Glow Effect */}
-                <div className="absolute inset-0 bg-gradient-to-t from-blue-400/0 via-blue-400/0 to-blue-400/0 group-hover:from-blue-400/5 group-hover:via-blue-400/10 group-hover:to-blue-400/5 rounded-2xl transition-all duration-300 pointer-events-none"></div>
+                ))}
               </div>
-            ))}
-          </div>
-
-          {/* Pagination Dots */}
-          <div className="flex justify-center gap-2 mt-12">
-            {partners.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => {
-                  setCurrentIndex(index);
-                  setIsAutoPlaying(false);
-                }}
-                className={`transition-all duration-300 rounded-full ${
-                  index === currentIndex
-                    ? 'w-8 h-2 bg-white'
-                    : 'w-2 h-2 bg-white/30 hover:bg-white/50'
-                }`}
-                aria-label={`Go to partner group ${index + 1}`}
-              />
-            ))}
-          </div>
-        </div>
-
-        {/* Stats Section */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mt-20 pt-16 border-t border-white/10">
-          <div className="text-center">
-            <div className="text-4xl md:text-5xl font-bold text-white mb-2">50+</div>
-            <div className="text-white/70 text-sm md:text-base">Active Partners</div>
-          </div>
-          <div className="text-center">
-            <div className="text-4xl md:text-5xl font-bold text-white mb-2">15+</div>
-            <div className="text-white/70 text-sm md:text-base">Countries</div>
-          </div>
-          <div className="text-center">
-            <div className="text-4xl md:text-5xl font-bold text-white mb-2">98%</div>
-            <div className="text-white/70 text-sm md:text-base">Satisfaction Rate</div>
-          </div>
-          <div className="text-center">
-            <div className="text-4xl md:text-5xl font-bold text-white mb-2">10+</div>
-            <div className="text-white/70 text-sm md:text-base">Years Experience</div>
+            </div>
+            
+            {/* Gradient Overlays */}
+            <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none"></div>
+            <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none"></div>
           </div>
         </div>
       </div>
-    </section>
+
+      <style>{`
+        .letter-spacing-wide {
+          letter-spacing: 3px;
+        }
+
+        .slider-container {
+          overflow: hidden;
+          width: 100%;
+        }
+
+        .slider-track {
+          display: flex;
+          width: fit-content;
+          animation: scroll 30s linear infinite;
+        }
+
+        .slider-track:hover {
+          animation-play-state: paused;
+        }
+
+        .slider-item {
+          flex: 0 0 auto;
+          width: 200px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 0 40px;
+        }
+
+        @keyframes scroll {
+          0% {
+            transform: translateX(0);
+          }
+          100% {
+            transform: translateX(-50%);
+          }
+        }
+
+        @media (max-width: 768px) {
+          .slider-item {
+            width: 150px;
+            padding: 0 30px;
+          }
+        }
+      `}</style>
+    </div>
   );
 }
+
+export default Partner;

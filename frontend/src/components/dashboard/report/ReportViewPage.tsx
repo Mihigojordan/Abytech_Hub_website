@@ -352,7 +352,7 @@ useEffect(() => {
           <p className="text-gray-600 mb-4">{error}</p>
           <button
             onClick={() => navigate(root_url)}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-slate-800 transition-colors"
           >
             Back to Reports
           </button>
@@ -372,7 +372,7 @@ useEffect(() => {
           <p className="text-gray-600 mb-4">There are no reports available.</p>
           <button
             onClick={() => navigate(root_url)}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-slate-800 transition-colors"
           >
             Back to Reports
           </button>
@@ -529,7 +529,7 @@ useEffect(() => {
                   <button
                     onClick={() => handleDownloadReport(selectedReport)}
                     disabled={operationLoading}
-                    className="flex items-center space-x-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex items-center space-x-2 bg-blue-500 hover:bg-slate-800 text-white px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Download className="w-4 h-4" />
                     <span>Download</span>
@@ -621,7 +621,7 @@ useEffect(() => {
                 <button
                   onClick={handleSendReply}
                   disabled={replying || !replyContent.trim()}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+                  className="flex items-center gap-2 px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
                 >
                   {replying ? (
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
