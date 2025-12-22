@@ -1,6 +1,10 @@
 // AdminProfileEdit.jsx
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import {
+  useParams,
+  useNavigate,
+  useSearchParams, // ← NEW: for tab in URL
+} from 'react-router-dom';
 import {
   User, Lock, Briefcase, Upload, Camera, Eye, EyeOff,
   Plus, Trash2, Save, Loader2, CheckCircle, AlertCircle,
@@ -11,8 +15,29 @@ import adminAuthService from '../services/adminAuthService';
 export default function AdminProfileEdit() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  const [activeTab, setActiveTab] = useState('personal');
+  // ——————————————————————————————————————————————————————————————
+  // TAB MANAGEMENT: Keep tab in URL (?tab=personal|password|...)
+  // ——————————————————————————————————————————————————————————————
+  const urlTab = searchParams.get('tab');
+  const validTabs = ['personal', 'password', 'experience', 'files'];
+  const activeTab = validTabs.includes(urlTab) ? urlTab : 'personal';
+
+  const setActiveTab = (newTab) => {
+    setSearchParams({ tab: newTab });
+  };
+
+  // Ensure a tab is always present in the URL
+  useEffect(() => {
+    if (!searchParams.has('tab')) {
+      setSearchParams({ tab: 'personal' });
+    }
+  }, [searchParams, setSearchParams]);
+
+  // ——————————————————————————————————————————————————————————————
+  // STATE
+  // ——————————————————————————————————————————————————————————————
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -25,7 +50,7 @@ export default function AdminProfileEdit() {
   // Form States
   const [personalInfo, setPersonalInfo] = useState({
     adminName: '', adminEmail: '', phone: '', location: '', bio: '',
-    profileImage: null, profileImageUrl: '', joinedDate: ''
+    profileImage: null, profileImageUrl: '', joinedDate: '', idNumber: '',
   });
   const [passwordData, setPasswordData] = useState({
     currentPassword: '', newPassword: '', confirmPassword: ''
@@ -38,7 +63,9 @@ export default function AdminProfileEdit() {
     cv: null, passport: null, identityCard: null
   });
 
-  // === Load Admin Data ===
+  // ——————————————————————————————————————————————————————————————
+  // LOAD ADMIN DATA
+  // ——————————————————————————————————————————————————————————————
   useEffect(() => {
     const loadAdmin = async () => {
       try {
@@ -55,7 +82,8 @@ export default function AdminProfileEdit() {
           bio: admin.bio || '',
           profileImage: admin.profileImage || null,
           profileImageUrl: admin.profileImage || '',
-          joinedDate: admin.joinedDate ? admin.joinedDate.split('T')[0] : ''
+          joinedDate: admin.joinedDate ? admin.joinedDate.split('T')[0] : '',
+          idNumber: admin.idNumber || '',
         });
 
         setExperiences(admin.experience || []);
@@ -77,7 +105,9 @@ export default function AdminProfileEdit() {
     if (id) loadAdmin();
   }, [id]);
 
-  // === Helpers ===
+  // ——————————————————————————————————————————————————————————————
+  // HELPERS
+  // ——————————————————————————————————————————————————————————————
   const addExperience = () => {
     setExperiences([...experiences, {
       id: Date.now(), from: '', to: '', companyName: '', jobTitle: '', jobDescription: ''
@@ -127,7 +157,9 @@ export default function AdminProfileEdit() {
     }
   };
 
-  // === Submit Update (All Tabs) ===
+  // ——————————————————————————————————————————————————————————————
+  // SUBMIT UPDATE
+  // ——————————————————————————————————————————————————————————————
   const handleSubmit = async () => {
     try {
       setSaving(true);
@@ -136,10 +168,11 @@ export default function AdminProfileEdit() {
 
       const formData = new FormData();
 
-      // Always include personal info if on personal tab
+      // Personal tab
       if (activeTab === 'personal') {
         formData.append('adminName', personalInfo.adminName);
         formData.append('adminEmail', personalInfo.adminEmail);
+        formData.append('idNumber', personalInfo.idNumber);
         if (personalInfo.phone) formData.append('phone', personalInfo.phone);
         if (personalInfo.location) formData.append('location', personalInfo.location);
         if (personalInfo.bio) formData.append('bio', personalInfo.bio);
@@ -157,7 +190,7 @@ export default function AdminProfileEdit() {
         formData.append('portifilio', JSON.stringify(portfolio));
       }
 
-      // Password change (only if on password tab and fields filled)
+      // Password change
       if (activeTab === 'password') {
         if (!passwordData.currentPassword || !passwordData.newPassword) {
           throw new Error('Both current and new passwords are required');
@@ -169,7 +202,7 @@ export default function AdminProfileEdit() {
         formData.append('newPassword', passwordData.newPassword);
       }
 
-      // Experience & Files tabs use same fields as personal
+      // Experience & Files tabs
       if (['experience', 'files'].includes(activeTab)) {
         formData.append('experience', JSON.stringify(experiences));
         if (documents.cv instanceof File) formData.append('cv', documents.cv);
@@ -182,7 +215,6 @@ export default function AdminProfileEdit() {
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
 
-      // Reset password fields after success
       if (activeTab === 'password') {
         setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
       }
@@ -193,7 +225,9 @@ export default function AdminProfileEdit() {
     }
   };
 
-  // === Loading UI ===
+  // ——————————————————————————————————————————————————————————————
+  // LOADING UI
+  // ——————————————————————————————————————————————————————————————
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
@@ -202,10 +236,13 @@ export default function AdminProfileEdit() {
     );
   }
 
-  // === Main UI ===
+  // ——————————————————————————————————————————————————————————————
+  // MAIN UI
+  // ——————————————————————————————————————————————————————————————
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4">
       <div className="mx-auto">
+        {/* Header */}
         <div className="relative rounded-t-xl overflow-hidden h-56">
           <div
             className="absolute inset-0 bg-cover bg-center"
@@ -221,7 +258,7 @@ export default function AdminProfileEdit() {
             <div className="flex items-start justify-between w-full">
               <div className="flex items-end gap-4">
                 <div className="relative mb-[-32px]">
-                  {/* Profile image placeholder removed as per original */}
+                  {/* Profile image placeholder */}
                 </div>
                 <div className="text-white mb-3">
                   <h1 className="text-2xl font-bold mb-0.5">Edit Profile - {personalInfo.adminName || '—'}</h1>
@@ -242,7 +279,7 @@ export default function AdminProfileEdit() {
           </div>
         </div>
 
-        {/* Error Banner */}
+        {/* Banners */}
         {error && (
           <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 text-red-800 text-sm">
             <AlertCircle className="w-4 h-4" />
@@ -250,7 +287,6 @@ export default function AdminProfileEdit() {
           </div>
         )}
 
-        {/* Success Banner */}
         {success && (
           <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2 text-green-800 text-sm">
             <CheckCircle className="w-4 h-4" />
@@ -326,6 +362,7 @@ export default function AdminProfileEdit() {
                   { label: 'Phone', key: 'phone', type: 'tel' },
                   { label: 'Location', key: 'location', type: 'text' },
                   { label: 'Joined Date', key: 'joinedDate', type: 'date' },
+                  { label: 'Identity Card Number', key: 'idNumber', type: 'number' },
                 ].map(field => (
                   <div key={field.key}>
                     <label className="block text-xs font-medium text-gray-700 mb-1.5">{field.label}</label>
@@ -559,7 +596,7 @@ export default function AdminProfileEdit() {
             </div>
           )}
 
-          {/* Save / Cancel — Always shown */}
+          {/* Save / Cancel */}
           <div className="flex items-center gap-2 pt-4 border-t mt-4">
             <button
               onClick={handleSubmit}

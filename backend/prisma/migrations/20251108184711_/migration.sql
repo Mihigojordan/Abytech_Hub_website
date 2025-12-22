@@ -23,6 +23,7 @@ CREATE TABLE `Admin` (
     `cv` VARCHAR(191) NULL,
     `passport` VARCHAR(191) NULL,
     `identityCard` VARCHAR(191) NULL,
+    `subscription` JSON NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
 

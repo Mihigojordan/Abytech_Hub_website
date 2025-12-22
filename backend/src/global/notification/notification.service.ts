@@ -1,44 +1,71 @@
 import { Injectable } from '@nestjs/common';
 import * as webpush from 'web-push';
-import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class NotificationService {
-  constructor(private prisma: PrismaService) {
+  private subscriptions: Map<string, any> = new Map();
+
+  constructor() {
+    // Set VAPID details
     webpush.setVapidDetails(
-      'mailto:support@myapp.com',
-      process.env.VAPID_PUBLIC_KEY!,
-      process.env.VAPID_PRIVATE_KEY!,
+      'mailto:your-email@example.com',
+      process.env.VAPID_PUBLIC_KEY,
+      process.env.VAPID_PRIVATE_KEY,
     );
   }
 
-  async saveSubscription(adminId: string, subscription: any) {
-    await this.prisma.admin.update({
-      where: { id: adminId },
-      data: { subscription },
-    });
-    return { message: 'Subscription saved successfully' };
+  // Store subscription
+  addSubscription(subscription: any): void {
+    this.subscriptions.set(subscription.endpoint, subscription);
   }
-async sendNotification(adminId: string, payload: any) {
-  const admin = await this.prisma.admin.findUnique({ where: { id: adminId } });
-  if (!admin?.subscription) return;
 
-  const cleanPayload = JSON.parse(JSON.stringify(payload)); // removes undefined, functions
+  // Remove subscription
+  removeSubscription(endpoint: string): void {
+    this.subscriptions.delete(endpoint);
+  }
 
-  try {
-    console.log('Sending payload:', cleanPayload);
-    await webpush.sendNotification(admin.subscription as any, JSON.stringify(cleanPayload));
-    return { message: 'Notification sent!' };
-  } catch (err: any) {
-    console.error('Push failed:', err.statusCode, err.body);
-    if (err.statusCode === 410 || err.statusCode === 404) {
-        const sub = null as any
-      await this.prisma.admin.update({
-        where: { id: adminId },
-        data: { subscription: sub },
-      });
+  // Send notification to specific subscription
+  async sendNotification(
+    subscription: any,
+    payload: any,
+  ): Promise<void> {
+    try {
+      await webpush.sendNotification(
+        subscription,
+        JSON.stringify(payload),
+      );
+    } catch (error) {
+      console.error('Error sending notification:', error);
+      // If subscription is invalid, remove it
+      if (error.statusCode === 410) {
+        this.removeSubscription(subscription.endpoint);
+      }
+      throw error;
     }
-    throw err;
   }
+
+  // Send notification to all subscribers
+async sendToAll(payload: any): Promise<void> {
+  const promises: Promise<void>[] = [];
+
+  for (const subscription of this.subscriptions.values()) {
+    const p = this.sendNotification(subscription, payload).catch((error) =>
+      console.error('Failed to send to:', subscription.endpoint, error),
+    );
+
+    promises.push(p);
+  }
+
+  await Promise.all(promises);
 }
+
+  // Get subscription by endpoint
+  getSubscription(endpoint: string): any {
+    return this.subscriptions.get(endpoint);
+  }
+
+  // Get all subscriptions
+  getAllSubscriptions(): any[] {
+    return Array.from(this.subscriptions.values());
+  }
 }
