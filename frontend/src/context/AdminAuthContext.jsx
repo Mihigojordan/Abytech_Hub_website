@@ -16,9 +16,12 @@ export const AdminAuthContext = createContext({
   updateAdmin: () => Promise.resolve({}),
   deleteAdmin: () => Promise.resolve(),
   loginWithGoogle: () => {},
+  subscribeToNotifications: () => Promise.resolve(),
+  unsubscribeFromNotifications: () => Promise.resolve(),
   isAuthenticated: false,
   isLocked: false,
   isLoading: true,
+  isSubscribedToNotifications: false,
 });
 
 export const AdminAuthContextProvider = ({ children }) => {
@@ -26,12 +29,143 @@ export const AdminAuthContextProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLocked, setIsLocked] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSubscribedToNotifications, setIsSubscribedToNotifications] = useState(false);
 
   const updateAuthState = (authData) => {
     setUser(authData.user);
     setIsAuthenticated(authData.isAuthenticated);
     setIsLocked(authData.isLocked);
+    setIsSubscribedToNotifications(!!authData.user?.subscription);
   };
+
+  // Helper function to convert VAPID key
+  const urlBase64ToUint8Array = (base64String) => {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+    const rawData = window.atob(base64);
+    return Uint8Array.from([...rawData].map((char) => char.charCodeAt(0)));
+  };
+
+  // Subscribe to push notifications
+  const subscribeToNotifications = async () => {
+    if (!user?.id) {
+      throw new Error('User must be logged in to subscribe');
+    }
+
+    try {
+      // 1. Check if browser supports notifications
+      if (!('Notification' in window) || !('serviceWorker' in navigator)) {
+        throw new Error('Push notifications not supported');
+      }
+
+      // 2. Request permission
+      const permission = await Notification.requestPermission();
+      if (permission !== 'granted') {
+        throw new Error('Notification permission denied');
+      }
+
+      // 3. Wait for service worker to be ready
+      const registration = await navigator.serviceWorker.ready;
+
+      // 4. Get VAPID public key from environment
+      const publicVapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
+      if (!publicVapidKey) {
+        throw new Error('VAPID public key not configured');
+      }
+
+      // 5. Subscribe to push manager
+      const subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(publicVapidKey),
+      });
+
+      // 6. Send subscription to backend
+      const response = await fetch(`${API_URL}/notifications/subscribe/${user.id}`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include', // Send cookies
+        body: JSON.stringify({ subscription }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save subscription on server');
+      }
+
+      const data = await response.json();
+      
+      // Update user state with new subscription
+      setUser(data.admin);
+      setIsSubscribedToNotifications(true);
+
+      console.log('✅ Successfully subscribed to push notifications');
+      return { success: true, message: 'Subscribed successfully' };
+    } catch (error) {
+      console.error('❌ Error subscribing to notifications:', error);
+      throw error;
+    }
+  };
+
+  // Unsubscribe from push notifications
+  const unsubscribeFromNotifications = async () => {
+    if (!user?.id) {
+      throw new Error('User must be logged in');
+    }
+
+    try {
+      // 1. Unsubscribe from push manager
+      const registration = await navigator.serviceWorker.ready;
+      const subscription = await registration.pushManager.getSubscription();
+      
+      if (subscription) {
+        await subscription.unsubscribe();
+      }
+
+      // 2. Remove subscription from backend
+      const response = await fetch(`${API_URL}/notifications/unsubscribe/${user.id}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to remove subscription from server');
+      }
+
+      // Update user state
+      setUser({ ...user, subscription: null });
+      setIsSubscribedToNotifications(false);
+
+      console.log('✅ Successfully unsubscribed from push notifications');
+      return { success: true, message: 'Unsubscribed successfully' };
+    } catch (error) {
+      console.error('❌ Error unsubscribing from notifications:', error);
+      throw error;
+    }
+  };
+
+  // Auto-subscribe on login (optional)
+  useEffect(() => {
+    const autoSubscribe = async () => {
+      // Only run if authenticated and not already subscribed
+      if (!isAuthenticated || isLoading || !user?.id || user?.subscription) {
+        return;
+      }
+
+      // Check if user wants auto-subscribe (you can add a preference)
+      const autoSubscribeEnabled = localStorage.getItem('autoSubscribePush') === 'true';
+      
+      if (autoSubscribeEnabled) {
+        try {
+          await subscribeToNotifications();
+        } catch (error) {
+          console.warn('Auto-subscribe failed:', error);
+        }
+      }
+    };
+
+    autoSubscribe();
+  }, [isAuthenticated, isLoading, user]);
 
   // Login with email/password
   const login = async (data) => {
@@ -161,61 +295,6 @@ export const AdminAuthContextProvider = ({ children }) => {
     checkAuthStatus();
   }, []);
 
- useEffect(() => {
-  const registerPush = async () => {
-    // 🧠 Run only if user is authenticated and finished loading
-    if (!isAuthenticated || isLoading || !user?.id) return;
-
-    // 🧩 Ask only if user doesn't already have a subscription
-    if (user?.subscription) {
-      console.log('🔔 User already subscribed to notifications');
-      return;
-    }
-
-    try {
-      // 🔸 1. Ask for permission first
-      const permission = await Notification.requestPermission();
-      if (permission !== 'granted') {
-        console.warn('🔕 Notification permission denied by user.');
-        return;
-      }
-
-      // 🔸 2. Register service worker
-      const publicVapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
-      const registration = await navigator.serviceWorker.register('/worker.js', { scope: '/' });
-
-      // 🔸 3. Subscribe the user
-      const subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(publicVapidKey),
-      });
-
-      // 🔸 4. Send subscription to backend
-      await fetch(`${API_URL}/notifications/subscribe/${user.id}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ subscription }),
-      });
-
-      console.log('✅ Push notification subscription saved for admin:', user.id);
-    } catch (error) {
-      console.error('❌ Error registering push notifications:', error);
-    }
-  };
-
-  registerPush();
-
-  // helper function
-  function urlBase64ToUint8Array(base64String) {
-    const padding = '='.repeat((4 - base64String.length % 4) % 4);
-    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
-    const rawData = window.atob(base64);
-    return Uint8Array.from([...rawData].map((char) => char.charCodeAt(0)));
-  }
-}, [isAuthenticated, isLoading, user]);
-
-
-
   const values = {
     login,
     logout,
@@ -224,10 +303,13 @@ export const AdminAuthContextProvider = ({ children }) => {
     updateAdmin,
     deleteAdmin,
     loginWithGoogle,
+    subscribeToNotifications,
+    unsubscribeFromNotifications,
     user,
     isLoading,
     isAuthenticated,
     isLocked,
+    isSubscribedToNotifications,
   };
 
   return (

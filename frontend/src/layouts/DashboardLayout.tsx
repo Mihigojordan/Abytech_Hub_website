@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import Header from '../components/dashboard/Header';
 
@@ -14,6 +14,12 @@ const DashboardLayout = ({role}:{role:string}) => {
   const onToggle = () => {
     setIsOpen(!isOpen)
   }
+   
+  useEffect(()=>{
+    navigator.serviceWorker.getRegistrations().then(console.warn)
+
+
+  },[])
 
   return (
     <div className="flex h-screen bg-slate-50">

@@ -129,9 +129,6 @@ export class AdminController {
       // Use state from strategy or fallback to cookie
       const state = passedState || req.cookies?.oauth_state;
 
-
-
-
       // Clear the oauth state cookie
       res.clearCookie('oauth_state', {
         httpOnly: true,
@@ -370,6 +367,12 @@ export class AdminController {
     if (body['joinedDate']) {
       body['joinedDate'] = new Date(body['joinedDate'])
     }
+    if (body['idNumber']) {
+      body['idNumber'] = parseInt(body['idNumber'])
+    }
+
+    console.log(body);
+    
     return this.adminServices.updateAdmin(id, body);
   }
 

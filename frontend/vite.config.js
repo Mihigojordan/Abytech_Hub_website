@@ -2,12 +2,16 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 import tailwindcss from '@tailwindcss/vite'
+
 export default defineConfig({
     plugins: [
         react(),
         tailwindcss(),
         VitePWA({
             registerType: 'autoUpdate',
+            strategies: 'injectManifest', // Using custom service worker
+            srcDir: 'src',
+            filename: 'sw.ts',
             includeAssets: [
                 'favicon.ico',
                 'favicon-16x16.png',
@@ -71,7 +75,6 @@ export default defineConfig({
                         sizes: '512x512',
                         type: 'image/png'
                     },
-                    // Maskable icons for Android
                     {
                         src: '/maskable-icon-192x192.png',
                         sizes: '192x192',
@@ -84,7 +87,6 @@ export default defineConfig({
                         type: 'image/png',
                         purpose: 'maskable'
                     },
-                    // Any purpose icons
                     {
                         src: '/pwa-192x192.png',
                         sizes: '192x192',
@@ -115,29 +117,9 @@ export default defineConfig({
                     }
                 ]
             },
-            workbox: {
-                cleanupOutdatedCaches: true,
-                skipWaiting: true,
+            injectManifest: {
+                globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,woff,woff2,ttf,eot}'],
                 maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5 MB
-                clientsClaim: true,
-                globPatterns: [
-                    '**/*.{js,css,html,ico,png,svg,webp,woff,woff2,ttf,eot}'
-                ],
-                runtimeCaching: [
-                    // Uncomment and customize caching strategies if needed
-                    // {
-                    //     urlPattern: /^https:\/\/api\.abytehub\.com\//,
-                    //     handler: 'NetworkFirst',
-                    //     options: {
-                    //         cacheName: 'api-cache',
-                    //         expiration: {
-                    //             maxEntries: 50,
-                    //             maxAgeSeconds: 60 * 60 * 24 // 24 hours
-                    //         },
-                    //         networkTimeoutSeconds: 10
-                    //     }
-                    // }
-                ]
             },
             devOptions: {
                 enabled: true,
@@ -159,7 +141,7 @@ export default defineConfig({
         }
     },
     server: {
-        host: true, // Enables access from other devices for testing
+        host: true,
         port: 5173
     }
 })

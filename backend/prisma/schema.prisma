@@ -29,6 +29,7 @@ model Admin {
   status     AdminStatus @default(ACTIVE)
   google_id  String?  @unique
   is2FA      Boolean? @default(false)
+  idNumber   Int?
   bio        String?
   experience Json?  // array of {from,to,companyName,jobTitle,JobDescription}
   joinedDate DateTime?
@@ -64,6 +65,7 @@ model Expense {
   amount      Float
   status      ExpenseStatus @default(PENDING)
   description String?
+  reason String?
   adminId     String
   createdAt   DateTime @default(now())
   admin    Admin    @relation(fields: [adminId], references: [id], onDelete: Cascade, onUpdate: Cascade)
@@ -72,6 +74,7 @@ model Expense {
 enum ExpenseStatus{
     PENDING
     APPROVED
+    REJECTED
     COMPLETED
 }
 

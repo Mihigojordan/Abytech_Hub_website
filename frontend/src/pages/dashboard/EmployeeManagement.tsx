@@ -67,7 +67,7 @@ const EmployeeDirectoryPage = () => {
   const [sortBy, setSortBy] = useState('adminName');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(4);
+  const [itemsPerPage] = useState(10);
   const [operationStatus, setOperationStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [viewMode, setViewMode] = useState<'table' | 'grid' | 'list'>('table'); // Start in grid
   const [activeFilter, setActiveFilter] = useState<'ALL' | 'ACTIVE' | 'INACTIVE'>('ALL');
