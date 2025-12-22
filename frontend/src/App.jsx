@@ -22,12 +22,9 @@ const BlogSingle = lazy(() => import("./pages/blogs/Blogsingle"));
 const ServicePage = lazy(() => import("./pages/services/ServicePage"));
 const ServiceSingle = lazy(() => import("./pages/services/ServiceSingle"));
 const BlogContainer = lazy(() => import("../src/pages/blogs/blogContainer"));
-const AboutUs = lazy(() => import('./pages/about us/aboutUs'));
-const TeamMember = lazy(() => import('./pages/Team'))
 
-import MainLayout from "./layouts/MainLayout";
-import DashboardLayout from "./layouts/DashboardLayout";
-import ProtectPrivateAdminRoute from "./components/protectors/ProtectPrivateAdminRoute";
+// import DashboardLayout from "./layouts/DashboardLayout";
+// import ProtectPrivateAdminRoute from "./components/protectors/ProtectPrivateAdminRoute";
 import EmployeeeDashboard from "./pages/dashboard/EmployeeManagement";
 
 import AdminProfileEdit from "./pages/EditProfilePage";
@@ -45,12 +42,12 @@ const AdminLogin = lazy(() => import("./pages/auth/admin/Login"));
 const UnlockScreen = lazy(() => import("./pages/auth/admin/UnlockScreen"));
 const DashboardHome = lazy(() => import("./pages/dashboard/DashboardHome"));
 const ExpenseDashboard = lazy(() => import("./pages/dashboard/ExpenseDashboard"));
-const EmployeeeDashboard = lazy(() => import("./pages/dashboard/EmployeeManagement"));
+// const EmployeeeDashboard = lazy(() => import("./pages/dashboard/EmployeeManagement"));
 const ReportDashboard = lazy(() => import("./pages/dashboard/ReportManagement"));
 const UpsertReportPage = lazy(() => import("./components/dashboard/report/UpsertReportPage"));
 const ReportViewPage = lazy(() => import("./components/dashboard/report/ReportViewPage"));
-const AdminProfilePage = lazy(() => import("./pages/ProfilePage"));
-const AdminProfileEdit = lazy(() => import("./pages/EditProfilePage"));
+// const AdminProfilePage = lazy(() => import("./pages/ProfilePage"));
+// const AdminProfileEdit = lazy(() => import("./pages/EditProfilePage"));
 
 // Loading UI
 const LoadingSpinner = () => (
@@ -80,7 +77,7 @@ const router = createBrowserRouter([
       { path: '/team-member', element: <SuspenseWrapper><TeamMember /> </SuspenseWrapper> },
       { path: '/location', element: <SuspenseWrapper><AbyTechLocations /> </SuspenseWrapper> },
       { path: '/pwa', element: <SuspenseWrapper><PWAPushNotifications /> </SuspenseWrapper> },
-      ,
+
     ]
   },
   { path: '/text', element: <SuspenseWrapper><RichTextEditor /> </SuspenseWrapper> },
