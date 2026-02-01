@@ -6,10 +6,14 @@ import Sidebar from '../components/dashboard/Sidebar';
 
 import { Outlet } from 'react-router-dom';
 import PWAInstallButton from '../components/PWAInstallButton';
+import { useSocket } from '../context/SocketContext';
+import useAdminAuth from '../context/AdminAuthContext';
 
 const DashboardLayout = ({role}:{role:string}) => {
 
     const [isOpen, setIsOpen] = useState(false)
+    const {emit} = useSocket()
+    const {user} = useAdminAuth()
  
   const onToggle = () => {
     setIsOpen(!isOpen)
@@ -21,6 +25,12 @@ const DashboardLayout = ({role}:{role:string}) => {
 
   },[])
 
+
+  // useEffect(()=>{
+
+  //   emit('user:online',{userType:'ADMIN',userId:user?.id})
+    
+  // },[])
   return (
     <div className="flex h-screen bg-slate-50">
       <PWAInstallButton />
