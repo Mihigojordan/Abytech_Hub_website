@@ -7,6 +7,8 @@ import { ExpenseModule } from './modules/expense-managment/expense.module';
 import { ReportModule } from './modules/report-management/report.module';
 import { DriveModule } from './global/googleDriveService/driver.module';
 import { NotificationModule } from './global/notification/notification.module';
+import { ChatModule } from './modules/chat/chat.module';
+import { UserAuthModule } from './modules/user-auth/user-auth.module';
 
 @Module({
   imports: [
@@ -15,8 +17,10 @@ import { NotificationModule } from './global/notification/notification.module';
     ExpenseModule,
     ReportModule,
     DriveModule,
+    ChatModule,
+    UserAuthModule,
     // NotificationModule
   ],
   controllers: [AppController],
 })
-export class AppModule {}
+export class AppModule { }

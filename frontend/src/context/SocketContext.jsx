@@ -161,6 +161,14 @@ export const SocketProvider = ({
     }
   }, []);
 
+  // Helper function to emit user online status
+  const emitUserOnline = useCallback((userId, userType) => {
+    if (socketRef.current?.connected && userId && userType) {
+      socketRef.current.emit('user:online', { userId, userType });
+      console.log('Emitted user:online event for', userId, userType);
+    }
+  }, []);
+
   // Initialize socket on mount
   useEffect(() => {
     const socket = initializeSocket();
@@ -184,7 +192,8 @@ export const SocketProvider = ({
     disconnect,
     emit,
     on,
-    off
+    off,
+    emitUserOnline
   };
 
   return (

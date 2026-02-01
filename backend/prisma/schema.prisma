@@ -15,47 +15,245 @@ datasource db {
 }
 
 model Admin {
-  id         String   @id @unique @default(uuid())
-  adminName  String?
-  adminEmail String?  @unique
-  phone      String?
-  location   String?
+  id                   String      @id @unique @default(uuid())
+  adminName            String?
+  adminEmail           String?     @unique
+  phone                String?
+  location             String?
   identityCardPublicId String?
   passportPublicId     String?
   cvPublicId           String?
   profileImagePublicId String?
-  password   String?
-  profileImage String?
-  status     AdminStatus @default(ACTIVE)
-  google_id  String?  @unique
-  is2FA      Boolean? @default(false)
-  idNumber   Int?
-  bio        String?
-  experience Json?  // array of {from,to,companyName,jobTitle,JobDescription}
-  joinedDate DateTime?
-  isLocked   Boolean? @default(false)
-  skills     Json?  // array
-  portifilio Json?  // array
+  password             String?
+  profileImage         String?
+  status               AdminStatus @default(ACTIVE)
+  google_id            String?     @unique
+  is2FA                Boolean?    @default(false)
+  idNumber             Int?
+  bio                  String?     @db.Text
+  experience           Json? // array of {from,to,companyName,jobTitle,JobDescription}
+  joinedDate           DateTime?
+  isLocked             Boolean?    @default(false)
+  skills               Json? // array
+  portifilio           Json? // array
 
   // files
-  cv          String?
-  passport    String?
+  cv           String?
+  passport     String?
   identityCard String?
 
-  // 🆕 Push notification subscription
+  // Push notification subscription
   subscription Json? // stores the push subscription object (endpoint + keys)
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  replies     ReplyReport[]
-  expenses    Expense[]
-  report      Report[]
+  // Original relations
+  replies  ReplyReport[]
+  expenses Expense[]
+  report   Report[]
+
+  @@map("Admin")
+}
+
+model User {
+  id        String    @id @default(uuid())
+  name      String    @db.VarChar(255)
+  email     String    @unique @db.VarChar(255)
+  password  String    @db.VarChar(255)
+  avatar    String?   @db.VarChar(500)
+  initial   String?   @db.VarChar(5)
+  lastSeen  DateTime? @map("last_seen") @db.Timestamp(0)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
+
+  @@map("users")
 }
 
 enum AdminStatus {
   ACTIVE
   INACTIVE
+}
+
+// ============================================
+// CHAT MODELS
+// ============================================
+
+model Conversation {
+  id        Int   @id @default(autoincrement())
+  name      String?  @db.VarChar(255)
+  avatar    String?  @db.VarChar(500)
+  initial   String?  @db.VarChar(5)
+  isGroup   Boolean  @default(false) @map("is_group")
+  
+  // Polymorphic creator - can be Admin or User (NO FK constraint)
+  createdBy     String           @map("created_by")
+  createdByType ParticipantType  @map("created_by_type")
+  
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
+
+  // Relations - NO foreign key constraints for polymorphic fields
+  participants ConversationParticipant[]
+  messages     Message[]
+
+  @@index([createdBy])
+  @@index([isGroup])
+  @@index([createdByType])
+  @@map("conversations")
+}
+
+model ConversationParticipant {
+  id             Int          @id @default(autoincrement())
+  conversationId Int          @map("conversation_id")
+  
+  // Polymorphic participant - can be Admin or User (NO FK constraint)
+  participantId   String          @map("participant_id")
+  participantType ParticipantType @map("participant_type")
+  
+  role              Role      @default(member)
+  joinedAt          DateTime  @default(now()) @map("joined_at") @db.Timestamp(0)
+  leftAt            DateTime? @map("left_at") @db.Timestamp(0)
+  lastReadMessageId Int?   @map("last_read_message_id")
+
+  // Relations
+  conversation    Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  lastReadMessage Message?     @relation("LastReadMessage", fields: [lastReadMessageId], references: [id], onDelete: SetNull)
+
+  @@unique([conversationId, participantId, participantType], name: "unique_conversation_participant")
+  @@index([conversationId])
+  @@index([participantId])
+  @@index([participantType])
+  @@index([lastReadMessageId])
+  @@map("conversation_participants")
+}
+
+model Message {
+  id               Int      @id @default(autoincrement())
+  conversationId   Int      @map("conversation_id")
+  
+  // Polymorphic sender - can be Admin or User (NO FK constraint)
+  senderId         String          @map("sender_id")
+  senderType       ParticipantType @map("sender_type")
+  
+  type             MessageType @default(text)
+  content          String?     @db.Text
+  replyToMessageId Int?     @map("reply_to_message_id")
+  edited           Boolean     @default(false)
+  timestamp        DateTime    @default(now()) @db.Timestamp(0)
+  createdAt        DateTime    @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt        DateTime    @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
+
+  // Relations
+  conversation           Conversation              @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  replyToMessage         Message?                  @relation("MessageReplies", fields: [replyToMessageId], references: [id], onDelete: SetNull)
+  replies                Message[]                 @relation("MessageReplies")
+  images                 MessageImage[]
+  files                  MessageFile[]
+  readers                MessageReader[]
+  lastReadByParticipants ConversationParticipant[] @relation("LastReadMessage")
+
+  @@index([conversationId])
+  @@index([senderId])
+  @@index([senderType])
+  @@index([timestamp])
+  @@index([replyToMessageId])
+  @@fulltext([content])
+  @@map("messages")
+}
+
+model MessageImage {
+  id         Int   @id @default(autoincrement())
+  messageId  Int   @map("message_id")
+  imageUrl   String   @map("image_url") @db.VarChar(500)
+  imageOrder Int      @default(0) @map("image_order")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamp(0)
+
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@index([messageId])
+  @@map("message_images")
+}
+
+model MessageFile {
+  id        Int   @id @default(autoincrement())
+  messageId Int   @map("message_id")
+  fileName  String   @map("file_name") @db.VarChar(255)
+  fileSize  String?  @map("file_size") @db.VarChar(50)
+  fileUrl   String   @map("file_url") @db.VarChar(500)
+  fileType  String?  @map("file_type") @db.VarChar(100)
+  fileOrder Int      @default(0) @map("file_order")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(0)
+
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@index([messageId])
+  @@map("message_files")
+}
+
+model MessageReader {
+  id         Int          @id @default(autoincrement())
+  messageId  Int          @map("message_id")
+  
+  // Polymorphic reader - can be Admin or User (NO FK constraint)
+  readerId   String          @map("reader_id")
+  readerType ParticipantType @map("reader_type")
+  
+  readAt DateTime @default(now()) @map("read_at") @db.Timestamp(0)
+
+  // Relations
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, readerId, readerType], name: "unique_message_reader")
+  @@index([messageId])
+  @@index([readerId])
+  @@index([readerType])
+  @@map("message_readers")
+}
+
+model Contact {
+  id            Int          @id @default(autoincrement())
+  
+  // Polymorphic owner - can be Admin or User (NO FK constraint)
+  ownerId       String          @map("owner_id")
+  ownerType     ParticipantType @map("owner_type")
+  
+  // Polymorphic contact - can be Admin or User (NO FK constraint)
+  contactId     String          @map("contact_id")
+  contactType   ParticipantType @map("contact_type")
+  
+  nickname  String?  @db.VarChar(255)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(0)
+
+  // Relations - NO foreign key constraints for polymorphic fields
+
+  @@unique([ownerId, contactId, ownerType, contactType], name: "unique_owner_contact")
+  @@index([ownerId])
+  @@index([contactId])
+  @@index([ownerType])
+  @@index([contactType])
+  @@map("contacts")
+}
+
+// ============================================
+// ENUMS
+// ============================================
+
+enum Role {
+  admin
+  member
+}
+
+enum MessageType {
+  text
+  image
+  file
+  combined
+}
+
+enum ParticipantType {
+  ADMIN
+  USER
 }
 
 
@@ -69,6 +267,7 @@ model Expense {
   adminId     String
   createdAt   DateTime @default(now())
   admin    Admin    @relation(fields: [adminId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+    @@map("Expense")
 }
 
 enum ExpenseStatus{
@@ -89,6 +288,7 @@ model Report{
   adminId    String
   admin   Admin    @relation(fields: [adminId], references: [id], onDelete: Cascade, onUpdate: Cascade)
    replies    ReplyReport[] 
+     @@map("Report")
 }
 
 model ReplyReport {
@@ -104,4 +304,10 @@ model ReplyReport {
   
   adminId      String
   admin        Admin    @relation(fields: [adminId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+    @@map("ReplyReport")
 }
+
+
+
+
+
