@@ -375,7 +375,7 @@ const ReportViewPage = () => {
           <p className="text-gray-600 mb-4">{error}</p>
           <button
             onClick={() => navigate(root_url)}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-slate-800 transition-colors"
           >
             Back to Reports
           </button>
@@ -395,7 +395,7 @@ const ReportViewPage = () => {
           <p className="text-gray-600 mb-4">There are no reports available.</p>
           <button
             onClick={() => navigate(root_url)}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-slate-800 transition-colors"
           >
             Back to Reports
           </button>

@@ -17,7 +17,8 @@ const Message = ({
     setShowMenu,
     onMediaView,
     conversation,
-    setMessageRef
+    setMessageRef,
+    scrollToMessage
 }) => {
     const handleClick = () => {
         if (selectionMode) {
@@ -35,6 +36,7 @@ const Message = ({
     // Determine message type to render
     const isTextOnly = message.type === 'text';
     const isCombined = message.type === 'combined' || message.images || message.files;
+    
 
     return (
         <div
@@ -74,7 +76,15 @@ const Message = ({
 
                 {/* Reply indicator */}
                 {message.replyTo && (
-                    <div className={`${message.isSent ? 'bg-gray-200' : 'bg-indigo-500/30'} rounded-lg px-3 py-2 mb-2 border-l-2 ${message.isSent ? 'border-indigo-600' : 'border-white'}`}>
+                    <div
+                        className={`${message.isSent ? 'bg-gray-200' : 'bg-indigo-500/30'} rounded-lg px-3 py-2 mb-2 border-l-2 ${message.isSent ? 'border-indigo-600' : 'border-white'} cursor-pointer hover:opacity-80 transition-opacity`}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            if (scrollToMessage && message.replyTo.id) {
+                                scrollToMessage(message.replyTo.id);
+                            }
+                        }}
+                    >
                         <p className={`text-xs ${message.isSent ? 'text-gray-600' : 'text-white/80'} font-medium mb-1`}>
                             Reply to {message.replyTo.sender}
                         </p>

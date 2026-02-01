@@ -23,7 +23,7 @@ export class ChatAuthGuard implements CanActivate {
         const token = adminToken || userToken;
         const tokenType = adminToken ? 'ADMIN' : userToken ? 'USER' : null;
 
-        console.log('Chat auth - Token type:', tokenType);
+        // console.log('Chat auth - Token type:', tokenType);
 
         if (!token || !tokenType) {
             throw new UnauthorizedException('Not authenticated - no valid token found');
@@ -43,7 +43,7 @@ export class ChatAuthGuard implements CanActivate {
                 role: decoded.role,
             };
 
-            console.log('Chat auth successful - User:', request.user.id, 'Type:', request.user.type);
+            // console.log('Chat auth successful - User:', request.user.id, 'Type:', request.user.type);
 
             return true;
         } catch (error) {

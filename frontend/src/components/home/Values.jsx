@@ -3,7 +3,7 @@ import { Users, Shield, UserCheck } from 'lucide-react';
 
 function Values() {
   return (
-    <div className="relative overflow-hidden px-10 py-2" style={{backgroundColor: '#37517e'}}>
+    <div className="relative overflow-hidden px-10 py-2" style={{backgroundColor: '#101828'}}>
       {/* Background decorative elements */}
       <div className="absolute inset-0 opacity-10">
         <div className="absolute top-20 left-10 w-64 h-64 bg-blue-400 rounded-full blur-3xl"></div>

@@ -19,7 +19,7 @@ background: `linear-gradient(
                     {title}
                 </h1>
                 <p className='capitalize'>
-                    <span style={{color: "#37517e"}}>Home /</span> {path}
+                    <span className='text-blue-300'>Home /</span> {path}
                 </p>
             </div>
         </div>
