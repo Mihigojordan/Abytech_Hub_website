@@ -48,7 +48,7 @@ interface ReplyReport {
   content: string;
   createdAt: string;
   adminId: string;
-  reportId:string;
+  reportId: string;
   admin?: {
     name?: string;
   };
@@ -117,30 +117,30 @@ const ReportViewPage = () => {
 
   const repliesEndRef = useRef<HTMLDivElement>(null);
 
-useEffect(() => {
-  repliesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-}, [selectedReport?.replies?.length]);
+  useEffect(() => {
+    repliesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [selectedReport?.replies?.length]);
 
-// Add state for calendar visibility
-const [showCalendar, setShowCalendar] = useState(false);
+  // Add state for calendar visibility
+  const [showCalendar, setShowCalendar] = useState(false);
 
-// Add handler for date range selection
-const handleDateRangeSelect = (startDate: Date | null, endDate: Date | null) => {
-  if (startDate && endDate) {
-    // Convert to ISO format for your API
-    const params = {
-      filter: 'custom',
-      from: startDate.toISOString().split('T')[0],
-      to: endDate.toISOString().split('T')[0]
-    };
-    // Call your fetchSidebarReports with custom date range
-    fetchSidebarReports(params);
-    setFilterType('custom')
-  } else {
-    // Clear custom filter
-    setFilterType('all');
-  }
-};
+  // Add handler for date range selection
+  const handleDateRangeSelect = (startDate: Date | null, endDate: Date | null) => {
+    if (startDate && endDate) {
+      // Convert to ISO format for your API
+      const params = {
+        filter: 'custom',
+        from: startDate.toISOString().split('T')[0],
+        to: endDate.toISOString().split('T')[0]
+      };
+      // Call your fetchSidebarReports with custom date range
+      fetchSidebarReports(params);
+      setFilterType('custom')
+    } else {
+      // Clear custom filter
+      setFilterType('all');
+    }
+  };
 
   // Fetch selected report
   useEffect(() => {
@@ -159,24 +159,24 @@ const handleDateRangeSelect = (startDate: Date | null, endDate: Date | null) => 
   }, [reportId]);
 
   useSocketEvent(
-  'reportReplyCreated',
-  (newReply: ReplyReport) => {
-    if (selectedReport?.id === newReply.reportId && newReply.adminId !== user?.id) {
-      showOperationStatus("info", `${newReply.admin?.name || 'Someone'} replied`);
-    }
-    // Still update UI
-    if (selectedReport?.id === newReply.reportId) {
-      setSelectedReport(prev => prev ? {
-        ...prev,
-        replies: [...(prev.replies || []), newReply]
-      } : null);
-    }
-  },
-  [selectedReport?.id, user?.id]
-);
+    'reportReplyCreated',
+    (newReply: ReplyReport) => {
+      if (selectedReport?.id === newReply.reportId && newReply.adminId !== user?.id) {
+        showOperationStatus("info", `${newReply.admin?.name || 'Someone'} replied`);
+      }
+      // Still update UI
+      if (selectedReport?.id === newReply.reportId) {
+        setSelectedReport(prev => prev ? {
+          ...prev,
+          replies: [...(prev.replies || []), newReply]
+        } : null);
+      }
+    },
+    [selectedReport?.id, user?.id]
+  );
 
   // Fetch sidebar reports with server-side pagination
-  const fetchSidebarReports = async (par?:any) => {
+  const fetchSidebarReports = async (par?: any) => {
     setLoading(true);
     setError(null);
     try {
@@ -283,8 +283,8 @@ const handleDateRangeSelect = (startDate: Date | null, endDate: Date | null) => 
 
     try {
       setReplying(true);
-      const newReply = await reportService.replyToReport(selectedReport.id,   replyContent , user?.id );
-      
+      const newReply = await reportService.replyToReport(selectedReport.id, replyContent, user?.id);
+
       // Replace replies with new array including the new one
       setSelectedReport(prev => prev ? { ...prev, replies: [...(prev.replies || []), newReply] } : null);
 
@@ -405,33 +405,36 @@ const handleDateRangeSelect = (startDate: Date | null, endDate: Date | null) => 
   }
 
   return (
-    <div className="mx-auto p-6 bg-gray-50 min-h-screen">
-      <div className="bg-white border-b">
+    <div className="mx-auto p-4 md:p-6 bg-gradient-to-br from-gray-50 via-blue-50/30 to-gray-50 min-h-screen">
+      <div className="bg-white/80 backdrop-blur-sm border-b shadow-sm">
         <div className="mx-auto px-4 sm:px-6 py-4">
           <button
             onClick={() => navigate(root_url)}
-            className="flex items-center text-gray-600 hover:text-gray-900 transition-colors"
+            className="flex items-center text-gray-600 hover:text-blue-600 transition-all duration-200 hover:gap-2 gap-1 font-medium"
           >
-            <ArrowLeft className="w-5 h-5 mr-1" />
+            <ArrowLeft className="w-5 h-5" />
             Back to Reports
           </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-12 gap-6 mt-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6 mt-6">
         {/* Reports List Sidebar */}
-        <div className="col-span-3 sticky top-0">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-300">
-            <div className="p-4 border-b border-gray-300">
+        <div className="lg:col-span-4 xl:col-span-3">
+          <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+            <div className="p-4 md:p-5 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200">
               <div className="flex flex-col space-y-4">
-                <h2 className="text-lg font-semibold text-gray-900">Reports</h2>
+                <h2 className="text-lg md:text-xl font-bold text-gray-900 flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-blue-600" />
+                  Reports
+                </h2>
                 <div className="relative">
                   <input
                     type="text"
                     placeholder="Search reports..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white shadow-sm"
                   />
                   <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
                 </div>
@@ -442,48 +445,46 @@ const handleDateRangeSelect = (startDate: Date | null, endDate: Date | null) => 
                       <button
                         key={filter}
                         onClick={() => setFilterType(filter)}
-                        className={`px-3 py-1 text-xs font-medium rounded-full transition-colors ${
-                          filterType === filter
-                            ? "bg-blue-500 text-white"
-                            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                        }`}
+                        className={`px-3 py-1.5 text-xs font-semibold rounded-full transition-all duration-200 ${filterType === filter
+                          ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md"
+                          : "bg-white text-gray-700 hover:bg-gray-100 border border-gray-200 hover:border-blue-300"
+                          }`}
                       >
                         {filter.charAt(0).toUpperCase() + filter.slice(1)}
                       </button>
                     ))}
                     <button
-  onClick={() => setShowCalendar(!showCalendar)}
-  className={`px-3 py-1 text-xs font-medium rounded-full transition-colors ${ filterType === 'custom'
-                            ? "bg-blue-500 text-white"
-                            : "bg-gray-100 text-gray-700 hover:bg-gray-200"} `}
->
-  Custom Date
-</button>
+                      onClick={() => setShowCalendar(!showCalendar)}
+                      className={`px-3 py-1.5 text-xs font-semibold rounded-full transition-all duration-200 ${filterType === 'custom'
+                        ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md"
+                        : "bg-white text-gray-700 hover:bg-gray-100 border border-gray-200 hover:border-blue-300"} `}
+                    >
+                      Custom Date
+                    </button>
 
                   </div>
                 </div>
               </div>
-              <p className="text-sm text-gray-600 mt-2">{totalSidebarReports} reports</p>
+              <p className="text-sm font-medium text-blue-600 mt-2 bg-blue-50 px-3 py-1 rounded-full inline-block">{totalSidebarReports} reports</p>
             </div>
-            <div className="divide-y max-h-[calc(100vh-400px)] overflow-y-auto">
+            <div className="divide-y divide-gray-100 max-h-[calc(100vh-400px)] overflow-y-auto">
               {currentSidebarReports.map((report) => (
                 <div
                   key={report.id}
-                  className={`p-4 cursor-pointer hover:bg-gray-50 transition-colors ${
-                    selectedReport.id === report.id ? "bg-blue-50 border-r-2 border-blue-500" : ""
-                  }`}
+                  className={`p-4 cursor-pointer transition-all duration-200 ${selectedReport.id === report.id ? "bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500 shadow-sm" : "hover:bg-gray-50 hover:shadow-sm"
+                    }`}
                   onClick={() => handleReportSelect(report)}
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-sm font-medium text-gray-900 truncate">{report.title}</h3>
+                      <h3 className="text-sm font-semibold text-gray-900 truncate">{report.title}</h3>
                       <p className="text-xs text-gray-600 mt-1 line-clamp-2">
                         {report.reportUrl
                           ? `File: ${report.title}`
                           : truncateText(
-                              typeof report.content === "string" ? report.content : JSON.stringify(report.content || ''),
-                              80
-                            )}
+                            typeof report.content === "string" ? report.content : JSON.stringify(report.content || ''),
+                            80
+                          )}
                       </p>
                       <p className="text-xs text-gray-500 mt-2">{getRelativeTime(report.createdAt)}</p>
                     </div>
@@ -493,21 +494,21 @@ const handleDateRangeSelect = (startDate: Date | null, endDate: Date | null) => 
               ))}
             </div>
             {sidebarTotalPages > 1 && (
-              <div className="p-4 border-t border-gray-400 flex justify-center space-x-2">
+              <div className="p-4 border-t border-gray-200 bg-gray-50 flex justify-center space-x-2">
                 <button
                   onClick={() => handleSidebarPageChange(sidebarCurrentPage - 1)}
                   disabled={sidebarCurrentPage === 1}
-                  className="p-2 text-gray-500 hover:text-gray-700 disabled:opacity-50"
+                  className="p-2 text-gray-500 hover:text-blue-600 disabled:opacity-50 transition-colors rounded-lg hover:bg-blue-50"
                 >
                   <ChevronLeft className="w-5 h-5" />
                 </button>
-                <span className="py-2 px-4 text-sm text-gray-700">
+                <span className="py-2 px-4 text-sm font-medium text-gray-700">
                   Page {sidebarCurrentPage} of {sidebarTotalPages}
                 </span>
                 <button
                   onClick={() => handleSidebarPageChange(sidebarCurrentPage + 1)}
                   disabled={sidebarCurrentPage === sidebarTotalPages}
-                  className="p-2 text-gray-500 hover:text-gray-700 disabled:opacity-50"
+                  className="p-2 text-gray-500 hover:text-blue-600 disabled:opacity-50 transition-colors rounded-lg hover:bg-blue-50"
                 >
                   <ChevronRight className="w-5 h-5" />
                 </button>
@@ -517,15 +518,15 @@ const handleDateRangeSelect = (startDate: Date | null, endDate: Date | null) => 
         </div>
 
         {/* Main Report Detail View */}
-        <div className="col-span-9 space-y-6">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-300 p-6">
+        <div className="lg:col-span-8 xl:col-span-9 space-y-4 md:space-y-6">
+          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-4 md:p-6 hover:shadow-xl transition-shadow">
             <div className="flex items-start justify-between">
               <div className="flex items-center space-x-4">
-                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center">
+                <div className="w-14 h-14 md:w-16 md:h-16 bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg">
                   <FileText className="w-8 h-8 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-2xl font-bold text-gray-900">{selectedReport.title}</h1>
+                  <h1 className="text-xl md:text-2xl font-bold text-gray-900">{selectedReport.title}</h1>
                   <div className="flex items-center space-x-4 mt-2">
                     <span className="text-sm text-gray-500">
                       Created {formatDateTime(selectedReport.createdAt)}
@@ -538,11 +539,11 @@ const handleDateRangeSelect = (startDate: Date | null, endDate: Date | null) => 
                   </div>
                 </div>
               </div>
-              <div className="flex flex-wrap gap-4 items-center">
+              <div className="flex flex-wrap gap-2 md:gap-3 items-center">
                 <button
                   onClick={() => navigate('/admin/dashboard/report/edit/' + selectedReport.id)}
                   disabled={operationLoading}
-                  className="flex items-center space-x-2 bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center space-x-2 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white px-3 md:px-4 py-2 rounded-lg font-semibold transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Edit className="w-4 h-4" />
                   <span>Edit</span>
@@ -551,7 +552,7 @@ const handleDateRangeSelect = (startDate: Date | null, endDate: Date | null) => 
                   <button
                     onClick={() => setDeleteConfirm(selectedReport)}
                     disabled={operationLoading}
-                    className="flex items-center space-x-2 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex items-center space-x-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-3 md:px-4 py-2 rounded-lg font-semibold transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Trash2 className="w-4 h-4" />
                     <span>Delete</span>
@@ -561,7 +562,11 @@ const handleDateRangeSelect = (startDate: Date | null, endDate: Date | null) => 
                   <button
                     onClick={() => handleDownloadReport(selectedReport)}
                     disabled={operationLoading}
+<<<<<<< HEAD
                     className="flex items-center space-x-2 bg-blue-500 hover:bg-slate-800 text-white px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+=======
+                    className="flex items-center space-x-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-3 md:px-4 py-2 rounded-lg font-semibold transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+>>>>>>> 9414a008eda44b579c957a877a0dfaa6b79a1f17
                   >
                     <Download className="w-4 h-4" />
                     <span>Download</span>
@@ -571,8 +576,11 @@ const handleDateRangeSelect = (startDate: Date | null, endDate: Date | null) => 
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm border border-gray-300 p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Report Content</h3>
+          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-4 md:p-6">
+            <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <FileText className="w-5 h-5 text-blue-600" />
+              Report Content
+            </h3>
             <div className="swal-preview-container">
               {selectedReport.reportUrl ? (
                 <div className="text-left">
@@ -603,31 +611,34 @@ const handleDateRangeSelect = (startDate: Date | null, endDate: Date | null) => 
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Report Information</h3>
-            <div className="grid grid-cols-2 gap-6">
-              <div className="flex items-center">
-                <Calendar className="w-5 h-5 text-gray-400 mr-3" />
+          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-4 md:p-6">
+            <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <Calendar className="w-5 h-5 text-blue-600" />
+              Report Information
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+              <div className="flex items-center p-3 bg-blue-50 rounded-lg">
+                <Calendar className="w-5 h-5 text-blue-600 mr-3" />
                 <div>
-                  <p className="text-xs text-gray-500">Created</p>
-                  <p className="text-sm text-gray-900">{formatDateTime(selectedReport.createdAt)}</p>
+                  <p className="text-xs font-semibold text-gray-600">Created</p>
+                  <p className="text-sm font-medium text-gray-900">{formatDateTime(selectedReport.createdAt)}</p>
                 </div>
               </div>
-              <div className="flex items-center">
-                <FileText className="w-5 h-5 text-gray-400 mr-3" />
+              <div className="flex items-center p-3 bg-indigo-50 rounded-lg">
+                <FileText className="w-5 h-5 text-indigo-600 mr-3" />
                 <div>
-                  <p className="text-xs text-gray-500">Report ID</p>
-                  <p className="text-sm text-gray-900 font-mono">{selectedReport.id.slice(0, 8)}...</p>
+                  <p className="text-xs font-semibold text-gray-600">Report ID</p>
+                  <p className="text-sm font-medium text-gray-900 font-mono">{selectedReport.id.slice(0, 8)}...</p>
                 </div>
               </div>
             </div>
           </div>
 
           {/* === REPLIES SECTION === */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-300 p-6">
+          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-4 md:p-6">
             <div className="flex items-center gap-2 mb-4">
               <MessageCircle className="w-5 h-5 text-blue-600" />
-              <h3 className="text-lg font-medium text-gray-900">
+              <h3 className="text-lg md:text-xl font-bold text-gray-900">
                 Replies ({selectedReport.replies?.length || 0})
               </h3>
             </div>
@@ -636,17 +647,21 @@ const handleDateRangeSelect = (startDate: Date | null, endDate: Date | null) => 
             <div className="mb-6">
               <textarea
                 value={replyContent}
-                onChange={(e)=> setReplyContent(e.target.value)}
+                onChange={(e) => setReplyContent(e.target.value)}
                 placeholder="Write your reply..."
-                className="bg-gray-50 w-full border-2 p-2 border-gray-300 rounded-lg"
+                className="bg-gray-50 w-full border-2 p-3 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
                 rows={4}
-               
+
               ></textarea>
               <div className="mt-3 flex justify-end">
                 <button
                   onClick={handleSendReply}
                   disabled={replying || !replyContent.trim()}
+<<<<<<< HEAD
                   className="flex items-center gap-2 px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+=======
+                  className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-semibold shadow-md hover:shadow-lg"
+>>>>>>> 9414a008eda44b579c957a877a0dfaa6b79a1f17
                 >
                   {replying ? (
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -662,10 +677,10 @@ const handleDateRangeSelect = (startDate: Date | null, endDate: Date | null) => 
             <div className="space-y-4">
               {selectedReport.replies && selectedReport.replies.length > 0 ? (
                 selectedReport.replies.map((reply) => (
-                  <div key={reply.id} className="border border-gray-200 rounded-lg p-4">
+                  <div key={reply.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow bg-gradient-to-r from-gray-50 to-white">
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-semibold text-sm">
+                        <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-md">
                           {reply.admin?.name?.[0]?.toUpperCase() || 'A'}
                         </div>
                         <div>
@@ -695,13 +710,12 @@ const handleDateRangeSelect = (startDate: Date | null, endDate: Date | null) => 
       {operationStatus && (
         <div className="fixed top-4 right-4 z-50 transform transition-all duration-300 ease-in-out">
           <div
-            className={`flex items-center space-x-3 px-4 py-3 rounded-lg shadow-lg border ${
-              operationStatus.type === "success"
-                ? "bg-green-50 border-green-200 text-green-800"
-                : operationStatus.type === "error"
+            className={`flex items-center space-x-3 px-4 py-3 rounded-lg shadow-lg border ${operationStatus.type === "success"
+              ? "bg-green-50 border-green-200 text-green-800"
+              : operationStatus.type === "error"
                 ? "bg-red-50 border-red-200 text-red-800"
                 : "bg-blue-50 border-blue-200 text-blue-800"
-            }`}
+              }`}
           >
             {operationStatus.type === "success" && <CheckCircle className="w-5 h-5 text-green-600" />}
             {operationStatus.type === "error" && <XCircle className="w-5 h-5 text-red-600" />}
@@ -763,14 +777,14 @@ const handleDateRangeSelect = (startDate: Date | null, endDate: Date | null) => 
         </div>
       )}
       {showCalendar && (
-  <div className="fixed top-0 left-0 w-screen h-screen flex justify-center items-center flex-col bg-black/50">
-    <X className="text-white w-16 h-16" onClick={()=>setShowCalendar(false)}></X>
-    <CalendarFilter 
-      onDateRangeSelect={handleDateRangeSelect}
-      onClose={() => setShowCalendar(false)}
-    />
-  </div>
-)}
+        <div className="fixed top-0 left-0 w-screen h-screen flex justify-center items-center flex-col bg-black/50">
+          <X className="text-white w-16 h-16" onClick={() => setShowCalendar(false)}></X>
+          <CalendarFilter
+            onDateRangeSelect={handleDateRangeSelect}
+            onClose={() => setShowCalendar(false)}
+          />
+        </div>
+      )}
 
       <style jsx>{`
         .swal-preview-container .ql-editor {
