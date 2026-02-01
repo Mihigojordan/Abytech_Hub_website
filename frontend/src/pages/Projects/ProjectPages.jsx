@@ -141,11 +141,11 @@ const projects = [
 // Project Card Component
 const ProjectCard = ({ project }) => {
   return (
-    <div className="bg-white rounded-2xl p-6 hover:transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-2xl border border-[#37517e]/10 group">
+    <div className="bg-white rounded-2xl p-6 hover:transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-2xl border border-[#101828]/10 group">
       {/* Project Image & Basic Info */}
       <div className="text-center mb-6">
         <div className="relative mb-6">
-          <div className="w-full h-56 mx-auto rounded-xl overflow-hidden border-2 border-gray-300 group-hover:border-[#37517e] transition-colors duration-300">
+          <div className="w-full h-56 mx-auto rounded-xl overflow-hidden border-2 border-gray-300 group-hover:border-[#101828] transition-colors duration-300">
             <img
               src={project.imageUrl}
               alt={project.title}
@@ -154,7 +154,7 @@ const ProjectCard = ({ project }) => {
           </div>
         </div>
 
-        <h3 className="text-2xl font-bold mb-3 text-gray-900 group-hover:text-[#37517e] transition-colors capitalize">
+        <h3 className="text-2xl font-bold mb-3 text-gray-900 group-hover:text-[#101828] transition-colors capitalize">
           {project.title}
         </h3>
 
@@ -165,11 +165,11 @@ const ProjectCard = ({ project }) => {
 
       {/* Project Stats */}
       <div className="grid grid-cols-2 gap-4 mb-6">
-        <div className="bg-[#37517e] p-4 rounded-lg hover:bg-[#2c4166] transition-all text-center border border-[#37517e]/20">
+        <div className="bg-[#101828] p-4 rounded-lg hover:bg-[#2c4166] transition-all text-center border border-[#101828]/20">
           <div className="text-white font-bold text-lg">Live</div>
           <div className="text-gray-200 text-xs font-medium">Status</div>
         </div>
-        <div className="bg-[#37517e] p-4 rounded-lg hover:bg-[#2c4166] transition-all text-center border border-[#37517e]/20">
+        <div className="bg-[#101828] p-4 rounded-lg hover:bg-[#2c4166] transition-all text-center border border-[#101828]/20">
           <div className="text-white font-bold text-lg">
             {project.techStack.length}
           </div>
@@ -184,7 +184,7 @@ const ProjectCard = ({ project }) => {
             href={project.liveDemo}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex-1 py-3 bg-[#37517e] rounded-lg hover:bg-[#2c4166] text-white font-semibold transition-all duration-300 flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
+            className="flex-1 py-3 bg-[#101828] rounded-lg hover:bg-[#2c4166] text-white font-semibold transition-all duration-300 flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
             title="Live Demo"
           >
             <ExternalLink className="w-5 h-5" />
@@ -240,7 +240,7 @@ const ProjectsPage = () => {
       {/* Hero Section */}
       <div className="text-center mx-auto px-6 mt-4">
         <h1 className="text-5xl md:text-6xl font-bold mb-6 text-gray-900">
-          Our <span className="text-[#37517e]">Amazing Projects</span>
+          Our <span className="text-[#101828]">Amazing Projects</span>
         </h1>
         <p className="text-gray-600 text-xl leading-relaxed mb-12">
           Discover our portfolio of innovative solutions. Each project
@@ -250,13 +250,13 @@ const ProjectsPage = () => {
 
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-4">
-          <div className="bg-[#37517e] rounded-2xl p-8 shadow-lg border border-[#37517e]/20">
+          <div className="bg-[#101828] rounded-2xl p-8 shadow-lg border border-[#101828]/20">
             <div className="text-4xl font-bold text-white mb-2">
               {projects.length}
             </div>
             <div className="text-gray-100 font-medium">Live Projects</div>
           </div>
-          <div className="bg-[#37517e] rounded-2xl p-8 shadow-lg border border-[#37517e]/20">
+          <div className="bg-[#101828] rounded-2xl p-8 shadow-lg border border-[#101828]/20">
             <div className="text-4xl font-bold text-white mb-2">100%</div>
             <div className="text-gray-100 font-medium">Success Rate</div>
           </div>
@@ -277,7 +277,7 @@ const ProjectsPage = () => {
             <button
               onClick={() => handlePageChange(currentPage - 1)}
               disabled={currentPage === 1}
-              className="p-2 rounded-lg bg-white border-2 border-gray-300 hover:border-[#37517e] hover:bg-[#37517e]/5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-gray-300 disabled:hover:bg-white transition-all duration-300"
+              className="p-2 rounded-lg bg-white border-2 border-gray-300 hover:border-[#101828] hover:bg-[#101828]/5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-gray-300 disabled:hover:bg-white transition-all duration-300"
               aria-label="Previous page"
             >
               <ChevronLeft className="w-5 h-5 text-gray-700" />
@@ -289,8 +289,8 @@ const ProjectsPage = () => {
                 onClick={() => handlePageChange(index + 1)}
                 className={`w-10 h-10 rounded-lg font-semibold transition-all duration-300 ${
                   currentPage === index + 1
-                    ? 'bg-[#37517e] text-white shadow-lg'
-                    : 'bg-white border-2 border-gray-300 text-gray-700 hover:border-[#37517e] hover:bg-[#37517e]/5'
+                    ? 'bg-[#101828] text-white shadow-lg'
+                    : 'bg-white border-2 border-gray-300 text-gray-700 hover:border-[#101828] hover:bg-[#101828]/5'
                 }`}
               >
                 {index + 1}
@@ -300,7 +300,7 @@ const ProjectsPage = () => {
             <button
               onClick={() => handlePageChange(currentPage + 1)}
               disabled={currentPage === totalPages}
-              className="p-2 rounded-lg bg-white border-2 border-gray-300 hover:border-[#37517e] hover:bg-[#37517e]/5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-gray-300 disabled:hover:bg-white transition-all duration-300"
+              className="p-2 rounded-lg bg-white border-2 border-gray-300 hover:border-[#101828] hover:bg-[#101828]/5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-gray-300 disabled:hover:bg-white transition-all duration-300"
               aria-label="Next page"
             >
               <ChevronRight className="w-5 h-5 text-gray-700" />

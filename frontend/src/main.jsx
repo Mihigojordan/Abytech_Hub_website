@@ -32,15 +32,14 @@ const updateSW = registerSW({
   },
 });
 
-createRoot(document.getElementById('root')).render(
+createRoot(document.getElementById("root")).render(
   <StrictMode>
-    <SocketProvider serverUrl={import.meta.env.VITE_API_URL}>
-
-    <AdminAuthContextProvider>
-
-      <App />
-    </AdminAuthContextProvider>
-    </SocketProvider>
-    
+    <HelmetProvider>
+      <SocketProvider serverUrl={import.meta.env.VITE_API_URL}>
+        <AdminAuthContextProvider>
+          <App />
+        </AdminAuthContextProvider>
+      </SocketProvider>
+    </HelmetProvider>
   </StrictMode>
 );

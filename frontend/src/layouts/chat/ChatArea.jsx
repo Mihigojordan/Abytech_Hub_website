@@ -44,7 +44,8 @@ const ChatArea = ({
     onMessageAction,
     onMediaView,
     allMessages,
-    setMessageRef
+    setMessageRef,
+    unreadCount = 0
 }) => {
     if (!selectedConversation) {
         return (
@@ -92,17 +93,12 @@ const ChatArea = ({
                 onMediaView={onMediaView}
                 conversation={selectedConversation}
                 setMessageRef={setMessageRef}
+                isTyping={isTyping}
+                // Pass scroll props to container
+                showScrollButton={showScrollButton}
+                scrollToBottom={scrollToBottom}
+                unreadCount={unreadCount}
             />
-
-            {/* Scroll to Bottom Button */}
-            {showScrollButton && (
-                <button
-                    onClick={scrollToBottom}
-                    className="absolute bottom-24 right-8 p-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full shadow-lg transition-all duration-200 hover:scale-110 z-10"
-                >
-                    <ArrowDown className="w-5 h-5" />
-                </button>
-            )}
 
             {/* Edit/Reply Preview Bar */}
             <EditReplyBar

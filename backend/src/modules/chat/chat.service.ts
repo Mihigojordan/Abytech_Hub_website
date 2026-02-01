@@ -125,6 +125,64 @@ export class ChatService {
             }))
             .filter(p => !(p.participantId === creatorId && p.participantType === creatorType));
 
+        // Build complete list of all participants (creator + others)
+        const allParticipants = [
+            { participantId: creatorId, participantType: creatorType },
+            ...otherParticipants
+        ];
+
+        // Total number of participants
+        const totalParticipants = allParticipants.length;
+
+        // VALIDATION: If not a group and has more than 2 participants, reject
+        if (!dto.isGroup && totalParticipants > 2) {
+            throw new Error('Non-group conversations can only have 2 participants. Please set isGroup to true for multiple participants.');
+        }
+
+        // VALIDATION: If is a group and has only 2 or fewer participants, reject
+        if (dto.isGroup && totalParticipants <= 2) {
+            throw new Error('Group conversations must have more than 2 participants. For 2 participants, set isGroup to false.');
+        }
+
+        // For non-group conversations (1-on-1), check if conversation already exists with these exact participants
+        if (!dto.isGroup && totalParticipants === 2) {
+            // Find existing non-group conversation with exactly these 2 participants
+            const existingConversations = await this.prisma.conversation.findMany({
+                where: {
+                    isGroup: false,
+                },
+                include: {
+                    participants: {
+                        where: {
+                            leftAt: null
+                        }
+                    }
+                }
+            });
+
+            // Check if any existing conversation has exactly the same 2 participants
+            for (const conv of existingConversations) {
+                if (conv.participants.length === 2) {
+                    // Create sorted keys for comparison
+                    const convParticipantKeys = conv.participants
+                        .map(p => `${p.participantId}-${p.participantType}`)
+                        .sort();
+                    const newParticipantKeys = allParticipants
+                        .map(p => `${p.participantId}-${p.participantType}`)
+                        .sort();
+
+                    // If they match exactly, return existing conversation
+                    if (JSON.stringify(convParticipantKeys) === JSON.stringify(newParticipantKeys)) {
+                        return conv;
+                    }
+                }
+            }
+        }
+
+        // For group conversations, always create new one (groups can have same participants in different groups)
+        // This allows multiple group chats with the same people but different purposes
+
+        // No existing conversation found or it's a group, create new one
         const conversation = await this.prisma.conversation.create({
             data: {
                 name: dto.name,
@@ -196,8 +254,6 @@ export class ChatService {
             },
         });
 
-
-
         let hasMore = false;
         let nextCursor: any = null;
 
@@ -208,12 +264,97 @@ export class ChatService {
         }
 
         console.log('messages =>', messages);
+        
         // Return messages in chronological order (Oldest -> Newest) for the UI
+        const enrichedMessages = await this.enrichMessages(messages.reverse() as any[]);
+
         return {
-            messages: messages.reverse(),
+            messages: enrichedMessages,
             nextCursor,
             hasMore
         };
+    }
+
+    async enrichMessages(messages: any[]) {
+        if (!messages.length) return [];
+
+        // Collect unique sender IDs
+        const adminIds = new Set<string>();
+        const userIds = new Set<string>();
+
+        messages.forEach(msg => {
+            if (msg.senderType === 'ADMIN') adminIds.add(msg.senderId);
+            else if (msg.senderType === 'USER') userIds.add(msg.senderId);
+
+            // Also check replyToMessage if it exists
+            if (msg.replyToMessage) {
+                if (msg.replyToMessage.senderType === 'ADMIN') adminIds.add(msg.replyToMessage.senderId);
+                else if (msg.replyToMessage.senderType === 'USER') userIds.add(msg.replyToMessage.senderId);
+            }
+        });
+
+        // Fetch details
+        const [admins, users] = await Promise.all([
+            this.prisma.admin.findMany({
+                where: { id: { in: Array.from(adminIds) } },
+                select: { id: true, adminName: true, profileImage: true }
+            }),
+            this.prisma.user.findMany({
+                where: { id: { in: Array.from(userIds) } },
+                select: { id: true, name: true, avatar: true, initial: true }
+            })
+        ]);
+
+        const adminMap = new Map(admins.map(a => [a.id, a]));
+        const userMap = new Map(users.map(u => [u.id, u]));
+
+        // Enrich messages
+        return messages.map(msg => {
+            let senderName = 'Unknown';
+            let senderAvatar = null as any;
+            let senderInitial = null as any;
+
+            if (msg.senderType === 'ADMIN') {
+                const admin = adminMap.get(msg.senderId);
+                if (admin) {
+                    senderName = admin.adminName || 'Admin';
+                    senderAvatar = admin.profileImage;
+                    senderInitial = admin.adminName ? admin.adminName[0].toUpperCase() : 'A';
+                }
+            } else {
+                const user = userMap.get(msg.senderId);
+                if (user) {
+                    senderName = user.name || 'User';
+                    senderAvatar = user.avatar;
+                    senderInitial = user.initial || (user.name ? user.name[0].toUpperCase() : 'U');
+                }
+            }
+
+            // Enrich reply to message if exists
+            let replyToMessage = msg.replyToMessage;
+            if (replyToMessage) {
+                let replySenderName = 'Unknown';
+                if (replyToMessage.senderType === 'ADMIN') {
+                    const admin = adminMap.get(replyToMessage.senderId);
+                    if (admin) replySenderName = admin.adminName || 'Admin';
+                } else {
+                    const user = userMap.get(replyToMessage.senderId);
+                    if (user) replySenderName = user.name || 'User';
+                }
+                replyToMessage = {
+                    ...replyToMessage,
+                    senderName: replySenderName
+                };
+            }
+
+            return {
+                ...msg,
+                senderName,
+                senderAvatar,
+                senderInitial,
+                replyToMessage
+            };
+        });
     }
 
     async sendMessage(dto: SendMessageDto, senderId: string, senderType: 'ADMIN' | 'USER') {
@@ -266,16 +407,18 @@ export class ChatService {
         // Invalidate cache
         this.cache.deleteConversation(`conversation:${dto.conversationId}`);
 
+        const enrichedMessage = (await this.enrichMessages([message]))[0];
+
         // Broadcast to other participants
         const conversation = await this.getConversation(dto.conversationId, senderId, senderType);
         if (conversation && conversation.participants) {
             const recipients = conversation.participants.filter(p =>
                 !(p.participantId === senderId && p.participantType === senderType)
             );
-            this.chatGateway.broadcastNewMessage(message, recipients as any[]);
+            this.chatGateway.broadcastNewMessage(enrichedMessage, recipients as any[]);
         }
 
-        return message;
+        return enrichedMessage;
     }
 
     async markMessageAsRead(messageId: string, readerId: string, readerType: 'ADMIN' | 'USER') {
@@ -352,6 +495,8 @@ export class ChatService {
             },
         });
 
+        const enrichedUpdated = (await this.enrichMessages([updated]))[0];
+
         // Broadcast edit
         // We need participants from the message relation (poly relation is mostly in conversationParticipants)
         // Actually message -> conversation -> participants
@@ -370,7 +515,7 @@ export class ChatService {
             );
         }
 
-        return updated;
+        return enrichedUpdated;
     }
 
     async deleteMessage(messageId: string, userId: string, userType: 'ADMIN' | 'USER') {

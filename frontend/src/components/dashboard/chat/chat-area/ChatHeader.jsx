@@ -19,7 +19,7 @@ const ChatHeader = ({ conversation, isTyping }) => {
                 <div>
                     <h2 className="text-lg font-semibold text-gray-800">{conversation.name}</h2>
                     {isTyping && (
-                        <p className="text-xs text-indigo-600">typing...</p>
+                        <p className="text-xs text-indigo-600 font-medium animate-pulse">is typing...</p>
                     )}
                 </div>
             </div>

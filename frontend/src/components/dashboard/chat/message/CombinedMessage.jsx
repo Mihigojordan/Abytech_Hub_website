@@ -1,5 +1,5 @@
 import React from 'react';
-import { Clock, MoreVertical } from 'lucide-react';
+import { Clock, MoreVertical, Check } from 'lucide-react';
 import { formatTime } from '../../../../utils/chat/dateUtils';
 import ImageAttachment from './ImageAttachment';
 import FileAttachment from './FileAttachment';
@@ -12,7 +12,7 @@ const CombinedMessage = ({ message, onMenuAction, showMenu, setShowMenu, onMedia
     const handleMediaClick = () => {
         const allMedia = [
             ...(message.images || []).map(url => ({ type: 'image', url })),
-            ...(message.files || []).map(f => ({ type: 'file', name: f.name, size: f.size }))
+            ...(message.files || []).map(f => ({ type: 'file', name: f.fileName, size: f.fileSize }))
         ];
         onMediaView(allMedia, 0, message.timestamp);
     };
@@ -20,7 +20,7 @@ const CombinedMessage = ({ message, onMenuAction, showMenu, setShowMenu, onMedia
     const handleFileClick = (fileIndex) => {
         const allMedia = [
             ...(message.images || []).map(url => ({ type: 'image', url })),
-            ...(message.files || []).map(f => ({ type: 'file', name: f.name, size: f.size }))
+            ...(message.files || []).map(f => ({ type: 'file', name: f.fileName, size: f.fileSize }))
         ];
         const index = (message.images?.length || 0) + fileIndex;
         onMediaView(allMedia, index, message.timestamp);
@@ -62,6 +62,23 @@ const CombinedMessage = ({ message, onMenuAction, showMenu, setShowMenu, onMedia
             <div className={`flex items-center text-xs ${message.isSent ? 'text-gray-400' : 'text-gray-500'}`}>
                 <Clock className="w-3 h-3 mr-1" />
                 {formatTime(message.timestamp)}
+                 {message.edited && (
+                            <span className="ml-2 italic">(edited)</span>
+                        )}
+
+                {/* Read receipts for sent messages */}
+                {message.isSent && (
+                    <span className={`ml-2 ${message.isRead ? 'text-blue-500' : 'text-gray-400'}`}>
+                        {message.isRead ? (
+                            <div className="flex -space-x-1">
+                                <Check className="w-3 h-3" />
+                                <Check className="w-3 h-3" />
+                            </div>
+                        ) : (
+                            <Check className="w-3 h-3" />
+                        )}
+                    </span>
+                )}
             </div>
 
             {/* Menu button */}

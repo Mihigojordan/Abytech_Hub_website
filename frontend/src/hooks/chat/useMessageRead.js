@@ -23,7 +23,7 @@ export const useMessageRead = (messages, currentUserId, markAsRead, messagesCont
                             const message = messages.find(m => m.id == messageId);
 
                             // Only mark as read if it's not sent by current user and not already read
-                            if (message && !message.isSent && !message.readers?.includes(currentUserId)) {
+                            if (message && !message.isSent && !message.isRead) {
                                 // Call backend API to mark as read
                                 markAsRead(messageId);
                             }

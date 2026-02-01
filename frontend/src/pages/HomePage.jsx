@@ -4,6 +4,9 @@ import Partners from '../components/home/Partners';
 import HomeAbout from '../components/home/HomeAbout';
 import Values from '../components/home/Values';
 import Programs from '../components/home/Programs';
+import Slide from '../components/home/Slide';
+import Faq from '../components/home/Faq';
+import Quote from '../components/home/Quote';
 
 const LandingPage = lazy(() => import("../components/home/landingPage"));
 const WhyChooseUs = lazy(() => import("../components/home/chooseUs"));
@@ -21,15 +24,18 @@ const HomePage = () => {
     return (
         <>
             <LandingPage />
+            <Partners />
             <HomeAbout />
-            <Values />
+            <Slide />
+            <Quote />
+            {/* <Values /> */}
             <WhyChooseUs />
             <ContentReach />
  
             <WorkProcess />
             <Programs />
+            <Faq />
             <Testimonials />
-            <Partners />
             <BlogLatest />
 
         </>

@@ -20,12 +20,12 @@ const BlogPage = () => {
   }, []);
 
   return (
-    <div className="w-full flex flex-col pb-6 justify-center bg-white items-center gap-12 mt-25">
-      <Header title="blog" path="blog" />
+    <div className="w-full flex flex-col pb-6 justify-center bg-white items-center gap-12 ">
+      <Header title="News And Insight" path="News And Insights" />
 
       <div className="flex flex-col justify-center w-full lg:w-10/12 xl:w-11/12 pt-4 items-center gap-12">
         <div className="text-center">
-          <h1 className="text-[#37517e] font-bold text-3xl md:text-4xl lg:text-5xl">
+          <h1 className="text-[#101828] font-bold text-3xl md:text-4xl lg:text-5xl">
             News <span className="text-gray-900">&</span> Blogs
           </h1>
           <p className="text-gray-600 text-lg mt-4 max-w-xl mx-auto">

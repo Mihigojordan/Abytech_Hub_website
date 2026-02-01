@@ -12,14 +12,14 @@ const FileAttachment = ({ file, isSent, onClick }) => {
         >
             <div className={`w-10 h-10 ${isSent ? 'bg-indigo-100' : 'bg-indigo-500'} rounded flex items-center justify-center flex-shrink-0`}>
                 <File className={`w-5 h-5 ${isSent ? 'text-indigo-600' : 'text-white'}`} />
-            </div>
+            </div>  
             <div className="flex-1 min-w-0">
                 <p className={`text-sm font-medium ${isSent ? 'text-gray-800' : 'text-white'} truncate`}>
-                    {file.name}
+                    {file.fileName}
                 </p>
-                {file.size && (
+                {file.fileSize && (
                     <p className={`text-xs ${isSent ? 'text-gray-500' : 'text-indigo-200'}`}>
-                        {file.size}
+                        {file.fileSize}
                     </p>
                 )}
             </div>
