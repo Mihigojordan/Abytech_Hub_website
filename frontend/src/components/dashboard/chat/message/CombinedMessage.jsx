@@ -1,0 +1,91 @@
+import React from 'react';
+import { Clock, MoreVertical } from 'lucide-react';
+import { formatTime } from '../../../../utils/chat/dateUtils';
+import ImageAttachment from './ImageAttachment';
+import FileAttachment from './FileAttachment';
+import MessageMenu from './MessageMenu';
+
+/**
+ * Combined message component (text + images + files)
+ */
+const CombinedMessage = ({ message, onMenuAction, showMenu, setShowMenu, onMediaView, selectionMode }) => {
+    const handleMediaClick = () => {
+        const allMedia = [
+            ...(message.images || []).map(url => ({ type: 'image', url })),
+            ...(message.files || []).map(f => ({ type: 'file', name: f.name, size: f.size }))
+        ];
+        onMediaView(allMedia, 0, message.timestamp);
+    };
+
+    const handleFileClick = (fileIndex) => {
+        const allMedia = [
+            ...(message.images || []).map(url => ({ type: 'image', url })),
+            ...(message.files || []).map(f => ({ type: 'file', name: f.name, size: f.size }))
+        ];
+        const index = (message.images?.length || 0) + fileIndex;
+        onMediaView(allMedia, index, message.timestamp);
+    };
+
+    return (
+        <div className="relative group space-y-2 max-w-md">
+            {/* Images */}
+            {message.images && message.images.length > 0 && (
+                <ImageAttachment
+                    images={message.images}
+                    isSent={message.isSent}
+                    onClick={handleMediaClick}
+                />
+            )}
+
+            {/* Files */}
+            {message.files && message.files.length > 0 && (
+                <div className="space-y-1">
+                    {message.files.map((file, idx) => (
+                        <FileAttachment
+                            key={idx}
+                            file={file}
+                            isSent={message.isSent}
+                            onClick={() => handleFileClick(idx)}
+                        />
+                    ))}
+                </div>
+            )}
+
+            {/* Text content */}
+            {message.content && (
+                <div className={`${message.isSent ? 'bg-gray-100' : 'bg-indigo-600 text-white'} rounded-lg px-4 py-3`}>
+                    <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                </div>
+            )}
+
+            {/* Timestamp */}
+            <div className={`flex items-center text-xs ${message.isSent ? 'text-gray-400' : 'text-gray-500'}`}>
+                <Clock className="w-3 h-3 mr-1" />
+                {formatTime(message.timestamp)}
+            </div>
+
+            {/* Menu button */}
+            {!selectionMode && (
+                <button
+                    className="absolute top-2 right-2 p-1 bg-white/80 hover:bg-white rounded opacity-0 group-hover:opacity-100 transition-all duration-200"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        setShowMenu(message.id);
+                    }}
+                >
+                    <MoreVertical className="w-4 h-4 text-gray-600" />
+                </button>
+            )}
+            {showMenu === message.id && (
+                <MessageMenu
+                    messageId={message.id}
+                    isSent={message.isSent}
+                    onAction={onMenuAction}
+                    position="right"
+                />
+            )}
+        </div>
+    );
+};
+
+export default CombinedMessage;

@@ -18,6 +18,7 @@ import EmployeeeDashboard from "./pages/dashboard/EmployeeManagement";
 import AdminProfileEdit from "./pages/EditProfilePage";
 import PWAPushNotifications from "./pages/PWATestingPage";
 import AdminProfilePage from "./pages/dashboard/AdminProfile";
+import ChatApp from "./pages/dashboard/ChatAppPage";
 
 // Lazy-loaded pages
 const ProjectsPage = lazy(() => import("./pages/Projects/ProjectPages"));
@@ -85,11 +86,13 @@ const router = createBrowserRouter([
           {path:'report/view/:id' , element:<ReportViewPage />},
           {path:'profile/:id' , element:<AdminProfilePage />},
           {path:'edit-profile/:id' , element:<AdminProfileEdit />},
+          {path:'chat' , element:<ChatApp />},
+          {path:'chat/:conversationId' , element:<ChatApp />},
           // {path:'profile' , element:<AdminProfilePage />},
           
         ]
-       },
-
+      },
+      
     ]
   },
   {
