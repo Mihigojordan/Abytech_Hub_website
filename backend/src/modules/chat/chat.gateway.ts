@@ -126,9 +126,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         messageId: string,
         conversationId: string,
         content: string,
-        recipients: { userId: string; userType: 'ADMIN' | 'USER' }[]
+        recipients: { participantId: string; participantType: 'ADMIN' | 'USER' }[]
     ) {
-        this.emitToUsers(recipients, 'message:edited', {
+        this.emitToUsers( recipients.map(r=> ({userId: r.participantId as any,userType: r.participantType as any})) , 'message:edited', {
             messageId,
             conversationId,
             content,
@@ -142,9 +142,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     public broadcastMessageDeleted(
         messageId: string,
         conversationId: string,
-        recipients: { userId: string; userType: 'ADMIN' | 'USER' }[]
+        recipients: { participantId: string; participantType: 'ADMIN' | 'USER' }[]
     ) {
-        this.emitToUsers(recipients, 'message:deleted', {
+        this.emitToUsers( recipients.map(r=> ({userId: r.participantId as any,userType: r.participantType as any})) , 'message:deleted', {
             messageId,
             conversationId
         });
@@ -188,8 +188,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @SubscribeMessage('typing:start')
     async handleTypingStart(
         @ConnectedSocket() client: AuthenticatedSocket,
-        @MessageBody() data: { conversationId: string },
+        @MessageBody() data: { conversationId: string ,  userId: string; userType: 'ADMIN' | 'USER'},
     ) {
+        console.log('client user typing =>',client.userId,client.userType);
         try {
             this.cache.setTyping(data.conversationId, client.userId as string);
 
@@ -206,7 +207,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
                     !(p.participantId === client.userId && p.participantType === client.userType)
                 );
 
-                this.emitToUsers(recipients as any, 'typing:active', {
+                this.emitToUsers(recipients.map(r=> ({userId: r.participantId as any,userType: r.participantType as any})), 'typing:active', {
                     conversationId: data.conversationId,
                     userId: client.userId,
                     userType: client.userType,
@@ -222,10 +223,14 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @SubscribeMessage('typing:stop')
     async handleTypingStop(
         @ConnectedSocket() client: AuthenticatedSocket,
-        @MessageBody() data: { conversationId: string },
+        @MessageBody() data: { conversationId: string,  userId: string; userType: 'ADMIN' | 'USER' },
     ) {
         try {
-            // Same as above
+
+           console.log('client user typing =>',client.userId,client.userType);
+            
+            // Same
+            //  as above
             const conversation = await this.chatService.getConversation(
                 data.conversationId,
                 client.userId as string,
@@ -237,7 +242,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
                     !(p.participantId === client.userId && p.participantType === client.userType)
                 );
 
-                this.emitToUsers(recipients as any, 'typing:inactive', {
+                this.emitToUsers(recipients.map(r=> ({userId: r.participantId as any,userType: r.participantType as any})), 'typing:inactive', {
                     conversationId: data.conversationId,
                     userId: client.userId,
                 });

@@ -15,16 +15,33 @@ export const useMessages = (currentUser = null) => {
     const [error, setError] = useState(null);
 
     /**
-     * Transform messages to add isSent property based on current user
+     * Transform messages to add isSent property and standardize reply structure
      */
     const transformMessages = useCallback((messages) => {
-        if (!currentUser?.id) return messages;
+        if (!messages) return [];
+        return messages.map(msg => {
+            // Map replyToMessage to replyTo format expected by UI
+            let replyTo = null;
+            if (msg.replyToMessage) {
+                replyTo = {
+                    id: msg.replyToMessage.id,
+                    content: msg.replyToMessage.content,
+                    sender: msg.replyToMessage.senderName || 'Unknown',
+                    type: msg.replyToMessage.type || 'text'
+                };
+            }
 
-        return messages.map(msg => ({
-            ...msg,
-            isSent: msg.senderId === currentUser.id &&
-                msg.senderType === (currentUser.userType || 'ADMIN')
-        }));
+            return {
+                ...msg,
+                isSent: currentUser?.id ? (msg.senderId === currentUser.id &&
+                    msg.senderType === (currentUser.userType || 'ADMIN')) : false,
+                replyTo: replyTo || msg.replyTo, // Use mapped or existing
+                sender: msg.senderName || msg.sender || msg.senderId, // Prioritize senderName
+                avatar: msg.senderAvatar,
+                initial: msg.senderInitial,
+                isRead: msg.isRead || (msg.readers && msg.readers.length > 0) // Check if read by current user
+            };
+        });
     }, [currentUser]);
 
     /**
@@ -244,17 +261,30 @@ export const useMessages = (currentUser = null) => {
 
     /**
      * Add new message from WebSocket
+     * FIXED: Properly convert ID to string for comparison and ensure no duplicates
      */
     const addMessageFromSocket = useCallback((message, conversationId) => {
+        if (!message || !conversationId) {
+            console.warn('Invalid message or conversationId in addMessageFromSocket');
+            return;
+        }
+
         setAllMessages(prev => {
             const existing = prev[conversationId] || [];
-            // Check if message already exists
-            if (existing.some(m => m.id === message.id)) {
+            
+            // Convert both IDs to strings for proper comparison
+            const messageIdStr = String(message.id);
+            
+            // Check if message already exists (compare as strings)
+            if (existing.some(m => String(m.id) === messageIdStr)) {
+                console.log('Message already exists, skipping:', messageIdStr);
                 return prev;
             }
 
             // Transform message to add isSent property
             const transformedMessage = transformMessages([message])[0];
+
+            console.log('Adding new message from socket:', transformedMessage);
 
             return {
                 ...prev,
@@ -265,27 +295,124 @@ export const useMessages = (currentUser = null) => {
 
     /**
      * Update message from WebSocket
+     * FIXED: Properly convert ID to string for comparison
      */
     const updateMessageFromSocket = useCallback((updatedMessage, conversationId) => {
-        // Transform updated message
-        const transformedMessage = transformMessages([updatedMessage])[0];
+        if (!updatedMessage || !conversationId) {
+            console.warn('Invalid message or conversationId in updateMessageFromSocket');
+            return;
+        }
 
-        setAllMessages(prev => ({
-            ...prev,
-            [conversationId]: prev[conversationId]?.map(msg =>
-                msg.id === updatedMessage.id ? transformedMessage : msg
-            ) || []
-        }));
+        setAllMessages(prev => {
+            const existing = prev[conversationId];
+            
+            if (!existing || existing.length === 0) {
+                console.warn('No existing messages for conversation:', conversationId);
+                return prev;
+            }
+
+            // Convert IDs to strings for proper comparison
+            const updatedIdStr = String(updatedMessage.id);
+            
+            // Check if message exists
+            const messageExists = existing.some(m => String(m.id) === updatedIdStr);
+            
+            if (!messageExists) {
+                console.warn('Message to update not found:', updatedIdStr);
+                return prev;
+            }
+
+            // Transform updated message
+            const transformedMessage = transformMessages([updatedMessage])[0];
+
+            console.log('Updating message from socket:', transformedMessage);
+
+            return {
+                ...prev,
+                [conversationId]: existing.map(msg =>
+                    String(msg.id) === updatedIdStr ? {...msg,...updatedMessage,timestamp: new Date().toISOString(),edited:true} : msg
+                )
+            };
+        });
     }, [transformMessages]);
 
     /**
      * Remove message from WebSocket
+     * FIXED: Properly convert ID to string for comparison
      */
     const removeMessageFromSocket = useCallback((messageId, conversationId) => {
-        setAllMessages(prev => ({
-            ...prev,
-            [conversationId]: prev[conversationId]?.filter(m => m.id !== messageId) || []
-        }));
+        if (!messageId || !conversationId) {
+            console.warn('Invalid messageId or conversationId in removeMessageFromSocket');
+            return;
+        }
+
+        setAllMessages(prev => {
+            const existing = prev[conversationId];
+            
+            if (!existing || existing.length === 0) {
+                console.warn('No existing messages for conversation:', conversationId);
+                return prev;
+            }
+
+            // Convert ID to string for proper comparison
+            const messageIdStr = String(messageId);
+
+            console.log('Removing message from socket:', messageIdStr);
+
+            return {
+                ...prev,
+                [conversationId]: existing.filter(m => String(m.id) !== messageIdStr)
+            };
+        });
+    }, []);
+
+    /**
+     * Update message read status from WebSocket
+     * NEW: Handle read receipt updates
+     */
+    const updateMessageReadStatus = useCallback((messageId, conversationId, readerId, readerType) => {
+        if (!messageId || !conversationId) {
+            console.warn('Invalid messageId or conversationId in updateMessageReadStatus');
+            return;
+        }
+
+        
+
+        setAllMessages(prev => {
+            const existing = prev[conversationId];
+            
+            if (!existing || existing.length === 0) {
+                return prev;
+            }
+
+            const messageIdStr = String(messageId);
+
+            return {
+                ...prev,
+                [conversationId]: existing.map(msg => {
+                    if (String(msg.id) === messageIdStr) {
+                        // Update readers array if it exists, or mark as read
+                        const updatedReaders = msg.readers || [];
+                        
+                        // Check if this reader already exists
+                        const readerExists = updatedReaders.some(
+                            r => r.readerId === readerId && r.readerType === readerType
+                        );
+
+                        if (!readerExists) {
+                            updatedReaders.push({ readerId, readerType });
+                        }
+
+                        return {
+                            ...msg,
+                            readers: updatedReaders,
+                            isRead: true // Mark as read
+                        };
+                    }
+                    return msg;
+                })
+            };
+        });
     }, []);
 
     /**
@@ -316,6 +443,7 @@ export const useMessages = (currentUser = null) => {
         // WebSocket handlers
         addMessageFromSocket,
         updateMessageFromSocket,
-        removeMessageFromSocket
+        removeMessageFromSocket,
+        updateMessageReadStatus
     };
 };

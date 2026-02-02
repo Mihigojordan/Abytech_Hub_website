@@ -1,6 +1,7 @@
 import React from 'react';
 import { X, ChevronLeft, ChevronRight, Download, Calendar, File } from 'lucide-react';
 import { formatFullDate } from '../../../../utils/chat/dateUtils';
+import { API_URL } from '../../../../api/api';
 
 /**
  * Media viewer modal component for viewing images and files
@@ -59,7 +60,7 @@ const MediaViewer = ({
             <div className="max-w-5xl w-full h-full flex flex-col items-center justify-center p-20">
                 {currentMedia?.type === 'image' ? (
                     <img
-                        src={currentMedia.url}
+                        src={handleDisplayImgUrl(currentMedia.url)}
                         alt="Media"
                         className="max-w-full max-h-[70vh] object-contain rounded-lg shadow-2xl"
                     />
