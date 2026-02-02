@@ -1,28 +1,43 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
+import { useSocket, useSocketEvent } from '../../context/SocketContext';
 
 /**
  * Custom hook for managing typing indicators with WebSocket support
- * @param {Object} socket - Socket instance from SocketContext
  * @param {string} conversationId - Current conversation ID
  * @param {string} userId - Current user ID
+ * @param {string} userType - Current user Type
  * @returns {Object} Typing state and handlers
  */
-export const useTypingIndicator = (socket, conversationId, userId) => {
-    const [typingUsers, setTypingUsers] = useState(new Set());
+/**
+ * Custom hook for managing typing indicators with WebSocket support
+ * @param {string} currentConversationId - Current active conversation ID (for emitting)
+ * @param {string} userId - Current user ID
+ * @param {string} userType - Current user Type
+ * @returns {Object} Typing state and handlers
+ */
+export const useTypingIndicator = (currentConversationId, userId, userType) => {
+    const { socket, emit } = useSocket();
+
+    // State: Map of conversationId -> Set of userIds
+    const [typingMap, setTypingMap] = useState({});
+
     const typingTimeoutRef = useRef(null);
     const isTypingRef = useRef(false);
 
     /**
-     * Start typing - emit to server
+     * Start typing - emit to server for current conversation
      */
     const startTyping = useCallback(() => {
-        if (!socket || !conversationId || !userId) return;
+        if (!currentConversationId || !userId) {
+            return;
+        }
 
         // Only emit if not already typing
         if (!isTypingRef.current) {
-            socket.emit('typing:start', {
-                conversationId,
-                userId
+            emit('typing:start', {
+                conversationId: currentConversationId,
+                userId,
+                userType
             });
             isTypingRef.current = true;
         }
@@ -32,22 +47,23 @@ export const useTypingIndicator = (socket, conversationId, userId) => {
             clearTimeout(typingTimeoutRef.current);
         }
 
-        // Stop typing after 3 seconds of inactivity
+        // Stop typing after 2 seconds of inactivity
         typingTimeoutRef.current = setTimeout(() => {
             stopTyping();
-        }, 3000);
-    }, [socket, conversationId, userId]);
+        }, 2000);
+    }, [currentConversationId, userId, userType, emit]);
 
     /**
-     * Stop typing - emit to server
+     * Stop typing - emit to server for current conversation
      */
     const stopTyping = useCallback(() => {
-        if (!socket || !conversationId || !userId) return;
+        if (!currentConversationId || !userId) return;
 
         if (isTypingRef.current) {
-            socket.emit('typing:stop', {
-                conversationId,
-                userId
+            emit('typing:stop', {
+                conversationId: currentConversationId,
+                userId,
+                userType
             });
             isTypingRef.current = false;
         }
@@ -56,7 +72,7 @@ export const useTypingIndicator = (socket, conversationId, userId) => {
             clearTimeout(typingTimeoutRef.current);
             typingTimeoutRef.current = null;
         }
-    }, [socket, conversationId, userId]);
+    }, [currentConversationId, userId, userType, emit]);
 
     /**
      * Handle input change - trigger typing indicator
@@ -70,36 +86,48 @@ export const useTypingIndicator = (socket, conversationId, userId) => {
     }, [startTyping, stopTyping]);
 
     /**
-     * Listen to typing events from other users
+     * Handle typing start event (Global listener)
      */
-    useEffect(() => {
-        if (!socket || !conversationId) return;
+    const handleTypingStart = useCallback((data) => {
+        if (data.userId === userId) return; // Ignore self
 
-        const handleTypingStart = (data) => {
-            if (data.conversationId === conversationId && data.userId !== userId) {
-                setTypingUsers(prev => new Set([...prev, data.userId]));
-            }
-        };
+        setTypingMap(prev => {
+            const convId = data.conversationId;
+            const currentSet = new Set(prev[convId] || []);
+            currentSet.add(data.userId);
 
-        const handleTypingStop = (data) => {
-            if (data.conversationId === conversationId && data.userId !== userId) {
-                setTypingUsers(prev => {
-                    const newSet = new Set(prev);
-                    newSet.delete(data.userId);
-                    return newSet;
-                });
-            }
-        };
+            return {
+                ...prev,
+                [convId]: currentSet
+            };
+        });
+    }, [userId]);
 
-        socket.on('typing:active', handleTypingStart);
-        socket.on('typing:inactive', handleTypingStop);
+    /**
+     * Handle typing stop event (Global listener)
+     */
+    const handleTypingStop = useCallback((data) => {
+        if (data.userId === userId) return; // Ignore self
 
-        return () => {
-            socket.off('typing:active', handleTypingStart);
-            socket.off('typing:inactive', handleTypingStop);
-            stopTyping(); // Clean up typing state when unmounting
-        };
-    }, [socket, conversationId, userId, stopTyping]);
+        setTypingMap(prev => {
+            const convId = data.conversationId;
+            if (!prev[convId]) return prev;
+
+            const currentSet = new Set(prev[convId]);
+            currentSet.delete(data.userId); // Remove user
+
+            // If empty, we can keep empty set or remove key 
+            // Keeping empty set is fine for now
+            return {
+                ...prev,
+                [convId]: currentSet
+            };
+        });
+    }, [userId]);
+
+    // Use useSocketEvent for listeners (Global - independent of currentConversationId)
+    useSocketEvent('typing:active', handleTypingStart, [userId]);
+    useSocketEvent('typing:inactive', handleTypingStop, [userId]);
 
     /**
      * Cleanup on unmount
@@ -114,8 +142,13 @@ export const useTypingIndicator = (socket, conversationId, userId) => {
     }, [stopTyping]);
 
     return {
-        typingUsers: Array.from(typingUsers),
-        isTyping: typingUsers.size > 0,
+        // Return raw map for list view
+        typingMap,
+        // Helper for specific conversation (e.g. current selected one)
+        getTypingUsers: (convId) => Array.from(typingMap[convId] || []),
+        // Current conversation typing users (convenience)
+        typingUsers: Array.from(typingMap[currentConversationId] || []),
+
         handleTyping,
         startTyping,
         stopTyping

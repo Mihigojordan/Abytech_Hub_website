@@ -26,7 +26,7 @@ export class ChatController {
     async getConversations(@Req() req: RequestWithChatUser) {
         const userId = req.user.id;
         const userType = req.user.type;
-        console.log('User Data =>', userId, userType);
+        
         return this.chatService.getConversations(userId, userType);
     }
 

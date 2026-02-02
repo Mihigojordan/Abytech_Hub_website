@@ -1,5 +1,5 @@
 import React from 'react';
-import { Clock, MoreVertical } from 'lucide-react';
+import { Clock, MoreVertical, Check } from 'lucide-react';
 import { formatTime } from '../../../../utils/chat/dateUtils';
 import MessageMenu from './MessageMenu';
 
@@ -7,6 +7,9 @@ import MessageMenu from './MessageMenu';
  * Text-only message component
  */
 const TextMessage = ({ message, onMenuAction, showMenu, setShowMenu, selectionMode }) => {
+
+  
+    
     return (
         <div className="relative group">
             <div className={`${message.isSent ? 'bg-gray-100' : 'bg-indigo-600 text-white'} rounded-lg px-4 py-3`}>
@@ -17,6 +20,19 @@ const TextMessage = ({ message, onMenuAction, showMenu, setShowMenu, selectionMo
                         {formatTime(message.timestamp)}
                         {message.edited && (
                             <span className="ml-2 italic">(edited)</span>
+                        )}
+                        {/* Read receipts for sent messages */}
+                        {message.isSent && (
+                            <span className={`ml-2 ${message.isRead ? 'text-blue-200' : 'text-gray-400'}`}>
+                                {message.isRead ? (
+                                    <div className="flex -space-x-1">
+                                        <Check className="w-3 h-3" />
+                                        <Check className="w-3 h-3" />
+                                    </div>
+                                ) : (
+                                    <Check className="w-3 h-3" />
+                                )}
+                            </span>
                         )}
                     </div>
                 </div>

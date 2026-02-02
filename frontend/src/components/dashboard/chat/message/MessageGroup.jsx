@@ -14,7 +14,8 @@ const MessageGroup = ({
     setShowMenu,
     onMediaView,
     conversation,
-    setMessageRef
+    setMessageRef,
+    scrollToMessage
 }) => {
     return (
         <div>
@@ -43,6 +44,7 @@ const MessageGroup = ({
                             onMediaView={onMediaView}
                             conversation={conversation}
                             setMessageRef={setMessageRef}
+                            scrollToMessage={scrollToMessage}
                         />
                     );
                 })}

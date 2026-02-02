@@ -562,11 +562,7 @@ const ReportViewPage = () => {
                   <button
                     onClick={() => handleDownloadReport(selectedReport)}
                     disabled={operationLoading}
-<<<<<<< HEAD
-                    className="flex items-center space-x-2 bg-blue-500 hover:bg-slate-800 text-white px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-=======
-                    className="flex items-center space-x-2 bg-gradient-to-r from-blue-500 to-[#1d293d] hover:from-[#1d293d] hover:to-blue-700 text-white px-3 md:px-4 py-2 rounded-lg font-semibold transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
->>>>>>> 9414a008eda44b579c957a877a0dfaa6b79a1f17
+                    className="flex items-center space-x-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-3 md:px-4 py-2 rounded-lg font-semibold transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Download className="w-4 h-4" />
                     <span>Download</span>
@@ -657,11 +653,7 @@ const ReportViewPage = () => {
                 <button
                   onClick={handleSendReply}
                   disabled={replying || !replyContent.trim()}
-<<<<<<< HEAD
-                  className="flex items-center gap-2 px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
-=======
-                  className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-[#1d293d] to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-semibold shadow-md hover:shadow-lg"
->>>>>>> 9414a008eda44b579c957a877a0dfaa6b79a1f17
+                  className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-semibold shadow-md hover:shadow-lg"
                 >
                   {replying ? (
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
