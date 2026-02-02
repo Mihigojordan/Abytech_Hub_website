@@ -63,7 +63,7 @@ const content = {
       <div className="max-w-8xl  px-6 mx-auto">
         {/* Header Section */}
         <div className="mb-12">
-          <p className="text-blue-600 uppercase tracking-widest text-xs md:text-sm font-semibold mb-4 letter-spacing-wide">
+          <p className="text-[#1d293d] uppercase tracking-widest text-xs md:text-sm font-semibold mb-4 letter-spacing-wide">
             SPECIALIZATION
           </p>
           <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
@@ -119,9 +119,9 @@ const content = {
           <div className="bg-white rounded-2xl p-8 shadow-sm">
             <div className="flex items-center gap-3 mb-6">
               <div className="p-2 bg-blue-100 rounded-lg">
-                <Zap className="w-5 h-5 text-blue-600" />
+                <Zap className="w-5 h-5 text-[#1d293d]" />
               </div>
-              <h3 className="text-blue-600 font-semibold text-lg">{activeTab}</h3>
+              <h3 className="text-[#1d293d] font-semibold text-lg">{activeTab}</h3>
             </div>
             <h4 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">
               {activeContent.title}

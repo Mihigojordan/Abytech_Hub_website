@@ -6,6 +6,7 @@ import React from "react";
 import { AdminAuthContextProvider } from './context/AdminAuthContext.jsx';
 import { SocketProvider } from './context/SocketContext.jsx';
 import { registerSW } from 'virtual:pwa-register';
+import { HelmetProvider } from 'react-helmet-async';
 
 const updateSW = registerSW({
   onNeedRefresh() {
