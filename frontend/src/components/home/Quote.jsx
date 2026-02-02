@@ -43,7 +43,7 @@ function Quote() {
         <div className="flex flex-col items-center">
           {/* Profile Image */}
           <div className="w-32 h-32 mb-6 rounded-full overflow-hidden border-4 border-blue-400 shadow-2xl shadow-blue-500/50">
-            <div className="w-full h-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center">
+            <div className="w-full h-full bg-gradient-to-br from-blue-400 to-[#1d293d] flex items-center justify-center">
            
             <img src={Image1} alt="" />
             </div>
@@ -63,7 +63,7 @@ function Quote() {
 
       {/* Decorative Elements */}
       <div className="absolute top-1/4 left-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl"></div>
-      <div className="absolute bottom-1/4 right-0 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl"></div>
+      <div className="absolute bottom-1/4 right-0 w-96 h-96 bg-[#1d293d]/10 rounded-full blur-3xl"></div>
     </div>
   )
 }

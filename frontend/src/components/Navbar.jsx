@@ -100,8 +100,8 @@ function NavBar() {
                   <NavLink
                     to="/"
                     className={({ isActive }) =>
-                      `nav-link flex items-center space-x-1 text-gray-700 hover:text-blue-600 font-medium transition-colors ${
-                        isActive ? 'text-blue-600' : ''
+                      `nav-link flex items-center space-x-1 text-gray-700 hover:text-[#1d293d] font-medium transition-colors ${
+                        isActive ? 'text-[#1d293d]' : ''
                       }`
                     }
                   >
@@ -114,8 +114,8 @@ function NavBar() {
                   <NavLink
                     to="/about-us"
                     className={({ isActive }) =>
-                      `nav-link flex items-center space-x-1 text-gray-700 hover:text-blue-600 font-medium transition-colors ${
-                        isActive ? 'text-blue-600' : ''
+                      `nav-link flex items-center space-x-1 text-gray-700 hover:text-[#1d293d] font-medium transition-colors ${
+                        isActive ? 'text-[#1d293d]' : ''
                       }`
                     }
                   >
@@ -128,8 +128,8 @@ function NavBar() {
                   <NavLink
                     to="/services"
                     className={({ isActive }) =>
-                      `nav-link flex items-center space-x-1 text-gray-700 hover:text-blue-600 font-medium transition-colors ${
-                        isActive ? 'text-blue-600' : ''
+                      `nav-link flex items-center space-x-1 text-gray-700 hover:text-[#1d293d] font-medium transition-colors ${
+                        isActive ? 'text-[#1d293d]' : ''
                       }`
                     }
                   >
@@ -141,8 +141,8 @@ function NavBar() {
                   <NavLink
                     to="/team-member"
                     className={({ isActive }) =>
-                      `nav-link flex items-center space-x-1 text-gray-700 hover:text-blue-600 font-medium transition-colors ${
-                        isActive ? 'text-blue-600' : ''
+                      `nav-link flex items-center space-x-1 text-gray-700 hover:text-[#1d293d] font-medium transition-colors ${
+                        isActive ? 'text-[#1d293d]' : ''
                       }`
                     }
                   >
@@ -155,8 +155,8 @@ function NavBar() {
                   <NavLink
                     to="/project"
                     className={({ isActive }) =>
-                      `nav-link flex items-center space-x-1 text-gray-700 hover:text-blue-600 font-medium transition-colors ${
-                        isActive ? 'text-blue-600' : ''
+                      `nav-link flex items-center space-x-1 text-gray-700 hover:text-[#1d293d] font-medium transition-colors ${
+                        isActive ? 'text-[#1d293d]' : ''
                       }`
                     }
                   >
@@ -169,8 +169,8 @@ function NavBar() {
                   <NavLink
                     to="/blogs"
                     className={({ isActive }) =>
-                      `nav-link flex items-center space-x-1 text-gray-700 hover:text-blue-600 font-medium transition-colors ${
-                        isActive ? 'text-blue-600' : ''
+                      `nav-link flex items-center space-x-1 text-gray-700 hover:text-[#1d293d] font-medium transition-colors ${
+                        isActive ? 'text-[#1d293d]' : ''
                       }`
                     }
                   >
@@ -197,7 +197,7 @@ function NavBar() {
                 {/* Mobile Menu Toggle */}
                 <button
                   onClick={() => setMenuOpen(!menuOpen)}
-                  className="lg:hidden p-2 text-gray-700 hover:text-blue-600 transition-colors"
+                  className="lg:hidden p-2 text-gray-700 hover:text-[#1d293d] transition-colors"
                 >
                   {menuOpen ? (
                     <FiX className="w-6 h-6" />
@@ -222,7 +222,7 @@ function NavBar() {
                 <img src={Logo} alt="Brand Logo" className="h-10 w-auto object-contain" />
                 <button
                   onClick={() => setMenuOpen(false)}
-                  className="text-gray-700 hover:text-blue-600 transition-colors p-2"
+                  className="text-gray-700 hover:text-[#1d293d] transition-colors p-2"
                 >
                   <FiX className="w-6 h-6" />
                 </button>
@@ -243,8 +243,8 @@ function NavBar() {
                       to={item.path}
                       onClick={() => setMenuOpen(false)}
                       className={({ isActive }) =>
-                        `block px-4 py-3 text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-md font-medium transition-colors ${
-                          isActive ? 'text-blue-600 bg-gray-50' : ''
+                        `block px-4 py-3 text-gray-700 hover:text-[#1d293d] hover:bg-gray-50 rounded-md font-medium transition-colors ${
+                          isActive ? 'text-[#1d293d] bg-gray-50' : ''
                         }`
                       }
                     >
@@ -271,7 +271,7 @@ function NavBar() {
                       href={href}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-gray-600 hover:text-blue-600 transition-all"
+                      className="text-gray-600 hover:text-[#1d293d] transition-all"
                     >
                       <Icon className="w-5 h-5" />
                     </a>

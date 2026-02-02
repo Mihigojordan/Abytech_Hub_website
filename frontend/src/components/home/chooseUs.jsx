@@ -89,7 +89,7 @@ export default function WhyChooseUs() {
                 {/* Link */}
                 <a
                   href={service.path}
-                  className="text-blue-500 font-medium text-center block hover:text-blue-600 transition-colors duration-300 text-sm md:text-base"
+                  className="text-blue-500 font-medium text-center block hover:text-[#1d293d] transition-colors duration-300 text-sm md:text-base"
                 >
                   View Details →
                 </a>

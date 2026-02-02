@@ -374,7 +374,7 @@ const Header: React.FC<HeaderProps> = ({ onToggle }) => {
                         <div className="text-xs text-gray-600 truncate">
                           {getEmail()}
                         </div>
-                        <div className="text-xs font-medium text-blue-600 mt-0.5">
+                        <div className="text-xs font-medium text-[#1d293d] mt-0.5">
                           {role === "admin" ? "Administrator" : "Employee"}
                         </div>
                       </div>
