@@ -243,7 +243,7 @@ const Faq = () => {
                     : 'bg-white text-slate-700 hover:bg-slate-50 shadow-sm'
                 }`}
                 style={{
-                  backgroundColor: activeCategory === category.id ? '#1d293d' : undefined
+                  backgroundColor: activeCategory === category.id ? '#ff5a00' : undefined
                 }}
               >
                 {category.icon}
@@ -265,7 +265,7 @@ const Faq = () => {
                     className="w-full px-6 py-5 flex items-center justify-between text-left hover:bg-slate-50 transition-colors"
                   >
                     <div className="flex items-start gap-4 flex-1">
-                      <div className="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#1d293d' }}>
+                      <div className="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#ff5a00' }}>
                         <HelpCircle className="w-5 h-5 text-white" />
                       </div>
                       <div className="flex-1">
@@ -307,7 +307,7 @@ const Faq = () => {
       {/* Contact CTA Section */}
       <div className="relative px-4 py-16">
         <div className="max-w-5xl mx-auto">
-          <div className="bg-gradient-to-r from-[#1d293d] to-[#1d293d] rounded-2xl p-8 md:p-12 text-white text-center shadow-2xl">
+          <div className="bg-gradient-to-r from-[#ff5a00] to-[#ff5a00] rounded-2xl p-8 md:p-12 text-white text-center shadow-2xl">
             <h2 className="text-3xl font-bold mb-4">Still Have Questions?</h2>
             <p className="text-lg opacity-90 mb-6 max-w-2xl mx-auto">
               Can't find the answer you're looking for? Our team is here to help. Reach out to us and we'll get back to you as soon as possible.

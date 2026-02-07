@@ -267,7 +267,7 @@ const UpsertReportPage = () => {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#1d293d]"></div>
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#ff5a00]"></div>
           <p className="mt-4 text-gray-600 font-medium">Loading report...</p>
         </div>
       </div>

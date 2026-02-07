@@ -1,149 +1,148 @@
 import React, { useEffect, useState } from 'react';
-import { FaPencilRuler, FaCode, FaUserGraduate, FaTimes } from 'react-icons/fa';
-import { IoDocumentTextSharp } from 'react-icons/io5';
-import { MdSupportAgent } from 'react-icons/md';
-import { AiOutlineShoppingCart } from 'react-icons/ai';
+import { FaCode, FaMobile, FaLaptopCode, FaShoppingCart, FaCloud, FaRocket } from 'react-icons/fa';
+import { MdDeveloperMode, MdIntegrationInstructions } from 'react-icons/md';
+import { IoClose } from 'react-icons/io5';
 import { Link } from 'react-router-dom';
 
 const services = [
   {
-    title: 'Web Development',
-    icon: <FaPencilRuler size={40} />,
-    description:
-      'Transform your digital presence with websites that drive real business results. We create platforms that attract your ideal customers, convert visitors into clients, and grow alongside your business. From brand storytelling to user engagement, every element is designed to strengthen your market position and accelerate revenue growth.',
-    detailedInfo: {
-      overview: 'Your website is often the first impression potential customers have of your business. We create digital experiences that not only capture attention but convert visitors into loyal customers. Our approach focuses on understanding your business goals, target audience, and competitive landscape to deliver a solution that drives measurable ROI.',
-      keyFeatures: [
-        'Strategic design that positions your brand as an industry leader and builds trust with your target audience',
-        'User experience optimization that guides visitors seamlessly toward conversion actions and key business goals',
-        'Mobile-first approach ensuring your message reaches customers wherever they are, capturing the growing mobile market',
-        'Search engine visibility strategies that put your business in front of customers actively searching for your services',
-        'Performance optimization that reduces bounce rates and keeps potential customers engaged with fast loading times',
-        'Scalable architecture that grows with your business, accommodating increased traffic and expanded functionality',
-        'Analytics integration providing actionable insights into customer behavior and marketing campaign effectiveness',
-        'Content management capabilities allowing your team to maintain fresh, relevant content without technical dependencies'
-      ],
-      businessValue: 'A professional website is no longer optional—it\'s essential for business credibility and growth. Our clients typically see improved customer acquisition costs, higher conversion rates, and enhanced brand perception. We focus on creating digital assets that pay for themselves through increased leads, sales, and customer engagement.',
-      approach: 'We begin by understanding your business objectives, competitive advantages, and target customer profile. Our strategy phase identifies opportunities to differentiate your brand and capture market share. Throughout development, we prioritize features that deliver the highest business impact, ensuring your investment generates returns quickly.',
-      investment: 'Project scope and investment vary based on business objectives and complexity, typically ranging from 4-12 weeks',
-      idealFor: 'Businesses ready to establish strong digital authority, companies seeking to reduce customer acquisition costs, organizations looking to expand market reach and capture new customer segments.'
-    }
-  },
-  {
-    title: 'App Development',
-    icon: <IoDocumentTextSharp size={40} />,
-    description:
-      'Reach your customers directly with mobile and web applications that create lasting engagement. Whether you\'re launching a new revenue stream, improving operational efficiency, or building customer loyalty, we develop apps that solve real business problems and deliver competitive advantages in your market.',
-    detailedInfo: {
-      overview: 'Mobile applications offer unprecedented opportunities to engage customers, streamline operations, and create new revenue channels. We develop applications that become essential tools for your customers or powerful assets for your internal operations, focusing on solving specific business challenges and creating measurable value.',
-      keyFeatures: [
-        'Customer engagement tools that increase lifetime value through direct communication channels and personalized experiences',
-        'Revenue generation features including in-app purchases, subscriptions, and monetization strategies aligned with your business model',
-        'Operational efficiency improvements that reduce costs and free your team to focus on high-value activities',
-        'Data collection and analysis capabilities providing insights into customer preferences and behavior patterns',
-        'Brand presence extension keeping your business top-of-mind with customers through regular interaction touchpoints',
-        'Competitive differentiation through unique features that set your offering apart in the marketplace',
-        'Customer retention mechanisms including loyalty programs and exclusive app-only benefits that reduce churn',
-        'Market expansion opportunities reaching new customer segments and geographic markets cost-effectively'
-      ],
-      businessValue: 'Applications create direct relationships with customers, reducing dependence on third-party platforms and advertising. They enable data-driven decision making through direct customer insights and behavioral analytics. For operations-focused apps, clients typically see significant time savings, error reduction, and improved team productivity.',
-      approach: 'We start by identifying the core business problem your app will solve and who will benefit most. Our strategy focuses on features that deliver immediate value while planning for future expansion. We validate assumptions through research and prototyping before full development, minimizing risk and ensuring market fit.',
-      investment: 'Development timelines typically span 8-16 weeks depending on feature complexity and business requirements',
-      idealFor: 'Businesses seeking direct customer relationships, companies with unique service delivery models, organizations looking to improve internal processes, startups validating new market opportunities.'
-    }
-  },
-  {
-    title: 'Software Development',
+    title: 'Custom Software Development',
     icon: <FaCode size={40} />,
     description:
-      'Gain competitive advantage through custom software that automates complex processes, eliminates inefficiencies, and scales with your growth. We build solutions that address your unique operational challenges, reduce costs, and free your team to focus on strategic initiatives that drive business value.',
+      'Build powerful, scalable software solutions tailored to your unique business needs. We transform complex challenges into elegant applications that streamline operations, boost productivity, and give you a competitive edge in your industry.',
     detailedInfo: {
-      overview: 'Off-the-shelf software often forces businesses to adapt their processes to fit generic solutions. Custom software does the opposite—it\'s built around your specific workflows, business rules, and competitive strategies. This alignment eliminates inefficiencies, reduces training time, and provides capabilities your competitors simply don\'t have.',
+      overview: 'Custom software is more than code—it\'s a strategic asset that aligns perfectly with your business processes and goals. We create solutions that eliminate inefficiencies, automate workflows, and scale seamlessly as your business grows. Our approach ensures you get software that works exactly how you need it to, not how off-the-shelf products force you to work.',
       keyFeatures: [
-        'Process automation that eliminates repetitive tasks, reduces errors, and reallocates human resources to higher-value work',
-        'Workflow optimization tailored to your specific operations, removing bottlenecks and accelerating business cycles',
-        'Integration capabilities connecting disparate systems to create a unified view of business operations and customer data',
-        'Business intelligence tools transforming raw data into actionable insights that inform strategic decisions',
-        'Competitive differentiation through proprietary capabilities that create barriers to entry in your market',
-        'Scalability planning ensuring systems grow efficiently with your business without requiring expensive replacements',
-        'Cost reduction through elimination of manual processes, reduced error rates, and optimized resource allocation',
-        'Compliance and security measures protecting sensitive business data and meeting industry-specific regulatory requirements'
+        'Tailored architecture designed around your specific workflows, business rules, and operational requirements',
+        'Seamless integration with existing systems, databases, and third-party services to create a unified ecosystem',
+        'Scalable infrastructure that grows with your business without requiring costly rewrites or migrations',
+        'Advanced automation capabilities that eliminate repetitive tasks and reduce human error rates significantly',
+        'Real-time analytics and reporting dashboards providing actionable insights into business performance',
+        'Enterprise-grade security protocols protecting sensitive data and ensuring compliance with industry regulations',
+        'Cloud-native deployment options for flexibility, reliability, and cost-effective infrastructure management',
+        'Ongoing maintenance and support ensuring your software remains secure, performant, and up-to-date'
       ],
-      businessValue: 'Custom software delivers ROI through operational savings, competitive advantages, and growth enablement. Clients typically see reduced operational costs, faster business cycles, improved decision-making speed, and the ability to pursue opportunities that weren\'t previously feasible. The software becomes a strategic asset that appreciates in value as your business grows.',
-      approach: 'We begin with operational analysis to identify bottlenecks, inefficiencies, and opportunities for automation. Our business analysts work closely with your team to document workflows and design solutions that enhance rather than disrupt operations. Implementation is phased to minimize business disruption while delivering value quickly.',
-      investment: 'Custom software projects range from 12-24+ weeks based on scope and integration requirements',
-      idealFor: 'Growing businesses outgrowing generic solutions, companies with unique operational models, organizations seeking operational excellence and cost leadership, businesses requiring specific compliance or security capabilities.'
+      businessValue: 'Custom software delivers measurable ROI through operational efficiency gains, cost reduction, and competitive differentiation. Our clients typically experience 40-60% reduction in manual processing time, improved data accuracy, faster decision-making, and the ability to offer unique services their competitors cannot match. The software becomes a strategic asset that appreciates in value as your business expands.',
+      approach: 'We begin with deep discovery to understand your business challenges, opportunities, and goals. Our agile methodology ensures you see progress quickly with regular demos and feedback cycles. We prioritize features based on business impact, delivering value incrementally while building toward your complete vision. Post-launch, we provide training, documentation, and ongoing optimization.',
+      investment: 'Project timelines typically range from 12-24 weeks depending on scope and complexity, with flexible engagement models',
+      idealFor: 'Growing businesses outgrowing generic solutions, companies with unique operational models, organizations seeking process automation, businesses requiring specific compliance capabilities, enterprises needing competitive differentiation through technology.'
     }
   },
   {
-    title: 'E-Commerce Solutions',
-    icon: <AiOutlineShoppingCart size={40} />,
+    title: 'Web Application Development',
+    icon: <FaLaptopCode size={40} />,
     description:
-      'Maximize revenue with e-commerce platforms engineered for conversions and growth. From first-time visitors to repeat customers, every aspect is optimized to reduce friction, build trust, and increase average order values. We create online stores that don\'t just display products—they actively sell them.',
+      'Create powerful web applications that deliver exceptional user experiences across all devices. From SaaS platforms to enterprise portals, we build responsive, high-performance applications that engage users and drive business results.',
     detailedInfo: {
-      overview: 'E-commerce success requires more than putting products online—it demands strategic platform design, conversion optimization, and customer experience excellence. We build online stores that address the complete customer journey while providing you with tools to manage inventory, fulfill orders, and grow your business efficiently.',
+      overview: 'Modern web applications are the backbone of digital business operations. We develop sophisticated, cloud-based solutions that provide seamless experiences whether accessed from desktop, tablet, or mobile. Our applications combine beautiful design with robust functionality, ensuring users love working with them while achieving your business objectives.',
       keyFeatures: [
-        'Conversion rate optimization through strategic design, persuasive copywriting integration, and friction reduction in the buying process',
-        'Customer lifetime value enhancement via personalized recommendations, loyalty programs, and targeted retention campaigns',
-        'Average order value increase through strategic product bundling, upselling opportunities, and threshold incentives',
-        'Inventory management integration preventing stockouts, reducing carrying costs, and optimizing reorder timing',
-        'Multi-channel selling capabilities expanding reach across marketplaces while maintaining centralized control',
-        'Marketing automation tools for abandoned cart recovery, customer win-back campaigns, and promotional management',
-        'Analytics and reporting dashboards providing visibility into sales trends, customer behavior, and profitability by product',
-        'Payment flexibility supporting multiple methods and currencies to maximize market reach and reduce checkout abandonment'
+        'Responsive design ensuring flawless experiences across all devices and screen sizes for maximum accessibility',
+        'Progressive Web App (PWA) capabilities enabling offline functionality and app-like experiences in browsers',
+        'Advanced user interface design with intuitive navigation and workflows that minimize training requirements',
+        'Real-time data synchronization keeping information current across all users and touchpoints instantly',
+        'Role-based access control and authentication systems ensuring appropriate security and data privacy',
+        'API-first architecture enabling easy integration with other systems and future expansion possibilities',
+        'Performance optimization delivering fast load times and smooth interactions even with complex data',
+        'Cross-browser compatibility ensuring consistent functionality across Chrome, Safari, Firefox, and Edge'
       ],
-      businessValue: 'E-commerce platforms create 24/7 revenue generation capability while reducing overhead compared to physical retail. Our clients see increased profit margins through operational efficiency, expanded market reach without geographic limitations, and valuable customer data that informs product development and marketing strategies.',
-      approach: 'We analyze your product catalog, target customer profile, and competitive positioning to design an optimal selling environment. Our strategy emphasizes quick wins through conversion optimization while building long-term growth through customer retention and lifetime value enhancement. We focus on metrics that matter: conversion rate, average order value, and customer acquisition cost.',
-      investment: 'E-commerce implementations typically range from 6-14 weeks depending on catalog complexity and integration needs',
-      idealFor: 'Retailers expanding online or scaling existing e-commerce, manufacturers selling direct-to-consumer, service businesses adding product revenue streams, brands seeking greater control over customer relationships.'
+      businessValue: 'Web applications provide centralized access to critical business functions from anywhere, improving team productivity and enabling remote work capabilities. Clients see reduced IT infrastructure costs through cloud deployment, improved collaboration across distributed teams, better customer engagement through self-service portals, and the ability to rapidly deploy new features and updates without user downloads.',
+      approach: 'Our process starts with user research and workflow mapping to understand how people will interact with your application. We create interactive prototypes for early validation before full development. Our iterative approach allows for continuous refinement based on user feedback, ensuring the final product truly meets needs. We handle deployment, training, and provide comprehensive documentation.',
+      investment: 'Development cycles range from 10-20 weeks based on feature complexity and integration requirements',
+      idealFor: 'Businesses launching SaaS products, companies needing internal tools and portals, organizations replacing legacy desktop applications, startups building minimum viable products, enterprises requiring customer-facing platforms.'
     }
   },
   {
-    title: 'IT Support',
-    icon: <MdSupportAgent size={40} />,
+    title: 'Mobile App Development',
+    icon: <FaMobile size={40} />,
     description:
-      'Eliminate technology disruptions and security risks with proactive IT management that keeps your business running smoothly. Our support goes beyond fixing problems—we prevent them, optimize performance, and provide strategic guidance that aligns technology investments with business growth objectives.',
+      'Reach your customers where they are with native iOS and Android applications. We create mobile experiences that users love, combining beautiful design with powerful functionality to drive engagement, loyalty, and revenue growth.',
     detailedInfo: {
-      overview: 'Technology downtime directly impacts revenue, productivity, and customer satisfaction. Our IT support services ensure business continuity through proactive monitoring, rapid issue resolution, and strategic planning. We serve as your technology department, providing enterprise-level expertise at a fraction of the cost of in-house IT staff.',
+      overview: 'Mobile apps provide direct, personal connections with your customers or employees. We develop native applications for iOS and Android, as well as cross-platform solutions that maximize reach while minimizing development costs. Every app is crafted to leverage platform-specific capabilities while maintaining a consistent brand experience and achieving your business goals.',
       keyFeatures: [
-        'Business continuity assurance through proactive monitoring that identifies and resolves issues before they impact operations',
-        'Security risk mitigation protecting sensitive business data and customer information from evolving cyber threats',
-        'Productivity optimization ensuring employees have reliable tools and support to maximize their effectiveness',
-        'Technology planning aligned with business growth, ensuring infrastructure investments support strategic objectives',
-        'Cost predictability through fixed monthly fees that eliminate surprise IT expenses and enable accurate budgeting',
-        'Disaster recovery planning minimizing data loss and downtime in worst-case scenarios, protecting business continuity',
-        'Vendor management coordination saving time and reducing frustration when dealing with multiple technology providers',
-        'Compliance support ensuring technology practices meet industry regulatory requirements and standards'
+        'Native iOS and Android development or cross-platform solutions using React Native and Flutter frameworks',
+        'Intuitive user interfaces following platform design guidelines for familiar, easy-to-use experiences',
+        'Push notification systems enabling direct communication with users for engagement and retention',
+        'Offline functionality ensuring core features work even without internet connectivity for better user experience',
+        'Device feature integration leveraging camera, GPS, biometrics, and sensors for enhanced capabilities',
+        'In-app analytics tracking user behavior and engagement to inform product decisions and improvements',
+        'Secure payment integration for in-app purchases, subscriptions, and e-commerce transactions',
+        'App store optimization and deployment support ensuring successful launches on Apple App Store and Google Play'
       ],
-      businessValue: 'Reliable IT support reduces operational risk, improves employee productivity, and enables growth without technology constraints. Businesses typically see reduced downtime costs, lower cybersecurity insurance premiums, improved customer service capabilities, and the ability to focus management attention on core business activities rather than technology problems.',
-      approach: 'We start with a technology assessment identifying vulnerabilities, inefficiencies, and opportunities for improvement. Our proactive approach emphasizes prevention over reaction, with regular maintenance and monitoring preventing issues before they impact your business. Strategic reviews ensure technology investments align with business goals and deliver appropriate returns.',
-      investment: 'Flexible service agreements with predictable monthly costs based on business size and support requirements',
-      idealFor: 'Small to medium businesses without dedicated IT staff, growing companies needing to scale technology capabilities, organizations seeking to reduce IT costs while improving service quality, businesses requiring compliance with data security regulations.'
+      businessValue: 'Mobile apps create direct customer relationships, reducing dependence on third-party platforms and advertising costs. They enable personalized experiences based on user behavior and preferences, increasing engagement and lifetime value. Companies typically see improved customer retention through convenient access, new revenue streams through in-app monetization, enhanced brand loyalty through regular interaction, and valuable first-party data for marketing and product development.',
+      approach: 'We start by defining your app\'s core value proposition and target user personas. Our design phase focuses on creating intuitive flows that guide users to key actions. We develop in sprints with regular builds for testing and feedback. Pre-launch includes beta testing with real users to refine the experience. Post-launch, we monitor analytics, gather user feedback, and iterate based on actual usage patterns.',
+      investment: 'Mobile app projects typically span 12-20 weeks depending on platform choices and feature complexity',
+      idealFor: 'Businesses seeking direct customer relationships, companies with mobile-first audiences, organizations improving field operations, startups validating app-based business models, brands creating loyalty programs and engagement platforms.'
     }
   },
   {
-    title: 'Internship Program',
-    icon: <FaUserGraduate size={40} />,
+    title: 'E-Commerce Development',
+    icon: <FaShoppingCart size={40} />,
     description:
-      'Bridge the gap between education and career success through hands-on experience with real business projects. Our program provides aspiring professionals with mentorship, practical skills, and portfolio-building opportunities that accelerate career development and prepare them for the competitive job market.',
+      'Launch and scale your online store with e-commerce platforms built for growth. We create seamless shopping experiences that convert browsers into buyers, with robust backend systems that make order fulfillment and inventory management effortless.',
     detailedInfo: {
-      overview: 'The technology industry values practical experience as much as formal education. Our internship program provides that critical experience, working on actual client projects under the guidance of industry professionals. Interns gain not just technical skills but business acumen, professional communication abilities, and the confidence that comes from delivering real value.',
+      overview: 'E-commerce success requires more than a shopping cart—it demands strategic platform design, conversion optimization, and operational efficiency. We build online stores that attract customers, provide exceptional shopping experiences, and include powerful tools for managing inventory, processing orders, and analyzing sales performance. Every element is optimized to maximize revenue and minimize friction.',
       keyFeatures: [
-        'Real project experience building portfolios with actual business solutions rather than academic exercises',
-        'Professional mentorship providing guidance from experienced practitioners who share industry insights and career advice',
-        'Skill development across the full project lifecycle from requirements gathering to deployment and support',
-        'Business context understanding how technology decisions impact client outcomes and learning to think strategically',
-        'Team collaboration experience working in professional environments with established processes and quality standards',
-        'Industry tools exposure gaining proficiency with professional-grade platforms and frameworks used in the marketplace',
-        'Network building connecting with professionals, clients, and fellow interns who become valuable career contacts',
-        'Career acceleration positioning for full-time roles with demonstrated capabilities and professional recommendations'
+        'Conversion-optimized checkout flows reducing cart abandonment and maximizing completed purchases',
+        'Product catalog management with variants, categories, filtering, and search for easy discovery',
+        'Inventory tracking and management preventing overselling and optimizing stock levels automatically',
+        'Multiple payment gateway integration supporting credit cards, digital wallets, and alternative payment methods',
+        'Shipping calculation and fulfillment integration with major carriers for accurate costs and tracking',
+        'Customer account management with order history, wishlists, and saved payment information for convenience',
+        'Marketing automation including abandoned cart recovery, email campaigns, and promotional capabilities',
+        'Analytics and reporting dashboards tracking sales trends, customer behavior, and product performance metrics'
       ],
-      businessValue: 'For interns, the program provides competitive advantages in the job market through practical experience, professional references, and a portfolio of real work. Many interns transition to full-time positions, having proven their capabilities and cultural fit. The program serves as an extended interview process, reducing hiring risk for both parties.',
-      approach: 'The program balances learning with contribution, starting with foundational training and progressing to increasingly independent work. Regular feedback sessions ensure continuous improvement while project work provides context for learning. We match interns with projects that align with their interests and career goals while meeting business needs.',
-      investment: '3-6 month programs with flexible start dates, designed to fit academic schedules',
-      idealFor: 'Students seeking competitive advantages in the job market, recent graduates building professional experience, career changers validating interest in technology roles, motivated learners seeking practical skill development beyond classroom theory.'
+      businessValue: 'E-commerce platforms create 24/7 revenue generation while reducing overhead compared to physical retail. Our clients experience increased profit margins through operational efficiency, expanded market reach beyond geographic limitations, lower customer acquisition costs through owned channels, valuable customer data informing product and marketing decisions, and the ability to rapidly test new products and pricing strategies.',
+      approach: 'We analyze your products, target customers, and competitive landscape to design optimal selling experiences. Our strategy emphasizes quick wins through conversion optimization while building for long-term growth. We integrate with your existing systems for seamless operations. Post-launch includes conversion rate optimization, performance monitoring, and feature enhancements based on customer behavior and business needs.',
+      investment: 'E-commerce implementations range from 8-16 weeks depending on catalog size and integration complexity',
+      idealFor: 'Retailers expanding online or scaling existing e-commerce, manufacturers selling direct-to-consumer, service businesses adding product offerings, brands seeking control over customer relationships, wholesale businesses opening retail channels.'
     }
   },
+  {
+    title: 'Cloud Solutions & DevOps',
+    icon: <FaCloud size={40} />,
+    description:
+      'Modernize your infrastructure with cloud solutions that scale effortlessly and reduce costs. We implement DevOps practices and cloud architectures that improve reliability, speed up deployment, and give you the agility to respond quickly to market opportunities.',
+    detailedInfo: {
+      overview: 'Cloud infrastructure and DevOps practices are essential for modern software operations. We help businesses migrate to cloud platforms, optimize existing cloud deployments, and implement automation that accelerates development while improving reliability. Our solutions reduce infrastructure costs, eliminate manual deployment errors, and enable rapid scaling to meet demand fluctuations.',
+      keyFeatures: [
+        'Cloud architecture design and migration planning for AWS, Google Cloud, and Microsoft Azure platforms',
+        'Infrastructure as Code (IaC) implementation enabling consistent, repeatable deployments across environments',
+        'Continuous Integration/Continuous Deployment (CI/CD) pipelines automating testing and releases',
+        'Container orchestration with Docker and Kubernetes for efficient resource utilization and scaling',
+        'Monitoring and alerting systems providing visibility into application performance and infrastructure health',
+        'Security best practices including encryption, access controls, and compliance framework implementation',
+        'Cost optimization strategies reducing cloud spending while maintaining or improving performance',
+        'Disaster recovery and backup solutions ensuring business continuity and data protection'
+      ],
+      businessValue: 'Cloud and DevOps transformation delivers faster time-to-market for new features, reduced infrastructure costs through right-sizing and automation, improved system reliability and uptime, enhanced security and compliance posture, greater team productivity through automated workflows, and the flexibility to scale resources up or down based on actual demand rather than peak capacity planning.',
+      approach: 'We assess your current infrastructure and workflows to identify optimization opportunities. Our migration approach minimizes disruption through careful planning and phased execution. We implement monitoring and automation incrementally, proving value at each step. Training ensures your team can maintain and evolve the systems. Ongoing optimization continues to improve performance and reduce costs.',
+      investment: 'Cloud transformation projects typically span 8-16 weeks with ongoing optimization and support options',
+      idealFor: 'Businesses migrating from on-premise to cloud infrastructure, companies seeking to reduce IT costs, organizations improving deployment speed and reliability, startups building cloud-native from the start, enterprises modernizing legacy systems.'
+    }
+  },
+  {
+    title: 'API Development & Integration',
+    icon: <MdIntegrationInstructions size={40} />,
+    description:
+      'Connect your systems and unlock new capabilities through robust API development and integration. We build APIs that enable seamless data flow between applications and integrate third-party services to extend your platform\'s functionality.',
+    detailedInfo: {
+      overview: 'APIs are the connective tissue of modern software ecosystems, enabling different systems to work together seamlessly. We design and develop RESTful and GraphQL APIs that are secure, well-documented, and built for scale. Whether you need to expose your data to partners, integrate with third-party services, or connect internal systems, we create integration solutions that are reliable and maintainable.',
+      keyFeatures: [
+        'RESTful and GraphQL API design following industry best practices for consistency and usability',
+        'Comprehensive API documentation making integration straightforward for developers and partners',
+        'Authentication and authorization systems ensuring secure access control and data protection',
+        'Rate limiting and throttling protecting your infrastructure from abuse and ensuring fair usage',
+        'Third-party service integration connecting CRM, payment processors, marketing tools, and business systems',
+        'Data transformation and synchronization ensuring consistent information across connected platforms',
+        'Webhook implementation enabling real-time notifications and event-driven architectures',
+        'API versioning strategies allowing updates without breaking existing integrations and client applications'
+      ],
+      businessValue: 'Well-designed APIs enable business agility by allowing rapid integration of new services and partners. Companies experience reduced development time for new features through reusable components, new revenue opportunities through API monetization or partner ecosystems, improved data accuracy through automated synchronization, elimination of manual data entry and associated errors, and the ability to offer enhanced experiences through third-party service integration.',
+      approach: 'We start by mapping data flows and integration requirements across your systems. Our API design phase focuses on creating intuitive, consistent interfaces that developers enjoy using. We implement robust error handling and logging for easier troubleshooting. Testing includes security audits and load testing to ensure reliability. Documentation and developer support ensure successful integration by your team or partners.',
+      investment: 'API development and integration projects range from 6-14 weeks based on complexity and number of systems',
+      idealFor: 'Businesses building platform ecosystems, companies needing to connect disparate systems, organizations offering partner integrations, SaaS providers enabling customer integrations, enterprises modernizing through microservices architecture.'
+    }
+  }
 ];
 
 export default function ServicesSection() {
@@ -161,15 +160,20 @@ export default function ServicesSection() {
   }, [selectedService]);
 
   return (
-    <section className="bg-white py-4 md:py-10 px-4 md:px-8">
+    <section className="bg-gradient-to-b from-white to-slate-50 py-16 md:py-10 px-4 md:px-8">
       <div className="max-w-8xl mx-auto">
         {/* Header */}
         <div className="text-center mb-16 md:mb-20">
-          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-            Our Services
+          <div className="inline-block mb-4">
+            <span className="bg-orange-100 text-[#ff5a00] px-6 py-2 rounded-full text-sm font-semibold">
+              WHAT WE OFFER
+            </span>
+          </div>
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-6">
+            Our <span className="text-[#ff5a00]">Services</span>
           </h2>
-          <p className="text-gray-600 text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
-            Strategic technology solutions that drive measurable business results and competitive advantage.
+          <p className="text-gray-600 text-lg md:text-xl max-w-3xl mx-auto leading-relaxed">
+            Innovative software solutions that transform businesses and drive measurable results through cutting-edge technology.
           </p>
         </div>
 
@@ -178,32 +182,37 @@ export default function ServicesSection() {
           {services.map((service, index) => (
             <div
               key={index}
-              className="group relative bg-white border-2 border-gray-200 rounded-2xl p-8 md:p-10 transition-all duration-300 hover:border-gray-900 hover:shadow-xl"
+              className="group relative bg-white border-2 border-gray-100 rounded-2xl p-8 md:p-10 transition-all duration-300 hover:border-[#ff5a00] hover:shadow-2xl hover:-translate-y-2"
             >
+              {/* Gradient overlay on hover */}
+              <div className="absolute inset-0 bg-gradient-to-br from-[#ff5a00] to-[#cc4700] opacity-0 group-hover:opacity-5 rounded-2xl transition-opacity duration-300"></div>
+              
               {/* Icon Container */}
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-900 rounded-xl mb-6 shadow-md group-hover:bg-gray-800 transition-all duration-300">
+              <div className="relative inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-[#ff5a00] to-[#ff7a33] rounded-2xl mb-6 shadow-lg group-hover:shadow-xl group-hover:scale-110 transition-all duration-300">
                 <div className="text-white">
                   {service.icon}
                 </div>
               </div>
 
               {/* Title */}
-              <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 group-hover:text-gray-800 transition-colors duration-300">
+              <h3 className="relative text-2xl md:text-2xl font-bold text-gray-900 mb-4 group-hover:text-[#ff5a00] transition-colors duration-300">
                 {service.title}
               </h3>
 
               {/* Description */}
-              <p className="text-gray-600 text-sm md:text-base leading-relaxed mb-6">
+              <p className="relative text-gray-600 text-base leading-relaxed mb-6">
                 {service.description}
               </p>
 
               {/* View More Button */}
               <button 
                 onClick={() => setSelectedService(service)}
-                className="inline-flex items-center gap-2 px-6 py-3 bg-gray-900 text-white font-semibold rounded-lg hover:bg-gray-800 transition-all duration-300 group-hover:shadow-lg"
+                className="relative inline-flex items-center gap-2 px-6 py-3 bg-[#ff5a00] text-white font-semibold rounded-xl hover:bg-[#e64f00] transition-all duration-300 group-hover:shadow-lg group-hover:gap-3"
               >
-                View More
-                <span className="group-hover:translate-x-1 transition-transform duration-300">→</span>
+                Learn More
+                <svg className="w-5 h-5 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                </svg>
               </button>
             </div>
           ))}
@@ -212,49 +221,61 @@ export default function ServicesSection() {
 
       {/* Full Screen Modal */}
       {selectedService && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm animate-fadeIn">
-          <div className="relative bg-white w-full h-full md:w-[90vw] md:h-[90vh] md:rounded-2xl shadow-2xl overflow-hidden animate-slideUp">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70 backdrop-blur-sm animate-fadeIn">
+          <div className="relative bg-white w-full h-full md:w-[92vw] md:h-[92vh] md:rounded-3xl shadow-2xl overflow-hidden animate-slideUp">
             {/* Close Button */}
             <button
               onClick={() => setSelectedService(null)}
-              className="absolute top-6 right-6 z-10 w-12 h-12 bg-gray-900 hover:bg-gray-800 text-white rounded-full flex items-center justify-center transition-all duration-300 hover:rotate-90"
+              className="absolute top-6 right-6 z-10 w-14 h-14 bg-[#ff5a00] hover:bg-[#e64f00] text-white rounded-full flex items-center justify-center transition-all duration-300 hover:rotate-90 hover:scale-110 shadow-lg"
             >
-              <FaTimes size={20} />
+              <IoClose size={28} />
             </button>
 
             {/* Scrollable Content */}
             <div className="h-full overflow-y-auto">
-              <div className="max-w-8xl mx-auto px-8 md:px-16 py-12 md:py-16">
+              <div className="max-w-6xl mx-auto px-6 md:px-16 py-12 md:py-20">
                 {/* Header */}
-                <div className="mb-12">
-                  <div className="inline-flex items-center justify-center w-20 h-20 bg-gray-900 rounded-2xl mb-6">
+                <div className="mb-16">
+                  <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-[#ff5a00] to-[#ff7a33] rounded-3xl mb-8 shadow-xl">
                     <div className="text-white text-5xl">
                       {selectedService.icon}
                     </div>
                   </div>
-                  <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+                  <h2 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
                     {selectedService.title}
                   </h2>
-                  <p className="text-xl text-gray-600 leading-relaxed">
+                  <p className="text-xl md:text-2xl text-gray-600 leading-relaxed">
                     {selectedService.description}
                   </p>
                 </div>
 
                 {/* Overview */}
-                <div className="mb-12">
-                  <h3 className="text-2xl font-bold text-gray-900 mb-4">Strategic Overview</h3>
-                  <p className="text-gray-700 leading-relaxed text-lg">
+                <div className="mb-16">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-1 h-8 bg-[#ff5a00] rounded-full"></div>
+                    <h3 className="text-3xl font-bold text-gray-900">Strategic Overview</h3>
+                  </div>
+                  <p className="text-gray-700 leading-relaxed text-lg md:text-xl">
                     {selectedService.detailedInfo.overview}
                   </p>
                 </div>
 
                 {/* Key Features */}
-                <div className="mb-12">
-                  <h3 className="text-2xl font-bold text-gray-900 mb-6">Business Capabilities</h3>
-                  <div className="space-y-4">
+                <div className="mb-16">
+                  <div className="flex items-center gap-3 mb-8">
+                    <div className="w-1 h-8 bg-[#ff5a00] rounded-full"></div>
+                    <h3 className="text-3xl font-bold text-gray-900">Key Capabilities</h3>
+                  </div>
+                  <div className="grid md:grid-cols-2 gap-6">
                     {selectedService.detailedInfo.keyFeatures.map((feature, idx) => (
-                      <div key={idx} className="flex gap-4">
-                        <div className="flex-shrink-0 w-2 h-2 bg-gray-900 rounded-full mt-2"></div>
+                      <div key={idx} className="flex gap-4 bg-slate-50 rounded-xl p-6 hover:bg-slate-100 transition-colors duration-300">
+                        <div className="flex-shrink-0">
+                          <div className="w-8 h-8 bg-[#ff5a00] bg-opacity-10 rounded-lg flex items-center justify-center">
+                            <svg className="w-5 h-5 text-[#ff5a00]" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                          </div>
+                        </div>
                         <p className="text-gray-700 leading-relaxed text-lg">{feature}</p>
                       </div>
                     ))}
@@ -262,48 +283,82 @@ export default function ServicesSection() {
                 </div>
 
                 {/* Business Value */}
-                <div className="mb-12 bg-gray-50 rounded-xl p-8">
-                  <h3 className="text-2xl font-bold text-gray-900 mb-4">Business Value & ROI</h3>
-                  <p className="text-gray-700 leading-relaxed text-lg">
+                <div className="mb-16 bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl p-8 md:p-12 border border-[#ff5a00] border-opacity-20">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-1 h-8 bg-[#ff5a00] rounded-full"></div>
+                    <h3 className="text-3xl font-bold text-gray-900">Business Value & ROI</h3>
+                  </div>
+                  <p className="text-gray-700 leading-relaxed text-lg md:text-xl">
                     {selectedService.detailedInfo.businessValue}
                   </p>
                 </div>
 
                 {/* Approach */}
-                <div className="mb-12">
-                  <h3 className="text-2xl font-bold text-gray-900 mb-4">Our Approach</h3>
-                  <p className="text-gray-700 leading-relaxed text-lg">
+                <div className="mb-16">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-1 h-8 bg-[#ff5a00] rounded-full"></div>
+                    <h3 className="text-3xl font-bold text-gray-900">Our Approach</h3>
+                  </div>
+                  <p className="text-gray-700 leading-relaxed text-lg md:text-xl">
                     {selectedService.detailedInfo.approach}
                   </p>
                 </div>
 
                 {/* Investment & Ideal For */}
-                <div className="grid md:grid-cols-2 gap-8 mb-12">
-                  <div className="bg-gray-50 rounded-xl p-6">
-                    <h4 className="text-xl font-bold text-gray-900 mb-3">Investment & Timeline</h4>
-                    <p className="text-gray-700 leading-relaxed">
+                <div className="grid md:grid-cols-2 gap-8 mb-16">
+                  <div className="bg-slate-50 rounded-2xl p-8 border-2 border-slate-200 hover:border-[#ff5a00] transition-colors duration-300">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-10 h-10 bg-[#ff5a00] bg-opacity-10 rounded-lg flex items-center justify-center">
+                        <svg className="w-6 h-6 text-[#ff5a00]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                      <h4 className="text-2xl font-bold text-gray-900">Investment & Timeline</h4>
+                    </div>
+                    <p className="text-gray-700 leading-relaxed text-lg">
                       {selectedService.detailedInfo.investment}
                     </p>
                   </div>
-                  <div className="bg-gray-50 rounded-xl p-6">
-                    <h4 className="text-xl font-bold text-gray-900 mb-3">Ideal For</h4>
-                    <p className="text-gray-700 leading-relaxed">
+                  <div className="bg-slate-50 rounded-2xl p-8 border-2 border-slate-200 hover:border-[#ff5a00] transition-colors duration-300">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-10 h-10 bg-[#ff5a00] bg-opacity-10 rounded-lg flex items-center justify-center">
+                        <svg className="w-6 h-6 text-[#ff5a00]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                      </div>
+                      <h4 className="text-2xl font-bold text-gray-900">Ideal For</h4>
+                    </div>
+                    <p className="text-gray-700 leading-relaxed text-lg">
                       {selectedService.detailedInfo.idealFor}
                     </p>
                   </div>
                 </div>
 
                 {/* CTA */}
-                <div className="text-center pt-8 border-t border-gray-200">
-                  <h3 className="text-2xl font-bold text-gray-900 mb-4">
-                    Ready to Drive Results?
+                <div className="text-center pt-12 border-t-2 border-gray-200">
+                  <h3 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                    Ready to Get Started?
                   </h3>
-                  <p className="text-gray-600 mb-6 text-lg">
-                    Let's discuss how this solution can accelerate your business growth.
+                  <p className="text-gray-600 mb-8 text-lg md:text-xl max-w-2xl mx-auto">
+                    Let's discuss how we can help transform your business with innovative technology solutions.
                   </p>
-                  <Link to='/contact-us' className="px-8 py-4 bg-gray-900 hover:bg-gray-800 text-white font-semibold rounded-xl transition-all duration-300 text-lg">
-                    Schedule a Consultation
-                  </Link>
+                  <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                    <Link 
+                      to='/contact-us' 
+                      className="px-10 py-5 bg-[#ff5a00] hover:bg-[#e64f00] text-white font-bold rounded-xl transition-all duration-300 text-lg shadow-lg hover:shadow-xl hover:scale-105 inline-flex items-center gap-2"
+                    >
+                      Schedule a Consultation
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                      </svg>
+                    </Link>
+                    <button 
+                      onClick={() => setSelectedService(null)}
+                      className="px-10 py-5 bg-white border-2 border-[#ff5a00] text-[#ff5a00] hover:bg-orange-50 font-bold rounded-xl transition-all duration-300 text-lg"
+                    >
+                      View Other Services
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -323,7 +378,7 @@ export default function ServicesSection() {
 
         @keyframes slideUp {
           from {
-            transform: translateY(20px);
+            transform: translateY(30px);
             opacity: 0;
           }
           to {
@@ -338,6 +393,25 @@ export default function ServicesSection() {
 
         .animate-slideUp {
           animation: slideUp 0.4s ease-out;
+        }
+
+        /* Custom scrollbar for modal */
+        .overflow-y-auto::-webkit-scrollbar {
+          width: 10px;
+        }
+
+        .overflow-y-auto::-webkit-scrollbar-track {
+          background: #f1f1f1;
+          border-radius: 10px;
+        }
+
+        .overflow-y-auto::-webkit-scrollbar-thumb {
+          background: #ff5a00;
+          border-radius: 10px;
+        }
+
+        .overflow-y-auto::-webkit-scrollbar-thumb:hover {
+          background: #e64f00;
         }
       `}</style>
     </section>
