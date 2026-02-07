@@ -204,9 +204,9 @@ const DashboardHome = ({ role }) => {
       value: dashboardData.stats.totalReports,
       change: '+12%',
       icon: FileText,
-      gradient: 'from-blue-500 to-[#1d293d]',
+      gradient: 'from-blue-500 to-[#ff5a00]',
       bg: 'bg-blue-50',
-      iconColor: 'text-[#1d293d]',
+      iconColor: 'text-[#ff5a00]',
       trend: 'up'
     },
     {
@@ -441,7 +441,7 @@ const DashboardHome = ({ role }) => {
                     <div key={report.id} className="flex items-center justify-between p-3 bg-slate-50/50 rounded-lg hover:bg-slate-100/50 transition-all group">
                       <div className="flex items-center gap-2.5 flex-1 min-w-0">
                         <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                          <FileText className="w-4 h-4 text-[#1d293d]" />
+                          <FileText className="w-4 h-4 text-[#ff5a00]" />
                         </div>
                         <div className="min-w-0 flex-1">
                           <p className="font-semibold text-slate-900 text-xs truncate">{report.title}</p>

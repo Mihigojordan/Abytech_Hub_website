@@ -15,7 +15,7 @@ function Values() {
           {/* Left Content */}
           <div className="space-y-8">
             {/* Badge */}
-            <div className="inline-flex items-center gap-2 bg-blue-800/50 backdrop-blur-sm px-6 py-3 rounded-full border border-[#1d293d]/30">
+            <div className="inline-flex items-center gap-2 bg-blue-800/50 backdrop-blur-sm px-6 py-3 rounded-full border border-[#ff5a00]/30">
               <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
               <span className="text-blue-100 font-medium">Our Value Proposition</span>
             </div>
@@ -34,7 +34,7 @@ function Values() {
             <div className="space-y-6 pt-4">
               {/* BootCamp Training */}
               <div className="flex gap-4 group">
-                <div className="flex-shrink-0 w-12 h-12 bg-blue-800/50 backdrop-blur-sm rounded-lg flex items-center justify-center border border-[#1d293d]/30 group-hover:bg-blue-700/50 transition-colors">
+                <div className="flex-shrink-0 w-12 h-12 bg-blue-800/50 backdrop-blur-sm rounded-lg flex items-center justify-center border border-[#ff5a00]/30 group-hover:bg-blue-700/50 transition-colors">
                   <Users className="w-6 h-6 text-blue-300" />
                 </div>
                 <div>
@@ -45,7 +45,7 @@ function Values() {
 
               {/* Talent Outsourcing */}
               <div className="flex gap-4 group">
-                <div className="flex-shrink-0 w-12 h-12 bg-blue-800/50 backdrop-blur-sm rounded-lg flex items-center justify-center border border-[#1d293d]/30 group-hover:bg-blue-700/50 transition-colors">
+                <div className="flex-shrink-0 w-12 h-12 bg-blue-800/50 backdrop-blur-sm rounded-lg flex items-center justify-center border border-[#ff5a00]/30 group-hover:bg-blue-700/50 transition-colors">
                   <Shield className="w-6 h-6 text-blue-300" />
                 </div>
                 <div>
@@ -56,7 +56,7 @@ function Values() {
 
               {/* Back-Office Operations */}
               <div className="flex gap-4 group">
-                <div className="flex-shrink-0 w-12 h-12 bg-blue-800/50 backdrop-blur-sm rounded-lg flex items-center justify-center border border-[#1d293d]/30 group-hover:bg-blue-700/50 transition-colors">
+                <div className="flex-shrink-0 w-12 h-12 bg-blue-800/50 backdrop-blur-sm rounded-lg flex items-center justify-center border border-[#ff5a00]/30 group-hover:bg-blue-700/50 transition-colors">
                   <UserCheck className="w-6 h-6 text-blue-300" />
                 </div>
                 <div>

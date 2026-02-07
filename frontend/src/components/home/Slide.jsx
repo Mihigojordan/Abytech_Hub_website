@@ -96,7 +96,7 @@ function Slide() {
               <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl p-10 h-80 flex flex-col justify-between shadow-xl hover:shadow-2xl transition-shadow">
                 <div>
                   <div className="flex items-center justify-between mb-6">
-                    <div className="text-blue-400 text-sm font-semibold tracking-widest">
+                    <div className="text-[#ff5a00] text-sm font-semibold tracking-widest">
                       {feature.company}
                     </div>
                  
@@ -110,7 +110,7 @@ function Slide() {
                 </div>
                 
                 <div className="flex items-center gap-3 mt-6">
-                  <button className="bg-blue-500 hover:bg-slate-800 text-white px-6 py-2 rounded-full text-sm font-semibold transition-colors">
+                  <button className="bg-[#ff5a00] hover:bg-[#ff5a00] text-white px-6 py-2 rounded-full text-sm font-semibold transition-colors">
                     Learn More
                   </button>
                   <div className="text-gray-500 text-sm">
@@ -134,7 +134,7 @@ function Slide() {
               <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl p-10 h-80 flex flex-col justify-between shadow-xl hover:shadow-2xl transition-shadow">
                 <div>
                   <div className="flex items-center justify-between mb-6">
-                    <div className="text-blue-400 text-sm font-semibold tracking-widest">
+                    <div className="text-[#ff5a00] text-sm font-semibold tracking-widest">
                       {feature.company}
                     </div>
                  
@@ -148,7 +148,7 @@ function Slide() {
                 </div>
                 
                 <div className="flex items-center gap-3 mt-6">
-                  <button className="bg-blue-500 hover:bg-slate-800 text-white px-6 py-2 rounded-full text-sm font-semibold transition-colors">
+                  <button className="bg-[#ff5a00] hover:bg-slate-800 text-white px-6 py-2 rounded-full text-sm font-semibold transition-colors">
                     Learn More
                   </button>
                   <div className="text-gray-500 text-sm">

@@ -13,7 +13,7 @@ const InsightCard = ({ image, date, category, title, description, isNew }) => {
         />
         {isNew && (
           <div className="absolute top-4 right-4 bg-white px-4 py-1.5 rounded-full shadow-md">
-            <span className="text-[#1d293d] font-semibold text-sm">New</span>
+            <span className="text-[#ff5a00] font-semibold text-sm">New</span>
           </div>
         )}
       </div>
@@ -23,11 +23,11 @@ const InsightCard = ({ image, date, category, title, description, isNew }) => {
         {/* Date and Category */}
         <div className="flex items-center gap-3 text-sm">
           <span className="text-gray-500">{date}</span>
-          <span className="text-[#1d293d] font-semibold">{category}</span>
+          <span className="text-[#ff5a00] font-semibold">{category}</span>
         </div>
 
         {/* Title */}
-        <h3 className="text-xl font-bold text-gray-900 group-hover:text-[#1d293d] transition-colors line-clamp-2">
+        <h3 className="text-xl font-bold text-gray-900 group-hover:text-[#ff5a00] transition-colors line-clamp-2">
           {title}
         </h3>
 
@@ -76,7 +76,7 @@ const DailyInsights = () => {
         {/* Header Section */}
         <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 mb-12">
           <div className="space-y-4">
-            <p className="text-[#1d293d] uppercase tracking-widest text-xs md:text-sm font-semibold letter-spacing-wide">
+            <p className="text-[#ff5a00] uppercase tracking-widest text-xs md:text-sm font-semibold letter-spacing-wide">
               DAILY NEWS
             </p>
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900">
@@ -88,7 +88,7 @@ const DailyInsights = () => {
           </div>
 
           {/* Learn More Button */}
-          <button className="bg-slate-800 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-full flex items-center gap-2 transition-all duration-300 shadow-md hover:shadow-lg whitespace-nowrap self-start lg:self-auto">
+          <button className="bg-[#ff5a00] hover:bg-[#ff5a00] text-white font-semibold px-6 py-3 rounded-full flex items-center gap-2 transition-all duration-300 shadow-md hover:shadow-lg whitespace-nowrap self-start lg:self-auto">
             Learn More
             <ArrowRight className="w-5 h-5" />
           </button>

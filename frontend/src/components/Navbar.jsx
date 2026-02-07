@@ -83,14 +83,14 @@ function NavBar() {
 
         {/* Main Navigation */}
         <nav className="bg-[#F5F7FF] shadow-md">
-          <div className="container mx-auto px-8">
+          <div className=" px-10">
             <div className="flex justify-between items-center py-4">
               {/* Logo */}
               <Link to="/" className="flex items-center transition-transform duration-300 hover:scale-105">
                 <img
                   src={Logo}
                   alt="Brand Logo"
-                  className="h-14 w-auto object-contain"
+                  className="h-16 scale-140 w-auto object-contain"
                 />
               </Link>
 
@@ -100,8 +100,8 @@ function NavBar() {
                   <NavLink
                     to="/"
                     className={({ isActive }) =>
-                      `nav-link flex items-center space-x-1 text-gray-700 hover:text-[#1d293d] font-medium transition-colors ${
-                        isActive ? 'text-[#1d293d]' : ''
+                      `nav-link flex items-center space-x-1 text-gray-700 hover:text-[#ff5a00] font-medium transition-colors ${
+                        isActive ? 'text-[#ff5a00]' : ''
                       }`
                     }
                   >
@@ -114,8 +114,8 @@ function NavBar() {
                   <NavLink
                     to="/about-us"
                     className={({ isActive }) =>
-                      `nav-link flex items-center space-x-1 text-gray-700 hover:text-[#1d293d] font-medium transition-colors ${
-                        isActive ? 'text-[#1d293d]' : ''
+                      `nav-link flex items-center space-x-1 text-gray-700 hover:text-[#ff5a00] font-medium transition-colors ${
+                        isActive ? 'text-[#ff5a00]' : ''
                       }`
                     }
                   >
@@ -128,8 +128,8 @@ function NavBar() {
                   <NavLink
                     to="/services"
                     className={({ isActive }) =>
-                      `nav-link flex items-center space-x-1 text-gray-700 hover:text-[#1d293d] font-medium transition-colors ${
-                        isActive ? 'text-[#1d293d]' : ''
+                      `nav-link flex items-center space-x-1 text-gray-700 hover:text-[#ff5a00] font-medium transition-colors ${
+                        isActive ? 'text-[#ff5a00]' : ''
                       }`
                     }
                   >
@@ -141,8 +141,8 @@ function NavBar() {
                   <NavLink
                     to="/team-member"
                     className={({ isActive }) =>
-                      `nav-link flex items-center space-x-1 text-gray-700 hover:text-[#1d293d] font-medium transition-colors ${
-                        isActive ? 'text-[#1d293d]' : ''
+                      `nav-link flex items-center space-x-1 text-gray-700 hover:text-[#ff5a00] font-medium transition-colors ${
+                        isActive ? 'text-[#ff5a00]' : ''
                       }`
                     }
                   >
@@ -155,8 +155,8 @@ function NavBar() {
                   <NavLink
                     to="/project"
                     className={({ isActive }) =>
-                      `nav-link flex items-center space-x-1 text-gray-700 hover:text-[#1d293d] font-medium transition-colors ${
-                        isActive ? 'text-[#1d293d]' : ''
+                      `nav-link flex items-center space-x-1 text-gray-700 hover:text-[#ff5a00] font-medium transition-colors ${
+                        isActive ? 'text-[#ff5a00]' : ''
                       }`
                     }
                   >
@@ -169,8 +169,8 @@ function NavBar() {
                   <NavLink
                     to="/blogs"
                     className={({ isActive }) =>
-                      `nav-link flex items-center space-x-1 text-gray-700 hover:text-[#1d293d] font-medium transition-colors ${
-                        isActive ? 'text-[#1d293d]' : ''
+                      `nav-link flex items-center space-x-1 text-gray-700 hover:text-[#ff5a00] font-medium transition-colors ${
+                        isActive ? 'text-[#ff5a00]' : ''
                       }`
                     }
                   >
@@ -189,7 +189,7 @@ function NavBar() {
                 {/* Get Quote Button */}
                 <Link
                   to="/contact-us"
-                  className="hidden lg:block bg-[#1d293d] md:w-[100%] text-center text-white px-6 py-2 rounded-md font-medium hover:bg-slate-800 transition-all duration-300"
+                  className="hidden lg:block bg-[#ff5a00] md:w-[100%] text-center text-white px-6 py-2 rounded-md font-medium hover:bg-slate-800 transition-all duration-300"
                 >
                Contact Us
                 </Link>
@@ -197,7 +197,7 @@ function NavBar() {
                 {/* Mobile Menu Toggle */}
                 <button
                   onClick={() => setMenuOpen(!menuOpen)}
-                  className="lg:hidden p-2 text-gray-700 hover:text-[#1d293d] transition-colors"
+                  className="lg:hidden p-2 text-gray-700 hover:text-[#ff5a00] transition-colors"
                 >
                   {menuOpen ? (
                     <FiX className="w-6 h-6" />
@@ -222,7 +222,7 @@ function NavBar() {
                 <img src={Logo} alt="Brand Logo" className="h-10 w-auto object-contain" />
                 <button
                   onClick={() => setMenuOpen(false)}
-                  className="text-gray-700 hover:text-[#1d293d] transition-colors p-2"
+                  className="text-gray-700 hover:text-[#ff5a00] transition-colors p-2"
                 >
                   <FiX className="w-6 h-6" />
                 </button>
@@ -243,8 +243,8 @@ function NavBar() {
                       to={item.path}
                       onClick={() => setMenuOpen(false)}
                       className={({ isActive }) =>
-                        `block px-4 py-3 text-gray-700 hover:text-[#1d293d] hover:bg-gray-50 rounded-md font-medium transition-colors ${
-                          isActive ? 'text-[#1d293d] bg-gray-50' : ''
+                        `block px-4 py-3 text-gray-700 hover:text-[#ff5a00] hover:bg-gray-50 rounded-md font-medium transition-colors ${
+                          isActive ? 'text-[#ff5a00] bg-gray-50' : ''
                         }`
                       }
                     >
@@ -258,7 +258,7 @@ function NavBar() {
                 <Link
                   to="/contact-us"
                   onClick={() => setMenuOpen(false)}
-                  className="block w-full text-center bg-[#1d293d] text-white px-6 py-3 rounded-md font-medium hover:bg-slate-800 transition-all"
+                  className="block w-full text-center bg-[#ff5a00] text-white px-6 py-3 rounded-md font-medium hover:bg-slate-800 transition-all"
                 >Contact us 
                 </Link>
               </div>
@@ -271,7 +271,7 @@ function NavBar() {
                       href={href}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-gray-600 hover:text-[#1d293d] transition-all"
+                      className="text-gray-600 hover:text-[#ff5a00] transition-all"
                     >
                       <Icon className="w-5 h-5" />
                     </a>

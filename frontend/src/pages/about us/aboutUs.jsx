@@ -14,25 +14,25 @@ const AboutUs = () => {
 
   const stats = [
     {
-      icon: <Award className="w-12 h-12" style={{ color: '#4668a2' }} />,
+      icon: <Award className="w-12 h-12" style={{ color: '#ff5a00' }} />,
       number: "4+",
       label: "Years",
       subtitle: "On the market"
     },
     {
-      icon: <Users className="w-12 h-12" style={{ color: '#4668a2' }} />,
+      icon: <Users className="w-12 h-12" style={{ color: '#ff5a00' }} />,
       number: "10+",
       label: "Team members",
       subtitle: "Expert professionals"
     },
     {
-      icon: <TrendingUp className="w-12 h-12" style={{ color: '#4668a2' }} />,
+      icon: <TrendingUp className="w-12 h-12" style={{ color: '#ff5a00' }} />,
       number: "50+",
       label: "Projects",
       subtitle: "Successfully delivered"
     },
     {
-      icon: <Target className="w-12 h-12" style={{ color: '#4668a2' }} />,
+      icon: <Target className="w-12 h-12" style={{ color: '#ff5a00' }} />,
       number: "95%",
       label: "Client Satisfaction",
       subtitle: "Happy clients"
@@ -58,7 +58,7 @@ const AboutUs = () => {
   ];
 
   return (
-    <div className="w-full min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100">
+    <div className="w-full min-h-screen bg-gradient-to-br from-slate-50 via-slate-50 to-slate-100">
  
       <Header title="About Us" path="About Us" />
 
@@ -81,19 +81,19 @@ const AboutUs = () => {
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-6">
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: '#4668a2' }}></div>
-                <div className="w-2 h-2 rounded-full animate-pulse delay-100" style={{ backgroundColor: '#4668a2' }}></div>
-                <div className="w-2 h-2 rounded-full animate-pulse delay-200" style={{ backgroundColor: '#4668a2' }}></div>
+                <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: '#ff5a00' }}></div>
+                <div className="w-2 h-2 rounded-full animate-pulse delay-100" style={{ backgroundColor: '#ff5a00' }}></div>
+                <div className="w-2 h-2 rounded-full animate-pulse delay-200" style={{ backgroundColor: '#ff5a00' }}></div>
               </div>
-              <span className="font-semibold uppercase tracking-wider text-sm" style={{ color: '#4668a2' }}>
+              <span className="font-semibold uppercase tracking-wider text-sm" style={{ color: '#ff5a00' }}>
                 About AbyTech
               </span>
             </div>
 
-            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 leading-tight">
+            <h1 className="text-5xl md:text-4xl font-bold text-gray-900 mb-4 leading-tight">
               Driving Digital Transformation
               <br />
-              <span style={{ color: '#4668a2' }}>
+              <span style={{ color: '#ff5a00' }} className="text-4xl">
                 Through Technology & Data Science
               </span>
             </h1>
@@ -123,8 +123,8 @@ const AboutUs = () => {
           </div>
 
           <div className="grid md:grid-cols-3 gap-8 mb-16">
-            <div className="bg-gradient-to-br from-blue-50 to-white p-8 rounded-2xl shadow-lg">
-              <div className="w-16 h-16 rounded-xl flex items-center justify-center mb-4" style={{ backgroundColor: '#4668a2' }}>
+            <div className="bg-gradient-to-br from-slate-50 to-white p-8 rounded-2xl shadow-lg">
+              <div className="w-16 h-16 rounded-xl flex items-center justify-center mb-4" style={{ backgroundColor: '#ff5a00' }}>
                 <Award className="w-8 h-8 text-white" />
               </div>
               <h3 className="text-2xl font-bold text-gray-900 mb-3">Our Vision</h3>
@@ -133,8 +133,8 @@ const AboutUs = () => {
               </p>
             </div>
 
-            <div className="bg-gradient-to-br from-blue-50 to-white p-8 rounded-2xl shadow-lg">
-              <div className="w-16 h-16 rounded-xl flex items-center justify-center mb-4" style={{ backgroundColor: '#4668a2' }}>
+            <div className="bg-gradient-to-br from-slate-50 to-white p-8 rounded-2xl shadow-lg">
+              <div className="w-16 h-16 rounded-xl flex items-center justify-center mb-4" style={{ backgroundColor: '#ff5a00' }}>
                 <Target className="w-8 h-8 text-white" />
               </div>
               <h3 className="text-2xl font-bold text-gray-900 mb-3">Our Mission</h3>
@@ -143,8 +143,8 @@ const AboutUs = () => {
               </p>
             </div>
 
-            <div className="bg-gradient-to-br from-blue-50 to-white p-8 rounded-2xl shadow-lg">
-              <div className="w-16 h-16 rounded-xl flex items-center justify-center mb-4" style={{ backgroundColor: '#4668a2' }}>
+            <div className="bg-gradient-to-br from-slate-50 to-white p-8 rounded-2xl shadow-lg">
+              <div className="w-16 h-16 rounded-xl flex items-center justify-center mb-4" style={{ backgroundColor: '#ff5a00' }}>
                 <Users className="w-8 h-8 text-white" />
               </div>
               <h3 className="text-2xl font-bold text-gray-900 mb-3">Our Values</h3>
@@ -155,7 +155,7 @@ const AboutUs = () => {
           </div>
 
           {/* Additional Content */}
-          <div className="bg-gradient-to-r from-blue-900 to-blue-700 rounded-2xl p-8 md:p-12 text-white">
+          <div className="bg-gradient-to-r from-slate-900 to-slate-900 rounded-2xl p-8 md:p-12 text-white">
             <div className="grid md:grid-cols-2 gap-8 items-center">
               <div>
                 <h3 className="text-3xl font-bold mb-4">Why Choose AbyTech?</h3>
@@ -230,7 +230,7 @@ const AboutUs = () => {
 
           <div className="grid md:grid-cols-3 gap-6 mb-12">
             <div className="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition">
-              <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4" style={{ backgroundColor: '#4668a2' }}>
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4" style={{ backgroundColor: '#ff5a00' }}>
                 <Code className="w-6 h-6 text-white" />
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-3">Software Development</h3>
@@ -240,7 +240,7 @@ const AboutUs = () => {
             </div>
 
             <div className="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition">
-              <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4" style={{ backgroundColor: '#4668a2' }}>
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4" style={{ backgroundColor: '#ff5a00' }}>
                 <Database className="w-6 h-6 text-white" />
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-3">Data Analytics</h3>
@@ -250,7 +250,7 @@ const AboutUs = () => {
             </div>
 
             <div className="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition">
-              <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4" style={{ backgroundColor: '#4668a2' }}>
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4" style={{ backgroundColor: '#ff5a00' }}>
                 <Brain className="w-6 h-6 text-white" />
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-3">AI & Machine Learning</h3>
@@ -274,14 +274,14 @@ const AboutUs = () => {
 
           <div className="grid md:grid-cols-3 gap-6">
             {locations.map((location, index) => (
-              <div key={index} className="bg-gradient-to-br from-blue-50 to-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition">
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4" style={{ backgroundColor: '#4668a2' }}>
+              <div key={index} className="bg-gradient-to-br from-slate-50 to-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition">
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4" style={{ backgroundColor: '#ff5a00' }}>
                   <MapPin className="w-6 h-6 text-white" />
                 </div>
                 <h3 className="text-xl font-bold text-gray-900 mb-3">{location.city}</h3>
                 <div className="space-y-2 text-gray-600">
                   <p className="flex items-start gap-2">
-                    <MapPin className="w-4 h-4 mt-1 flex-shrink-0" style={{ color: '#4668a2' }} />
+                    <MapPin className="w-4 h-4 mt-1 flex-shrink-0" style={{ color: '#ff5a00' }} />
                     <span className="text-sm">{location.address}</span>
                   </p>
                   <p className="text-sm text-gray-500 italic">{location.description}</p>
@@ -387,7 +387,7 @@ const AboutUs = () => {
 
               <div className="space-y-6">
                 <div className="group flex gap-4 p-6 bg-white/80 backdrop-blur-sm rounded-xl hover:shadow-lg transition-all duration-300 border border-gray-100">
-                  <div className="flex-shrink-0 w-14 h-14 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform" style={{ backgroundColor: '#4668a2' }}>
+                  <div className="flex-shrink-0 w-14 h-14 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform" style={{ backgroundColor: '#ff5a00' }}>
                     <Award className="w-7 h-7 text-white" />
                   </div>
                   <div>
@@ -399,7 +399,7 @@ const AboutUs = () => {
                 </div>
 
                 <div className="group flex gap-4 p-6 bg-white/80 backdrop-blur-sm rounded-xl hover:shadow-lg transition-all duration-300 border border-gray-100">
-                  <div className="flex-shrink-0 w-14 h-14 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform" style={{ backgroundColor: '#4668a2' }}>
+                  <div className="flex-shrink-0 w-14 h-14 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform" style={{ backgroundColor: '#ff5a00' }}>
                     <Users className="w-7 h-7 text-white" />
                   </div>
                   <div>
@@ -411,7 +411,7 @@ const AboutUs = () => {
                 </div>
 
                 <div className="group flex gap-4 p-6 bg-white/80 backdrop-blur-sm rounded-xl hover:shadow-lg transition-all duration-300 border border-gray-100">
-                  <div className="flex-shrink-0 w-14 h-14 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform" style={{ backgroundColor: '#4668a2' }}>
+                  <div className="flex-shrink-0 w-14 h-14 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform" style={{ backgroundColor: '#ff5a00' }}>
                     <Target className="w-7 h-7 text-white" />
                   </div>
                   <div>
