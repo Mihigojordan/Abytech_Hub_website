@@ -6,6 +6,7 @@ import ChatList from '../../layouts/chat/ChatList';
 import ChatArea from '../../layouts/chat/ChatArea';
 import DragDropOverlay from '../../components/dashboard/chat/ui/DragDropOverlay';
 import MediaViewer from '../../components/dashboard/chat/ui/MediaViewer';
+import ForwardModal from '../../components/dashboard/chat/ui/ForwardModal';
 
 // Custom hooks
 import { useMessages } from '../../hooks/chat/useMessages';
@@ -48,6 +49,11 @@ const ChatApp = () => {
         timestamp: null
     });
     const [conversations, setConversations] = useState({});
+    const [forwardModal, setForwardModal] = useState({
+        isOpen: false,
+        messages: [],
+        loading: false
+    });
     const [unreadCounts, setUnreadCounts] = useState({});
     const [loading, setLoading] = useState(true);
     const [contacts, setContacts] = useState([]);
@@ -484,8 +490,44 @@ const ChatApp = () => {
         } else if (action === 'reply' && selectedMessages.length === 1) {
             handleMessageActionWrapper('reply', selectedMessages[0]);
             clearSelection();
+        } else if (action === 'forward') {
+            // Open forward modal with selected messages
+            const messagesToForward = allMessages.filter((m: any) =>
+                selectedMessages.includes(m.id)
+            );
+            setForwardModal({
+                isOpen: true,
+                messages: messagesToForward,
+                loading: false
+            });
         } else {
             originalBulkAction(action, allMessages, setAllMessages);
+        }
+    };
+
+    // Handle forward messages to multiple conversations
+    const handleForward = async (targetConversationIds: string[]) => {
+        try {
+            setForwardModal(prev => ({ ...prev, loading: true }));
+
+            const messageIds = forwardModal.messages.map((m: any) => m.id.toString());
+
+            // Forward to all selected conversations
+            await chatService.forwardMessages(messageIds, targetConversationIds);
+
+            // Close modal and clear selection
+            setForwardModal({ isOpen: false, messages: [], loading: false });
+            clearSelection();
+
+            // Show success message (you can add toast notification here)
+            console.log(`Messages forwarded to ${targetConversationIds.length} conversation(s)`);
+
+            // Messages will appear via WebSocket automatically
+        } catch (err) {
+            console.error('Forward failed:', err);
+            setForwardModal(prev => ({ ...prev, loading: false }));
+            // Show error message (you can add toast notification here)
+            alert('Failed to forward messages');
         }
     };
 
@@ -619,6 +661,22 @@ const ChatApp = () => {
                 onClose={() => setMediaViewer(prev => ({ ...prev, isOpen: false }))}
                 onNavigate={navigateMedia}
                 onDownload={downloadMedia}
+            />
+
+            {/* Forward Modal */}
+            {console.log('Rendering ForwardModal:', {
+                isOpen: forwardModal.isOpen,
+                messagesCount: forwardModal.messages.length,
+                conversationsCount: Object.values(conversations).length
+            })}
+            <ForwardModal
+                isOpen={forwardModal.isOpen}
+                messages={forwardModal.messages}
+                conversations={Object.values(conversations)}
+                currentConversationId={selectedChatId}
+                loading={forwardModal.loading}
+                onForward={handleForward}
+                onClose={() => setForwardModal({ isOpen: false, messages: [], loading: false })}
             />
         </div>
     );

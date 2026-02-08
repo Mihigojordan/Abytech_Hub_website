@@ -90,14 +90,14 @@ export default function Testimonials() {
       <div className="max-w-7xl mx-auto">
         {/* Section Badge */}
         <div className="inline-block mb-4">
-          <span className="text-primary-600 font-semibold text-sm uppercase tracking-wider bg-primary-50 px-4 py-2 rounded-full">
+          <span className="text-[#ff5a00] font-semibold text-sm uppercase tracking-wider bg-primary-50 px-4 py-2 rounded-full">
             Testimonials
           </span>
         </div>
 
         {/* Heading */}
         <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
-          What Our <span className="text-primary-600">Clients</span> Say
+          What Our <span className="text-[#ff5a00]">Clients</span> Say
         </h2>
         <p className="text-gray-600 mb-12 text-lg max-w-2xl mx-auto">
           Different customers sharing their experience with AbyTech.
@@ -120,7 +120,7 @@ export default function Testimonials() {
                     {/* Quote Icon */}
                     <div className="flex justify-start mb-4">
                       <div className="bg-primary-50 p-3 rounded-full group-hover:bg-primary-100 transition-colors duration-300">
-                        <FaQuoteRight className="text-primary-600 text-xl" />
+                        <FaQuoteRight className="text-[#ff5a00] text-xl" />
                       </div>
                     </div>
 
@@ -143,7 +143,7 @@ export default function Testimonials() {
                     <div className="flex items-center justify-between pt-6 border-t border-primary-100">
                       <div className="text-left">
                         <p className="font-bold text-gray-900 text-lg">{t.name}</p>
-                        <p className="text-primary-600 text-sm font-medium">
+                        <p className="text-[#ff5a00] text-sm font-medium">
                           {t.title} {t.emoji}
                         </p>
                       </div>
@@ -157,14 +157,14 @@ export default function Testimonials() {
 
           {/* Navigation Arrows */}
           <button
-            className="absolute -left-4 top-1/2 transform -translate-y-1/2 bg-white hover:bg-primary-600 text-gray-700 hover:text-white p-4 rounded-full shadow-lg transition-all duration-300 border border-primary-200 hover:border-primary-600"
+            className="absolute -left-4 top-1/2 transform -translate-y-1/2 bg-white hover:bg-[#ff5a00] text-gray-700 hover:text-white p-4 rounded-full shadow-lg transition-all duration-300 border border-primary-200 hover:border-[#ff5a00]"
             onClick={prevSlide}
             aria-label="Previous testimonial"
           >
             <FaChevronLeft className="text-lg" />
           </button>
           <button
-            className="absolute -right-4 top-1/2 transform -translate-y-1/2 bg-white hover:bg-primary-600 text-gray-700 hover:text-white p-4 rounded-full shadow-lg transition-all duration-300 border border-primary-200 hover:border-primary-600"
+            className="absolute -right-4 top-1/2 transform -translate-y-1/2 bg-white hover:bg-[#ff5a00] text-gray-700 hover:text-white p-4 rounded-full shadow-lg transition-all duration-300 border border-primary-200 hover:border-[#ff5a00]"
             onClick={nextSlide}
             aria-label="Next testimonial"
           >

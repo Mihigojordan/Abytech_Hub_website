@@ -54,7 +54,7 @@ function NotificationSettings() {
             className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold ${
               isSubscribedToNotifications
                 ? 'bg-red-500 hover:bg-red-600'
-                : 'bg-blue-500 hover:bg-blue-600'
+                : 'bg-blue-500 hover:bg-[#ff5a00]'
             } text-white disabled:opacity-50`}
           >
             {loading ? (

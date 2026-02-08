@@ -3,7 +3,7 @@ import Image1 from '../../assets/sadiki.jpg';
 
 function Quote() {
   return (
-    <div className="relative w-full h-[450px] flex items-center justify-center overflow-hidden bg-gradient-to-br from-blue-950 via-blue-900 to-blue-950 py-4 px-6">
+    <div className="relative w-full h-[450px] flex items-center justify-center overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 py-4 px-6">
       {/* Tech Pattern Background */}
       <div className="absolute inset-0 opacity-20">
         <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
@@ -42,8 +42,8 @@ function Quote() {
         {/* Profile Section */}
         <div className="flex flex-col items-center">
           {/* Profile Image */}
-          <div className="w-32 h-32 mb-6 rounded-full overflow-hidden border-4 border-blue-400 shadow-2xl shadow-blue-500/50">
-            <div className="w-full h-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center">
+          <div className="w-32 h-32 mb-6 rounded-full overflow-hidden border-4 border-[#ff5a00] shadow-2xl shadow-blue-500/50">
+            <div className="w-full h-full bg-gradient-to-br from-blue-400 to-[#ff5a00] flex items-center justify-center">
            
             <img src={Image1} alt="" />
             </div>
@@ -54,7 +54,7 @@ function Quote() {
             <h3 className="text-sm md:text-xl font-bold text-white mb-2">
               Sadiki Rukara
             </h3>
-            <p className="text-lg md:text-sm text-blue-300 font-medium tracking-wide">
+            <p className="text-lg md:text-sm text-[#ff5a00] font-medium tracking-wide">
               CEO & Founder, ABYTECH HUB
             </p>
           </div>
@@ -63,7 +63,7 @@ function Quote() {
 
       {/* Decorative Elements */}
       <div className="absolute top-1/4 left-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl"></div>
-      <div className="absolute bottom-1/4 right-0 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl"></div>
+      <div className="absolute bottom-1/4 right-0 w-96 h-96 bg-[#ff5a00]/10 rounded-full blur-3xl"></div>
     </div>
   )
 }

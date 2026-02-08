@@ -25,11 +25,11 @@ const BlogContainer = lazy(() => import("../src/pages/blogs/blogContainer"));
 
 // import DashboardLayout from "./layouts/DashboardLayout";
 // import ProtectPrivateAdminRoute from "./components/protectors/ProtectPrivateAdminRoute";
-import EmployeeeDashboard from "./pages/dashboard/EmployeeManagement";
 
-import AdminProfileEdit from "./pages/EditProfilePage";
+
+
 import PWAPushNotifications from "./pages/PWATestingPage";
-import AdminProfilePage from "./pages/dashboard/AdminProfile";
+
 import ChatApp from "./pages/dashboard/ChatAppPage";
 import MeetingManagement from "./pages/dashboard/MeetingManagement";
 import WeeklyGoalManagement from "./pages/dashboard/WeeklyGoalManagement";
@@ -48,12 +48,13 @@ const AdminLogin = lazy(() => import("./pages/auth/admin/Login"));
 const UnlockScreen = lazy(() => import("./pages/auth/admin/UnlockScreen"));
 const DashboardHome = lazy(() => import("./pages/dashboard/DashboardHome"));
 const ExpenseDashboard = lazy(() => import("./pages/dashboard/ExpenseDashboard"));
-// const EmployeeeDashboard = lazy(() => import("./pages/dashboard/EmployeeManagement"));
+
+const EmployeeeDashboard = lazy(() => import("./pages/dashboard/EmployeeManagement"));
 const ReportDashboard = lazy(() => import("./pages/dashboard/ReportManagement"));
 const UpsertReportPage = lazy(() => import("./components/dashboard/report/UpsertReportPage"));
 const ReportViewPage = lazy(() => import("./components/dashboard/report/ReportViewPage"));
-// const AdminProfilePage = lazy(() => import("./pages/ProfilePage"));
-// const AdminProfileEdit = lazy(() => import("./pages/EditProfilePage"));
+const AdminProfilePage = lazy(() => import("./pages/ProfilePage"));
+const AdminProfileEdit = lazy(() => import("./pages/EditProfilePage"));
 
 // Loading UI
 const LoadingSpinner = () => (
@@ -117,8 +118,7 @@ const router = createBrowserRouter([
           // {path:'profile' , element:<AdminProfilePage />},
           
         ]
-      },
-      
+      }
     ]
   },
   {
