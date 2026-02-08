@@ -19,7 +19,7 @@ const CombinedMessage = ({ message, onMenuAction, showMenu, setShowMenu, onMedia
 
     const handleFileClick = (fileIndex) => {
         const allMedia = [
-            ...(message.images || []).map(url => ({ type: 'image', url })),
+            ...(message.images || []).map(url => ({ type: 'image', url: url })),
             ...(message.files || []).map(f => ({ type: 'file', name: f.fileName, size: f.fileSize }))
         ];
         const index = (message.images?.length || 0) + fileIndex;

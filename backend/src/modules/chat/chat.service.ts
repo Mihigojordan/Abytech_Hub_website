@@ -50,11 +50,55 @@ export class ChatService {
     ) { }
 
     // ====================
+    // ONLINE STATUS MANAGEMENT
+    // ====================
+
+    async updateAdminOnlineStatus(adminId: string, isOnline: boolean, lastSeen: Date | null) {
+        return this.prisma.admin.update({
+            where: { id: adminId },
+            data: {
+                isOnline,
+                lastSeen: lastSeen || undefined,
+            },
+        });
+    }
+
+    async updateUserOnlineStatus(userId: string, isOnline: boolean, lastSeen: Date | null) {
+        return this.prisma.user.update({
+            where: { id: userId },
+            data: {
+                isOnline,
+                lastSeen: lastSeen || undefined,
+            },
+        });
+    }
+
+    async getUserConversations(userId: string, userType: 'ADMIN' | 'USER') {
+        const conversations = await this.prisma.conversation.findMany({
+            where: {
+                participants: {
+                    some: {
+                        participantId: userId,
+                        participantType: userType,
+                        leftAt: null,
+                    },
+                },
+            },
+            include: {
+                participants: {
+                    where: { leftAt: null },
+                },
+            },
+        });
+        return conversations;
+    }
+
+    // ====================
     // CONVERSATIONS
     // ====================
 
     async getConversations(userId: string, userType: 'ADMIN' | 'USER') {
-        return this.prisma.conversationParticipant.findMany({
+        const conversationParticipants = await this.prisma.conversationParticipant.findMany({
             where: {
                 participantId: userId,
                 participantType: userType,
@@ -69,12 +113,7 @@ export class ChatService {
                         },
                         participants: {
                             where: {
-                                NOT: {
-                                    AND: [
-                                        { participantId: userId },
-                                        { participantType: userType },
-                                    ],
-                                },
+                                leftAt: null,
                             },
                         },
                     },
@@ -86,6 +125,65 @@ export class ChatService {
                 },
             },
         });
+
+        // Enrich participants with online status from cache and user details
+        const enrichedConversations = await Promise.all(
+            conversationParticipants.map(async (cp) => {
+                const conv = cp.conversation;
+
+                // Fetch participant details with online status
+                const enrichedParticipants = await Promise.all(
+                    conv.participants.map(async (p) => {
+                        // Get online status from cache (real-time)
+                        const isOnline = this.cache.isUserOnline(p.participantId);
+
+                        // Fetch user details based on type
+                        let userDetails: any = null;
+                        if (p.participantType === 'ADMIN') {
+                            userDetails = await this.prisma.admin.findUnique({
+                                where: { id: p.participantId },
+                                select: {
+                                    id: true,
+                                    adminName: true,
+                                    profileImage: true,
+                                    lastSeen: true,
+                                },
+                            });
+                        } else {
+                            userDetails = await this.prisma.user.findUnique({
+                                where: { id: p.participantId },
+                                select: {
+                                    id: true,
+                                    name: true,
+                                    avatar: true,
+                                    initial: true,
+                                    lastSeen: true,
+                                },
+                            });
+                        }
+
+                        return {
+                            ...p,
+                            isOnline, // From cache (real-time)
+                            lastSeen: userDetails?.lastSeen,
+                            name: p.participantType === 'ADMIN' ? userDetails?.adminName : userDetails?.name,
+                            avatar: p.participantType === 'ADMIN' ? userDetails?.profileImage : userDetails?.avatar,
+                            initial: userDetails?.initial,
+                        };
+                    })
+                );
+
+                return {
+                    ...cp,
+                    conversation: {
+                        ...conv,
+                        participants: enrichedParticipants,
+                    },
+                };
+            })
+        );
+
+        return enrichedConversations;
     }
 
     async getConversation(conversationId: string, userId: string, userType: 'ADMIN' | 'USER') {
@@ -264,7 +362,7 @@ export class ChatService {
         }
 
         console.log('messages =>', messages);
-        
+
         // Return messages in chronological order (Oldest -> Newest) for the UI
         const enrichedMessages = await this.enrichMessages(messages.reverse() as any[]);
 
@@ -468,6 +566,59 @@ export class ChatService {
                 senderType: message.senderType,
             },
         };
+    }
+
+    async markConversationAsRead(conversationId: string, readerId: string, readerType: 'ADMIN' | 'USER') {
+        // Find all unread messages in this conversation where the reader is NOT the sender
+        const unreadMessages = await this.prisma.message.findMany({
+            where: {
+                conversationId: Number(conversationId),
+                NOT: {
+                    senderId: readerId,
+                    senderType: readerType,
+                },
+                readers: {
+                    none: {
+                        readerId,
+                        readerType,
+                    },
+                },
+            },
+            select: {
+                id: true,
+                senderId: true,
+                senderType: true,
+            },
+        });
+
+        if (unreadMessages.length === 0) {
+            return { markedCount: 0 };
+        }
+
+        // Bulk create read receipts
+        await this.prisma.messageReader.createMany({
+            data: unreadMessages.map(msg => ({
+                messageId: msg.id,
+                readerId,
+                readerType,
+            })),
+            skipDuplicates: true,
+        });
+
+        // Broadcast read receipts for each message
+        unreadMessages.forEach(msg => {
+            this.chatGateway.broadcastMessageRead(
+                msg.id.toString(),
+                conversationId,
+                readerId,
+                readerType,
+                { userId: msg.senderId, userType: msg.senderType }
+            );
+        });
+
+        console.log(`Marked ${unreadMessages.length} messages as read in conversation ${conversationId}`);
+
+        return { markedCount: unreadMessages.length };
     }
 
     async editMessage(messageId: string, content: string, userId: string, userType: 'ADMIN' | 'USER') {

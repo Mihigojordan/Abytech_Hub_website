@@ -3,6 +3,7 @@ import { Check } from 'lucide-react';
 import Avatar from '../ui/Avatar';
 import TextMessage from './TextMessage';
 import CombinedMessage from './CombinedMessage';
+import useAdminAuth from '../../../../context/AdminAuthContext';
 
 /**
  * Individual message wrapper component
@@ -20,6 +21,8 @@ const Message = ({
     setMessageRef,
     scrollToMessage
 }) => {
+    const { user: currentUser } = useAdminAuth();
+
     const handleClick = () => {
         if (selectionMode) {
             onToggleSelection(message.id);
@@ -36,7 +39,7 @@ const Message = ({
     // Determine message type to render
     const isTextOnly = message.type === 'text';
     const isCombined = message.type === 'combined' || message.images || message.files;
-    
+
 
     return (
         <div
@@ -121,8 +124,9 @@ const Message = ({
             {/* Current user avatar (for sent messages) */}
             {message.isSent && (
                 <Avatar
-                    avatar="https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=100&h=100&fit=crop"
-                    name="You"
+                    avatar={currentUser?.profileImage}
+                    initial={currentUser?.name?.charAt(0)?.toUpperCase()}
+                    name={currentUser?.name || 'You'}
                     size="sm"
                     className="ml-3 flex-shrink-0"
                 />

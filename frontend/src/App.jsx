@@ -31,6 +31,11 @@ import AdminProfileEdit from "./pages/EditProfilePage";
 import PWAPushNotifications from "./pages/PWATestingPage";
 import AdminProfilePage from "./pages/dashboard/AdminProfile";
 import ChatApp from "./pages/dashboard/ChatAppPage";
+import MeetingManagement from "./pages/dashboard/MeetingManagement";
+import WeeklyGoalManagement from "./pages/dashboard/WeeklyGoalManagement";
+import InternshipManagement from "./pages/dashboard/InternshipManagement";
+import HostedWebsiteManagement from "./pages/dashboard/HostedWebsiteManagement";
+import DemoRequestManagement from "./pages/dashboard/DemoRequestManagement";
 
 // Lazy-loaded pages
 const ProjectsPage = lazy(() => import("./pages/Projects/ProjectPages"));
@@ -81,7 +86,7 @@ const router = createBrowserRouter([
 
     ]
   },
-  { path: '/text', element: <SuspenseWrapper><RichTextEditor /> </SuspenseWrapper> },
+
   {
     path:'/admin',
     element: <ProtectPrivateAdminRoute><Outlet /></ProtectPrivateAdminRoute>,
@@ -100,8 +105,15 @@ const router = createBrowserRouter([
           {path:'report/view/:id' , element:<ReportViewPage />},
           {path:'profile/:id' , element:<AdminProfilePage />},
           {path:'edit-profile/:id' , element:<AdminProfileEdit />},
+          
+          
           {path:'chat' , element:<ChatApp />},
           {path:'chat/:conversationId' , element:<ChatApp />},
+          {path:'weekly-goals' , element:<WeeklyGoalManagement />},
+          {path:'internships' , element:<InternshipManagement />},
+          {path:'hosted-website' , element:<HostedWebsiteManagement />},
+          {path:'demo-request' , element:<DemoRequestManagement />},
+          {path:'meetings' , element:<MeetingManagement />},
           // {path:'profile' , element:<AdminProfilePage />},
           
         ]
@@ -109,33 +121,6 @@ const router = createBrowserRouter([
       
     ]
   },
-  {
-    path: '/auth/admin/login',
-    element: (
-      <ProtectPrivateAdminRoute>
-        <Outlet />
-      </ProtectPrivateAdminRoute>
-    ),
-    children: [
-      { index: true, element: <Navigate to="/admin/dashboard" /> },
-      {
-        path: "dashboard",
-        element: <DashboardLayout />,
-        children: [
-          { index: true, element: <DashboardHome /> },
-          { path: "expense", element: <ExpenseDashboard /> },
-          { path: "employee", element: <EmployeeeDashboard /> },
-          { path: "report", element: <ReportDashboard /> },
-          { path: "report/create", element: <UpsertReportPage /> },
-          { path: "report/edit/:id", element: <UpsertReportPage /> },
-          { path: "report/view/:id", element: <ReportViewPage /> },
-          { path: "profile/:id", element: <AdminProfilePage /> },
-          { path: "edit-profile/:id", element: <AdminProfileEdit /> },
-        ],
-      },
-    ],
-  },
-
   {
     path: "/auth/admin/login",
     element: <SuspenseWrapper><AdminLogin /></SuspenseWrapper>,

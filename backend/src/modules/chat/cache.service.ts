@@ -8,7 +8,7 @@ interface CacheEntry<T> {
 @Injectable()
 export class CacheService implements OnModuleInit {
     private conversationCache = new Map<string, CacheEntry<any>>();
-    private onlineUsers = new Set<string>();
+    private onlineUsers = new Map<string, { userType: 'ADMIN' | 'USER'; socketId: string }>();
     private typingIndicators = new Map<string, number>();
     private cleanupInterval: NodeJS.Timeout;
 
@@ -50,12 +50,14 @@ export class CacheService implements OnModuleInit {
     }
 
     // Online users
-    addOnlineUser(userId: string) {
-        this.onlineUsers.add(userId);
+    addOnlineUser(userId: string, userType: 'ADMIN' | 'USER', socketId: string) {
+        this.onlineUsers.set(userId, { userType, socketId });
+        console.log(`User online: ${userId} (${userType}) -> ${socketId}`);
     }
 
     removeOnlineUser(userId: string) {
         this.onlineUsers.delete(userId);
+        console.log(`User offline: ${userId}`);
     }
 
     isUserOnline(userId: string): boolean {
@@ -63,41 +65,62 @@ export class CacheService implements OnModuleInit {
     }
 
     getOnlineUsers(): string[] {
-        return Array.from(this.onlineUsers);
+        return Array.from(this.onlineUsers.keys());
     }
 
-    // User-to-Socket mapping for targeted emissions
-    private userSocketMap = new Map<string, string>(); // key: userId_userType, value: socketId
-
-    addUserSocket(userId: string, userType: 'ADMIN' | 'USER', socketId: string) {
-        const key = `${userId}_${userType}`;
-        this.userSocketMap.set(key, socketId);
-        console.log(`Added socket mapping: ${key} -> ${socketId}`);
-    }
-
-    removeUserSocket(userId: string, userType: 'ADMIN' | 'USER') {
-        const key = `${userId}_${userType}`;
-        this.userSocketMap.delete(key);
-        console.log(`Removed socket mapping: ${key}`);
-    }
-
-    getUserSocketId(userId: string, userType: 'ADMIN' | 'USER'): string | undefined {
-        const key = `${userId}_${userType}`;
-        return this.userSocketMap.get(key);
+    getUserSocketId(userId: string): string | undefined {
+        return this.onlineUsers.get(userId)?.socketId;
     }
 
     getSocketUser(socketId: string): { userId: string; userType: 'ADMIN' | 'USER' } | undefined {
-        for (const [key, sId] of this.userSocketMap.entries()) {
-            if (sId === socketId) {
-                const [userId, userType] = key.split('_');
-                return { userId, userType: userType as 'ADMIN' | 'USER' };
+        for (const [userId, data] of this.onlineUsers.entries()) {
+            if (data.socketId === socketId) {
+                return { userId, userType: data.userType };
             }
         }
         return undefined;
     }
 
     getAllUserSockets(): Map<string, string> {
-        return new Map(this.userSocketMap);
+        const map = new Map<string, string>();
+        for (const [userId, data] of this.onlineUsers.entries()) {
+            map.set(userId, data.socketId);
+        }
+        return map;
+    }
+
+    /**
+     * Get all online users who share conversations with the specified user
+     * @param userId - The user ID to check against
+     * @param userType - The user type (ADMIN or USER)
+     * @param conversationParticipants - Array of participants from user's conversations
+     * @returns Array of online participants with their details
+     */
+    getOnlineConversationParticipants(
+        userId: string,
+        userType: 'ADMIN' | 'USER',
+        conversationParticipants: Array<{ participantId: string; participantType: 'ADMIN' | 'USER' }>
+    ): Array<{ userId: string; userType: 'ADMIN' | 'USER'; socketId: string }> {
+        const onlineParticipants: Array<{ userId: string; userType: 'ADMIN' | 'USER'; socketId: string }> = [];
+
+        for (const participant of conversationParticipants) {
+            // Skip self
+            if (participant.participantId === userId && participant.participantType === userType) {
+                continue;
+            }
+
+            // Check if participant is online
+            const userInfo = this.onlineUsers.get(participant.participantId);
+            if (userInfo && userInfo.userType === participant.participantType) {
+                onlineParticipants.push({
+                    userId: participant.participantId,
+                    userType: participant.participantType,
+                    socketId: userInfo.socketId
+                });
+            }
+        }
+
+        return onlineParticipants;
     }
 
     // Typing indicators

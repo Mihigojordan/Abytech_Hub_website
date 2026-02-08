@@ -9,6 +9,11 @@ import { DriveModule } from './global/googleDriveService/driver.module';
 import { NotificationModule } from './global/notification/notification.module';
 import { ChatModule } from './modules/chat/chat.module';
 import { UserAuthModule } from './modules/user-auth/user-auth.module';
+import { MeetingModule } from './modules/meeting-management/meeting.module';
+import { InternshipModule } from './modules/internship-management/internship.module';
+import { HostedWebsiteModule } from './modules/hosted-website-management/hosted-website.module';
+import { DemoRequestModule } from './modules/demo-request-management/demo-request.module';
+import { WeeklyGoalModule } from './modules/weekly-goal-management/weekly-goal.module';
 
 @Module({
   imports: [
@@ -19,6 +24,11 @@ import { UserAuthModule } from './modules/user-auth/user-auth.module';
     DriveModule,
     ChatModule,
     UserAuthModule,
+    MeetingModule,
+    InternshipModule,
+    HostedWebsiteModule,
+    DemoRequestModule,
+    WeeklyGoalModule,
     // NotificationModule
   ],
   controllers: [AppController],

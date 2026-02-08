@@ -2,6 +2,7 @@ import React from 'react';
 import { X, ChevronLeft, ChevronRight, Download, Calendar, File } from 'lucide-react';
 import { formatFullDate } from '../../../../utils/chat/dateUtils';
 import { API_URL } from '../../../../api/api';
+import { handleDisplayImgUrl } from '../../../../utils/chat/messageUtils';
 
 /**
  * Media viewer modal component for viewing images and files
@@ -20,11 +21,7 @@ const MediaViewer = ({
     const currentMedia = media[currentIndex];
     const canNavigatePrev = currentIndex > 0;
     const canNavigateNext = currentIndex < media.length - 1;
-        const handleDisplayImgUrl = (url)=>{
-            if(!url ) return null;
-            // if(url?.startWith('http')) return url
-          return  `${API_URL}${url}`
-        }
+    
     
 
     return (
@@ -58,9 +55,11 @@ const MediaViewer = ({
 
             {/* Media content */}
             <div className="max-w-5xl w-full h-full flex flex-col items-center justify-center p-20">
+              
+                
                 {currentMedia?.type === 'image' ? (
                     <img
-                        src={handleDisplayImgUrl(currentMedia.url)}
+                        src={handleDisplayImgUrl(currentMedia.url.imageUrl)}
                         alt="Media"
                         className="max-w-full max-h-[70vh] object-contain rounded-lg shadow-2xl"
                     />

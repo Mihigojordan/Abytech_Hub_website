@@ -42,6 +42,10 @@ model Admin {
   passport     String?
   identityCard String?
 
+  // Chat online status tracking
+  isOnline     Boolean?  @default(false)
+  lastSeen     DateTime? @map("last_seen") @db.Timestamp(0)
+
   // Push notification subscription
   subscription Json? // stores the push subscription object (endpoint + keys)
 
@@ -53,8 +57,16 @@ model Admin {
   expenses Expense[]
   report   Report[]
 
+  research Research[]
+  meetings Meeting[]
+  internshipApplications InternshipApplication[]
+  weeklyGoals WeeklyGoal[]
+  demoRequests DemoRequest[]
+
   @@map("Admin")
 }
+
+
 
 model User {
   id        String    @id @default(uuid())
@@ -67,6 +79,10 @@ model User {
   createdAt DateTime  @default(now()) @map("created_at") @db.Timestamp(0)
   updatedAt DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
 
+  isOnline     Boolean?  @default(false)
+
+
+
   @@map("users")
 }
 
@@ -74,6 +90,288 @@ enum AdminStatus {
   ACTIVE
   INACTIVE
 }
+
+
+model Research {
+  id              String   @id @default(cuid())
+  title           String
+  slug            String   @unique
+  description     String?
+
+  // Research content sections
+  problem         Json? // problem statement
+  objective       Json? // research objectives
+  methodology     Json? // methods used
+  findings        Json? // results / findings
+  conclusion      Json?
+  recommendations Json?
+
+  // Classification
+  type            ResearchType
+  status          ResearchStatus @default(DRAFT)
+
+  startDate       DateTime?
+  endDate         DateTime?
+
+  // Ownership
+  ownerId         String
+  owner           Admin    @relation(fields: [ownerId], references: [id])
+
+  // Versioning / summary
+  summary         String? // short plain-text summary
+
+  // Supporting files [{ filename, url, size }]
+  attachments     Json?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+enum ResearchStatus {
+  DRAFT
+  IN_PROGRESS
+  COMPLETED
+  REVIEW
+  PUBLISHED
+}
+
+enum ResearchType {
+  TECHNICAL
+  MARKET
+  USER
+  PERFORMANCE
+  OTHER
+}
+
+
+
+model Meeting {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+
+  startTime   DateTime
+  endTime     DateTime?
+
+  status      MeetingStatus @default(SCHEDULED)
+
+  location    String?
+  meetingLink String?
+
+  // JSON sections
+  participants Json? 
+  // [
+  //   { "adminId": "id", "name": "John", "attended": true }
+  // ]
+
+  keyPoints   Json?
+  // [
+  //   { "title": "Database Issue", "notes": "...", "actionItems": [...] }
+  // ]
+
+  actionItems Json?
+  // [
+  //   { "task": "Fix API", "assignedToId": "id", "dueDate": "...", "completed": false }
+  // ]
+
+  attachments Json?
+  // [
+  //   { "fileName": "slides.pdf", "fileUrl": "...", "fileType": "pdf" }
+  // ]
+
+  createdById String
+  createdBy   Admin @relation(fields: [createdById], references: [id])
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+enum MeetingStatus {
+  SCHEDULED
+  ONGOING
+  COMPLETED
+  CANCELLED
+}
+
+model InternshipApplication {
+  id             String   @id @default(cuid())
+
+  // Applicant info
+  fullName       String
+  email          String
+  phone          String?
+  institution    String?
+  fieldOfStudy   String?
+  level          String?
+
+  // Location / address (useful for filtering locals)
+  country        String?
+  city           String?
+
+  // Internship details
+  internshipType InternshipType
+  period         InternshipPeriod?
+  preferredStart DateTime?
+  preferredEnd   DateTime?
+
+  // Motivation & skills
+  coverLetter    String?   @db.Text
+  skills         Json?     // ["JavaScript", "Figma", "NestJS"]
+
+  // Links & documents
+  cvUrl          String?
+  portfolioUrl   String?
+  githubUrl      String?
+  linkedinUrl    String?
+
+  // Internal scoring (very useful during review)
+  score          Int?      // e.g. reviewer gives 1–10
+
+  // Status
+  status         InternshipStatus @default(PENDING)
+
+  // Internal review
+  reviewedById   String?
+  reviewedBy     Admin?    @relation(fields: [reviewedById], references: [id])
+  reviewNotes    String?   @db.Text
+  reviewedAt     DateTime?
+
+  // Flags
+  isShortlisted  Boolean   @default(false)
+  isContacted    Boolean   @default(false)
+
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+
+enum InternshipStatus {
+  PENDING
+  REVIEWING
+  ACCEPTED
+  REJECTED
+  WAITLISTED
+}
+
+enum InternshipType {
+  SOFTWARE_DEVELOPMENT
+  UI_UX
+  DATA
+  MARKETING
+  IT_SUPPORT
+  OTHER
+}
+
+enum InternshipPeriod {
+  ONE_MONTH
+  THREE_MONTHS
+  SIX_MONTHS
+  ONE_YEAR
+}
+
+model HostedWebsite {
+  id          String   @id @default(cuid())
+  name        String
+  domain      String   @unique
+  description String?
+
+  status      WebsiteStatus @default(ACTIVE)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+
+enum WebsiteStatus {
+  ACTIVE
+  SUSPENDED
+  EXPIRED
+}
+
+
+model WeeklyGoal {
+  id          String   @id @default(cuid())
+
+  title       String
+  description String?
+
+  // Week identification
+  weekStart   DateTime
+  weekEnd     DateTime
+
+  // Progress
+  status      WeeklyGoalStatus @default(PENDING)
+  progress    Int @default(0) // 0–100%
+
+  // Ownership
+  ownerId     String
+  owner       Admin @relation(fields: [ownerId], references: [id])
+
+  // Weekly tasks
+  tasks       Json? // [{ title, description, done }]
+
+  // End-of-week reflection
+  reviewNotes String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+enum WeeklyGoalStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  MISSED
+}
+
+model DemoRequest {
+  id            String   @id @default(cuid())
+
+  // User requesting the demo
+  fullName      String
+  email         String
+  phone         String?
+
+  companyName   String?
+  message       String? // what they want to see in the demo
+
+  // What demo they want
+  product       String? // e.g. "Inventory System", "Booking Platform"
+  demoType      DemoType
+
+  // Preferred schedule
+  preferredDate DateTime?
+  preferredTime String? // e.g. "Morning", "14:00–16:00"
+
+  // Request lifecycle
+  status        DemoRequestStatus @default(PENDING)
+
+  // Internal handling
+  assignedToId  String?
+  assignedTo    Admin?  @relation(fields: [assignedToId], references: [id])
+
+  scheduledAt   DateTime? // actual demo date
+  meetingLink   String?
+
+  internalNotes String?
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+enum DemoRequestStatus {
+  PENDING
+  CONTACTED
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+}
+
+enum DemoType {
+  PRODUCT
+  FEATURE
+  CUSTOM
+}
+
+
 
 // ============================================
 // CHAT MODELS

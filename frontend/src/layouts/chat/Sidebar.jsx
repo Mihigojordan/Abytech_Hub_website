@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
 import { MessageSquare, Users, Settings, Moon, Globe, UserPlus } from 'lucide-react';
 import AdminList from '../../components/dashboard/chat/ui/AdminList';
+import Avatar from '../../components/dashboard/chat/ui/Avatar';
+import useAdminAuth from '../../context/AdminAuthContext';
 
 /**
  * Sidebar layout component - left navigation bar with icons
  */
 const Sidebar = ({ onConversationCreated }) => {
     const [showAdminList, setShowAdminList] = useState(false);
+    const { user: currentUser } = useAdminAuth();
 
     const handleConversationCreated = (conversation) => {
         setShowAdminList(false);
@@ -15,7 +18,7 @@ const Sidebar = ({ onConversationCreated }) => {
         }
     };
 
-    
+
 
     return (
         <>
@@ -58,13 +61,13 @@ const Sidebar = ({ onConversationCreated }) => {
                     <button className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-indigo-600 transition-colors">
                         <Moon className="w-5 h-5" />
                     </button>
-                    <div className="w-10 h-10 rounded-full overflow-hidden">
-                        <img
-                            src="https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=100&h=100&fit=crop"
-                            alt="User"
-                            className="w-full h-full object-cover"
-                        />
-                    </div>
+                    <Avatar
+                        avatar={currentUser?.profileImage}
+                        initial={currentUser?.name?.charAt(0)?.toUpperCase()}
+                        name={currentUser?.name || 'User'}
+                        size="md"
+                        online={false}
+                    />
                 </div>
             </div>
 

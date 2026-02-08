@@ -17,43 +17,76 @@ const ChatList = ({
     allMessages,
     contacts,
     currentUser,
-    unreadCounts = {}
+    unreadCounts = {},
+    onlineUsers = new Map()
 }) => {
-    // Filter conversations based on search query
+    // Helper function to check if a user is online
+    const isUserOnline = (userId, userType) => {
+        const user = onlineUsers.get(userId);
+        return user && user.userType === userType;
+    };
+
+    // 1. Convert to array and enrich with real-time online status
+    const chatsArray = Object.values(conversations).map(conv => {
+        // Enrich participants with real-time online status
+        const enrichedParticipants = conv.participants?.map(p => ({
+            ...p,
+            isOnline: isUserOnline(p.participantId, p.participantType)
+        }));
+
+        return {
+            ...conv,
+            participants: enrichedParticipants
+        };
+    });
+
+    // 2. Filter based on search query
     const filteredChats = searchQuery.trim()
-        ? Object.values(conversations).filter(conv =>
+        ? chatsArray.filter(conv =>
             conv.name.toLowerCase().includes(searchQuery.toLowerCase())
         )
-        : Object.values(conversations);
+        : chatsArray;
+
+    // 3. Sort by updatedAt (descending) - Real-time sorting
+    const sortedChats = [...filteredChats].sort((a, b) => {
+        const timeA = new Date(a.updatedAt || 0).getTime();
+        const timeB = new Date(b.updatedAt || 0).getTime();
+        return timeB - timeA;
+    });
 
     return (
-        <div className="w-96 bg-gray-50 border-r border-gray-200 flex flex-col">
+        <div className="w-96 bg-gray-50 border-r border-gray-200 flex flex-col h-full">
             {/* Header with search */}
             <ChatListHeader
                 searchQuery={searchQuery}
                 onSearchChange={onSearchChange}
             />
 
-            {/* Contacts */}
-            <ContactsList contacts={contacts} />
+            {/* Online Contacts */}
+            <ContactsList
+                contacts={contacts}
+                onlineUsers={onlineUsers}
+            />
 
             {/* Recent Chats */}
-            <div className="flex-1 overflow-y-auto">
-                <div className="px-4 py-3">
-                    <h2 className="text-sm font-semibold text-gray-500 mb-2">Recent</h2>
+            <div className="flex-1 overflow-y-auto custom-scrollbar">
+                <div className="px-4 py-3 bg-gray-50 sticky top-0 z-10">
+                    <h2 className="text-sm font-semibold text-gray-500">Recent</h2>
                 </div>
                 <div className="space-y-0">
-                    {filteredChats.map((chat) => {
-                        // Get messages from realtime store OR fallback to initial messages from conversation fetch
-                        // Note: chat.messages usually contains only the last message (take: 1)
-                        const messages = allMessages[chat.id] || chat.messages || [];
+
+                    {sortedChats.map((chat) => {
+                        // IMPORTANT: Prioritize chat.messages (latest message from conversation object)
+                        // over allMessages (full chat history) for conversation preview
+                        // chat.messages is updated in real-time via message:new event
+                        const messages = chat.messages || allMessages[chat.id] || [];
                         const lastMsg = getLastMessage(messages);
 
                         // Use prop unread count (from API) or calculate from loaded messages if available
                         // API count is more reliable for list view
                         const unreadCount = unreadCounts[chat.id] || 0;
 
-                        const isSelected = chat.id === selectedChatId;
+                        const isSelected = parseInt(chat.id) === parseInt(selectedChatId);
 
                         return (
                             <ConversationItem
@@ -67,6 +100,12 @@ const ChatList = ({
                             />
                         );
                     })}
+
+                    {sortedChats.length === 0 && (
+                        <div className="px-4 py-8 text-center text-gray-400 text-sm">
+                            {searchQuery ? 'No conversations found' : 'No conversations yet'}
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
