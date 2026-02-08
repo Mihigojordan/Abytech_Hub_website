@@ -97,7 +97,7 @@ const TeamMembersPage = () => {
             className="relative w-60 h-60 rounded-full border-4 border-white shadow-lg group-hover:border-[#101828] transition-all duration-300 object-cover"
           />
 
-          <div className="absolute -bottom-2 -right-2 w-10 h-10 bg-[#101828] rounded-full flex items-center justify-center shadow-lg">
+          <div className="absolute -bottom-2 -right-2 w-10 h-10 bg-[#ff5a00] rounded-full flex items-center justify-center shadow-lg">
             <Star className="w-5 h-5 text-white fill-white" />
           </div>
         </div>
@@ -112,7 +112,7 @@ const TeamMembersPage = () => {
 
       <div className="space-y-3 mb-6">
         <div className="flex items-center text-gray-700 text-sm bg-[#101828]/5 p-3 rounded-xl hover:shadow-md transition-all duration-300 group/item">
-          <div className="w-8 h-8 bg-[#101828] rounded-lg flex items-center justify-center mr-3 group-hover/item:scale-110 transition-transform duration-300">
+          <div className="w-8 h-8 bg-[#ff5a00] rounded-lg flex items-center justify-center mr-3 group-hover/item:scale-110 transition-transform duration-300">
             <Mail className="w-4 h-4 text-white" />
           </div>
           <span className="truncate text-xs">{member.email}</span>
@@ -134,7 +134,7 @@ const TeamMembersPage = () => {
 
         <h1 className="text-5xl md:text-6xl font-bold mb-6 leading-tight">
           Our{" "}
-          <span className="text-[#101828]">
+          <span className="text-[#ff5a00]">
             Exceptional Team
           </span>
         </h1>
