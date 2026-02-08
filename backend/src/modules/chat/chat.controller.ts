@@ -26,7 +26,7 @@ export class ChatController {
     async getConversations(@Req() req: RequestWithChatUser) {
         const userId = req.user.id;
         const userType = req.user.type;
-        
+
         return this.chatService.getConversations(userId, userType);
     }
 
@@ -152,6 +152,13 @@ export class ChatController {
         const readerId = req.user?.id;
         const readerType = req.user?.type || 'ADMIN';
         return this.chatService.markMessageAsRead(messageId, readerId, readerType);
+    }
+
+    @Post('conversations/:id/mark-read')
+    async markConversationAsRead(@Param('id') conversationId: string, @Req() req: any) {
+        const readerId = req.user?.id;
+        const readerType = req.user?.type || 'ADMIN';
+        return this.chatService.markConversationAsRead(conversationId, readerId, readerType);
     }
 
     // ====================

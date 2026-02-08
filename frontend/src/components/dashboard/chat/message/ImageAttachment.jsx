@@ -1,6 +1,7 @@
 import React from 'react';
 import { Image as ImageIcon } from 'lucide-react';
 import { API_URL } from '../../../../api/api';
+import { handleDisplayImgUrl } from '../../../../utils/chat/messageUtils';
 
 /**
  * Image attachment component with stack effect for multiple images
@@ -8,11 +9,6 @@ import { API_URL } from '../../../../api/api';
 const ImageAttachment = ({ images, isSent, onClick }) => {
     if (!images || images.length === 0) return null;
 
-    const handleDisplayImgUrl = (url)=>{
-        if(!url ) return null;
-        // if(url?.startWith('http')) return url
-      return  `${API_URL}${url}`
-    }
 
     return (
         <div className="relative">

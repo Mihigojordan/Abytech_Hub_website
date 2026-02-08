@@ -47,18 +47,50 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     async handleDisconnect(@ConnectedSocket() client: AuthenticatedSocket) {
         console.log(`Client disconnected: ${client.id}`);
 
-        if (client.userId && client.userType) {
-            // Remove socket mapping
-            this.cache.removeUserSocket(client.userId, client.userType);
+        if (client.userId) {
+            // Remove user from online users cache
             this.cache.removeOnlineUser(client.userId);
 
-            // Broadcast offline status
-            this.server.emit('user:status', {
-                userId: client.userId,
-                userType: client.userType,
-                status: 'offline',
-                lastSeen: new Date(),
-            });
+            const lastSeenTime = new Date();
+
+            // Update database status
+            try {
+                if (client.userType === 'ADMIN') {
+                    await this.chatService.updateAdminOnlineStatus(client.userId, false, lastSeenTime);
+                } else {
+                    await this.chatService.updateUserOnlineStatus(client.userId, false, lastSeenTime);
+                }
+
+                // Get all conversations this user participates in
+                const conversations = await this.chatService.getUserConversations(client.userId, client.userType as any);
+
+                // Extract unique participant IDs (excluding the disconnected user)
+                const participantSocketIds = new Set<string>();
+                conversations.forEach(conv => {
+                    conv.participants?.forEach(p => {
+                        if (!(p.participantId === client.userId && p.participantType === client.userType)) {
+                            const socketId = this.cache.getUserSocketId(p.participantId);
+                            if (socketId) {
+                                participantSocketIds.add(socketId);
+                            }
+                        }
+                    });
+                });
+
+                // Broadcast offline status only to conversation participants
+                participantSocketIds.forEach(socketId => {
+                    this.server.to(socketId).emit('user:status', {
+                        userId: client.userId,
+                        userType: client.userType,
+                        status: 'offline',
+                        lastSeen: lastSeenTime,
+                    });
+                });
+
+                console.log(`User ${client.userId} offline status sent to ${participantSocketIds.size} participants`);
+            } catch (error) {
+                console.error('Error in handleDisconnect:', error);
+            }
         }
     }
 
@@ -81,18 +113,74 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
             client.userId = data.userId;
             client.userType = data.userType;
 
-            // Add socket mapping and online user
-            this.cache.addUserSocket(client.userId, client.userType, client.id);
-            this.cache.addOnlineUser(client.userId);
+            // Add online user with full details
+            this.cache.addOnlineUser(client.userId, client.userType, client.id);
 
-            // Broadcast online status to all clients
-            this.server.emit('user:status', {
-                userId: client.userId,
-                userType: client.userType,
-                status: 'online',
+            // Update database status
+            if (client.userType === 'ADMIN') {
+                await this.chatService.updateAdminOnlineStatus(client.userId, true, null);
+            } else {
+                await this.chatService.updateUserOnlineStatus(client.userId, true, null);
+            }
+
+            // Get all conversations this user participates in
+            const conversations = await this.chatService.getUserConversations(client.userId, client.userType);
+
+            // Extract all unique participants from all conversations
+            const allParticipants = new Set<string>();
+            const participantsList: Array<{ participantId: string; participantType: 'ADMIN' | 'USER' }> = [];
+
+            conversations.forEach(conv => {
+                conv.participants?.forEach(p => {
+                    const key = `${p.participantId}-${p.participantType}`;
+                    if (!allParticipants.has(key)) {
+                        allParticipants.add(key);
+                        participantsList.push({
+                            participantId: p.participantId,
+                            participantType: p.participantType
+                        });
+                    }
+                });
             });
 
-            console.log(`User ${client.userId} (${client.userType}) is now online with socket ${client.id}`);
+            // Get online users from conversation participants
+            const onlineUsers = this.cache.getOnlineConversationParticipants(
+                client.userId,
+                client.userType,
+                participantsList
+            );
+
+            // Send online users list to the newly connected user
+            client.emit('online:users', {
+                users: onlineUsers.map(u => ({
+                    userId: u.userId,
+                    userType: u.userType
+                }))
+            });
+
+            // Extract unique participant socket IDs (excluding current user)
+            const participantSocketIds = new Set<string>();
+            conversations.forEach(conv => {
+                conv.participants?.forEach(p => {
+                    if (!(p.participantId === client.userId && p.participantType === client.userType)) {
+                        const socketId = this.cache.getUserSocketId(p.participantId);
+                        if (socketId) {
+                            participantSocketIds.add(socketId);
+                        }
+                    }
+                });
+            });
+
+            // Broadcast online status only to conversation participants
+            participantSocketIds.forEach(socketId => {
+                this.server.to(socketId).emit('user:status', {
+                    userId: client.userId,
+                    userType: client.userType,
+                    status: 'online',
+                });
+            });
+
+            console.log(`User ${client.userId} (${client.userType}) is now online with socket ${client.id}. Sent ${onlineUsers.length} online users, notified ${participantSocketIds.size} participants`);
 
             return { success: true, userId: client.userId, status: 'online' };
         } catch (error) {
@@ -113,7 +201,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         recipients: { participantId: string; participantType: 'ADMIN' | 'USER' }[]
     ) {
         console.log('Broadcasting new message to:', recipients);
-        this.emitToUsers( recipients.map(r=> ({userId: r.participantId as any,userType: r.participantType as any})) , 'message:new', {
+        this.emitToUsers(recipients.map(r => ({ userId: r.participantId as any, userType: r.participantType as any })), 'message:new', {
             conversationId: message.conversationId,
             message,
         });
@@ -128,7 +216,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         content: string,
         recipients: { participantId: string; participantType: 'ADMIN' | 'USER' }[]
     ) {
-        this.emitToUsers( recipients.map(r=> ({userId: r.participantId as any,userType: r.participantType as any})) , 'message:edited', {
+        this.emitToUsers(recipients.map(r => ({ userId: r.participantId as any, userType: r.participantType as any })), 'message:edited', {
             messageId,
             conversationId,
             content,
@@ -144,7 +232,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         conversationId: string,
         recipients: { participantId: string; participantType: 'ADMIN' | 'USER' }[]
     ) {
-        this.emitToUsers( recipients.map(r=> ({userId: r.participantId as any,userType: r.participantType as any})) , 'message:deleted', {
+        this.emitToUsers(recipients.map(r => ({ userId: r.participantId as any, userType: r.participantType as any })), 'message:deleted', {
             messageId,
             conversationId
         });
@@ -171,7 +259,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
 
     private emitToUser(userId: string, userType: 'ADMIN' | 'USER', event: string, data: any) {
-        const socketId = this.cache.getUserSocketId(userId, userType);
+        const socketId = this.cache.getUserSocketId(userId);
         if (socketId) {
             this.server.to(socketId).emit(event, data);
         }
@@ -188,9 +276,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @SubscribeMessage('typing:start')
     async handleTypingStart(
         @ConnectedSocket() client: AuthenticatedSocket,
-        @MessageBody() data: { conversationId: string ,  userId: string; userType: 'ADMIN' | 'USER'},
+        @MessageBody() data: { conversationId: string, userId: string; userType: 'ADMIN' | 'USER' },
     ) {
-        console.log('client user typing =>',client.userId,client.userType);
+        console.log('client user typing =>', client.userId, client.userType);
         try {
             this.cache.setTyping(data.conversationId, client.userId as string);
 
@@ -207,7 +295,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
                     !(p.participantId === client.userId && p.participantType === client.userType)
                 );
 
-                this.emitToUsers(recipients.map(r=> ({userId: r.participantId as any,userType: r.participantType as any})), 'typing:active', {
+                this.emitToUsers(recipients.map(r => ({ userId: r.participantId as any, userType: r.participantType as any })), 'typing:active', {
                     conversationId: data.conversationId,
                     userId: client.userId,
                     userType: client.userType,
@@ -223,12 +311,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @SubscribeMessage('typing:stop')
     async handleTypingStop(
         @ConnectedSocket() client: AuthenticatedSocket,
-        @MessageBody() data: { conversationId: string,  userId: string; userType: 'ADMIN' | 'USER' },
+        @MessageBody() data: { conversationId: string, userId: string; userType: 'ADMIN' | 'USER' },
     ) {
         try {
 
-           console.log('client user typing =>',client.userId,client.userType);
-            
+            console.log('client user typing =>', client.userId, client.userType);
+
             // Same
             //  as above
             const conversation = await this.chatService.getConversation(
@@ -242,7 +330,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
                     !(p.participantId === client.userId && p.participantType === client.userType)
                 );
 
-                this.emitToUsers(recipients.map(r=> ({userId: r.participantId as any,userType: r.participantType as any})), 'typing:inactive', {
+                this.emitToUsers(recipients.map(r => ({ userId: r.participantId as any, userType: r.participantType as any })), 'typing:inactive', {
                     conversationId: data.conversationId,
                     userId: client.userId,
                 });

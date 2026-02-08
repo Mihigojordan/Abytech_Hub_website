@@ -271,20 +271,17 @@ export const useMessages = (currentUser = null) => {
 
         setAllMessages(prev => {
             const existing = prev[conversationId] || [];
-            
+
             // Convert both IDs to strings for proper comparison
             const messageIdStr = String(message.id);
-            
+
             // Check if message already exists (compare as strings)
             if (existing.some(m => String(m.id) === messageIdStr)) {
-                console.log('Message already exists, skipping:', messageIdStr);
                 return prev;
             }
 
             // Transform message to add isSent property
             const transformedMessage = transformMessages([message])[0];
-
-            console.log('Adding new message from socket:', transformedMessage);
 
             return {
                 ...prev,
@@ -305,7 +302,7 @@ export const useMessages = (currentUser = null) => {
 
         setAllMessages(prev => {
             const existing = prev[conversationId];
-            
+
             if (!existing || existing.length === 0) {
                 console.warn('No existing messages for conversation:', conversationId);
                 return prev;
@@ -313,10 +310,10 @@ export const useMessages = (currentUser = null) => {
 
             // Convert IDs to strings for proper comparison
             const updatedIdStr = String(updatedMessage.id);
-            
+
             // Check if message exists
             const messageExists = existing.some(m => String(m.id) === updatedIdStr);
-            
+
             if (!messageExists) {
                 console.warn('Message to update not found:', updatedIdStr);
                 return prev;
@@ -325,12 +322,10 @@ export const useMessages = (currentUser = null) => {
             // Transform updated message
             const transformedMessage = transformMessages([updatedMessage])[0];
 
-            console.log('Updating message from socket:', transformedMessage);
-
             return {
                 ...prev,
                 [conversationId]: existing.map(msg =>
-                    String(msg.id) === updatedIdStr ? {...msg,...updatedMessage,timestamp: new Date().toISOString(),edited:true} : msg
+                    String(msg.id) === updatedIdStr ? { ...msg, ...updatedMessage, timestamp: new Date().toISOString(), edited: true } : msg
                 )
             };
         });
@@ -348,7 +343,7 @@ export const useMessages = (currentUser = null) => {
 
         setAllMessages(prev => {
             const existing = prev[conversationId];
-            
+
             if (!existing || existing.length === 0) {
                 console.warn('No existing messages for conversation:', conversationId);
                 return prev;
@@ -356,8 +351,6 @@ export const useMessages = (currentUser = null) => {
 
             // Convert ID to string for proper comparison
             const messageIdStr = String(messageId);
-
-            console.log('Removing message from socket:', messageIdStr);
 
             return {
                 ...prev,
@@ -376,11 +369,11 @@ export const useMessages = (currentUser = null) => {
             return;
         }
 
-        
+
 
         setAllMessages(prev => {
             const existing = prev[conversationId];
-            
+
             if (!existing || existing.length === 0) {
                 return prev;
             }
@@ -393,7 +386,7 @@ export const useMessages = (currentUser = null) => {
                     if (String(msg.id) === messageIdStr) {
                         // Update readers array if it exists, or mark as read
                         const updatedReaders = msg.readers || [];
-                        
+
                         // Check if this reader already exists
                         const readerExists = updatedReaders.some(
                             r => r.readerId === readerId && r.readerType === readerType

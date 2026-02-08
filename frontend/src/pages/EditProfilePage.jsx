@@ -172,7 +172,7 @@ export default function AdminProfileEdit() {
       if (activeTab === 'personal') {
         formData.append('adminName', personalInfo.adminName);
         formData.append('adminEmail', personalInfo.adminEmail);
-        formData.append('idNumber', personalInfo.idNumber);
+        // formData.append('idNumber', personalInfo.idNumber);
         if (personalInfo.phone) formData.append('phone', personalInfo.phone);
         if (personalInfo.location) formData.append('location', personalInfo.location);
         if (personalInfo.bio) formData.append('bio', personalInfo.bio);

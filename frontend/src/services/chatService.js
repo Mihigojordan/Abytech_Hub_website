@@ -112,6 +112,16 @@ class ChatService {
         }
     }
 
+    async markConversationAsRead(conversationId) {
+        try {
+            const response = await this.api.post(`/chat/conversations/${conversationId}/mark-read`);
+            return response.data;
+        } catch (error) {
+            const msg = error.response?.data?.message || error.message || 'Failed to mark conversation as read';
+            throw new Error(msg);
+        }
+    }
+
     // ====================
     // REPLY & FORWARD
     // ====================
@@ -214,9 +224,11 @@ export const {
     editMessage,
     deleteMessage,
     markMessageAsRead,
+    markConversationAsRead,
     replyToMessage,
     forwardMessages,
     getUnreadMessageCounts,
     getContacts,
     addContact,
 } = chatService;
+

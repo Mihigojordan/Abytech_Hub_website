@@ -6,6 +6,8 @@ import React from "react";
 import { AdminAuthContextProvider } from './context/AdminAuthContext.jsx';
 import { SocketProvider } from './context/SocketContext.jsx';
 import { registerSW } from 'virtual:pwa-register';
+import { HelmetProvider } from 'react-helmet-async';
+
 
 const updateSW = registerSW({
   onNeedRefresh() {
@@ -20,13 +22,13 @@ const updateSW = registerSW({
         'New version available! Update now?\n\n' +
         '(You can also update later by refreshing the page)'
       );
-      
+
       if (shouldUpdate) {
         updateSW(true);
       }
     }
   },
-  
+
   onOfflineReady() {
     console.log('App ready to work offline');
   },

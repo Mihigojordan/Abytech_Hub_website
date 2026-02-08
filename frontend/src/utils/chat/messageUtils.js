@@ -1,3 +1,4 @@
+import { API_URL } from '../../api/api';
 import { formatTime } from './dateUtils';
 
 /**
@@ -48,4 +49,20 @@ export const getUnreadCount = (messages, currentUserId) => {
         const hasRead = m.readers.some(r => r.readerId === currentUserId);
         return !hasRead;
     }).length;
+};
+
+
+
+export const handleDisplayImgUrl = (url) => {
+    // Return null if url is not provided or not a string
+    if (!url || typeof url !== 'string') return null;
+
+    // Return absolute URLs as-is
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+        return url;
+    }
+
+    // Ensure the path starts with a slash for relative URLs
+    const path = url.startsWith('/') ? url : `/${url}`;
+    return `${API_URL}${path}`;
 };
