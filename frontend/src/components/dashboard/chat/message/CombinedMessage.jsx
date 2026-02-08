@@ -1,5 +1,5 @@
 import React from 'react';
-import { Clock, MoreVertical, Check } from 'lucide-react';
+import { Clock, MoreVertical, Check, Forward } from 'lucide-react';
 import { formatTime } from '../../../../utils/chat/dateUtils';
 import ImageAttachment from './ImageAttachment';
 import FileAttachment from './FileAttachment';
@@ -8,7 +8,7 @@ import MessageMenu from './MessageMenu';
 /**
  * Combined message component (text + images + files)
  */
-const CombinedMessage = ({ message, onMenuAction, showMenu, setShowMenu, onMediaView, selectionMode }) => {
+const CombinedMessage = ({ message, onMenuAction, showMenu, setShowMenu, onMediaView, selectionMode, isGroup = false }) => {
     const handleMediaClick = () => {
         const allMedia = [
             ...(message.images || []).map(url => ({ type: 'image', url })),
@@ -28,6 +28,14 @@ const CombinedMessage = ({ message, onMenuAction, showMenu, setShowMenu, onMedia
 
     return (
         <div className="relative group space-y-2 max-w-md">
+            {/* Forwarded indicator */}
+            {message.isForwarded && (
+                <div className={`flex items-center gap-1 text-xs ${message.isSent ? 'text-gray-500' : 'text-gray-500'}`}>
+                    <Forward className="w-3 h-3" />
+                    <span className="italic">Forwarded</span>
+                </div>
+            )}
+
             {/* Images */}
             {message.images && message.images.length > 0 && (
                 <ImageAttachment
@@ -53,7 +61,7 @@ const CombinedMessage = ({ message, onMenuAction, showMenu, setShowMenu, onMedia
 
             {/* Text content */}
             {message.content && (
-                <div className={`${message.isSent ? 'bg-gray-100' : 'bg-indigo-600 text-white'} rounded-lg px-4 py-3`}>
+                <div className={`${message.isSent ? 'bg-gray-100' : 'bg-dashboard-600 text-white'} rounded-lg px-4 py-3`}>
                     <p className="text-sm whitespace-pre-wrap">{message.content}</p>
                 </div>
             )}
@@ -97,6 +105,7 @@ const CombinedMessage = ({ message, onMenuAction, showMenu, setShowMenu, onMedia
                 <MessageMenu
                     messageId={message.id}
                     isSent={message.isSent}
+                    isGroup={isGroup}
                     onAction={onMenuAction}
                     position="right"
                 />

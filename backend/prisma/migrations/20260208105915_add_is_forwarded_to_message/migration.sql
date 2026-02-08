@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE `messages` ADD COLUMN `is_forwarded` BOOLEAN NOT NULL DEFAULT false;

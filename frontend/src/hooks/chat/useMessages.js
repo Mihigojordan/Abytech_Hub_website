@@ -55,12 +55,13 @@ export const useMessages = (currentUser = null) => {
 
         try {
             const response = await chatService.getMessages(conversationId, { cursor, limit });
+            const convIdStr = String(conversationId);
 
             // Transform messages to add isSent property
             const transformedMessages = transformMessages(response.messages);
 
             setAllMessages(prev => {
-                const existingMessages = prev[conversationId] || [];
+                const existingMessages = prev[convIdStr] || [];
                 // Prepend older messages when loading more
                 const newMessages = cursor
                     ? [...transformedMessages, ...existingMessages]
@@ -68,23 +69,22 @@ export const useMessages = (currentUser = null) => {
 
                 return {
                     ...prev,
-                    [conversationId]: newMessages
+                    [convIdStr]: newMessages
                 };
             });
 
             setMessageLoadState(prev => ({
                 ...prev,
-                [conversationId]: {
+                [convIdStr]: {
                     cursor: response.nextCursor,
                     hasMore: response.hasMore,
-                    offset: (prev[conversationId]?.offset || 0) + response.messages.length
+                    offset: (prev[convIdStr]?.offset || 0) + response.messages.length
                 }
             }));
 
             return response;
         } catch (err) {
             setError(err.message || 'Failed to fetch messages');
-            console.error('Error fetching messages:', err);
             return null;
         } finally {
             setLoading(false);
@@ -95,8 +95,9 @@ export const useMessages = (currentUser = null) => {
      * Get messages for a conversation (from local state)
      */
     const getMessagesForConversation = useCallback((conversationId) => {
-        const messages = allMessages[conversationId] || [];
-        const loadState = messageLoadState[conversationId] || { hasMore: true, offset: 0 };
+        const convIdStr = String(conversationId);
+        const messages = allMessages[convIdStr] || [];
+        const loadState = messageLoadState[convIdStr] || { hasMore: true, offset: 0 };
 
         return {
             messages,
@@ -128,19 +129,20 @@ export const useMessages = (currentUser = null) => {
 
                 // Transform updated message
                 const transformedMessage = transformMessages([updatedMessage])[0];
+                const chatIdStr = String(selectedChatId);
 
                 setAllMessages(prev => ({
                     ...prev,
-                    [selectedChatId]: prev[selectedChatId].map(msg =>
+                    [chatIdStr]: (prev[chatIdStr] || []).map(msg =>
                         msg.id === editingMessage.id ? transformedMessage : msg
                     )
                 }));
 
                 setEditingMessage(null);
-                return '';
+                return { inputValue: '', message: transformedMessage };
             } catch (err) {
                 setError(err.message || 'Failed to edit message');
-                return messageInput;
+                return { inputValue: messageInput, message: null };
             }
         }
 
@@ -177,20 +179,22 @@ export const useMessages = (currentUser = null) => {
 
             // Transform new message to add isSent property
             const transformedNewMessage = transformMessages([newMessage])[0];
+            const chatIdStr = String(selectedChatId);
 
             // Add to local state
             setAllMessages(prev => ({
                 ...prev,
-                [selectedChatId]: [...(prev[selectedChatId] || []), transformedNewMessage]
+                [chatIdStr]: [...(prev[chatIdStr] || []), transformedNewMessage]
             }));
 
             clearFiles();
             setReplyingTo(null);
-            return '';
+
+            // Return empty string for input and the new message for conversation update
+            return { inputValue: '', message: transformedNewMessage };
         } catch (err) {
             setError(err.message || 'Failed to send message');
-            console.error('Error sending message:', err);
-            return messageInput;
+            return { inputValue: messageInput, message: null };
         }
     }, [editingMessage, replyingTo, transformMessages]);
 
@@ -200,14 +204,14 @@ export const useMessages = (currentUser = null) => {
     const deleteMessage = useCallback(async (messageId, conversationId) => {
         try {
             await chatService.deleteMessage(messageId);
+            const convIdStr = String(conversationId);
 
             setAllMessages(prev => ({
                 ...prev,
-                [conversationId]: prev[conversationId].filter(m => m.id !== messageId)
+                [convIdStr]: (prev[convIdStr] || []).filter(m => m.id !== messageId)
             }));
         } catch (err) {
             setError(err.message || 'Failed to delete message');
-            console.error('Error deleting message:', err);
         }
     }, []);
 
@@ -219,7 +223,7 @@ export const useMessages = (currentUser = null) => {
             await chatService.markMessageAsRead(messageId);
             // Update will come via WebSocket, so no local state update needed
         } catch (err) {
-            console.error('Error marking message as read:', err);
+            // Silently fail for read receipts
         }
     }, []);
 
@@ -227,7 +231,8 @@ export const useMessages = (currentUser = null) => {
      * Handle message actions (copy, edit, reply, delete, forward)
      */
     const handleMessageAction = useCallback((action, messageId, textareaRef, conversationId) => {
-        const message = allMessages[conversationId]?.find(m => m.id === messageId);
+        const convIdStr = String(conversationId);
+        const message = allMessages[convIdStr]?.find(m => m.id === messageId);
         if (!message) return null;
 
         switch (action) {
@@ -251,7 +256,7 @@ export const useMessages = (currentUser = null) => {
                 deleteMessage(messageId, conversationId);
                 break;
             case 'forward':
-                console.log('Forward functionality - to be implemented');
+                // Forward handled by parent component
                 break;
             default:
                 break;
@@ -265,7 +270,6 @@ export const useMessages = (currentUser = null) => {
      */
     const addMessageFromSocket = useCallback((message, conversationId) => {
         if (!message || !conversationId) {
-            console.warn('Invalid message or conversationId in addMessageFromSocket');
             return;
         }
 
@@ -283,9 +287,16 @@ export const useMessages = (currentUser = null) => {
             // Transform message to add isSent property
             const transformedMessage = transformMessages([message])[0];
 
+            // Ensure new messages have proper readBy array initialized
+            const messageWithReadBy = {
+                ...transformedMessage,
+                readBy: transformedMessage.readBy || [],
+                isRead: transformedMessage.isRead || false
+            };
+
             return {
                 ...prev,
-                [conversationId]: [...existing, transformedMessage]
+                [conversationId]: [...existing, messageWithReadBy]
             };
         });
     }, [transformMessages]);
@@ -296,7 +307,6 @@ export const useMessages = (currentUser = null) => {
      */
     const updateMessageFromSocket = useCallback((updatedMessage, conversationId) => {
         if (!updatedMessage || !conversationId) {
-            console.warn('Invalid message or conversationId in updateMessageFromSocket');
             return;
         }
 
@@ -304,7 +314,6 @@ export const useMessages = (currentUser = null) => {
             const existing = prev[conversationId];
 
             if (!existing || existing.length === 0) {
-                console.warn('No existing messages for conversation:', conversationId);
                 return prev;
             }
 
@@ -315,7 +324,6 @@ export const useMessages = (currentUser = null) => {
             const messageExists = existing.some(m => String(m.id) === updatedIdStr);
 
             if (!messageExists) {
-                console.warn('Message to update not found:', updatedIdStr);
                 return prev;
             }
 
@@ -337,7 +345,6 @@ export const useMessages = (currentUser = null) => {
      */
     const removeMessageFromSocket = useCallback((messageId, conversationId) => {
         if (!messageId || !conversationId) {
-            console.warn('Invalid messageId or conversationId in removeMessageFromSocket');
             return;
         }
 
@@ -345,7 +352,6 @@ export const useMessages = (currentUser = null) => {
             const existing = prev[conversationId];
 
             if (!existing || existing.length === 0) {
-                console.warn('No existing messages for conversation:', conversationId);
                 return prev;
             }
 
@@ -365,7 +371,6 @@ export const useMessages = (currentUser = null) => {
      */
     const updateMessageReadStatus = useCallback((messageId, conversationId, readerId, readerType) => {
         if (!messageId || !conversationId) {
-            console.warn('Invalid messageId or conversationId in updateMessageReadStatus');
             return;
         }
 

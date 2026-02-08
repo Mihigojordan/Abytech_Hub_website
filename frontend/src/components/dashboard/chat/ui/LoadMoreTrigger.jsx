@@ -10,7 +10,7 @@ const LoadMoreTrigger = ({ hasMore, isLoading, triggerRef }) => {
         <div ref={triggerRef} className="flex justify-center py-2">
             {isLoading && (
                 <div className="flex items-center text-gray-500 text-sm">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-indigo-600 mr-2"></div>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-dashboard-600 mr-2"></div>
                     Loading more messages...
                 </div>
             )}

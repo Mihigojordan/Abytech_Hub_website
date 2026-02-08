@@ -8,11 +8,11 @@ const EditReplyBar = ({ editingMessage, replyingTo, onCancel }) => {
     if (!editingMessage && !replyingTo) return null;
 
     return (
-        <div className="px-6 py-3 bg-indigo-50 border-t border-indigo-100 flex items-center justify-between">
+        <div className="px-6 py-3 bg-dashboard-50 border-t border-dashboard-100 flex items-center justify-between">
             <div className="flex items-center gap-3">
                 {editingMessage ? (
                     <>
-                        <Edit className="w-4 h-4 text-indigo-600" />
+                        <Edit className="w-4 h-4 text-dashboard-600" />
                         <div>
                             <p className="text-sm font-medium text-gray-800">Editing message</p>
                             <p className="text-xs text-gray-600 truncate max-w-md">
@@ -22,7 +22,7 @@ const EditReplyBar = ({ editingMessage, replyingTo, onCancel }) => {
                     </>
                 ) : (
                     <>
-                        <Forward className="w-4 h-4 text-indigo-600" />
+                        <Forward className="w-4 h-4 text-dashboard-600" />
                         <div>
                             <p className="text-sm font-medium text-gray-800">
                                 Replying to {replyingTo?.sender}
@@ -39,7 +39,7 @@ const EditReplyBar = ({ editingMessage, replyingTo, onCancel }) => {
             </div>
             <button
                 onClick={onCancel}
-                className="p-1 hover:bg-indigo-100 rounded transition-colors"
+                className="p-1 hover:bg-dashboard-100 rounded transition-colors"
             >
                 <X className="w-5 h-5 text-gray-600" />
             </button>

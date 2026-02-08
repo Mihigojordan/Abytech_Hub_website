@@ -110,6 +110,16 @@ export class ChatService {
                         messages: {
                             take: 1,
                             orderBy: { timestamp: 'desc' },
+                            include: {
+                                images: true,
+                                files: true,
+                                readers: {
+                                    select: {
+                                        readerId: true,
+                                        readerType: true,
+                                    },
+                                },
+                            },
                         },
                         participants: {
                             where: {
@@ -173,10 +183,45 @@ export class ChatService {
                     })
                 );
 
+                // Enrich the last message with isRead status
+                const isGroup = conv.isGroup || false;
+                const participantCount = enrichedParticipants.length;
+
+                const enrichedMessages = conv.messages.map((msg: any) => {
+                    // For read receipts (ticks), we check if the current user is the sender
+                    // If they are the sender, isRead = true means "recipient(s) have read it" (double tick)
+                    const isSenderCurrentUser = msg.senderId === userId && msg.senderType === userType;
+
+                    // Filter readers to exclude the sender
+                    const readByOthers = (msg.readers || []).filter(
+                        (r: any) => !(r.readerId === msg.senderId && r.readerType === msg.senderType)
+                    );
+
+                    let isRead = false;
+                    if (isSenderCurrentUser) {
+                        if (isGroup) {
+                            // For groups: all other participants must have read
+                            const requiredReaders = participantCount - 1;
+                            isRead = readByOthers.length >= requiredReaders;
+                        } else {
+                            // For 1-on-1: at least one other person has read
+                            isRead = readByOthers.length > 0;
+                        }
+                    }
+                    // For non-senders, isRead doesn't affect display (ticks only shown for sent messages)
+
+                    return {
+                        ...msg,
+                        isRead,
+                        readBy: readByOthers,
+                    };
+                });
+
                 return {
                     ...cp,
                     conversation: {
                         ...conv,
+                        messages: enrichedMessages,
                         participants: enrichedParticipants,
                     },
                 };
@@ -308,7 +353,129 @@ export class ChatService {
             },
         });
 
-        return conversation;
+        // Enrich conversation with participant details for real-time broadcast
+        const enrichedParticipants = await Promise.all(
+            conversation.participants.map(async (p) => {
+                const isOnline = this.cache.isUserOnline(p.participantId);
+                let userDetails: any = null;
+
+                if (p.participantType === 'ADMIN') {
+                    userDetails = await this.prisma.admin.findUnique({
+                        where: { id: p.participantId },
+                        select: { id: true, adminName: true, profileImage: true, lastSeen: true },
+                    });
+                } else {
+                    userDetails = await this.prisma.user.findUnique({
+                        where: { id: p.participantId },
+                        select: { id: true, name: true, avatar: true, initial: true, lastSeen: true },
+                    });
+                }
+
+                return {
+                    ...p,
+                    isOnline,
+                    lastSeen: userDetails?.lastSeen,
+                    name: p.participantType === 'ADMIN' ? userDetails?.adminName : userDetails?.name,
+                    avatar: p.participantType === 'ADMIN' ? userDetails?.profileImage : userDetails?.avatar,
+                    initial: userDetails?.initial,
+                };
+            })
+        );
+
+        const enrichedConversation = {
+            ...conversation,
+            participants: enrichedParticipants,
+            messages: [], // No messages yet for new conversation
+        };
+
+        // Broadcast new conversation to OTHER participants (not the creator, they already have it)
+        const otherRecipients = otherParticipants.map(p => ({
+            participantId: p.participantId,
+            participantType: p.participantType as 'ADMIN' | 'USER',
+        }));
+
+        if (otherRecipients.length > 0) {
+            this.chatGateway.broadcastNewConversation(enrichedConversation, otherRecipients);
+        }
+
+        return enrichedConversation;
+    }
+
+    async addMembersToConversation(
+        conversationId: string,
+        participantIds: string[],
+        participantTypes: ('ADMIN' | 'USER')[],
+        requesterId: string,
+        requesterType: 'ADMIN' | 'USER'
+    ) {
+        // Verify conversation exists and is a group
+        const conversation = await this.prisma.conversation.findUnique({
+            where: { id: Number(conversationId) },
+            include: {
+                participants: {
+                    where: { leftAt: null }
+                }
+            }
+        });
+
+        if (!conversation) {
+            throw new Error('Conversation not found');
+        }
+
+        if (!conversation.isGroup) {
+            throw new Error('Cannot add members to a non-group conversation');
+        }
+
+        // Verify requester is a member of the conversation
+        const isRequesterMember = conversation.participants.some(
+            p => p.participantId === requesterId && p.participantType === requesterType
+        );
+
+        if (!isRequesterMember) {
+            throw new Error('You are not a member of this conversation');
+        }
+
+        // Get existing participant keys
+        const existingKeys = new Set(
+            conversation.participants.map(p => `${p.participantType}-${p.participantId}`)
+        );
+
+        // Filter out already existing participants
+        const newParticipants: { participantId: string; participantType: 'ADMIN' | 'USER' }[] = [];
+        for (let i = 0; i < participantIds.length; i++) {
+            const key = `${participantTypes[i]}-${participantIds[i]}`;
+            if (!existingKeys.has(key)) {
+                newParticipants.push({
+                    participantId: participantIds[i],
+                    participantType: participantTypes[i]
+                });
+            }
+        }
+
+        if (newParticipants.length === 0) {
+            return { addedCount: 0, message: 'All selected participants are already in the group' };
+        }
+
+        // Add new participants
+        await this.prisma.conversationParticipant.createMany({
+            data: newParticipants.map(p => ({
+                conversationId: Number(conversationId),
+                participantId: p.participantId,
+                participantType: p.participantType,
+                role: 'member'
+            }))
+        });
+
+        // Invalidate cache
+        this.cache.deleteConversation(`conversation:${conversationId}`);
+
+        // Return updated conversation
+        const updatedConversation = await this.getConversation(conversationId, requesterId, requesterType);
+
+        return {
+            addedCount: newParticipants.length,
+            conversation: updatedConversation
+        };
     }
 
     // ====================
@@ -319,6 +486,20 @@ export class ChatService {
         const limit = pagination.limit || 15;
         // Fetch one extra to check if there are more
         const fetchLimit = limit + 1;
+
+        // Get conversation details to know participant count for group read status
+        const conversation = await this.prisma.conversation.findUnique({
+            where: { id: Number(conversationId) },
+            include: {
+                participants: {
+                    where: { leftAt: null },
+                    select: { participantId: true, participantType: true }
+                }
+            }
+        });
+
+        const isGroup = conversation?.isGroup || false;
+        const participantCount = conversation?.participants?.length || 0;
 
         const messages = await this.prisma.message.findMany({
             where: {
@@ -343,12 +524,8 @@ export class ChatService {
                         senderType: true,
                     },
                 },
-                readers: {
-                    where: {
-                        readerId: userId,
-                        readerType: userType,
-                    },
-                },
+                // Get ALL readers for the message (for group "read by" feature)
+                readers: true,
             },
         });
 
@@ -361,10 +538,14 @@ export class ChatService {
             nextCursor = nextItem?.id.toString();
         }
 
-        console.log('messages =>', messages);
-
         // Return messages in chronological order (Oldest -> Newest) for the UI
-        const enrichedMessages = await this.enrichMessages(messages.reverse() as any[]);
+        const enrichedMessages = await this.enrichMessages(
+            messages.reverse() as any[],
+            userId,
+            userType,
+            isGroup,
+            participantCount
+        );
 
         return {
             messages: enrichedMessages,
@@ -373,10 +554,16 @@ export class ChatService {
         };
     }
 
-    async enrichMessages(messages: any[]) {
+    async enrichMessages(
+        messages: any[],
+        currentUserId?: string,
+        currentUserType?: 'ADMIN' | 'USER',
+        isGroup: boolean = false,
+        participantCount: number = 2
+    ) {
         if (!messages.length) return [];
 
-        // Collect unique sender IDs
+        // Collect unique sender IDs and reader IDs
         const adminIds = new Set<string>();
         const userIds = new Set<string>();
 
@@ -388,6 +575,14 @@ export class ChatService {
             if (msg.replyToMessage) {
                 if (msg.replyToMessage.senderType === 'ADMIN') adminIds.add(msg.replyToMessage.senderId);
                 else if (msg.replyToMessage.senderType === 'USER') userIds.add(msg.replyToMessage.senderId);
+            }
+
+            // Collect reader IDs for enrichment
+            if (msg.readers && Array.isArray(msg.readers)) {
+                msg.readers.forEach((reader: any) => {
+                    if (reader.readerType === 'ADMIN') adminIds.add(reader.readerId);
+                    else if (reader.readerType === 'USER') userIds.add(reader.readerId);
+                });
             }
         });
 
@@ -445,12 +640,70 @@ export class ChatService {
                 };
             }
 
+            // Enrich readers with user details
+            const enrichedReaders = (msg.readers || []).map((reader: any) => {
+                let readerName = 'Unknown';
+                let readerAvatar = null as any;
+                let readerInitial = null as any; 
+
+                if (reader.readerType === 'ADMIN') {
+                    const admin = adminMap.get(reader.readerId);
+                    if (admin) {
+                        readerName = admin.adminName || 'Admin';
+                        readerAvatar = admin.profileImage;
+                        readerInitial = admin.adminName ? admin.adminName[0].toUpperCase() : 'A';
+                    }
+                } else {
+                    const user = userMap.get(reader.readerId);
+                    if (user) {
+                        readerName = user.name || 'User';
+                        readerAvatar = user.avatar;
+                        readerInitial = user.initial || (user.name ? user.name[0].toUpperCase() : 'U');
+                    }
+                }
+
+                return {
+                    ...reader,
+                    name: readerName,
+                    avatar: readerAvatar,
+                    initial: readerInitial,
+                };
+            });
+
+            // Filter out the sender from readers for "read by" display
+            const readByOthers = enrichedReaders.filter(
+                (r: any) => !(r.readerId === msg.senderId && r.readerType === msg.senderType)
+            );
+
+            // Calculate isRead status
+            // For 1-on-1: isRead = at least one other person has read
+            // For groups: isRead = ALL other participants have read
+            let isRead = false;
+            const isSenderCurrentUser = currentUserId &&
+                msg.senderId === currentUserId &&
+                msg.senderType === currentUserType;
+
+            if (isSenderCurrentUser) {
+                if (isGroup) {
+                    // For groups: all other participants must have read
+                    // participantCount includes sender, so we need (participantCount - 1) readers
+                    const requiredReaders = participantCount - 1;
+                    isRead = readByOthers.length >= requiredReaders;
+                } else {
+                    // For 1-on-1: at least one other person has read
+                    isRead = readByOthers.length > 0;
+                }
+            }
+
             return {
                 ...msg,
                 senderName,
                 senderAvatar,
                 senderInitial,
-                replyToMessage
+                replyToMessage,
+                readBy: readByOthers, // Array of users who read (excluding sender)
+                readByCount: readByOthers.length,
+                isRead,
             };
         });
     }
@@ -529,16 +782,18 @@ export class ChatService {
             throw new Error('Message not found');
         }
 
-        // Check if already read by this user
-        const existing = await this.prisma.messageReader.findFirst({
+        // Use upsert to avoid race condition - atomically create if not exists
+        const existingReader = await this.prisma.messageReader.findUnique({
             where: {
-                messageId: Number(messageId),
-                readerId,
-                readerType,
+                unique_message_reader: {
+                    messageId: Number(messageId),
+                    readerId,
+                    readerType,
+                },
             },
         });
 
-        if (!existing) {
+        if (!existingReader) {
             // Create read receipt
             await this.prisma.messageReader.create({
                 data: {
@@ -546,6 +801,8 @@ export class ChatService {
                     readerId,
                     readerType,
                 },
+            }).catch(() => {
+                // Ignore duplicate key error due to race condition
             });
 
             // Broadcast read receipt
@@ -616,8 +873,6 @@ export class ChatService {
             );
         });
 
-        console.log(`Marked ${unreadMessages.length} messages as read in conversation ${conversationId}`);
-
         return { markedCount: unreadMessages.length };
     }
 
@@ -687,7 +942,10 @@ export class ChatService {
             where: { id: Number(messageId) },
         });
 
-        // Broadcast delete
+        // Invalidate cache for conversation
+        this.cache.deleteConversation(`conversation:${message.conversationId}`);
+
+        // Broadcast delete to ALL participants (including sender for multi-device sync)
         const conversation = await this.getConversation(message.conversationId.toString(), userId, userType);
         if (conversation && conversation.participants) {
             this.chatGateway.broadcastMessageDeleted(
@@ -697,7 +955,7 @@ export class ChatService {
             );
         }
 
-        return { success: true };
+        return { success: true, conversationId: message.conversationId.toString() };
     }
 
     // ====================
@@ -712,31 +970,39 @@ export class ChatService {
             },
         });
 
-        // Manually fetch related Admin/User data for each contact
-        const contactsWithDetails = await Promise.all(
-            contacts.map(async (contact) => {
-                let contactDetails: any = null;
+        if (!contacts.length) return [];
 
-                if (contact.contactType === 'ADMIN') {
-                    contactDetails = await this.prisma.admin.findUnique({
-                        where: { id: contact.contactId },
-                        select: { id: true, adminName: true, profileImage: true },
-                    });
-                } else if (contact.contactType === 'USER') {
-                    contactDetails = await this.prisma.user.findUnique({
-                        where: { id: contact.contactId },
-                        select: { id: true, name: true, avatar: true },
-                    });
-                }
+        // Collect unique contact IDs by type
+        const adminIds = contacts.filter(c => c.contactType === 'ADMIN').map(c => c.contactId);
+        const userIds = contacts.filter(c => c.contactType === 'USER').map(c => c.contactId);
 
-                return {
-                    ...contact,
-                    contactDetails,
-                };
-            })
-        );
+        // Batch fetch all admins and users
+        const [admins, users] = await Promise.all([
+            adminIds.length > 0
+                ? this.prisma.admin.findMany({
+                    where: { id: { in: adminIds } },
+                    select: { id: true, adminName: true, profileImage: true },
+                })
+                : [],
+            userIds.length > 0
+                ? this.prisma.user.findMany({
+                    where: { id: { in: userIds } },
+                    select: { id: true, name: true, avatar: true },
+                })
+                : [],
+        ]);
 
-        return contactsWithDetails;
+        // Create lookup maps
+        const adminMap = new Map(admins.map(a => [a.id, a] as const));
+        const userMap = new Map(users.map(u => [u.id, u] as const));
+
+        // Enrich contacts with details
+        return contacts.map(contact => ({
+            ...contact,
+            contactDetails: contact.contactType === 'ADMIN'
+                ? adminMap.get(contact.contactId) || null
+                : userMap.get(contact.contactId) || null,
+        }));
     }
 
     async addContact(ownerId: string, ownerType: 'ADMIN' | 'USER', contactId: string, contactType: 'ADMIN' | 'USER', nickname?: string) {
@@ -826,6 +1092,7 @@ export class ChatService {
                     senderType: forwarderType,
                     type: originalMsg.type,
                     content: originalMsg.content,
+                    isForwarded: true,
                     images: originalMsg.images.length > 0
                         ? {
                             create: originalMsg.images.map(img => ({
@@ -870,20 +1137,19 @@ export class ChatService {
         // Invalidate cache
         this.cache.deleteConversation(`conversation:${dto.targetConversationId}`);
 
-        // Broadcast to target conversation
+        // Enrich forwarded messages with sender details before broadcasting
+        const enrichedForwardedMessages = await this.enrichMessages(forwardedMessages);
+
+        // Broadcast to target conversation (all participants including forwarder for real-time sync)
         const targetConv = await this.getConversation(dto.targetConversationId, forwarderId, forwarderType);
         if (targetConv && targetConv.participants) {
-            const recipients = targetConv.participants.filter(p =>
-                !(p.participantId === forwarderId && p.participantType === forwarderType)
-            );
-
-            // Broadcast each forwarded message
-            for (const msg of forwardedMessages) {
-                this.chatGateway.broadcastNewMessage(msg, recipients as any[]);
+            // Broadcast each enriched forwarded message to ALL participants
+            for (const msg of enrichedForwardedMessages) {
+                this.chatGateway.broadcastNewMessage(msg, targetConv.participants as any[]);
             }
         }
 
-        return forwardedMessages;
+        return enrichedForwardedMessages;
     }
 
     // ====================
@@ -906,17 +1172,22 @@ export class ChatService {
         const conversationIds = conversations.map(c => c.conversationId);
 
         // Count unread messages for each conversation
+        // Only count messages NOT sent by the current user AND not yet read by them
         const unreadCounts = await Promise.all(
             conversationIds.map(async (conversationId) => {
                 const unreadCount = await this.prisma.message.count({
                     where: {
                         conversationId,
+                        // Exclude messages sent by the current user (you don't count your own messages as "unread")
                         NOT: {
-                            readers: {
-                                some: {
-                                    readerId: userId,
-                                    readerType: userType,
-                                },
+                            senderId: userId,
+                            senderType: userType,
+                        },
+                        // Message not read by current user
+                        readers: {
+                            none: {
+                                readerId: userId,
+                                readerType: userType,
                             },
                         },
                     },

@@ -1,19 +1,21 @@
 @import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Roboto+Condensed:ital,wght@0,100..900;1,100..900&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap');
+
 @theme {
 
-    --color-primary-50:  #e7eff8;
+  --color-primary-50: #e7eff8;
   --color-primary-100: #d6e2f4;
   --color-primary-200: #adc7e9;
   --color-primary-300: #88acd7;
   --color-primary-400: #162135;
-  --color-primary-500:  #ff5a00; /* base / brand color */
+  --color-primary-500: #ff5a00;
+  /* base / brand color */
   --color-primary-600: #162135;
   --color-primary-700: #162135;
   --color-primary-800: #06407d;
   --color-primary-900: #053365;
   --color-primary-950: #021a36;
- 
+
   --color-secondary-50: #f0fdfa;
   --color-secondary-100: #ccfbf5;
   --color-secondary-200: #99f6e9;
@@ -25,14 +27,34 @@
   --color-secondary-800: #115e59;
   --color-secondary-900: #134e4a;
   --color-secondary-950: #062e2c;
+
+
+  --color-dashboard-100: #f0f2f7;
+  --color-dashboard-200: #dce1ec;
+  --color-dashboard-300: #b8c2d9;
+  --color-dashboard-400: #94a3c6;
+  --color-dashboard-500: #7084b3;
+  --color-dashboard-600: #516092;
+  --color-dashboard-700: #3d4870;
+  --color-dashboard-800: #29304e;
+  --color-dashboard-900: #1a1f33;
+  --color-dashboard-950: #0d1019;
   /* --- Fonts --- */
- 
+
 
   /* --- Animations and Keyframes --- */
   @keyframes float {
-    0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-10px); }
+
+    0%,
+    100% {
+      transform: translateY(0px);
+    }
+
+    50% {
+      transform: translateY(-10px);
+    }
   }
+
   --animate-float: float 3s ease-in-out infinite;
   --animate-pulse-slow: pulse 3s ease-in-out infinite;
 
@@ -40,15 +62,16 @@
   --shadow-glow: 0 0 20px rgba(239, 68, 68, 0.3);
   --shadow-glow-lg: 0 0 40px rgba(239, 68, 68, 0.4);
 }
-body{
-     font-family: "Roboto Condensed", sans-serif;
-    font-optical-sizing: auto;
-   
-    font-style: normal;
-  }
+
+body {
+  font-family: "Roboto Condensed", sans-serif;
+  font-optical-sizing: auto;
+
+  font-style: normal;
+}
 
 
-  .ql-editor {
+.ql-editor {
   min-height: 300px;
   font-family: "Inter", sans-serif;
   font-size: 16px;

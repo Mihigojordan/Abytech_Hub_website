@@ -20,7 +20,7 @@ interface AuthenticatedSocket extends Socket {
 
 @WebSocketGateway({
     cors: {
-        origin: '*', // Update with your frontend URL
+        origin: process.env.FRONTEND_URL || 'http://localhost:5173',
         credentials: true,
     },
 })
@@ -40,12 +40,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     // ====================
 
     async handleConnection(@ConnectedSocket() client: AuthenticatedSocket) {
-        console.log(`Client connected: ${client.id}`);
         // Client will send user details via 'user:online' event
     }
 
     async handleDisconnect(@ConnectedSocket() client: AuthenticatedSocket) {
-        console.log(`Client disconnected: ${client.id}`);
 
         if (client.userId) {
             // Remove user from online users cache
@@ -87,7 +85,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
                     });
                 });
 
-                console.log(`User ${client.userId} offline status sent to ${participantSocketIds.size} participants`);
             } catch (error) {
                 console.error('Error in handleDisconnect:', error);
             }
@@ -180,8 +177,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
                 });
             });
 
-            console.log(`User ${client.userId} (${client.userType}) is now online with socket ${client.id}. Sent ${onlineUsers.length} online users, notified ${participantSocketIds.size} participants`);
-
             return { success: true, userId: client.userId, status: 'online' };
         } catch (error) {
             console.error('Failed to set user online:', error.message);
@@ -200,7 +195,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         message: any,
         recipients: { participantId: string; participantType: 'ADMIN' | 'USER' }[]
     ) {
-        console.log('Broadcasting new message to:', recipients);
         this.emitToUsers(recipients.map(r => ({ userId: r.participantId as any, userType: r.participantType as any })), 'message:new', {
             conversationId: message.conversationId,
             message,
@@ -258,6 +252,21 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         });
     }
 
+    /**
+     * Broadcasts a new conversation to all participants
+     * This allows conversations to appear in real-time for all participants
+     */
+    public broadcastNewConversation(
+        conversation: any,
+        recipients: { participantId: string; participantType: 'ADMIN' | 'USER' }[]
+    ) {
+        this.emitToUsers(
+            recipients.map(r => ({ userId: r.participantId, userType: r.participantType })),
+            'conversation:new',
+            { conversation }
+        );
+    }
+
     private emitToUser(userId: string, userType: 'ADMIN' | 'USER', event: string, data: any) {
         const socketId = this.cache.getUserSocketId(userId);
         if (socketId) {
@@ -278,7 +287,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         @ConnectedSocket() client: AuthenticatedSocket,
         @MessageBody() data: { conversationId: string, userId: string; userType: 'ADMIN' | 'USER' },
     ) {
-        console.log('client user typing =>', client.userId, client.userType);
         try {
             this.cache.setTyping(data.conversationId, client.userId as string);
 
@@ -314,11 +322,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         @MessageBody() data: { conversationId: string, userId: string; userType: 'ADMIN' | 'USER' },
     ) {
         try {
-
-            console.log('client user typing =>', client.userId, client.userType);
-
-            // Same
-            //  as above
             const conversation = await this.chatService.getConversation(
                 data.conversationId,
                 client.userId as string,
@@ -377,7 +380,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
                 userType: decoded.role === 'ADMIN' ? 'ADMIN' : 'USER', // Adjust based on your payload
             };
         } catch (error) {
-            console.log('JWT verification error:', error);
             throw new Error('Invalid or expired token');
         }
     }

@@ -7,7 +7,7 @@ const SocketContext = createContext(null);
 // Socket Context Provider Component
 export const SocketProvider = ({
   children,
-  serverUrl = 'http://localhost:3001',
+  serverUrl = import.meta.env.VITE_SOCKET_URL || 'http://localhost:3001',
   options = {}
 }) => {
   const socketRef = useRef(null);
@@ -40,14 +40,12 @@ export const SocketProvider = ({
 
     // Connection event handlers
     socket.on('connect', () => {
-      console.log('Socket connected:', socket.id);
       setIsConnected(true);
       setConnectionError(null);
       reconnectAttemptsRef.current = 0;
     });
 
     socket.on('disconnect', (reason) => {
-      console.log('Socket disconnected:', reason);
       setIsConnected(false);
 
       if (reason === 'io server disconnect') {
@@ -56,31 +54,26 @@ export const SocketProvider = ({
     });
 
     socket.on('connect_error', (error) => {
-      console.error('Socket connection error:', error);
       setConnectionError(error.message);
       setIsConnected(false);
       handleReconnection();
     });
 
-    socket.on('reconnect', (attemptNumber) => {
-      console.log('Socket reconnected after', attemptNumber, 'attempts');
+    socket.on('reconnect', () => {
       setIsConnected(true);
       setConnectionError(null);
       reconnectAttemptsRef.current = 0;
     });
 
     socket.on('reconnect_attempt', (attemptNumber) => {
-      console.log('Reconnection attempt:', attemptNumber);
       reconnectAttemptsRef.current = attemptNumber;
     });
 
     socket.on('reconnect_error', (error) => {
-      console.error('Reconnection error:', error);
       setConnectionError(error.message);
     });
 
     socket.on('reconnect_failed', () => {
-      console.error('Failed to reconnect after maximum attempts');
       setConnectionError('Failed to reconnect to server');
     });
 
@@ -90,7 +83,6 @@ export const SocketProvider = ({
   // Manual reconnection handler
   const handleReconnection = useCallback(() => {
     if (reconnectAttemptsRef.current >= maxReconnectAttempts) {
-      console.log('Max reconnection attempts reached');
       return;
     }
 
@@ -102,7 +94,6 @@ export const SocketProvider = ({
 
     reconnectTimeoutRef.current = setTimeout(() => {
       if (!socketRef.current?.connected) {
-        console.log('Attempting manual reconnection...');
         socketRef.current?.connect();
       }
     }, delay);
@@ -138,8 +129,6 @@ export const SocketProvider = ({
       } else {
         socketRef.current.emit(event, data);
       }
-    } else {
-      console.warn('Socket not connected. Cannot emit event:', event);
     }
   }, []);
 
@@ -165,7 +154,6 @@ export const SocketProvider = ({
   const emitUserOnline = useCallback((userId, userType) => {
     if (socketRef.current?.connected && userId && userType) {
       socketRef.current.emit('user:online', { userId, userType });
-      console.log('Emitted user:online event for', userId, userType);
     }
   }, []);
 

@@ -2,32 +2,24 @@ import { API_URL } from '../../api/api';
 import { formatTime } from './dateUtils';
 
 /**
- * Get the last message details for a conversation
- * @param {number} chatId - The chat/conversation ID
- * @param {Array} allMessages - All messages array
- * @returns {Object} Object with text and time of last message
+ * Get the last message for a conversation with formatted time
+ * @param {Array} messages - All messages array for a conversation
+ * @returns {Object|null} Full message object with added `time` field, or null
  */
 export const getLastMessage = (messages) => {
-    if (!messages || !Array.isArray(messages) || messages.length === 0) return { text: '', time: '' };
+    if (!messages || !Array.isArray(messages) || messages.length === 0) return null;
 
-    // Sort by timestamp just in case (optional, but safer)
-    // Assuming messages are already sorted or we just take the last one
+    // Get the last message in the array
     const lastMsg = messages[messages.length - 1];
 
     // Safety check
-    if (!lastMsg) return { text: '', time: '' };
+    if (!lastMsg) return null;
 
-    let text = '';
-
-    if (lastMsg.type === 'file') {
-        text = `📎 ${lastMsg.content || 'File'}`;
-    } else if (lastMsg.type === 'image') {
-        text = '📷 Image';
-    } else {
-        text = lastMsg.content || '';
-    }
-
-    return { text, time: formatTime(new Date(lastMsg.timestamp)) };
+    // Return full message object with formatted time added
+    return {
+        ...lastMsg,
+        time: lastMsg.time || formatTime(new Date(lastMsg.timestamp || lastMsg.createdAt))
+    };
 };
 
 /**
