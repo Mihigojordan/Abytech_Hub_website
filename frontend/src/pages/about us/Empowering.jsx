@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import Header from '../../components/header'
 
 function EmpoweringPage() {
   const [scrollY, setScrollY] = useState(0)
@@ -14,44 +15,8 @@ function EmpoweringPage() {
 
   return (
     <div className="min-h-screen bg-white overflow-hidden">
-      {/* Hero Section with Parallax */}
-      <section className="relative h-screen flex items-center justify-center overflow-hidden">
-        <div 
-          className="absolute inset-0 z-0"
-          style={{
-            transform: `translateY(${scrollY * 0.5}px)`,
-          }}
-        >
-          <img 
-            src="https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=1600&q=80" 
-            alt="Empowerment"
-            className="w-full h-[120vh] object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-br from-[#ff5a00]/90 via-gray-900/80 to-gray-800/90"></div>
-        </div>
-        
-        <div 
-          className="max-w-7xl mx-auto px-6 relative z-10 text-center text-white"
-          style={{
-            transform: `translateY(${scrollY * 0.2}px)`,
-            opacity: 1 - scrollY / 500,
-          }}
-        >
-          <h1 className="text-6xl md:text-7xl font-bold mb-6">
-            Empowering Rwanda's Future
-          </h1>
-          <div className="w-32 h-1 bg-[#ff5a00] mx-auto mb-8"></div>
-          <p className="text-2xl md:text-3xl text-gray-200 max-w-4xl mx-auto leading-relaxed">
-            Through Technology, Education, and Opportunity
-          </p>
-        </div>
-
-        <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2 z-10 animate-bounce">
-          <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-          </svg>
-        </div>
-      </section>
+      {/* Hero Section - No Parallax */}
+  <Header title="Emporing Inclusin" path="empowering inclusin" />
 
       {/* Introduction */}
       <section className="py-24 px-6 bg-white">
@@ -86,12 +51,7 @@ function EmpoweringPage() {
           </div>
 
           <div className="grid md:grid-cols-2 gap-16 items-center mb-16">
-            <div 
-              className="relative"
-              style={{
-                transform: `translateY(${(scrollY - 1000) * 0.1}px)`,
-              }}
-            >
+            <div className="relative">
               <div className="overflow-hidden rounded-2xl shadow-2xl">
                 <img 
                   src="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=800&q=80" 
@@ -99,12 +59,7 @@ function EmpoweringPage() {
                   className="w-full h-[500px] object-cover"
                 />
               </div>
-              <div 
-                className="absolute -bottom-6 -right-6 w-48 h-48 bg-[#ff5a00]/20 rounded-lg -z-10"
-                style={{
-                  transform: `translateY(${(scrollY - 1000) * -0.05}px)`,
-                }}
-              ></div>
+              <div className="absolute -bottom-6 -right-6 w-48 h-48 bg-[#ff5a00]/20 rounded-lg -z-10"></div>
             </div>
 
             <div>
@@ -172,9 +127,6 @@ function EmpoweringPage() {
               <div 
                 key={index}
                 className="bg-white rounded-xl shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-300"
-                style={{
-                  transform: `translateY(${(scrollY - 1400) * (0.08 + index * 0.02)}px)`,
-                }}
               >
                 <div className="overflow-hidden h-48">
                   <img 
@@ -193,18 +145,13 @@ function EmpoweringPage() {
         </div>
       </section>
 
-      {/* Parallax Divider 1 */}
+      {/* Divider 1 - No Parallax */}
       <section className="relative h-96 overflow-hidden">
-        <div 
-          className="absolute inset-0"
-          style={{
-            transform: `translateY(${(scrollY - 2000) * 0.5}px)`,
-          }}
-        >
+        <div className="absolute inset-0">
           <img 
             src="https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=1600&q=80" 
             alt="Students learning"
-            className="w-full h-[150%] object-cover"
+            className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-[#ff5a00]/80"></div>
         </div>
@@ -265,12 +212,7 @@ function EmpoweringPage() {
               </div>
             </div>
 
-            <div 
-              className="relative"
-              style={{
-                transform: `translateY(${(scrollY - 2600) * 0.1}px)`,
-              }}
-            >
+            <div className="relative">
               <div className="overflow-hidden rounded-2xl shadow-2xl">
                 <img 
                   src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&q=80" 
@@ -278,18 +220,13 @@ function EmpoweringPage() {
                   className="w-full h-[600px] object-cover"
                 />
               </div>
-              <div 
-                className="absolute -top-6 -left-6 w-48 h-48 bg-[#ff5a00]/20 rounded-lg -z-10"
-                style={{
-                  transform: `translateY(${(scrollY - 2600) * -0.05}px)`,
-                }}
-              ></div>
+              <div className="absolute -top-6 -left-6 w-48 h-48 bg-[#ff5a00]/20 rounded-lg -z-10"></div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Empowering Youth */}
+      {/* Empowering Youth - Updated to 5 Images */}
       <section className="py-24 px-6 bg-gray-50">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
@@ -305,7 +242,7 @@ function EmpoweringPage() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8 mb-16">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
             {[
               {
                 title: "Coding Bootcamps for Students",
@@ -330,14 +267,17 @@ function EmpoweringPage() {
                 description: "Annual hackathons where young developers compete, learn, and build solutions to local challenges.",
                 image: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=700&q=80",
                 stats: "200+ participants"
+              },
+              {
+                title: "STEM Workshops",
+                description: "Interactive workshops introducing science, technology, engineering, and math concepts to young learners.",
+                image: "https://images.unsplash.com/photo-1509062522246-3755977927d7?w=700&q=80",
+                stats: "300+ workshop attendees"
               }
             ].map((program, index) => (
               <div 
                 key={index}
                 className="bg-white rounded-xl shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-300"
-                style={{
-                  transform: `translateY(${(scrollY - 3400) * (0.08 + index * 0.02)}px)`,
-                }}
               >
                 <div className="overflow-hidden h-64">
                   <img 
@@ -362,18 +302,13 @@ function EmpoweringPage() {
         </div>
       </section>
 
-      {/* Parallax Divider 2 */}
+      {/* Divider 2 - No Parallax */}
       <section className="relative h-96 overflow-hidden">
-        <div 
-          className="absolute inset-0"
-          style={{
-            transform: `translateY(${(scrollY - 4200) * 0.5}px)`,
-          }}
-        >
+        <div className="absolute inset-0">
           <img 
             src="https://images.unsplash.com/photo-1559027615-cd4628902d4a?w=1600&q=80" 
             alt="Community impact"
-            className="w-full h-[150%] object-cover"
+            className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-gray-900/70"></div>
         </div>
@@ -423,9 +358,6 @@ function EmpoweringPage() {
               <div 
                 key={index}
                 className="bg-gray-50 rounded-xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300"
-                style={{
-                  transform: `translateY(${(scrollY - 4800) * (0.08 + index * 0.02)}px)`,
-                }}
               >
                 <div className="overflow-hidden h-56">
                   <img 
@@ -444,12 +376,7 @@ function EmpoweringPage() {
 
           {/* Economic Impact */}
           <div className="grid md:grid-cols-2 gap-16 items-center">
-            <div 
-              className="relative"
-              style={{
-                transform: `translateY(${(scrollY - 5200) * 0.1}px)`,
-              }}
-            >
+            <div className="relative">
               <div className="overflow-hidden rounded-2xl shadow-2xl">
                 <img 
                   src="https://images.unsplash.com/photo-1551434678-e076c223a692?w=800&q=80" 
@@ -541,9 +468,6 @@ function EmpoweringPage() {
               <div 
                 key={index}
                 className="bg-white rounded-xl shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-300"
-                style={{
-                  transform: `translateY(${(scrollY - 6000) * (0.08 + index * 0.02)}px)`,
-                }}
               >
                 <div className="overflow-hidden h-64">
                   <img 
@@ -563,18 +487,13 @@ function EmpoweringPage() {
         </div>
       </section>
 
-      {/* Call to Action with Parallax */}
+      {/* Call to Action - No Parallax */}
       <section className="relative h-screen flex items-center justify-center overflow-hidden">
-        <div 
-          className="absolute inset-0"
-          style={{
-            transform: `translateY(${(scrollY - 6800) * 0.5}px)`,
-          }}
-        >
+        <div className="absolute inset-0">
           <img 
             src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=1600&q=80" 
             alt="Join the movement"
-            className="w-full h-[120vh] object-cover"
+            className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-br from-[#ff5a00]/90 to-gray-900/90"></div>
         </div>

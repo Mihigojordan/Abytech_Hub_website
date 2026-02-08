@@ -13,6 +13,27 @@ import DashboardLayout from "./layouts/DashboardLayout";
 
 // Protectors
 import ProtectPrivateAdminRoute from "./components/protectors/ProtectPrivateAdminRoute";
+import EmpoweringPage from "./pages/about us/Empowering";
+import Values from "./pages/about us/OurValues";
+import StoryImpactCulturePage from "./pages/about us/Storyimpactculturepage";
+import MissionVisionPage from "./pages/about us/VisionAndVision";
+import Whoweare from "./components/home/Whoweare";
+import WhoWeArePage from "./pages/about us/WhoWeArePage";
+import AnalysisService from "./pages/services/Analysisservice";
+import CybersecurityService from "./pages/services/Cybersecurityservice";
+import SoftwareDevelopmentService from "./pages/services/Softwaredevelopmentservice";
+import DatabaseManagementService from "./pages/services/Databasemanagementservice";
+import UIUXDesignService from "./pages/services/Uiuxdesignservice";
+import WebHostingService from "./pages/services/Webhostingservice";
+import IoTSolutionsService from "./pages/services/otsolutionsservice";
+import DevOpsAutomationService from "./pages/services/Devopsautomationservice";
+import AcademicTraining from "./pages/Programs/AcademicTraining";
+import AmazonCloud from "./pages/Programs/AmazonCloud";
+import Apprenticeship from "./pages/Programs/Apprenticeship";
+import Ciscotraining from "./pages/Programs/Ciscotraining";
+import OneMonthTraining from "./pages/Programs/Onemonthtraining";
+import ThreeMonthTraining from "./pages/Programs/Threemonthtraining";
+import SixMonthTraining from "./pages/Programs/Sixmonthtraining";
 
 // Pages (Lazy)
 const HomePage = lazy(() => import("./pages/HomePage"));
@@ -66,12 +87,48 @@ const router = createBrowserRouter([
       },
       { path: "blogs", element: <SuspenseWrapper><BlogPage /></SuspenseWrapper> },
       { path: "blog/:id", element: <SuspenseWrapper><BlogSingle /></SuspenseWrapper> },
-      { path: "services", element: <SuspenseWrapper><ServicePage /></SuspenseWrapper> },
-      { path: "service/:id", element: <SuspenseWrapper><ServiceSingle /></SuspenseWrapper> },
-      { path: "project", element: <SuspenseWrapper><ProjectsPage /></SuspenseWrapper> },
+    
+      // service 
+        { path: "services", element: <SuspenseWrapper><ServicePage /></SuspenseWrapper> },
+   
+    { path: "analysis-service", element: <SuspenseWrapper><AnalysisService /></SuspenseWrapper> },
+      { path: "cyber-security", element: <SuspenseWrapper>< CybersecurityService/></SuspenseWrapper> },
+      { path: "software-development", element: <SuspenseWrapper><SoftwareDevelopmentService /></SuspenseWrapper> },
+      { path: "Databasemanagement", element: <SuspenseWrapper><DatabaseManagementService /></SuspenseWrapper> },
+      { path: "ui&uxdesign", element: <SuspenseWrapper><UIUXDesignService /></SuspenseWrapper> },
+      { path: "webandapphost", element: <SuspenseWrapper><WebHostingService /></SuspenseWrapper> },
+      { path: "iotsolution", element: <SuspenseWrapper><IoTSolutionsService /></SuspenseWrapper> },
+        { path: "devops", element: <SuspenseWrapper><DevOpsAutomationService /></SuspenseWrapper> },
+   
+
+// about 
       { path: "about-us", element: <SuspenseWrapper><AboutUs /></SuspenseWrapper> },
+      { path: "empowering-inclusion", element: <SuspenseWrapper><EmpoweringPage /></SuspenseWrapper> },
+      { path: "values", element: <SuspenseWrapper><Values /></SuspenseWrapper> },
+      { path: "Story", element: <SuspenseWrapper><StoryImpactCulturePage /></SuspenseWrapper> },
+      { path: "Vision-mission", element: <SuspenseWrapper><MissionVisionPage /></SuspenseWrapper> },
+      { path: "who-we-are", element: <SuspenseWrapper><WhoWeArePage /></SuspenseWrapper> },
+      
+      
+
+
+
+
       { path: "team-member", element: <SuspenseWrapper><TeamMember /></SuspenseWrapper> },
-      { path: "location", element: <SuspenseWrapper><AbyTechLocations /></SuspenseWrapper> },
+
+
+      // taining programms 
+      { path: "Academic", element: <SuspenseWrapper><AcademicTraining /></SuspenseWrapper> },
+      { path: "amazon", element: <SuspenseWrapper><AmazonCloud /></SuspenseWrapper> },   
+      { path: "Apprenticeship", element: <SuspenseWrapper><Apprenticeship /></SuspenseWrapper> },
+      { path: "ciscotraining", element: <SuspenseWrapper><Ciscotraining /></SuspenseWrapper> },
+
+        { path: "onemonth", element: <SuspenseWrapper><OneMonthTraining /></SuspenseWrapper> },
+  { path: "threemonths", element: <SuspenseWrapper><ThreeMonthTraining /></SuspenseWrapper> },
+  { path: "sixmonths", element: <SuspenseWrapper><SixMonthTraining /></SuspenseWrapper> },
+
+      
+
       { path: "contact-us", element: <SuspenseWrapper><ContactUs /></SuspenseWrapper> },
     ],
   },
