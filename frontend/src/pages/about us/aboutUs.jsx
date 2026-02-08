@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { TrendingUp, Users, Award, Target, MapPin, Code, Database, Brain } from "lucide-react";
 import Header from "../../components/header";
-import Image from '../../assets/images/about-img1.png'
+import Image from '../../assets/images/team.png'
 
 const AboutUs = () => {
   useEffect(() => {

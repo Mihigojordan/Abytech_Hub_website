@@ -94,13 +94,13 @@ const ContactUs = () => {
           {contactInfo.map((info, index) => (
             <div
               key={index}
-              className="group relative bg-white rounded-2xl p-6 shadow-md hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border border-[#101828]/10"
+              className="group relative bg-white rounded-2xl p-6 shadow-md hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border border-[#FF5A00]/10"
             >
               {/* Subtle hover glow */}
-              <div className="absolute inset-0 bg-[#101828] opacity-0 group-hover:opacity-5 rounded-2xl transition-opacity duration-300"></div>
+              <div className="absolute inset-0 bg-[#FF5A00] opacity-0 group-hover:opacity-5 rounded-2xl transition-opacity duration-300"></div>
 
               {/* Icon */}
-              <div className="relative w-14 h-14 rounded-xl bg-[#101828] flex items-center justify-center mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300">
+              <div className="relative w-14 h-14 rounded-xl bg-[#FF5A00] flex items-center justify-center mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300">
                 <div className="text-white">{info.icon}</div>
               </div>
 
@@ -114,7 +114,7 @@ const ContactUs = () => {
                     href={info.link}
                     target={info.link.startsWith("http") ? "_blank" : undefined}
                     rel={info.link.startsWith("http") ? "noopener noreferrer" : undefined}
-                    className="text-gray-900 font-bold text-lg hover:text-[#101828] transition-colors duration-200 block"
+                    className="text-gray-900 font-bold text-lg hover:text-[#FF5A00] transition-colors duration-200 block"
                   >
                     {info.detail}
                   </a>
@@ -134,7 +134,7 @@ const ContactUs = () => {
           <div className="w-full rounded-2xl overflow-hidden shadow-xl border-4 border-white relative group">
             <div className="absolute top-4 left-4 z-10 bg-white/95 backdrop-blur-sm px-4 py-2 rounded-lg shadow-lg">
               <div className="flex items-center gap-2">
-                <MapPin className="w-5 h-5 text-[#101828]" />
+                <MapPin className="w-5 h-5 text-[#FF5A00]" />
                 <span className="font-semibold text-gray-900">Our Location</span>
               </div>
             </div>
@@ -149,14 +149,14 @@ const ContactUs = () => {
 
         {/* Contact Form */}
         <div className="w-full lg:w-1/2">
-          <div className="relative bg-white p-8 lg:p-10 rounded-2xl shadow-xl border border-[#101828]/10">
+          <div className="relative bg-white p-8 lg:p-10 rounded-2xl shadow-xl border border-[#FF5A00]/10">
             {/* Subtle accent */}
-            <div className="absolute -top-2 -right-2 w-32 h-32 bg-[#101828] opacity-5 rounded-full blur-3xl"></div>
-            <div className="absolute -bottom-2 -left-2 w-32 h-32 bg-[#101828] opacity-5 rounded-full blur-3xl"></div>
+            <div className="absolute -top-2 -right-2 w-32 h-32 bg-[#FF5A00] opacity-5 rounded-full blur-3xl"></div>
+            <div className="absolute -bottom-2 -left-2 w-32 h-32 bg-[#FF5A00] opacity-5 rounded-full blur-3xl"></div>
 
             <div className="relative">
               <div className="flex items-center gap-3 mb-2">
-                <div className="w-12 h-12 rounded-xl bg-[#101828] flex items-center justify-center shadow-lg">
+                <div className="w-12 h-12 rounded-xl bg-[#FF5A00] flex items-center justify-center shadow-lg">
                   <Send className="w-6 h-6 text-white" />
                 </div>
                 <h2 className="text-3xl lg:text-4xl font-bold text-gray-900">
@@ -180,7 +180,7 @@ const ContactUs = () => {
                     onChange={handleChange}
                     placeholder="John Doe"
                     required
-                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#101828] focus:bg-white transition duration-200"
+                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#FF5A00] focus:bg-white transition duration-200"
                   />
                 </div>
 
@@ -199,7 +199,7 @@ const ContactUs = () => {
                     onChange={handleChange}
                     placeholder="you@example.com"
                     required
-                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#101828] focus:bg-white transition duration-200"
+                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#FF5A00] focus:bg-white transition duration-200"
                   />
                 </div>
 
@@ -215,7 +215,7 @@ const ContactUs = () => {
                     placeholder="Tell us more about your inquiry..."
                     required
                     rows="5"
-                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#101828] focus:bg-white transition duration-200 resize-none"
+                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#FF5A00] focus:bg-white transition duration-200 resize-none"
                   ></textarea>
                 </div>
 
@@ -223,7 +223,7 @@ const ContactUs = () => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="group relative w-full py-3.5 mt-2 bg-[#101828] text-white font-bold text-lg rounded-xl hover:bg-[#2c4166] transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden"
+                  className="group relative w-full py-3.5 mt-2 bg-[#FF5A00] text-white font-bold text-lg rounded-xl hover:bg-[#2c4166] transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden"
                 >
                   <span className="relative z-10 flex items-center justify-center gap-2">
                     {loading ? (
