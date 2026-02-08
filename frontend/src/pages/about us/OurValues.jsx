@@ -1,29 +1,23 @@
 import React from 'react'
+import Header from "../../components/header";
+import image1 from '../../assets/untitled folder/image1.jpg'
+import image2 from '../../assets/untitled folder/image2.jpg'
+import image3 from '../../assets/untitled folder/image3.jpg'
+import image4 from '../../assets/untitled folder/image4.jpg'
+import image5 from '../../assets/untitled folder/image5.jpg'
+import image6 from '../../assets/untitled folder/image6.jpg'
+import image7 from '../../assets/untitled folder/image7.png'
+import image8 from '../../assets/untitled folder/image8.png'
+import image9 from '../../assets/untitled folder/image8.jpeg'
+
+
+
 
 function OurValuesPage() {
   return (
     <div className="min-h-screen bg-white">
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white py-20 px-6 overflow-hidden">
-        {/* Background Image with Overlay */}
-        <div className="absolute inset-0 z-0">
-          <img 
-            src="https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=1600&q=80" 
-            alt="Team values background"
-            className="w-full h-full object-cover opacity-20"
-          />
-        </div>
-        
-        <div className="max-w-7xl mx-auto relative z-10">
-          <h1 className="text-5xl md:text-6xl font-bold mb-6">
-            Our Values
-          </h1>
-          <div className="w-24 h-1 bg-[#ff5a00] mb-8"></div>
-          <p className="text-xl md:text-2xl text-gray-300 max-w-3xl leading-relaxed">
-            The principles that guide everything we do at Abytech
-          </p>
-        </div>
-      </section>
+     <Header title="OUR VALUES" path="our values" />
 
       {/* Introduction */}
       <section className="py-16 px-6 bg-white">
@@ -47,7 +41,7 @@ function OurValuesPage() {
             <div className="order-2 md:order-1">
               <div className="overflow-hidden rounded-xl shadow-2xl">
                 <img 
-                  src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=800&q=80" 
+                  src={image8}
                   alt="Excellence in work"
                   className="w-full h-[400px] object-cover hover:scale-105 transition-transform duration-500"
                 />
@@ -138,8 +132,8 @@ function OurValuesPage() {
             <div>
               <div className="overflow-hidden rounded-xl shadow-2xl">
                 <img 
-                  src="https://images.unsplash.com/photo-1573164713714-d95e436ab8d6?w=800&q=80" 
-                  alt="Innovation and creativity"
+                        src={image9}
+                        alt="Innovation and creativity"
                   className="w-full h-[400px] object-cover hover:scale-105 transition-transform duration-500"
                 />
               </div>
@@ -155,8 +149,8 @@ function OurValuesPage() {
             <div className="order-2 md:order-1">
               <div className="overflow-hidden rounded-xl shadow-2xl">
                 <img 
-                  src="https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=800&q=80" 
-                  alt="Team collaboration"
+                       src={image7}
+                        alt="Team collaboration"
                   className="w-full h-[400px] object-cover hover:scale-105 transition-transform duration-500"
                 />
               </div>
@@ -246,8 +240,8 @@ function OurValuesPage() {
             <div>
               <div className="overflow-hidden rounded-xl shadow-2xl">
                 <img 
-                  src="https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=800&q=80" 
-                  alt="Integrity and trust"
+                       src={image1}
+                       alt="Integrity and trust"
                   className="w-full h-[400px] object-cover hover:scale-105 transition-transform duration-500"
                 />
               </div>
@@ -263,8 +257,8 @@ function OurValuesPage() {
             <div className="order-2 md:order-1">
               <div className="overflow-hidden rounded-xl shadow-2xl">
                 <img 
-                  src="https://images.unsplash.com/photo-1553028826-f4804a6dba3b?w=800&q=80" 
-                  alt="Growth and development"
+                       src={image2}
+                        alt="Growth and development"
                   className="w-full h-[400px] object-cover hover:scale-105 transition-transform duration-500"
                 />
               </div>
@@ -354,8 +348,8 @@ function OurValuesPage() {
             <div>
               <div className="overflow-hidden rounded-xl shadow-2xl">
                 <img 
-                  src="https://images.unsplash.com/photo-1559027615-cd4628902d4a?w=800&q=80" 
-                  alt="Making an impact"
+                       src={image4}
+                       alt="Making an impact"
                   className="w-full h-[400px] object-cover hover:scale-105 transition-transform duration-500"
                 />
               </div>
@@ -421,15 +415,14 @@ function OurValuesPage() {
           <div className="grid md:grid-cols-2 gap-8">
             <div className="overflow-hidden rounded-xl shadow-xl">
               <img 
-                src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&q=80" 
-                alt="Team working together"
+                     src={image5}
+                      alt="Team working together"
                 className="w-full h-80 object-cover hover:scale-105 transition-transform duration-500"
               />
             </div>
             <div className="overflow-hidden rounded-xl shadow-xl">
               <img 
-                src="https://images.unsplash.com/photo-1531482615713-2afd69097998?w=800&q=80" 
-                alt="Collaborative workspace"
+                    src={image6}  alt="Collaborative workspace"
                 className="w-full h-80 object-cover hover:scale-105 transition-transform duration-500"
               />
             </div>
