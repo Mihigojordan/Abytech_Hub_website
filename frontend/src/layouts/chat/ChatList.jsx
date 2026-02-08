@@ -5,6 +5,24 @@ import ConversationItem from '../../components/dashboard/chat/chat-list/Conversa
 import { getLastMessage, getUnreadCount } from '../../utils/chat/messageUtils';
 
 /**
+ * Skeleton component for conversation items while loading
+ */
+const ConversationSkeleton = () => (
+    <div className="px-4 py-3 animate-pulse">
+        <div className="flex items-center space-x-3">
+            <div className="w-12 h-12 bg-gray-200 rounded-full flex-shrink-0" />
+            <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between mb-2">
+                    <div className="h-4 bg-gray-200 rounded w-24" />
+                    <div className="h-3 bg-gray-200 rounded w-12" />
+                </div>
+                <div className="h-3 bg-gray-200 rounded w-3/4" />
+            </div>
+        </div>
+    </div>
+);
+
+/**
  * ChatList layout component - middle panel with search, contacts, and conversation list
  */
 const ChatList = ({
@@ -18,7 +36,8 @@ const ChatList = ({
     contacts,
     currentUser,
     unreadCounts = {},
-    onlineUsers = new Map()
+    onlineUsers = new Map(),
+    isLoading = false
 }) => {
     // Helper function to check if a user is online
     const isUserOnline = (userId, userType) => {
@@ -74,37 +93,52 @@ const ChatList = ({
                     <h2 className="text-sm font-semibold text-gray-500">Recent</h2>
                 </div>
                 <div className="space-y-0">
+                    {/* Show skeletons while loading */}
+                    {isLoading ? (
+                        <>
+                            <ConversationSkeleton />
+                            <ConversationSkeleton />
+                            <ConversationSkeleton />
+                            <ConversationSkeleton />
+                            <ConversationSkeleton />
+                        </>
+                    ) : (
+                        <>
+                            {sortedChats.map((chat) => {
+                                // Use consistent string IDs for all lookups
+                                const chatIdStr = String(chat.id);
 
-                    {sortedChats.map((chat) => {
-                        // IMPORTANT: Prioritize chat.messages (latest message from conversation object)
-                        // over allMessages (full chat history) for conversation preview
-                        // chat.messages is updated in real-time via message:new event
-                        const messages = chat.messages || allMessages[chat.id] || [];
-                        const lastMsg = getLastMessage(messages);
+                                // IMPORTANT: Prioritize chat.messages (latest message from conversation object)
+                                // over allMessages (full chat history) for conversation preview
+                                // chat.messages is updated in real-time via message:new event
+                                const messages = chat.messages || allMessages[chatIdStr] || [];
+                                const lastMsg = getLastMessage(messages);
 
-                        // Use prop unread count (from API) or calculate from loaded messages if available
-                        // API count is more reliable for list view
-                        const unreadCount = unreadCounts[chat.id] || 0;
+                                // Use prop unread count (from API) or calculate from loaded messages if available
+                                // API count is more reliable for list view
+                                const unreadCount = unreadCounts[chatIdStr] || 0;
 
-                        const isSelected = parseInt(chat.id) === parseInt(selectedChatId);
+                                const isSelected = chatIdStr === String(selectedChatId);
 
-                        return (
-                            <ConversationItem
-                                key={chat.id}
-                                chat={chat}
-                                isSelected={isSelected}
-                                isTyping={isTyping[chat.id]?.size > 0}
-                                lastMessage={lastMsg}
-                                unreadCount={unreadCount}
-                                onSelect={onSelectChat}
-                            />
-                        );
-                    })}
+                                return (
+                                    <ConversationItem
+                                        key={chatIdStr}
+                                        chat={chat}
+                                        isSelected={isSelected}
+                                        isTyping={isTyping[chatIdStr]?.size > 0}
+                                        lastMessage={lastMsg}
+                                        unreadCount={unreadCount}
+                                        onSelect={onSelectChat}
+                                    />
+                                );
+                            })}
 
-                    {sortedChats.length === 0 && (
-                        <div className="px-4 py-8 text-center text-gray-400 text-sm">
-                            {searchQuery ? 'No conversations found' : 'No conversations yet'}
-                        </div>
+                            {sortedChats.length === 0 && (
+                                <div className="px-4 py-8 text-center text-gray-400 text-sm">
+                                    {searchQuery ? 'No conversations found' : 'No conversations yet'}
+                                </div>
+                            )}
+                        </>
                     )}
                 </div>
             </div>

@@ -30,6 +30,14 @@ export class ChatController {
         return this.chatService.getConversations(userId, userType);
     }
 
+    // IMPORTANT: This route must come BEFORE 'conversations/:id' to avoid matching "unread" as an ID
+    @Get('conversations/unread')
+    async getUnreadCounts(@Req() req: RequestWithChatUser) {
+        const userId = req.user.id;
+        const userType = req.user.type;
+        return this.chatService.getUnreadMessageCounts(userId, userType);
+    }
+
     @Get('conversations/:id')
     async getConversation(@Param('id') id: string, @Req() req: any) {
         const userId = req.user?.id;
@@ -41,8 +49,18 @@ export class ChatController {
     async createConversation(@Body() dto: CreateConversationDto, @Req() req: any) {
         const creatorId = req.user?.id;
         const creatorType = req.user?.type || 'ADMIN';
-        console.log(creatorId, creatorType);
         return this.chatService.createConversation(dto, creatorId, creatorType);
+    }
+
+    @Post('conversations/:id/members')
+    async addMembersToConversation(
+        @Param('id') conversationId: string,
+        @Body() dto: { participantIds: string[]; participantTypes: ('ADMIN' | 'USER')[] },
+        @Req() req: RequestWithChatUser
+    ) {
+        const userId = req.user.id;
+        const userType = req.user.type;
+        return this.chatService.addMembersToConversation(conversationId, dto.participantIds, dto.participantTypes, userId, userType);
     }
 
     // ====================
@@ -99,10 +117,21 @@ export class ChatController {
                 const file = files.chatFiles[i];
                 // Store relative path from project root
                 const relativePath = file.path.replace(process.cwd() + '\\', '').replace(/\\/g, '/');
+                // Format file size as human-readable string (KB or MB)
+                const sizeInBytes = file.size;
+                let formattedSize: string;
+                if (sizeInBytes >= 1024 * 1024) {
+                    formattedSize = (sizeInBytes / (1024 * 1024)).toFixed(2) + ' MB';
+                } else if (sizeInBytes >= 1024) {
+                    formattedSize = (sizeInBytes / 1024).toFixed(2) + ' KB';
+                } else {
+                    formattedSize = sizeInBytes + ' B';
+                }
+
                 uploadedFiles.push({
                     fileUrl: '/' + relativePath, // Serve with leading slash for static files
                     fileName: file.originalname,
-                    fileSize: file.size.toString(),
+                    fileSize: formattedSize,
                     fileType: file.mimetype,
                     fileOrder: i,
                 });
@@ -219,15 +248,4 @@ export class ChatController {
         return this.chatService.forwardMessages(dto, forwarderId, forwarderType);
     }
 
-    // ====================
-    // UNREAD COUNTS
-    // ====================
-
-    @Get('conversations/unread/:userId/:userType')
-    async getUnreadCounts(
-        @Param('userId') userId: string,
-        @Param('userType') userType: 'ADMIN' | 'USER',
-    ) {
-        return this.chatService.getUnreadMessageCounts(userId, userType);
-    }
 }

@@ -66,7 +66,7 @@ const MediaViewer = ({
                 ) : (
                     <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-12 max-w-md w-full">
                         <div className="flex flex-col items-center text-center">
-                            <div className="w-24 h-24 bg-indigo-500 rounded-full flex items-center justify-center mb-6">
+                            <div className="w-24 h-24 bg-dashboard-500 rounded-full flex items-center justify-center mb-6">
                                 <File className="w-12 h-12 text-white" />
                             </div>
                             <h3 className="text-2xl font-bold text-white mb-3">
@@ -77,7 +77,7 @@ const MediaViewer = ({
                             </p>
                             <button
                                 onClick={() => onDownload(currentMedia)}
-                                className="flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors"
+                                className="flex items-center gap-2 px-6 py-3 bg-dashboard-600 hover:bg-dashboard-700 text-white rounded-lg font-medium transition-colors"
                             >
                                 <Download className="w-5 h-5" />
                                 Download File
@@ -101,7 +101,7 @@ const MediaViewer = ({
                         {currentMedia?.type === 'image' && (
                             <button
                                 onClick={() => onDownload(currentMedia)}
-                                className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors text-sm"
+                                className="flex items-center gap-2 px-4 py-2 bg-dashboard-600 hover:bg-dashboard-700 text-white rounded-lg font-medium transition-colors text-sm"
                             >
                                 <Download className="w-4 h-4" />
                                 Download

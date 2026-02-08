@@ -46,14 +46,14 @@ const Message = ({
             ref={(el) => setMessageRef && setMessageRef(message.id, el)}
             data-message-id={message.id}
             className={`flex ${message.isSent ? 'justify-end' : 'justify-start'} ${selectionMode ? 'cursor-pointer' : ''
-                } ${isSelected ? 'bg-indigo-50 -mx-2 px-2 py-2 rounded-lg' : ''} transition-all duration-200`}
+                } ${isSelected ? 'bg-dashboard-50 -mx-2 px-2 py-2 rounded-lg' : ''} transition-all duration-200`}
             onClick={handleClick}
             onContextMenu={handleContextMenu}
         >
             {/* Selection checkbox */}
             {selectionMode && (
                 <div className="flex items-center mr-3">
-                    <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-200 ${isSelected ? 'bg-indigo-600 border-indigo-600 scale-110' : 'border-gray-300'
+                    <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-200 ${isSelected ? 'bg-dashboard-600 border-dashboard-600 scale-110' : 'border-gray-300'
                         }`}>
                         {isSelected && <Check className="w-4 h-4 text-white" />}
                     </div>
@@ -80,7 +80,7 @@ const Message = ({
                 {/* Reply indicator */}
                 {message.replyTo && (
                     <div
-                        className={`${message.isSent ? 'bg-gray-200' : 'bg-indigo-500/30'} rounded-lg px-3 py-2 mb-2 border-l-2 ${message.isSent ? 'border-indigo-600' : 'border-white'} cursor-pointer hover:opacity-80 transition-opacity`}
+                        className={`${message.isSent ? 'bg-gray-200' : 'bg-dashboard-500/30'} rounded-lg px-3 py-2 mb-2 border-l-2 ${message.isSent ? 'border-dashboard-600' : 'border-white'} cursor-pointer hover:opacity-80 transition-opacity`}
                         onClick={(e) => {
                             e.stopPropagation();
                             if (scrollToMessage && message.replyTo.id) {
@@ -109,6 +109,7 @@ const Message = ({
                         setShowMenu={setShowMenu}
                         onMediaView={onMediaView}
                         selectionMode={selectionMode}
+                        isGroup={conversation?.isGroup || false}
                     />
                 ) : isTextOnly ? (
                     <TextMessage
@@ -117,6 +118,7 @@ const Message = ({
                         showMenu={showMenu}
                         setShowMenu={setShowMenu}
                         selectionMode={selectionMode}
+                        isGroup={conversation?.isGroup || false}
                     />
                 ) : null}
             </div>

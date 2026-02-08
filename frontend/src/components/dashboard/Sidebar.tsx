@@ -44,6 +44,12 @@ import {
   ShoppingBag,
   File,
   Users2,
+  MessageSquare,
+  Target,
+  Calendar,
+  Globe,
+  GraduationCap,
+  Monitor,
 } from "lucide-react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 
@@ -77,8 +83,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onToggle, }) => {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const location = useLocation();
   const adminAuth = useAdminAuth();
- 
-  const auth =  adminAuth ;
+
+  const auth = adminAuth;
   const user = auth.user;
   const navigate = useNavigate();
 
@@ -103,23 +109,72 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onToggle, }) => {
         label: "Expense Management",
         icon: ShoppingBag,
         path: `${basePath}/expense`,
-        
+
       },
       {
         id: "employee",
         label: "Employee Management",
         icon: Users2,
         path: `${basePath}/employee`,
-        
+
+      },
+      {
+        id: "chat",
+        label: "Chat Management",
+        icon: MessageSquare,
+        path: `${basePath}/chat`,
+
       },
       {
         id: "report",
         label: "Report Management ",
-        icon: File,
+        icon: ClipboardList,
         path: `${basePath}/report`,
-        
+
       },
-      
+      {
+        id: "weekly-goals",
+        label: "Weekly Goals Management ",
+        icon: Target,
+        path: `${basePath}/weekly-goals`,
+
+      },
+      {
+        id: "research",
+        label: "Research Management ",
+        icon: Microscope,
+        path: `${basePath}/research`,
+
+      },
+      {
+        id: "meeting",
+        label: "Meeting Management ",
+        icon: Calendar,
+        path: `${basePath}/meetings`,
+
+      },
+      {
+        id: "hosted-web",
+        label: "Hosted Website Management ",
+        icon: Globe,
+        path: `${basePath}/hosted-website`,
+
+      },
+      {
+        id: "internships",
+        label: "Internship Management ",
+        icon: GraduationCap,
+        path: `${basePath}/internships`,
+
+      },
+      {
+        id: "demo-request",
+        label: "Demo Request Management ",
+        icon: Monitor,
+        path: `${basePath}/demo-request`,
+
+      },
+
 
     ];
   };
@@ -297,11 +352,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onToggle, }) => {
         <div className="flex items-center justify-between p-3 border-b border-white/10">
           <div className="flex items-center space-x-2">
             <img src={logo} className="flex items-center justify-center w-10 h-10 rounded-lg" />
-             
-            
+
+
             <div>
               <h2 className="font-bold text-base text-white">
-                ABYTECH-HUB LTD 
+                ABYTECH-HUB LTD
               </h2>
               <p className="text-xs text-white/70">{portalTitle}</p>
             </div>

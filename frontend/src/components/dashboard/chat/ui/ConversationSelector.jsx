@@ -63,7 +63,7 @@ const ConversationSelector = ({
                     placeholder="Search conversations..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-dashboard-500"
                 />
             </div>
 
@@ -72,7 +72,7 @@ const ConversationSelector = ({
                 <div className="flex gap-2 mb-2">
                     <button
                         onClick={handleSelectAll}
-                        className="text-xs text-indigo-600 hover:text-indigo-700 font-medium"
+                        className="text-xs text-dashboard-600 hover:text-dashboard-700 font-medium"
                     >
                         Select All
                     </button>
@@ -101,14 +101,14 @@ const ConversationSelector = ({
                                 key={conv.id}
                                 onClick={() => handleToggle(conv.id)}
                                 className={`w-full flex items-center gap-3 p-3 rounded-lg transition-colors ${isSelected
-                                        ? 'bg-indigo-50 border-2 border-indigo-500'
+                                        ? 'bg-dashboard-50 border-2 border-dashboard-500'
                                         : 'bg-white border-2 border-transparent hover:bg-gray-50'
                                     }`}
                             >
                                 {/* Checkbox */}
                                 <div
                                     className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 ${isSelected
-                                            ? 'bg-indigo-600 border-indigo-600'
+                                            ? 'bg-dashboard-600 border-dashboard-600'
                                             : 'border-gray-300'
                                         }`}
                                 >

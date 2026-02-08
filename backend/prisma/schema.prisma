@@ -438,6 +438,7 @@ model Message {
   content          String?     @db.Text
   replyToMessageId Int?     @map("reply_to_message_id")
   edited           Boolean     @default(false)
+  isForwarded      Boolean     @default(false) @map("is_forwarded")
   timestamp        DateTime    @default(now()) @db.Timestamp(0)
   createdAt        DateTime    @default(now()) @map("created_at") @db.Timestamp(0)
   updatedAt        DateTime    @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)

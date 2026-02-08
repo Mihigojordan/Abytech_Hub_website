@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Smile, Paperclip, Image as ImageIcon, Send } from 'lucide-react';
+import { Smile, Paperclip, Image as ImageIcon, Send, Loader2 } from 'lucide-react';
 import EmojiPicker from '../ui/EmojiPicker';
 
 /**
@@ -12,7 +12,8 @@ const MessageInput = ({
     textareaRef,
     fileInputRef,
     imageInputRef,
-    onFileUpload
+    onFileUpload,
+    isSending = false
 }) => {
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
@@ -21,7 +22,7 @@ const MessageInput = ({
     };
 
     const handleKeyPress = (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
+        if (e.key === 'Enter' && !e.shiftKey && !isSending) {
             e.preventDefault();
             onSend();
         }
@@ -37,7 +38,8 @@ const MessageInput = ({
                         value={value}
                         onChange={(e) => onChange(e.target.value)}
                         onKeyPress={handleKeyPress}
-                        className="w-full px-4 py-3 bg-gray-50 rounded-lg text-sm text-gray-600 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none min-h-[48px] max-h-[150px] transition-all duration-200"
+                        disabled={isSending}
+                        className="w-full px-4 py-3 bg-gray-50 rounded-lg text-sm text-gray-600 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-dashboard-500 resize-none min-h-[48px] max-h-[150px] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                         rows="1"
                     />
                 </div>
@@ -48,7 +50,8 @@ const MessageInput = ({
                                 e.stopPropagation();
                                 setShowEmojiPicker(!showEmojiPicker);
                             }}
-                            className="p-3 hover:bg-gray-100 rounded-lg transition-colors"
+                            disabled={isSending}
+                            className="p-3 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             <Smile className="w-5 h-5 text-gray-500" />
                         </button>
@@ -64,10 +67,12 @@ const MessageInput = ({
                         ref={fileInputRef}
                         onChange={onFileUpload}
                         className="hidden"
+                        disabled={isSending}
                     />
                     <button
                         onClick={() => fileInputRef.current?.click()}
-                        className="p-3 hover:bg-gray-100 rounded-lg transition-colors"
+                        disabled={isSending}
+                        className="p-3 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         <Paperclip className="w-5 h-5 text-gray-500" />
                     </button>
@@ -78,18 +83,25 @@ const MessageInput = ({
                         ref={imageInputRef}
                         onChange={onFileUpload}
                         className="hidden"
+                        disabled={isSending}
                     />
                     <button
                         onClick={() => imageInputRef.current?.click()}
-                        className="p-3 hover:bg-gray-100 rounded-lg transition-colors"
+                        disabled={isSending}
+                        className="p-3 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         <ImageIcon className="w-5 h-5 text-gray-500" />
                     </button>
                     <button
                         onClick={onSend}
-                        className="p-3 bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-all duration-200 hover:scale-105 active:scale-95"
+                        disabled={isSending}
+                        className="p-3 bg-dashboard-600 hover:bg-dashboard-700 rounded-lg transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                     >
-                        <Send className="w-5 h-5 text-white" />
+                        {isSending ? (
+                            <Loader2 className="w-5 h-5 text-white animate-spin" />
+                        ) : (
+                            <Send className="w-5 h-5 text-white" />
+                        )}
                     </button>
                 </div>
             </div>

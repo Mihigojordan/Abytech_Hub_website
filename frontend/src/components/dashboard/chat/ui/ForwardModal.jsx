@@ -53,7 +53,7 @@ const ForwardModal = ({
                 {/* Header */}
                 <div className="flex items-center justify-between p-6 border-b border-gray-200">
                     <div className="flex items-center gap-2">
-                        <Forward className="w-5 h-5 text-indigo-600" />
+                        <Forward className="w-5 h-5 text-dashboard-600" />
                         <h2 className="text-xl font-semibold text-gray-900">Forward Messages</h2>
                     </div>
                     <button
@@ -101,8 +101,8 @@ const ForwardModal = ({
 
                     {/* Selection Count */}
                     {selectedConversationIds.length > 0 && (
-                        <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-3">
-                            <p className="text-sm text-indigo-700 font-medium">
+                        <div className="bg-dashboard-50 border border-dashboard-200 rounded-lg p-3">
+                            <p className="text-sm text-dashboard-700 font-medium">
                                 {selectedConversationIds.length} conversation{selectedConversationIds.length !== 1 ? 's' : ''} selected
                             </p>
                         </div>
@@ -121,7 +121,7 @@ const ForwardModal = ({
                     <button
                         onClick={handleForward}
                         disabled={loading || selectedConversationIds.length === 0}
-                        className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                        className="px-6 py-2 bg-dashboard-600 hover:bg-dashboard-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                     >
                         {loading ? (
                             <>

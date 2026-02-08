@@ -39,6 +39,19 @@ class ChatService {
         }
     }
 
+    async addMembersToConversation(conversationId, participantIds, participantTypes) {
+        try {
+            const response = await this.api.post(`/chat/conversations/${conversationId}/members`, {
+                participantIds,
+                participantTypes
+            });
+            return response.data;
+        } catch (error) {
+            const msg = error.response?.data?.message || error.message || 'Failed to add members';
+            throw new Error(msg);
+        }
+    }
+
     // ====================
     // MESSAGES
     // ====================
@@ -181,9 +194,9 @@ class ChatService {
     // UNREAD COUNTS
     // ====================
 
-    async getUnreadMessageCounts(userId, userType) {
+    async getUnreadMessageCounts() {
         try {
-            const response = await this.api.get(`/chat/conversations/unread/${userId}/${userType}`);
+            const response = await this.api.get('/chat/conversations/unread');
             return response.data;
         } catch (error) {
             const msg = error.response?.data?.message || error.message || 'Failed to fetch unread counts';

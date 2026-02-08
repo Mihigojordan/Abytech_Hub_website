@@ -6,8 +6,9 @@ import chatService from '../../services/chatService';
  * @param {string} conversationId - Current conversation ID
  * @param {string} currentUserId - Current user ID
  * @param {string} currentUserType - Current user type ('ADMIN' or 'USER')
+ * @param {Function} onRead - Callback when conversation is marked as read
  */
-export const useAutoRead = (conversationId, currentUserId, currentUserType) => {
+export const useAutoRead = (conversationId, currentUserId, currentUserType, onRead) => {
     useEffect(() => {
         if (!conversationId || !currentUserId) return;
 
@@ -17,7 +18,10 @@ export const useAutoRead = (conversationId, currentUserId, currentUserType) => {
             if (document.visibilityState === 'visible') {
                 chatService.markConversationAsRead(conversationId)
                     .then(() => {
-                        console.log(`Marked conversation ${conversationId} as read`);
+                        // Call the onRead callback to update unread count
+                        if (onRead) {
+                            onRead(conversationId);
+                        }
                     })
                     .catch(error => {
                         console.error('Failed to auto-mark conversation as read:', error);
@@ -26,5 +30,5 @@ export const useAutoRead = (conversationId, currentUserId, currentUserType) => {
         }, 1000);
 
         return () => clearTimeout(timer);
-    }, [conversationId, currentUserId, currentUserType]);
+    }, [conversationId, currentUserId, currentUserType, onRead]);
 };

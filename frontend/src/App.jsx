@@ -36,6 +36,7 @@ import WeeklyGoalManagement from "./pages/dashboard/WeeklyGoalManagement";
 import InternshipManagement from "./pages/dashboard/InternshipManagement";
 import HostedWebsiteManagement from "./pages/dashboard/HostedWebsiteManagement";
 import DemoRequestManagement from "./pages/dashboard/DemoRequestManagement";
+import ResearchManagement from "./pages/dashboard/ResearchManagement";
 
 // Lazy-loaded pages
 const ProjectsPage = lazy(() => import("./pages/Projects/ProjectPages"));
@@ -115,6 +116,7 @@ const router = createBrowserRouter([
           {path:'hosted-website' , element:<HostedWebsiteManagement />},
           {path:'demo-request' , element:<DemoRequestManagement />},
           {path:'meetings' , element:<MeetingManagement />},
+          {path:'research' , element:<ResearchManagement />},
           // {path:'profile' , element:<AdminProfilePage />},
           
         ]

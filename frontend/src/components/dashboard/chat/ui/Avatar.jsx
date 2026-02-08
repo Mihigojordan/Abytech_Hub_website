@@ -36,7 +36,7 @@ const Avatar = ({
                     />
                 </div>
             ) : (
-                <div className={`${sizeClasses[size]} rounded-full flex items-center justify-center text-white font-medium bg-indigo-300`}>
+                <div className={`${sizeClasses[size]} rounded-full flex items-center justify-center text-white font-medium bg-dashboard-300`}>
                     {initial || name.charAt(0).toUpperCase()}
                 </div>
             )}

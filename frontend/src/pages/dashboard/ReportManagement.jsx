@@ -205,7 +205,7 @@ const ReportDashboard = () => {
 
   const handleViewReport = (report) => {
     if (!report?.id) return;
-   navigate(`/admin/dashboard/report/view/${report?.id}`)
+    navigate(`/admin/dashboard/report/view/${report?.id}`)
   };
 
   const handleDeleteReport = async (report) => {
@@ -984,7 +984,7 @@ const ReportDashboard = () => {
         ) : (<></>)}
 
         {
-          !loading &&  reports.length !== 0 &&
+          !loading && reports.length !== 0 &&
 
           <motion.div
             initial={{ opacity: 0 }}
@@ -995,7 +995,7 @@ const ReportDashboard = () => {
             {viewMode === 'list' && renderListView()}
             {renderPagination()}
           </motion.div>
-        } 
+        }
 
 
 

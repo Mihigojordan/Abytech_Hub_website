@@ -56,6 +56,7 @@ const ChatApp = () => {
     });
     const [unreadCounts, setUnreadCounts] = useState({});
     const [loading, setLoading] = useState(true);
+    const [isSending, setIsSending] = useState(false);
     const [contacts, setContacts] = useState([]);
     const [onlineUsers, setOnlineUsers] = useState<Map<string, { userType: 'ADMIN' | 'USER' }>>(new Map());
 
@@ -72,15 +73,17 @@ const ChatApp = () => {
                     const conv = { ...item.conversation };
                     conv.participantRole = item.role;
                     conv.joinedAt = item.joinedAt;
-                    acc[conv.id] = conv;
+                    // Use string keys for consistent ID handling
+                    acc[String(conv.id)] = conv;
                     return acc;
                 }, {});
                 setConversations(convsMap);
 
                 // Fetch unread counts
-                const countsData = await chatService.getUnreadMessageCounts(admin.id, 'ADMIN');
+                const countsData = await chatService.getUnreadMessageCounts();
                 const countsMap = countsData.reduce((acc: any, item: any) => {
-                    acc[item.conversationId] = item.unreadCount;
+                    // Use string keys for consistent ID handling
+                    acc[String(item.conversationId)] = item.unreadCount;
                     return acc;
                 }, {});
                 setUnreadCounts(countsMap);
@@ -147,33 +150,54 @@ const ChatApp = () => {
         ));
     });
 
+    // Socket Event: New Conversation (real-time)
+    useSocketEvent('conversation:new', (data: any) => {
+        const { conversation } = data;
+        if (!conversation || !conversation.id) return;
+
+        const convIdStr = String(conversation.id);
+
+        // Add the new conversation to the state
+        setConversations((prev: any) => {
+            // Don't add if already exists
+            if (prev[convIdStr]) return prev;
+
+            return {
+                ...prev,
+                [convIdStr]: conversation
+            };
+        });
+
+        // Initialize unread count for this conversation (0 since it's new)
+        setUnreadCounts((prev: any) => ({
+            ...prev,
+            [convIdStr]: 0
+        }));
+    });
+
     // Socket Event: New Message
     useSocketEvent('message:new', (data: any) => {
         const { conversationId, message } = data;
+        const convIdStr = String(conversationId);
 
         // Update messages list if viewing this conversation
-        if (selectedChatId == conversationId.toString()) {
-            addMessageFromSocket(message, conversationId.toString());
-
+        if (String(selectedChatId) === convIdStr) {
+            addMessageFromSocket(message, convIdStr);
         }
 
         // Update conversation list preview with latest message
         setConversations((prev: any) => {
-            const conv = prev[conversationId];
+            const conv = prev[convIdStr];
             if (!conv) return prev;
-
-
-
-            // Determine if message is read (sender always sees their own messages as read)
-            const isRead = message.senderId === admin?.id && message.senderType === 'ADMIN';
 
             return {
                 ...prev,
-                [conversationId]: {
+                [convIdStr]: {
                     ...conv,
                     messages: [{
                         ...message,
-                        isRead: isRead,
+                        isRead: false, // New message starts unread
+                        readBy: [], // Initialize empty readBy array for tracking
                         time: new Date(message.timestamp).toLocaleTimeString('en-US', {
                             hour: 'numeric',
                             minute: '2-digit',
@@ -186,10 +210,10 @@ const ChatApp = () => {
         });
 
         // Update unread count if not current chat
-        if (selectedChatId != conversationId.toString()) {
+        if (String(selectedChatId) !== convIdStr) {
             setUnreadCounts((prev: any) => ({
                 ...prev,
-                [conversationId]: (prev[conversationId] || 0) + 1
+                [convIdStr]: (prev[convIdStr] || 0) + 1
             }));
         }
     });
@@ -197,22 +221,24 @@ const ChatApp = () => {
     // Socket Event: Message Edited
     useSocketEvent('message:edited', (data: any) => {
         const { conversationId, messageId, content, edited } = data;
+        const convIdStr = String(conversationId);
+        const msgIdStr = String(messageId);
 
         // Update in message list if viewing this conversation
-        if (selectedChatId == conversationId.toString()) {
-            updateMessageFromSocket({ id: messageId, content, edited: true }, conversationId.toString());
+        if (String(selectedChatId) === convIdStr) {
+            updateMessageFromSocket({ id: messageId, content, edited: true }, convIdStr);
         }
 
         // Update conversation preview if this is the last message
         setConversations((prev: any) => {
-            const conv = prev[conversationId];
+            const conv = prev[convIdStr];
             if (!conv || !conv.messages || conv.messages.length === 0) return prev;
 
             const lastMessage = conv.messages[0];
-            if (lastMessage.id == messageId) {
+            if (String(lastMessage.id) === msgIdStr) {
                 return {
                     ...prev,
-                    [conversationId]: {
+                    [convIdStr]: {
                         ...conv,
                         messages: [{
                             ...lastMessage,
@@ -229,63 +255,131 @@ const ChatApp = () => {
     // Socket Event: Message Deleted
     useSocketEvent('message:deleted', (data: any) => {
         const { conversationId, messageId } = data;
-        if (selectedChatId == conversationId.toString()) {
-            removeMessageFromSocket(messageId, conversationId.toString());
-        }
-    });
+        const convIdStr = String(conversationId);
 
-    // Socket Event: Message Read
-    useSocketEvent('message:read', (data: any) => {
-        const { conversationId, messageId, readerId } = data;
-
-        // Update message list if viewing this conversation
-        if (selectedChatId == conversationId.toString()) {
-            setAllMessages((prev: any) => {
-                const currentMessages = prev[conversationId] || [];
-                return {
-                    ...prev,
-                    [conversationId]: currentMessages.map((m: any) => {
-                        if (m.id == messageId) {
-                            return { ...m, isRead: true };
-                        }
-                        return m;
-                    })
-                };
-            });
+        if (String(selectedChatId) === convIdStr) {
+            removeMessageFromSocket(messageId, convIdStr);
         }
 
-        // Update conversation preview if this is the last message (for sender to see double tick)
+        // Update conversation preview if deleted message was the last message
         setConversations((prev: any) => {
-            const conv = prev[conversationId];
+            const conv = prev[convIdStr];
             if (!conv || !conv.messages || conv.messages.length === 0) return prev;
 
             const lastMessage = conv.messages[0];
-            // Only update if this is the last message and current user is the sender
-            if (lastMessage.id == messageId && lastMessage.senderId === admin?.id && lastMessage.senderType === 'ADMIN') {
+            if (String(lastMessage.id) === String(messageId)) {
+                // Clear the last message preview since it was deleted
                 return {
                     ...prev,
-                    [conversationId]: {
+                    [convIdStr]: {
                         ...conv,
-                        messages: [{
-                            ...lastMessage,
-                            isRead: true
-                        }]
+                        messages: []
                     }
                 };
             }
             return prev;
         });
+    });
 
-        // Update unread count if current user read the message
-        if (readerId === admin?.id) {
-            setUnreadCounts((prev: any) => {
-                const currentCount = prev[conversationId] || 0;
+    // Socket Event: Message Read
+    // Note: Backend only sends this event to the message SENDER, so we know this is for our sent message
+    useSocketEvent('message:read', (data: any) => {
+        const { conversationId, messageId, readerId, readerType } = data;
+        const convIdStr = String(conversationId);
+        const msgIdStr = String(messageId);
+
+        // Get conversation info to check if it's a group
+        const conv = (conversations as any)[convIdStr];
+        const isGroup = conv?.isGroup || false;
+        const participantCount = conv?.participants?.length || 2;
+
+        // Update message list for this conversation
+        setAllMessages((prev: any) => {
+            const currentMessages = prev[convIdStr] || [];
+            if (currentMessages.length === 0) return prev;
+
+            return {
+                ...prev,
+                [convIdStr]: currentMessages.map((m: any) => {
+                    if (String(m.id) === msgIdStr) {
+                        // Get current readBy array or initialize it
+                        const currentReadBy = m.readBy || [];
+
+                        // Check if this reader is already in the list
+                        const alreadyRead = currentReadBy.some(
+                            (r: any) => String(r.participantId) === String(readerId) && r.participantType === readerType
+                        );
+
+                        // Add reader if not already in list
+                        const newReadBy = alreadyRead
+                            ? currentReadBy
+                            : [...currentReadBy, { participantId: readerId, participantType: readerType, readAt: new Date().toISOString() }];
+
+                        // For 1-on-1: isRead = at least one person has read
+                        // For groups: isRead = ALL other participants have read (participantCount - 1)
+                        let newIsRead;
+                        if (isGroup) {
+                            const requiredReaders = participantCount - 1; // Everyone except sender
+                            newIsRead = newReadBy.length >= requiredReaders;
+                        } else {
+                            newIsRead = newReadBy.length > 0;
+                        }
+
+                        return {
+                            ...m,
+                            readBy: newReadBy,
+                            readByCount: newReadBy.length,
+                            isRead: newIsRead
+                        };
+                    }
+                    return m;
+                })
+            };
+        });
+
+        // Update conversation preview if this is the last message (for sender to see double tick)
+        setConversations((prev: any) => {
+            const conv = prev[convIdStr];
+            if (!conv || !conv.messages || conv.messages.length === 0) return prev;
+
+            const isGroupConv = conv.isGroup || false;
+            const partCount = conv.participants?.length || 2;
+
+            // Get the last message
+            const lastMessage = conv.messages[conv.messages.length - 1] || conv.messages[0];
+
+            // Update if this is the message being read
+            if (String(lastMessage.id) === msgIdStr) {
+                // Get current readBy or initialize
+                const currentReadBy = lastMessage.readBy || [];
+                const alreadyRead = currentReadBy.some(
+                    (r: any) => String(r.participantId) === String(readerId) && r.participantType === readerType
+                );
+                const newReadBy = alreadyRead
+                    ? currentReadBy
+                    : [...currentReadBy, { participantId: readerId, participantType: readerType }];
+
+                // Calculate isRead based on group/1-on-1
+                let newIsRead;
+                if (isGroupConv) {
+                    const requiredReaders = partCount - 1;
+                    newIsRead = newReadBy.length >= requiredReaders;
+                } else {
+                    newIsRead = newReadBy.length > 0;
+                }
+
                 return {
                     ...prev,
-                    [conversationId]: Math.max(0, currentCount - 1)
+                    [convIdStr]: {
+                        ...conv,
+                        messages: conv.messages.map((m: any) =>
+                            String(m.id) === msgIdStr ? { ...m, readBy: newReadBy, isRead: newIsRead } : m
+                        )
+                    }
                 };
-            });
-        }
+            }
+            return prev;
+        });
     });
 
     // Custom hooks
@@ -295,6 +389,7 @@ const ChatApp = () => {
         setAllMessages,
         editingMessage,
         replyingTo,
+        loading: messagesLoading,
         getMessagesForConversation,
         fetchMessages,
         sendMessage,
@@ -334,15 +429,27 @@ const ChatApp = () => {
     const imageInputRef = useRef<HTMLInputElement>(null);
     const fetchedChatsRef = useRef<Set<string>>(new Set());
 
+    // Callback to clear unread count when conversation is marked as read
+    const handleConversationRead = useCallback((conversationId: string) => {
+        const convIdStr = String(conversationId);
+        setUnreadCounts((prev: any) => ({
+            ...prev,
+            [convIdStr]: 0
+        }));
+    }, []);
+
     // Auto-read functionality
-    useAutoRead(selectedChatId, admin?.id, 'ADMIN');
+    useAutoRead(selectedChatId, admin?.id, 'ADMIN', handleConversationRead);
 
     // Fetch messages when conversation changes
     useEffect(() => {
-        if (selectedChatId && admin?.id && !fetchedChatsRef.current.has(selectedChatId)) {
-            fetchedChatsRef.current.add(selectedChatId);
-            console.log('📨 Fetching initial messages for conversation:', selectedChatId);
-            fetchMessages(selectedChatId);
+        if (selectedChatId && admin?.id) {
+            const chatIdStr = String(selectedChatId);
+            // Only fetch if not already fetched for this conversation
+            if (!fetchedChatsRef.current.has(chatIdStr)) {
+                fetchedChatsRef.current.add(chatIdStr);
+                fetchMessages(selectedChatId);
+            }
         }
     }, [selectedChatId, admin?.id, fetchMessages]);
 
@@ -361,7 +468,6 @@ const ChatApp = () => {
         const oldestMessageId = currentMessages.length > 0 ? currentMessages[0].id : null;
 
         if (oldestMessageId) {
-            console.log('📥 Loading more messages...', oldestMessageId);
             await fetchMessages(selectedChatId, oldestMessageId);
         }
     }, [selectedChatId, hasMore, fetchMessages, getMessagesForConversation]);
@@ -448,8 +554,11 @@ const ChatApp = () => {
     }, [showMenu]);
 
     const handleSelectChat = (chatId) => {
-        setSelectedChatId(chatId);
+        // Ensure consistent string type for chat ID
+        setSelectedChatId(String(chatId));
         clearSelection();
+        cancelEditOrReply();
+        setMessageInput('');
     };
 
     const handleInputChange = (value: string) => {
@@ -460,11 +569,60 @@ const ChatApp = () => {
     };
 
     const handleSendMessage = async () => {
-        const newInput = await sendMessage(messageInput, uploadedFiles, selectedChatId, clearFiles);
-        setMessageInput(newInput);
+        if (isSending) return; // Prevent double-sending
+
+        setIsSending(true);
+        try {
+            const result = await sendMessage(messageInput, uploadedFiles, selectedChatId, clearFiles);
+            setMessageInput(result.inputValue);
+
+            // Update conversation list with new message
+            if (result.message && selectedChatId) {
+                const chatIdStr = String(selectedChatId);
+                setConversations((prev: any) => {
+                    const conv = prev[chatIdStr];
+                    if (!conv) return prev;
+
+                    return {
+                        ...prev,
+                        [chatIdStr]: {
+                            ...conv,
+                            messages: [{
+                                ...result.message,
+                                isRead: false, // Initially not read by recipients (single tick)
+                                readBy: [], // Initialize empty readBy array for tracking
+                                time: new Date(result.message.timestamp || Date.now()).toLocaleTimeString('en-US', {
+                                    hour: 'numeric',
+                                    minute: '2-digit',
+                                    hour12: true
+                                })
+                            }],
+                            updatedAt: result.message.timestamp || new Date().toISOString(),
+                        }
+                    };
+                });
+            }
+        } finally {
+            setIsSending(false);
+        }
     };
 
     const handleMessageActionWrapper = (action, messageId) => {
+        // Handle forward action from individual message menu
+        if (action === 'forward') {
+            const currentMessages = selectedChatId ? (allMessages[selectedChatId] || []) : [];
+            const messageToForward = currentMessages.find((m: any) => String(m.id) === String(messageId));
+            if (messageToForward) {
+                setForwardModal({
+                    isOpen: true,
+                    messages: [messageToForward],
+                    loading: false
+                });
+            }
+            setShowMenu(null);
+            return;
+        }
+
         const result = handleMessageAction(action, messageId, textareaRef, selectedChatId);
         if (result !== null) {
             setMessageInput(result);
@@ -481,8 +639,11 @@ const ChatApp = () => {
     };
 
     const handleBulkActionWrapper = (action) => {
+        // Get current conversation messages
+        const currentMessages = selectedChatId ? (allMessages[selectedChatId] || []) : [];
+
         if (action === 'edit' && selectedMessages.length === 1) {
-            const message = allMessages.find((m: any) => m.id === selectedMessages[0]);
+            const message = currentMessages.find((m: any) => String(m.id) === String(selectedMessages[0]));
             if (message && message.isSent) {
                 handleMessageActionWrapper('edit', selectedMessages[0]);
                 clearSelection();
@@ -492,16 +653,27 @@ const ChatApp = () => {
             clearSelection();
         } else if (action === 'forward') {
             // Open forward modal with selected messages
-            const messagesToForward = allMessages.filter((m: any) =>
-                selectedMessages.includes(m.id)
+            const messagesToForward = currentMessages.filter((m: any) =>
+                selectedMessages.some(id => String(id) === String(m.id))
             );
             setForwardModal({
                 isOpen: true,
                 messages: messagesToForward,
                 loading: false
             });
+        } else if (action === 'delete') {
+            // Delete selected messages
+            selectedMessages.forEach((messageId: any) => {
+                handleMessageActionWrapper('delete', messageId);
+            });
+            clearSelection();
         } else {
-            originalBulkAction(action, allMessages, setAllMessages);
+            originalBulkAction(action, currentMessages, (updatedMessages: any) => {
+                setAllMessages((prev: any) => ({
+                    ...prev,
+                    [selectedChatId]: updatedMessages
+                }));
+            });
         }
     };
 
@@ -519,14 +691,9 @@ const ChatApp = () => {
             setForwardModal({ isOpen: false, messages: [], loading: false });
             clearSelection();
 
-            // Show success message (you can add toast notification here)
-            console.log(`Messages forwarded to ${targetConversationIds.length} conversation(s)`);
-
             // Messages will appear via WebSocket automatically
         } catch (err) {
-            console.error('Forward failed:', err);
             setForwardModal(prev => ({ ...prev, loading: false }));
-            // Show error message (you can add toast notification here)
             alert('Failed to forward messages');
         }
     };
@@ -610,6 +777,7 @@ const ChatApp = () => {
                 currentUser={admin}
                 unreadCounts={unreadCounts}
                 onlineUsers={onlineUsers}
+                isLoading={loading}
             />
 
             <ChatArea
@@ -617,6 +785,7 @@ const ChatApp = () => {
                 messages={messages}
                 hasMore={hasMore}
                 isLoadingMore={isLoadingMore}
+                isLoadingInitial={messagesLoading && messages.length === 0}
                 showScrollButton={showScrollButton}
                 unreadCount={unreadCounts[selectedChatId] || 0}
                 scrollToBottom={scrollToBottom}
@@ -649,6 +818,7 @@ const ChatApp = () => {
                 onMediaView={handleMediaView}
                 allMessages={allMessages}
                 setMessageRef={setMessageRef}
+                isSending={isSending}
             />
 
             <DragDropOverlay isVisible={isDragging} />
@@ -664,11 +834,6 @@ const ChatApp = () => {
             />
 
             {/* Forward Modal */}
-            {console.log('Rendering ForwardModal:', {
-                isOpen: forwardModal.isOpen,
-                messagesCount: forwardModal.messages.length,
-                conversationsCount: Object.values(conversations).length
-            })}
             <ForwardModal
                 isOpen={forwardModal.isOpen}
                 messages={forwardModal.messages}
