@@ -148,22 +148,29 @@ class ChatService {
         }
     }
 
-    async forwardMessages(forwardData) {
+    /**
+     * Forward messages to one or more conversations
+     * @param {string[]} messageIds - Array of message IDs to forward
+     * @param {string[]} targetConversationIds - Array of target conversation IDs
+     * @returns {Promise<Array>} Array of forwarded message responses
+     */
+    async forwardMessages(messageIds, targetConversationIds) {
         try {
-            // Check if forwardData is FormData to set appropriate headers
-            const config = {};
-            if (forwardData instanceof FormData) {
-                config.headers = {
-                    'Content-Type': 'multipart/form-data',
-                };
-            }
+            // Ensure targetConversationIds is an array
+            const conversationIds = Array.isArray(targetConversationIds)
+                ? targetConversationIds
+                : [targetConversationIds];
 
-            const response = await this.api.post(
-                '/chat/messages/forward',
-                forwardData,
-                config
+            // Forward to multiple conversations in parallel
+            const promises = conversationIds.map(conversationId =>
+                this.api.post('/chat/messages/forward', {
+                    messageIds,
+                    targetConversationId: conversationId
+                })
             );
-            return response.data;
+
+            const results = await Promise.all(promises);
+            return results.map(r => r.data);
         } catch (error) {
             const msg = error.response?.data?.message || error.message || 'Failed to forward messages';
             throw new Error(msg);

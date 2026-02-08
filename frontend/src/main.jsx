@@ -8,7 +8,6 @@ import { SocketProvider } from './context/SocketContext.jsx';
 import { registerSW } from 'virtual:pwa-register';
 import { HelmetProvider } from 'react-helmet-async';
 
-
 const updateSW = registerSW({
   onNeedRefresh() {
     // Check if it's a background tab

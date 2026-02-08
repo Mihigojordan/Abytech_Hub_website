@@ -410,7 +410,7 @@ const ReportViewPage = () => {
         <div className="mx-auto px-4 sm:px-6 py-4">
           <button
             onClick={() => navigate(root_url)}
-            className="flex items-center text-gray-600 hover:text-blue-600 transition-all duration-200 hover:gap-2 gap-1 font-medium"
+            className="flex items-center text-gray-600 hover:text-[#ff5a00] transition-all duration-200 hover:gap-2 gap-1 font-medium"
           >
             <ArrowLeft className="w-5 h-5" />
             Back to Reports
@@ -425,7 +425,7 @@ const ReportViewPage = () => {
             <div className="p-4 md:p-5 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200">
               <div className="flex flex-col space-y-4">
                 <h2 className="text-lg md:text-xl font-bold text-gray-900 flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-blue-600" />
+                  <FileText className="w-5 h-5 text-[#ff5a00]" />
                   Reports
                 </h2>
                 <div className="relative">
@@ -446,7 +446,7 @@ const ReportViewPage = () => {
                         key={filter}
                         onClick={() => setFilterType(filter)}
                         className={`px-3 py-1.5 text-xs font-semibold rounded-full transition-all duration-200 ${filterType === filter
-                          ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md"
+                          ? "bg-gradient-to-r from-blue-500 to-[#ff5a00] text-white shadow-md"
                           : "bg-white text-gray-700 hover:bg-gray-100 border border-gray-200 hover:border-blue-300"
                           }`}
                       >
@@ -456,7 +456,7 @@ const ReportViewPage = () => {
                     <button
                       onClick={() => setShowCalendar(!showCalendar)}
                       className={`px-3 py-1.5 text-xs font-semibold rounded-full transition-all duration-200 ${filterType === 'custom'
-                        ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md"
+                        ? "bg-gradient-to-r from-blue-500 to-[#ff5a00] text-white shadow-md"
                         : "bg-white text-gray-700 hover:bg-gray-100 border border-gray-200 hover:border-blue-300"} `}
                     >
                       Custom Date
@@ -465,7 +465,7 @@ const ReportViewPage = () => {
                   </div>
                 </div>
               </div>
-              <p className="text-sm font-medium text-blue-600 mt-2 bg-blue-50 px-3 py-1 rounded-full inline-block">{totalSidebarReports} reports</p>
+              <p className="text-sm font-medium text-[#ff5a00] mt-2 bg-blue-50 px-3 py-1 rounded-full inline-block">{totalSidebarReports} reports</p>
             </div>
             <div className="divide-y divide-gray-100 max-h-[calc(100vh-400px)] overflow-y-auto">
               {currentSidebarReports.map((report) => (
@@ -498,7 +498,7 @@ const ReportViewPage = () => {
                 <button
                   onClick={() => handleSidebarPageChange(sidebarCurrentPage - 1)}
                   disabled={sidebarCurrentPage === 1}
-                  className="p-2 text-gray-500 hover:text-blue-600 disabled:opacity-50 transition-colors rounded-lg hover:bg-blue-50"
+                  className="p-2 text-gray-500 hover:text-[#ff5a00] disabled:opacity-50 transition-colors rounded-lg hover:bg-blue-50"
                 >
                   <ChevronLeft className="w-5 h-5" />
                 </button>
@@ -508,7 +508,7 @@ const ReportViewPage = () => {
                 <button
                   onClick={() => handleSidebarPageChange(sidebarCurrentPage + 1)}
                   disabled={sidebarCurrentPage === sidebarTotalPages}
-                  className="p-2 text-gray-500 hover:text-blue-600 disabled:opacity-50 transition-colors rounded-lg hover:bg-blue-50"
+                  className="p-2 text-gray-500 hover:text-[#ff5a00] disabled:opacity-50 transition-colors rounded-lg hover:bg-blue-50"
                 >
                   <ChevronRight className="w-5 h-5" />
                 </button>
@@ -522,7 +522,7 @@ const ReportViewPage = () => {
           <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-4 md:p-6 hover:shadow-xl transition-shadow">
             <div className="flex items-start justify-between">
               <div className="flex items-center space-x-4">
-                <div className="w-14 h-14 md:w-16 md:h-16 bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg">
+                <div className="w-14 h-14 md:w-16 md:h-16 bg-gradient-to-br from-blue-500 via-[#ff5a00] to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg">
                   <FileText className="w-8 h-8 text-white" />
                 </div>
                 <div>
@@ -574,7 +574,7 @@ const ReportViewPage = () => {
 
           <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-4 md:p-6">
             <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-              <FileText className="w-5 h-5 text-blue-600" />
+              <FileText className="w-5 h-5 text-[#ff5a00]" />
               Report Content
             </h3>
             <div className="swal-preview-container">
@@ -587,7 +587,7 @@ const ReportViewPage = () => {
                     href={`${handleReportUrl(selectedReport.reportUrl)}?inline=true`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-blue-600 hover:underline"
+                    className="text-[#ff5a00] hover:underline"
                   >
                     View file in new tab
                   </a>
@@ -609,12 +609,12 @@ const ReportViewPage = () => {
 
           <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-4 md:p-6">
             <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-blue-600" />
+              <Calendar className="w-5 h-5 text-[#ff5a00]" />
               Report Information
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
               <div className="flex items-center p-3 bg-blue-50 rounded-lg">
-                <Calendar className="w-5 h-5 text-blue-600 mr-3" />
+                <Calendar className="w-5 h-5 text-[#ff5a00] mr-3" />
                 <div>
                   <p className="text-xs font-semibold text-gray-600">Created</p>
                   <p className="text-sm font-medium text-gray-900">{formatDateTime(selectedReport.createdAt)}</p>
@@ -633,7 +633,7 @@ const ReportViewPage = () => {
           {/* === REPLIES SECTION === */}
           <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-4 md:p-6">
             <div className="flex items-center gap-2 mb-4">
-              <MessageCircle className="w-5 h-5 text-blue-600" />
+              <MessageCircle className="w-5 h-5 text-[#ff5a00]" />
               <h3 className="text-lg md:text-xl font-bold text-gray-900">
                 Replies ({selectedReport.replies?.length || 0})
               </h3>
@@ -711,7 +711,7 @@ const ReportViewPage = () => {
           >
             {operationStatus.type === "success" && <CheckCircle className="w-5 h-5 text-green-600" />}
             {operationStatus.type === "error" && <XCircle className="w-5 h-5 text-red-600" />}
-            {operationStatus.type === "info" && <AlertCircle className="w-5 h-5 text-blue-600" />}
+            {operationStatus.type === "info" && <AlertCircle className="w-5 h-5 text-[#ff5a00]" />}
             <span className="font-medium">{operationStatus.message}</span>
             <button onClick={() => setOperationStatus(null)} className="ml-2 hover:opacity-70">
               <X className="w-4 h-4" />

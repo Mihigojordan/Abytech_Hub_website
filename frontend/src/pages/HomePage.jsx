@@ -7,24 +7,24 @@ import Programs from '../components/home/Programs';
 import Slide from '../components/home/Slide';
 import Faq from '../components/home/Faq';
 import Quote from '../components/home/Quote';
+import AbytechWorkshop from '../components/home/Ads';
+import Whoweare from '../components/home/Whoweare';
+import HowItWorks from '../components/home/HowItWorks';
 
 const LandingPage = lazy(() => import("../components/home/landingPage"));
 const WhyChooseUs = lazy(() => import("../components/home/chooseUs"));
-const ClientsSection = lazy(() => import("../components/home/clients"));
 const ContentReach = lazy(() => import("../components/home/contentReach"));
-const ContentWriteServices = lazy(() =>
-  import("../components/home/contentWrite")
-);
+
 const WorkProcess = lazy(() => import("../components/home/workingProcess"));
-const ContentSection = lazy(() => import("../components/home/talkContent"));
-const LatestProjects = lazy(() => import("../components/home/project"));
 const Testimonials = lazy(() => import("../components/home/testimony"));
 
 const HomePage = () => {
     return (
         <>
             <LandingPage />
+            
             <Partners />
+            <Whoweare />
             <HomeAbout />
             <Slide />
             <Quote />
@@ -33,10 +33,13 @@ const HomePage = () => {
             <ContentReach />
  
             <WorkProcess />
-            <Programs />
-            <Faq />
+            {/* <Programs /> */}
+            {/* <Faq /> */}
+            <AbytechWorkshop />
             <Testimonials />
+
             <BlogLatest />
+            <HowItWorks />
 
         </>
     )

@@ -1,19 +1,18 @@
 @import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Roboto+Condensed:ital,wght@0,100..900;1,100..900&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap');
 @theme {
-  /* --- Colors --- */
- --color-primary-50: #e7eff8;
+
+    --color-primary-50:  #e7eff8;
   --color-primary-100: #d6e2f4;
   --color-primary-200: #adc7e9;
   --color-primary-300: #88acd7;
   --color-primary-400: #162135;
-  --color-primary-500: #162135; /* The original hex code */
+  --color-primary-500:  #ff5a00; /* base / brand color */
   --color-primary-600: #162135;
   --color-primary-700: #162135;
   --color-primary-800: #06407d;
   --color-primary-900: #053365;
   --color-primary-950: #021a36;
-
  
   --color-secondary-50: #f0fdfa;
   --color-secondary-100: #ccfbf5;
