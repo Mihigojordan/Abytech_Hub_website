@@ -1,4 +1,29 @@
 import React, { useState, useEffect } from 'react'
+import image1 from '../../assets/images/about/story/image1.webp'
+import image2 from '../../assets/images/about/story/image2.png'
+import image3 from '../../assets/images/about/story/image3.png'
+import image4 from '../../assets/images/about/story/image4.png'
+import image5 from '../../assets/images/about/story/image5.png'
+import image6 from '../../assets/images/about/story/image6.png'
+import image7 from '../../assets/images/about/story/image7.png'
+import image8 from '../../assets/images/about/story/image8.png'
+import image9 from '../../assets/images/about/story/image9.png'
+import image10 from '../../assets/images/about/story/image10.png'
+import image11 from '../../assets/images/about/story/image11.png'
+import image12 from '../../assets/images/about/story/image12.png'
+import image13 from '../../assets/images/about/story/image13.png'
+import image14 from '../../assets/images/about/story/image14.png'
+import image15 from '../../assets/images/about/story/image15.png'
+import image16 from '../../assets/images/about/story/image16.png'
+import image17 from '../../assets/images/about/story/image17.png'
+import image18 from '../../assets/images/about/story/image18.png'
+import image19 from '../../assets/images/about/story/image19.png'
+import image20 from '../../assets/images/about/story/image20.png'
+import image21 from '../../assets/images/about/story/image21.png'
+import image22 from '../../assets/images/about/story/image22.png'
+import image23 from '../../assets/images/about/story/image23.png'
+import image24 from '../../assets/images/about/story/image24.jpg'
+import image25 from '../../assets/images/about/story/image25.jpg'
 
 function StoryImpactCulturePage() {
   const [scrollY, setScrollY] = useState(0)
@@ -16,25 +41,25 @@ function StoryImpactCulturePage() {
     <div className="min-h-screen bg-white overflow-hidden">
       {/* Hero Section with Parallax */}
       <section className="relative h-screen flex items-center justify-center overflow-hidden">
-        <div 
+        <div
           className="absolute inset-0 z-0"
           style={{
-            transform: `translateY(${scrollY * 0.5}px)`,
+            transform: `translateY(${scrollY * 0.3}px)`,
           }}
         >
-          <img 
-            src="https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=1600&q=80" 
+          <img
+            src={image1}
             alt="Abytech story"
             className="w-full h-[120vh] object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-br from-gray-900/90 via-[#ff5a00]/70 to-gray-800/90"></div>
         </div>
-        
-        <div 
+
+        <div
           className="max-w-7xl mx-auto px-6 relative z-10 text-center text-white"
           style={{
-            transform: `translateY(${scrollY * 0.2}px)`,
-            opacity: 1 - scrollY / 500,
+            transform: `translateY(${scrollY * 0.15}px)`,
+            opacity: Math.max(0, 1 - scrollY / 600),
           }}
         >
           <h1 className="text-6xl md:text-7xl font-bold mb-6">
@@ -70,23 +95,23 @@ function StoryImpactCulturePage() {
           </div>
 
           <div className="grid md:grid-cols-2 gap-16 items-center mb-24">
-            <div 
+            <div
               className="relative"
               style={{
-                transform: `translateY(${(scrollY - 600) * 0.1}px)`,
+                transform: `translateY(${Math.max(0, (scrollY - 400) * 0.08)}px)`,
               }}
             >
               <div className="overflow-hidden rounded-2xl shadow-2xl">
-                <img 
-                  src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&q=80" 
+                <img
+                  src={image2}
                   alt="Kigali Rwanda"
                   className="w-full h-[500px] object-cover"
                 />
               </div>
-              <div 
+              <div
                 className="absolute -bottom-6 -right-6 w-48 h-48 bg-[#ff5a00]/20 rounded-lg -z-10"
                 style={{
-                  transform: `translateY(${(scrollY - 600) * -0.05}px)`,
+                  transform: `translateY(${Math.max(0, (scrollY - 400) * -0.04)}px)`,
                 }}
               ></div>
             </div>
@@ -110,20 +135,20 @@ function StoryImpactCulturePage() {
           {/* Timeline with Images */}
           <div className="relative">
             <div className="absolute left-1/2 transform -translate-x-1/2 h-full w-1 bg-[#ff5a00] hidden md:block"></div>
-            
+
             <div className="space-y-16">
               {/* 2022 */}
               <div className="relative">
                 <div className="md:grid md:grid-cols-2 gap-8">
-                  <div 
+                  <div
                     className="md:text-right mb-8 md:mb-0"
                     style={{
-                      transform: `translateX(${(scrollY - 1200) * -0.05}px)`,
+                      transform: `translateX(${Math.max(-100, Math.min(100, (scrollY - 800) * -0.03))}px)`,
                     }}
                   >
                     <div className="bg-white rounded-xl shadow-xl overflow-hidden">
-                      <img 
-                        src="https://images.unsplash.com/photo-1557804506-669a67965ba0?w=600&q=80" 
+                      <img
+                        src={image3}
                         alt="Foundation 2022"
                         className="w-full h-48 object-cover"
                       />
@@ -147,15 +172,15 @@ function StoryImpactCulturePage() {
               <div className="relative">
                 <div className="md:grid md:grid-cols-2 gap-8">
                   <div className="hidden md:block"></div>
-                  <div 
+                  <div
                     className="mb-8 md:mb-0"
                     style={{
-                      transform: `translateX(${(scrollY - 1400) * 0.05}px)`,
+                      transform: `translateX(${Math.max(-100, Math.min(100, (scrollY - 1000) * 0.03))}px)`,
                     }}
                   >
                     <div className="bg-white rounded-xl shadow-xl overflow-hidden">
-                      <img 
-                        src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=600&q=80" 
+                      <img
+                        src={image4}
                         alt="Growth 2023"
                         className="w-full h-48 object-cover"
                       />
@@ -177,15 +202,15 @@ function StoryImpactCulturePage() {
               {/* 2024 */}
               <div className="relative">
                 <div className="md:grid md:grid-cols-2 gap-8">
-                  <div 
+                  <div
                     className="md:text-right mb-8 md:mb-0"
                     style={{
-                      transform: `translateX(${(scrollY - 1600) * -0.05}px)`,
+                      transform: `translateX(${Math.max(-100, Math.min(100, (scrollY - 1200) * -0.03))}px)`,
                     }}
                   >
                     <div className="bg-white rounded-xl shadow-xl overflow-hidden">
-                      <img 
-                        src="https://images.unsplash.com/photo-1552664730-d307ca884978?w=600&q=80" 
+                      <img
+                        src={image5}
                         alt="Expansion 2024"
                         className="w-full h-48 object-cover"
                       />
@@ -209,15 +234,15 @@ function StoryImpactCulturePage() {
               <div className="relative">
                 <div className="md:grid md:grid-cols-2 gap-8">
                   <div className="hidden md:block"></div>
-                  <div 
+                  <div
                     className="mb-8 md:mb-0"
                     style={{
-                      transform: `translateX(${(scrollY - 1800) * 0.05}px)`,
+                      transform: `translateX(${Math.max(-100, Math.min(100, (scrollY - 1400) * 0.03))}px)`,
                     }}
                   >
                     <div className="bg-gradient-to-br from-[#ff5a00] to-orange-600 rounded-xl shadow-xl overflow-hidden">
-                      <img 
-                        src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=600&q=80" 
+                      <img
+                        src={image6}
                         alt="Future vision"
                         className="w-full h-48 object-cover opacity-80"
                       />
@@ -242,14 +267,14 @@ function StoryImpactCulturePage() {
 
       {/* Parallax Divider */}
       <section className="relative h-96 overflow-hidden">
-        <div 
+        <div
           className="absolute inset-0"
           style={{
-            transform: `translateY(${(scrollY - 2200) * 0.5}px)`,
+            transform: `translateY(${Math.max(-200, (scrollY - 1800) * 0.3)}px)`,
           }}
         >
-          <img 
-            src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=1600&q=80" 
+          <img
+            src={image7}
             alt="Team collaboration"
             className="w-full h-[150%] object-cover"
           />
@@ -284,20 +309,20 @@ function StoryImpactCulturePage() {
           {/* Impact Stats */}
           <div className="grid md:grid-cols-4 gap-8 mb-16">
             {[
-              { number: "50+", label: "Developers Trained", image: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=400&q=80" },
-              { number: "30+", label: "Projects Delivered", image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400&q=80" },
-              { number: "15+", label: "Partner Companies", image: "https://images.unsplash.com/photo-1556761175-b413da4baf72?w=400&q=80" },
-              { number: "100%", label: "Job Placement Rate", image: "https://images.unsplash.com/photo-1553028826-f4804a6dba3b?w=400&q=80" }
+              { number: "50+", label: "Developers Trained", image: image8 },
+              { number: "30+", label: "Projects Delivered", image: image9 },
+              { number: "15+", label: "Partner Companies", image: image10 },
+              { number: "100%", label: "Job Placement Rate", image: image11 }
             ].map((stat, index) => (
-              <div 
+              <div
                 key={index}
                 className="relative overflow-hidden rounded-xl shadow-xl group"
                 style={{
-                  transform: `translateY(${(scrollY - 2800) * (0.05 + index * 0.02)}px)`,
+                  transform: `translateY(${Math.max(0, (scrollY - 2400) * (0.04 + index * 0.015))}px)`,
                 }}
               >
-                <img 
-                  src={stat.image} 
+                <img
+                  src={stat.image}
                   alt={stat.label}
                   className="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-500"
                 />
@@ -311,15 +336,15 @@ function StoryImpactCulturePage() {
 
           {/* Impact Stories */}
           <div className="grid md:grid-cols-2 gap-12">
-            <div 
+            <div
               className="bg-gray-50 p-8 rounded-xl"
               style={{
-                transform: `translateY(${(scrollY - 3200) * 0.08}px)`,
+                transform: `translateY(${Math.max(0, (scrollY - 2800) * 0.06)}px)`,
               }}
             >
               <div className="flex items-start gap-4 mb-6">
-                <img 
-                  src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&q=80" 
+                <img
+                  src={image12}
                   alt="Success story"
                   className="w-20 h-20 rounded-full object-cover"
                 />
@@ -333,15 +358,15 @@ function StoryImpactCulturePage() {
               </p>
             </div>
 
-            <div 
+            <div
               className="bg-gray-50 p-8 rounded-xl"
               style={{
-                transform: `translateY(${(scrollY - 3200) * 0.1}px)`,
+                transform: `translateY(${Math.max(0, (scrollY - 2800) * 0.08)}px)`,
               }}
             >
               <div className="flex items-start gap-4 mb-6">
-                <img 
-                  src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&q=80" 
+                <img
+                  src={image13}
                   alt="Success story"
                   className="w-20 h-20 rounded-full object-cover"
                 />
@@ -362,28 +387,28 @@ function StoryImpactCulturePage() {
               {
                 title: "Educational Partnerships",
                 description: "Collaborating with universities to bridge the gap between academic knowledge and industry skills.",
-                image: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=500&q=80"
+                image: image14
               },
               {
                 title: "Tech Community Events",
                 description: "Hosting workshops, hackathons, and meetups to foster knowledge sharing and networking.",
-                image: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=500&q=80"
+                image: image15
               },
               {
                 title: "Youth Mentorship",
                 description: "Guiding the next generation through coding bootcamps and career counseling programs.",
-                image: "https://images.unsplash.com/photo-1531482615713-2afd69097998?w=500&q=80"
+                image: image16
               }
             ].map((item, index) => (
-              <div 
+              <div
                 key={index}
                 className="bg-white rounded-xl shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-300"
                 style={{
-                  transform: `translateY(${(scrollY - 3600) * (0.08 + index * 0.02)}px)`,
+                  transform: `translateY(${Math.max(0, (scrollY - 3200) * (0.06 + index * 0.015))}px)`,
                 }}
               >
-                <img 
-                  src={item.image} 
+                <img
+                  src={item.image}
                   alt={item.title}
                   className="w-full h-48 object-cover"
                 />
@@ -399,14 +424,14 @@ function StoryImpactCulturePage() {
 
       {/* Parallax Divider 2 */}
       <section className="relative h-96 overflow-hidden">
-        <div 
+        <div
           className="absolute inset-0"
           style={{
-            transform: `translateY(${(scrollY - 4200) * 0.5}px)`,
+            transform: `translateY(${Math.max(-200, (scrollY - 3800) * 0.3)}px)`,
           }}
         >
-          <img 
-            src="https://images.unsplash.com/photo-1552664730-d307ca884978?w=1600&q=80" 
+          <img
+            src={image17}
             alt="Team success"
             className="w-full h-[150%] object-cover"
           />
@@ -441,14 +466,14 @@ function StoryImpactCulturePage() {
           <div className="space-y-24">
             {/* Collaboration */}
             <div className="grid md:grid-cols-2 gap-12 items-center">
-              <div 
+              <div
                 style={{
-                  transform: `translateX(${(scrollY - 4800) * -0.05}px)`,
+                  transform: `translateX(${Math.max(-80, Math.min(80, (scrollY - 4400) * -0.04))}px)`,
                 }}
               >
                 <div className="relative overflow-hidden rounded-2xl shadow-2xl">
-                  <img 
-                    src="https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=800&q=80" 
+                  <img
+                    src={image18}
                     alt="Collaboration culture"
                     className="w-full h-[400px] object-cover"
                   />
@@ -510,15 +535,15 @@ function StoryImpactCulturePage() {
                   </li>
                 </ul>
               </div>
-              <div 
+              <div
                 className="order-1 md:order-2"
                 style={{
-                  transform: `translateX(${(scrollY - 5200) * 0.05}px)`,
+                  transform: `translateX(${Math.max(-80, Math.min(80, (scrollY - 4800) * 0.04))}px)`,
                 }}
               >
                 <div className="relative overflow-hidden rounded-2xl shadow-2xl">
-                  <img 
-                    src="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=800&q=80" 
+                  <img
+                    src={image19}
                     alt="Learning culture"
                     className="w-full h-[400px] object-cover"
                   />
@@ -528,14 +553,14 @@ function StoryImpactCulturePage() {
 
             {/* Work-Life Balance */}
             <div className="grid md:grid-cols-2 gap-12 items-center">
-              <div 
+              <div
                 style={{
-                  transform: `translateX(${(scrollY - 5600) * -0.05}px)`,
+                  transform: `translateX(${Math.max(-80, Math.min(80, (scrollY - 5200) * -0.04))}px)`,
                 }}
               >
                 <div className="relative overflow-hidden rounded-2xl shadow-2xl">
-                  <img 
-                    src="https://images.unsplash.com/photo-1551836022-deb4988cc6c0?w=800&q=80" 
+                  <img
+                    src={image20}
                     alt="Work-life balance"
                     className="w-full h-[400px] object-cover"
                   />
@@ -597,15 +622,15 @@ function StoryImpactCulturePage() {
                   </li>
                 </ul>
               </div>
-              <div 
+              <div
                 className="order-1 md:order-2"
                 style={{
-                  transform: `translateX(${(scrollY - 6000) * 0.05}px)`,
+                  transform: `translateX(${Math.max(-80, Math.min(80, (scrollY - 5600) * 0.04))}px)`,
                 }}
               >
                 <div className="relative overflow-hidden rounded-2xl shadow-2xl">
-                  <img 
-                    src="https://images.unsplash.com/photo-1573164713714-d95e436ab8d6?w=800&q=80" 
+                  <img
+                    src={image21}
                     alt="Innovation culture"
                     className="w-full h-[400px] object-cover"
                   />
@@ -615,26 +640,26 @@ function StoryImpactCulturePage() {
           </div>
 
           {/* Team Gallery */}
-          <div className="mt-24">
+          <div className="">
             <h3 className="text-4xl font-bold text-gray-900 text-center mb-12">Life at Abytech</h3>
             <div className="grid md:grid-cols-3 gap-6">
               {[
-                "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=600&q=80",
-                "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=600&q=80",
-                "https://images.unsplash.com/photo-1551434678-e076c223a692?w=600&q=80",
-                "https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=600&q=80",
-                "https://images.unsplash.com/photo-1531482615713-2afd69097998?w=600&q=80",
-                "https://images.unsplash.com/photo-1553028826-f4804a6dba3b?w=600&q=80"
+                image22,
+                image23,
+                image24,
+                image25,
+                image16,
+                image11
               ].map((img, index) => (
-                <div 
+                <div
                   key={index}
                   className="overflow-hidden rounded-lg shadow-lg"
                   style={{
-                    transform: `translateY(${(scrollY - 6400) * (0.05 + index * 0.01)}px)`,
+                    transform: `translateY(${Math.max(0, (scrollY - 6000) * (0.04 + index * 0.008))}px)`,
                   }}
                 >
-                  <img 
-                    src={img} 
+                  <img
+                    src={img}
                     alt={`Team moment ${index + 1}`}
                     className="w-full h-64 object-cover hover:scale-110 transition-transform duration-500"
                   />
@@ -646,22 +671,28 @@ function StoryImpactCulturePage() {
       </section>
 
       {/* Final CTA with Parallax */}
-      <section className="relative h-screen flex items-center justify-center overflow-hidden">
-        <div 
+      {/* <section className="relative h-screen  text-black flex items-center justify-center overflow-hidden">
+        <div
           className="absolute inset-0"
           style={{
-            transform: `translateY(${(scrollY - 7000) * 0.5}px)`,
+            transform: `translateY(${Math.max(-150, (scrollY - 6200) * 0.25)}px)`,
           }}
         >
-          <img 
-            src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=1600&q=80" 
+          <img
+            src={image7}
             alt="Join us"
             className="w-full h-[120vh] object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-br from-[#ff5a00]/90 to-gray-900/90"></div>
         </div>
-        
-        <div className="max-w-5xl mx-auto px-6 relative z-10 text-center text-white">
+
+        <div
+          className="max-w-5xl mx-auto px-6 relative z-10 text-center text-white"
+          style={{
+            opacity: Math.min(1, Math.max(0, (scrollY - 6200) / 400)),
+            transform: `translateY(${Math.max(0, 30 - (scrollY - 6200) / 10)}px)`,
+          }}
+        >
           <h2 className="text-5xl md:text-6xl font-bold mb-8">
             Be Part of Our Story
           </h2>
@@ -677,7 +708,7 @@ function StoryImpactCulturePage() {
             </button>
           </div>
         </div>
-      </section>
+      </section> */}
     </div>
   )
 }

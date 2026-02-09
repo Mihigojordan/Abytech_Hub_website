@@ -1,6 +1,12 @@
 import React, { useEffect } from "react";
 import Header from "../../components/header";
 import { Element } from "react-scroll";
+import image1 from "../../assets/images/programs/image1.png";
+import image2 from "../../assets/images/programs/image2.png";
+import image3 from "../../assets/images/programs/image3.png";
+import image4 from "../../assets/images/programs/image4.png";
+import image5 from "../../assets/images/programs/image5.jpg";
+import image6 from "../../assets/images/programs/image6.jpg";
 
 const Training = () => {
     useEffect(() => {
@@ -17,7 +23,7 @@ const Training = () => {
             title: "Academic Partnership",
             badge: "UNIVERSITY COLLABORATION",
             description: "Bridging the gap between academia and industry through hands-on technical training and project-based learning.",
-            image: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=800&h=600&fit=crop",
+            image: image1,
             overview: [
                 { label: "Duration", value: "Academic Year", icon: "📅" },
                 { label: "Schedule", value: "Flexible", icon: "⏰" },
@@ -30,7 +36,7 @@ const Training = () => {
             title: "Amazon Career Choice",
             badge: "AMAZON PARTNERSHIP",
             description: "Exclusive training program for Amazon employees. Amazon covers 95% of tuition costs for high-demand tech skills.",
-            image: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800&h=600&fit=crop",
+            image: image2,
             overview: [
                 { label: "Duration", value: "9 Months", icon: "📅" },
                 { label: "Schedule", value: "Shift Friendly", icon: "⏰" },
@@ -43,7 +49,7 @@ const Training = () => {
             title: "Tech Apprenticeship",
             badge: "EARN WHILE YOU LEARN",
             description: "Paid on-the-job training at leading tech companies. Gain real-world experience and guaranteed job placement.",
-            image: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&h=600&fit=crop",
+            image: image3,
             overview: [
                 { label: "Duration", value: "12 Months", icon: "📅" },
                 { label: "Schedule", value: "Full-Time", icon: "⏰" },
@@ -56,7 +62,7 @@ const Training = () => {
             title: "Cisco Certifications",
             badge: "NETWORK PROFESSIONAL",
             description: "Master networking with CCNA and CCNP tracks. Hands-on labs with real Cisco equipment and expert instruction.",
-            image: "https://images.unsplash.com/photo-1544197150-b99a580bb7a8?w=800&h=600&fit=crop",
+            image: image4,
             overview: [
                 { label: "Duration", value: "16 Weeks", icon: "📅" },
                 { label: "Schedule", value: "Weekends", icon: "⏰" },
@@ -69,7 +75,7 @@ const Training = () => {
             title: "3 Month Intensive",
             badge: "PROFESSIONAL TRACK",
             description: "Fast-track your development career. Intensive full-stack training from basics to industry-ready status.",
-            image: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&h=600&fit=crop",
+            image: image5,
             overview: [
                 { label: "Duration", value: "3 Months", icon: "📅" },
                 { label: "Schedule", value: "6 PM - 9 PM", icon: "⏰" },
@@ -82,7 +88,7 @@ const Training = () => {
             title: "6 Month Mastery",
             badge: "EXPERT PROGRAM",
             description: "Deep dive into software engineering. Master architecture, DevOps, and advanced systems in a 6-month journey.",
-            image: "https://images.unsplash.com/photo-1531482615713-2afd69097998?w=800&h=600&fit=crop",
+            image: image6,
             overview: [
                 { label: "Duration", value: "6 Months", icon: "📅" },
                 { label: "Schedule", value: "Flexible", icon: "⏰" },
