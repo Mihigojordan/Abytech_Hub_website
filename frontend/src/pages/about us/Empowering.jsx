@@ -1,5 +1,24 @@
 import React, { useState, useEffect } from 'react'
 import Header from '../../components/header'
+import image1 from '../../assets/images/about/empowerment/image1.png'
+import image2 from '../../assets/images/about/empowerment/image2.png'
+import image3 from '../../assets/images/about/empowerment/image1.jpeg'
+import image4 from '../../assets/images/about/empowerment/image2.jpeg'
+import image5 from '../../assets/images/about/empowerment/image3.jpeg'
+import image6 from '../../assets/images/about/empowerment/image4.jpeg'
+import image7 from '../../assets/images/about/empowerment/image5.jpeg'
+import image8 from '../../assets/images/about/empowerment/image3.png'
+import image9 from '../../assets/images/about/empowerment/image1.jpg'
+import image10 from '../../assets/images/about/empowerment/image4.png'
+import image11 from '../../assets/images/about/empowerment/image5.png'
+import image12 from '../../assets/images/about/empowerment/image6.png'
+import image13 from '../../assets/images/about/empowerment/image11.png'
+import image14 from '../../assets/images/about/empowerment/image8.png'
+import image15 from '../../assets/images/about/empowerment/image9.png'
+import image16 from '../../assets/images/about/empowerment/image10.png'
+import image17 from '../../assets/images/about/empowerment/image11.png'
+import image18 from '../../assets/images/about/empowerment/image12.png'
+import image19 from '../../assets/images/about/empowerment/image1.png'
 
 function EmpoweringPage() {
   const [scrollY, setScrollY] = useState(0)
@@ -54,7 +73,7 @@ function EmpoweringPage() {
             <div className="relative">
               <div className="overflow-hidden rounded-2xl shadow-2xl">
                 <img 
-                  src="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=800&q=80" 
+                  src={image1} 
                   alt="Training programs"
                   className="w-full h-[500px] object-cover"
                 />
@@ -111,17 +130,17 @@ function EmpoweringPage() {
               {
                 title: "Mentorship Programs",
                 description: "One-on-one guidance from experienced developers who have walked the path before.",
-                image: "https://images.unsplash.com/photo-1531482615713-2afd69097998?w=600&q=80"
+                image: image2
               },
               {
                 title: "Industry Certifications",
                 description: "Support for obtaining recognized certifications in cloud computing, development, and more.",
-                image: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=600&q=80"
+                image: image3
               },
               {
                 title: "Career Counseling",
                 description: "Personalized career guidance to help each individual chart their unique path in tech.",
-                image: "https://images.unsplash.com/photo-1552664730-d307ca884978?w=600&q=80"
+                image: image4
               }
             ].map((feature, index) => (
               <div 
@@ -149,7 +168,7 @@ function EmpoweringPage() {
       <section className="relative h-96 overflow-hidden">
         <div className="absolute inset-0">
           <img 
-            src="https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=1600&q=80" 
+            src={image5} 
             alt="Students learning"
             className="w-full h-full object-cover"
           />
@@ -215,7 +234,7 @@ function EmpoweringPage() {
             <div className="relative">
               <div className="overflow-hidden rounded-2xl shadow-2xl">
                 <img 
-                  src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&q=80" 
+                  src={image6} 
                   alt="Women in tech"
                   className="w-full h-[600px] object-cover"
                 />
@@ -247,31 +266,31 @@ function EmpoweringPage() {
               {
                 title: "Coding Bootcamps for Students",
                 description: "Free weekend coding workshops for high school and university students to explore programming.",
-                image: "https://images.unsplash.com/photo-1517048676732-d65bc937f952?w=700&q=80",
+                image: image7,
                 stats: "500+ students reached"
               },
               {
                 title: "Tech Career Awareness",
                 description: "School visits and seminars to showcase diverse career paths in technology and inspire young minds.",
-                image: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=700&q=80",
+                image: image8,
                 stats: "20+ schools partnered"
               },
               {
                 title: "Internship Programs",
                 description: "Structured internships that provide real-world experience and a pathway to full-time employment.",
-                image: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=700&q=80",
+                image: image9,
                 stats: "100+ interns trained"
               },
               {
                 title: "Youth Hackathons",
                 description: "Annual hackathons where young developers compete, learn, and build solutions to local challenges.",
-                image: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=700&q=80",
+                image: image10,
                 stats: "200+ participants"
               },
               {
                 title: "STEM Workshops",
                 description: "Interactive workshops introducing science, technology, engineering, and math concepts to young learners.",
-                image: "https://images.unsplash.com/photo-1509062522246-3755977927d7?w=700&q=80",
+                image: image11,
                 stats: "300+ workshop attendees"
               }
             ].map((program, index) => (
@@ -306,7 +325,7 @@ function EmpoweringPage() {
       <section className="relative h-96 overflow-hidden">
         <div className="absolute inset-0">
           <img 
-            src="https://images.unsplash.com/photo-1559027615-cd4628902d4a?w=1600&q=80" 
+            src={image12} 
             alt="Community impact"
             className="w-full h-full object-cover"
           />
@@ -342,17 +361,17 @@ function EmpoweringPage() {
               {
                 title: "Community Tech Hubs",
                 description: "Creating accessible spaces where communities can learn, collaborate, and innovate together.",
-                image: "https://images.unsplash.com/photo-1556761175-b413da4baf72?w=600&q=80"
+                image: image13
               },
               {
                 title: "Open Source Contributions",
                 description: "Contributing to global open-source projects while building local expertise and reputation.",
-                image: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=600&q=80"
+                image: image14
               },
               {
                 title: "Knowledge Sharing",
                 description: "Regular meetups, workshops, and conferences to share knowledge across the tech community.",
-                image: "https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=600&q=80"
+                image: image15
               }
             ].map((initiative, index) => (
               <div 
@@ -379,7 +398,7 @@ function EmpoweringPage() {
             <div className="relative">
               <div className="overflow-hidden rounded-2xl shadow-2xl">
                 <img 
-                  src="https://images.unsplash.com/photo-1551434678-e076c223a692?w=800&q=80" 
+                  src={image16} 
                   alt="Economic empowerment"
                   className="w-full h-[500px] object-cover"
                 />
@@ -449,19 +468,19 @@ function EmpoweringPage() {
               {
                 name: "Divine Uwimana",
                 role: "Senior Developer",
-                image: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=400&q=80",
+                image: image17,
                 story: "From a recent graduate with no job prospects to leading complex projects for international clients. Abytech gave me the skills and confidence to pursue my dreams."
               },
               {
                 name: "Eric Niyonzima",
                 role: "Full-Stack Engineer",
-                image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80",
+                image: image18,
                 story: "I was working in a completely different field. Through Abytech's training program, I discovered my passion for coding and transformed my career completely."
               },
               {
                 name: "Grace Mutesi",
                 role: "Tech Lead",
-                image: "https://images.unsplash.com/photo-1594744803329-e58b31de8bf5?w=400&q=80",
+                image: image19,
                 story: "As a woman in tech, I faced many doubts. Abytech's supportive environment and mentorship helped me rise to a leadership position I never thought possible."
               }
             ].map((story, index) => (
@@ -491,7 +510,7 @@ function EmpoweringPage() {
       <section className="relative h-screen flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0">
           <img 
-            src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=1600&q=80" 
+            src={image9} 
             alt="Join the movement"
             className="w-full h-full object-cover"
           />

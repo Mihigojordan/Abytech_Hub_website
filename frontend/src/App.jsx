@@ -19,26 +19,13 @@ import StoryImpactCulturePage from "./pages/about us/Storyimpactculturepage";
 import MissionVisionPage from "./pages/about us/VisionAndVision";
 import Whoweare from "./components/home/Whoweare";
 import WhoWeArePage from "./pages/about us/WhoWeArePage";
-import AnalysisService from "./pages/services/Analysisservice";
-import CybersecurityService from "./pages/services/Cybersecurityservice";
-import SoftwareDevelopmentService from "./pages/services/Softwaredevelopmentservice";
-import DatabaseManagementService from "./pages/services/Databasemanagementservice";
-import UIUXDesignService from "./pages/services/Uiuxdesignservice";
-import WebHostingService from "./pages/services/Webhostingservice";
-import IoTSolutionsService from "./pages/services/otsolutionsservice";
-import DevOpsAutomationService from "./pages/services/Devopsautomationservice";
-import AcademicTraining from "./pages/Programs/AcademicTraining";
-import AmazonCloud from "./pages/Programs/AmazonCloud";
-import Apprenticeship from "./pages/Programs/Apprenticeship";
-import Ciscotraining from "./pages/Programs/Ciscotraining";
-import OneMonthTraining from "./pages/Programs/Onemonthtraining";
-import ThreeMonthTraining from "./pages/Programs/Threemonthtraining";
-import SixMonthTraining from "./pages/Programs/Sixmonthtraining";
+const Services = lazy(() => import("./pages/services/Services"));
+const Training = lazy(() => import("./pages/Programs/Training"));
 
 // Pages (Lazy)
 const HomePage = lazy(() => import("./pages/HomePage"));
 const ContactUs = lazy(() => import("./pages/ContactUs"));
-const BlogPage = lazy(() => import("./pages/blogs/BlogPage"));
+const BlogPage = lazy(() => import("./pages/blogs/Insights"));
 const BlogSingle = lazy(() => import("./pages/blogs/Blogsingle"));
 const ServicePage = lazy(() => import("./pages/services/ServicePage"));
 const ServiceSingle = lazy(() => import("./pages/services/ServiceSingle"));
@@ -104,19 +91,11 @@ const router = createBrowserRouter([
         ),
       },
       { path: "blogs", element: <SuspenseWrapper><BlogPage /></SuspenseWrapper> },
+      { path: "insights", element: <SuspenseWrapper><BlogPage /></SuspenseWrapper> },
       { path: "blog/:id", element: <SuspenseWrapper><BlogSingle /></SuspenseWrapper> },
 
-      // service 
-      { path: "services", element: <SuspenseWrapper><ServicePage /></SuspenseWrapper> },
-
-      { path: "analysis-service", element: <SuspenseWrapper><AnalysisService /></SuspenseWrapper> },
-      { path: "cyber-security", element: <SuspenseWrapper>< CybersecurityService /></SuspenseWrapper> },
-      { path: "software-development", element: <SuspenseWrapper><SoftwareDevelopmentService /></SuspenseWrapper> },
-      { path: "Databasemanagement", element: <SuspenseWrapper><DatabaseManagementService /></SuspenseWrapper> },
-      { path: "ui&uxdesign", element: <SuspenseWrapper><UIUXDesignService /></SuspenseWrapper> },
-      { path: "webandapphost", element: <SuspenseWrapper><WebHostingService /></SuspenseWrapper> },
-      { path: "iotsolution", element: <SuspenseWrapper><IoTSolutionsService /></SuspenseWrapper> },
-      { path: "devops", element: <SuspenseWrapper><DevOpsAutomationService /></SuspenseWrapper> },
+      // services
+      { path: "services", element: <SuspenseWrapper><Services /></SuspenseWrapper> },
 
 
       // about 
@@ -135,15 +114,8 @@ const router = createBrowserRouter([
       { path: "team-member", element: <SuspenseWrapper><TeamMember /></SuspenseWrapper> },
 
 
-      // taining programms 
-      { path: "Academic", element: <SuspenseWrapper><AcademicTraining /></SuspenseWrapper> },
-      { path: "amazon", element: <SuspenseWrapper><AmazonCloud /></SuspenseWrapper> },
-      { path: "Apprenticeship", element: <SuspenseWrapper><Apprenticeship /></SuspenseWrapper> },
-      { path: "ciscotraining", element: <SuspenseWrapper><Ciscotraining /></SuspenseWrapper> },
-
-      { path: "onemonth", element: <SuspenseWrapper><OneMonthTraining /></SuspenseWrapper> },
-      { path: "threemonths", element: <SuspenseWrapper><ThreeMonthTraining /></SuspenseWrapper> },
-      { path: "sixmonths", element: <SuspenseWrapper><SixMonthTraining /></SuspenseWrapper> },
+      // training programs 
+      { path: "training", element: <SuspenseWrapper><Training /></SuspenseWrapper> },
 
 
 
