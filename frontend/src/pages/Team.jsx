@@ -3,12 +3,12 @@ import { Mail, Star } from "lucide-react";
 import Header from "../components/header";
 import Image1 from '../assets/mihi.jpg';
 import Image2 from '../assets/honore.jpg';
-import Image3 from '../assets/serge.jpg';
+import Image3 from '../assets/serge.png';
 import Image4 from '../assets/sadiki.jpg';
 import Image5 from '../assets/kibasha.jpeg';
-import Image6 from '../assets/fabrice.jpg';
-import Image7 from '../assets/david.jpeg';
-import Image8 from '../assets/sadiki.jpg';
+import Image6 from '../assets/niyigena.jpeg';
+import Image7 from '../assets/fabrice.jpg';
+import Image8 from '../assets/david.jpeg';
 
 const TeamMembersPage = () => {
   useEffect(() => {
