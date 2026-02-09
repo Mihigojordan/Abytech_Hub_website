@@ -7,6 +7,10 @@ import {
   FiChevronDown,
 } from "react-icons/fi";
 import Logo from "../assets/tran.png";
+import navImage1 from "../assets/images/navbar/image1.png";
+import navImage2 from "../assets/images/navbar/image2.png";
+import navImage3 from "../assets/images/navbar/image3.png";
+import navImage4 from "../assets/images/navbar/image4.png";
 
 function NavBar() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -34,7 +38,7 @@ function NavBar() {
   const dropdownMenus = {
     about: {
       title: "About AbyTech",
-      image: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&auto=format&fit=crop&q=80",
+      image: navImage1,
       links: [
         { name: "Who We Are", path: "/about-us", desc: "Learn about our story" },
         { name: "Our Values", path: "/values", desc: "What drives us forward" },
@@ -45,7 +49,7 @@ function NavBar() {
     },
     services: {
       title: "Our Services",
-      image: "https://images.unsplash.com/photo-1551434678-e076c223a692?w=800&auto=format&fit=crop&q=80",
+      image: navImage2,
       isScroll: true,
       rootPath: "/services",
       links: [
@@ -61,7 +65,7 @@ function NavBar() {
     },
     training: {
       title: "Training Programs",
-      image: "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=800&auto=format&fit=crop&q=80",
+      image: navImage3,
       isScroll: true,
       rootPath: "/training",
       links: [
@@ -75,7 +79,7 @@ function NavBar() {
     },
     insights: {
       title: "News & Insights",
-      image: "https://images.unsplash.com/photo-1495020689067-958852a7765e?w=800&auto=format&fit=crop&q=80",
+      image: navImage4,
       isScroll: true,
       rootPath: "/insights",
       links: [

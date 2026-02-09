@@ -1,6 +1,14 @@
 import React, { useEffect } from "react";
 import Header from "../../components/header";
 import { Element } from "react-scroll";
+import image1 from "../../assets/images/service/image7.png";
+import image2 from "../../assets/images/service/image5.png";
+import image3 from "../../assets/images/service/image3.png";
+import image4 from "../../assets/images/service/image1.png";
+import image5 from "../../assets/images/service/image4.png";
+import image6 from "../../assets/images/service/image2.png";
+import image7 from "../../assets/images/service/image6.png";
+import image8 from "../../assets/images/service/image8.png";
 
 const Services = () => {
   useEffect(() => {
@@ -16,7 +24,7 @@ const Services = () => {
       id: "analysis",
       title: "Data Analysis",
       description: "Transform your data into actionable insights with our comprehensive analysis services.",
-      image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&h=600&fit=crop",
+      image: image1,
       features: [
         "Infrastructure assessment and optimization",
         "Performance bottleneck identification",
@@ -28,7 +36,7 @@ const Services = () => {
       id: "cybersecurity",
       title: "Cyber Security",
       description: "Comprehensive security solutions to protect your digital assets and stay ahead of cyber threats.",
-      image: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800&h=600&fit=crop",
+      image: image2,
       features: [
         "Real-time threat monitoring",
         "Penetration testing & Security Audits",
@@ -40,7 +48,7 @@ const Services = () => {
       id: "software-development",
       title: "Software Development",
       description: "Custom software solutions tailored to your business needs, from mobile apps to enterprise systems.",
-      image: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&h=600&fit=crop",
+      image: image3,
       features: [
         "Full-stack web & mobile development",
         "Scalable architecture design",
@@ -52,7 +60,7 @@ const Services = () => {
       id: "database-management",
       title: "Database Management",
       description: "Expert database solutions for optimal performance, reliability, and secure data storage.",
-      image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&h=600&fit=crop",
+      image: image4,
       features: [
         "Normalized schema design & architecture",
         "Performance tuning & Query optimization",
@@ -64,7 +72,7 @@ const Services = () => {
       id: "ui-ux-design",
       title: "UI/UX Design",
       description: "Create exceptional user experiences that delight users and drive business results.",
-      image: "https://images.unsplash.com/photo-1559028012-481c04fa702d?w=800&h=600&fit=crop",
+      image: image5,
       features: [
         "User research & Persona development",
         "Wireframing & High-fidelity prototyping",
@@ -76,7 +84,7 @@ const Services = () => {
       id: "web-hosting",
       title: "Web & App Hosting",
       description: "Reliable hosting solutions and seamless application deployment services.",
-      image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&h=600&fit=crop",
+      image: image6,
       features: [
         "Shared & VPS hosting solutions",
         "App Store & Play Store publishing",
@@ -88,7 +96,7 @@ const Services = () => {
       id: "iot-solutions",
       title: "IoT Solutions",
       description: "Connect and control your devices with intelligent IoT and automation solutions.",
-      image: "https://images.unsplash.com/photo-1558002038-1055907df827?w=800&h=600&fit=crop",
+      image: image7,
       features: [
         "Smart home & Building automation",
         "Industrial IoT (IIoT) solutions",
@@ -100,7 +108,7 @@ const Services = () => {
       id: "devops",
       title: "DevOps & Automation",
       description: "Streamline your development lifecycle with modern DevOps and automation practices.",
-      image: "https://images.unsplash.com/photo-1667372393119-3d4c48d07fc9?w=800&h=600&fit=crop",
+      image: image8,
       features: [
         "CI/CD pipeline setup & Automation",
         "Infrastructure as Code (Terraform/Ansible)",
@@ -154,7 +162,7 @@ const Services = () => {
                   ))}
                 </div>
                 <button className="bg-[#ff5a00] hover:bg-[#ff7a30] text-white px-8 py-4 rounded-full font-bold transition-all transform hover:scale-105 shadow-lg group">
-                  Get Started 
+                  Get Started
                   <span className="inline-block ml-2 group-hover:translate-x-1 transition-transform">→</span>
                 </button>
               </div>

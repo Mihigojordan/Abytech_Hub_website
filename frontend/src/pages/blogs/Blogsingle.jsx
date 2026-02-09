@@ -95,7 +95,7 @@ const BlogSingle = () => {
         return (
             <div className='w-full bg-slate-50 min-h-screen'>
                 <Header title="Content Not Found" path="insights / error" />
-                <div className="max-w-4xl mx-auto px-6 py-16 text-center">
+                <div className="max-w-7xl mx-auto px-6 py-16 text-center">
                     <h1 className="text-4xl font-black text-slate-900 mb-4">Content Not Found</h1>
                     <p className="text-slate-600 mb-8">The content you're looking for doesn't exist or has been removed.</p>
                     <Link to="/insights" className="inline-flex items-center gap-2 text-[#ff5a00] hover:text-slate-900 font-bold transition-colors">
@@ -110,7 +110,7 @@ const BlogSingle = () => {
         <div className='w-full bg-slate-50 min-h-screen text-black'>
             <Header title="Insight Detail" path="insights / detail" />
 
-            <div className="max-w-4xl mx-auto px-6 py-16">
+            <div className="max-w-7xl mx-auto px-6 py-16">
                 {/* Back Button */}
                 <Link to="/insights" className="inline-flex items-center gap-2 text-slate-500 hover:text-[#ff5a00] font-bold mb-10 transition-colors group">
                     <FiArrowLeft className="group-hover:-translate-x-2 transition-transform" /> Back to Insights
