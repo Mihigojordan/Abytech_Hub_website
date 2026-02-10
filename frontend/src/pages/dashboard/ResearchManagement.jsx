@@ -230,28 +230,28 @@ const ResearchManagement = () => {
     <div className="bg-white rounded-xl border border-gray-100 shadow-sm w-full">
       <div className="overflow-x-auto">
         <table className="w-full text-xs">
-          <thead style={{ backgroundColor: 'rgba(81, 96, 146, 0.05)' }}>
+          <thead style={{ backgroundColor: 'rgba(249, 115, 22, 0.05)' }}>
             <tr>
               <th className="text-left py-3 px-4 font-semibold cursor-pointer hover:bg-gray-50 transition-colors"
-                style={{ color: 'rgb(81, 96, 146)' }}
+                style={{ color: 'rgb(249, 115, 22)' }}
                 onClick={() => { setSortBy('title'); setSortOrder(sortBy === 'title' ? (sortOrder === 'asc' ? 'desc' : 'asc') : 'asc'); }}>
                 <div className="flex items-center space-x-1">
                   <span>Title</span>
                   <ChevronDown className={`w-3 h-3 transition-transform ${sortBy === 'title' ? (sortOrder === 'asc' ? 'rotate-180' : '') : 'opacity-40'}`} />
                 </div>
               </th>
-              <th className="text-left py-3 px-4 font-semibold" style={{ color: 'rgb(81, 96, 146)' }}>Type</th>
-              <th className="text-left py-3 px-4 font-semibold" style={{ color: 'rgb(81, 96, 146)' }}>Status</th>
-              <th className="text-left py-3 px-4 font-semibold hidden md:table-cell" style={{ color: 'rgb(81, 96, 146)' }}>Owner</th>
+              <th className="text-left py-3 px-4 font-semibold" style={{ color: 'rgb(249, 115, 22)' }}>Type</th>
+              <th className="text-left py-3 px-4 font-semibold" style={{ color: 'rgb(249, 115, 22)' }}>Status</th>
+              <th className="text-left py-3 px-4 font-semibold hidden md:table-cell" style={{ color: 'rgb(249, 115, 22)' }}>Owner</th>
               <th className="text-left py-3 px-4 font-semibold cursor-pointer hover:bg-gray-50 transition-colors hidden lg:table-cell"
-                style={{ color: 'rgb(81, 96, 146)' }}
+                style={{ color: 'rgb(249, 115, 22)' }}
                 onClick={() => { setSortBy('createdAt'); setSortOrder(sortBy === 'createdAt' ? (sortOrder === 'asc' ? 'desc' : 'asc') : 'asc'); }}>
                 <div className="flex items-center space-x-1">
                   <span>Created</span>
                   <ChevronDown className={`w-3 h-3 transition-transform ${sortBy === 'createdAt' ? (sortOrder === 'asc' ? 'rotate-180' : '') : 'opacity-40'}`} />
                 </div>
               </th>
-              <th className="text-right py-3 px-4 font-semibold" style={{ color: 'rgb(81, 96, 146)' }}>Actions</th>
+              <th className="text-right py-3 px-4 font-semibold" style={{ color: 'rgb(249, 115, 22)' }}>Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
@@ -326,7 +326,7 @@ const ResearchManagement = () => {
                 whileHover={{ rotate: 360 }}
                 transition={{ duration: 0.5 }}
                 className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
-                style={{ backgroundColor: 'rgba(81, 96, 146, 0.1)' }}
+                style={{ backgroundColor: 'rgba(249, 115, 22, 0.1)' }}
               >
                 {getTypeIcon(research.type)}
               </motion.div>
@@ -395,7 +395,7 @@ const ResearchManagement = () => {
         >
           <div className="flex items-center justify-between">
             <div className="flex-1 min-w-0 flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: 'rgba(81, 96, 146, 0.1)' }}>
+              <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: 'rgba(249, 115, 22, 0.1)' }}>
                 {getTypeIcon(research.type)}
               </div>
               <div className="flex-1 min-w-0">
@@ -490,7 +490,7 @@ const ResearchManagement = () => {
                 ? 'text-white font-semibold shadow-sm'
                 : 'text-gray-600 bg-white border border-gray-200 hover:bg-gray-50'
                 }`}
-              style={currentPage === page ? { backgroundColor: 'rgb(81, 96, 146)' } : {}}
+              style={currentPage === page ? { backgroundColor: 'rgb(249, 115, 22)' } : {}}
             >
               {page}
             </motion.button>
@@ -524,8 +524,8 @@ const ResearchManagement = () => {
       label: 'Total Research',
       value: stats.total,
       icon: Beaker,
-      color: 'rgb(81, 96, 146)',
-      bgColor: 'rgba(81, 96, 146, 0.1)',
+      color: 'rgb(249, 115, 22)',
+      bgColor: 'rgba(249, 115, 22, 0.1)',
       gradient: 'from-blue-500 to-indigo-600'
     },
     {
@@ -578,7 +578,7 @@ const ResearchManagement = () => {
                   animate={{ rotate: [0, 10, -10, 0] }}
                   transition={{ duration: 2, repeat: Infinity, repeatDelay: 5 }}
                 >
-                  <Sparkles className="w-5 h-5" style={{ color: 'rgb(81, 96, 146)' }} />
+                  <Sparkles className="w-5 h-5" style={{ color: 'rgb(249, 115, 22)' }} />
                 </motion.div>
                 <h1 className="text-xl sm:text-2xl font-bold text-[rgb(81,96,146)] bg-clip-text">
                   Research Management
@@ -700,7 +700,7 @@ const ResearchManagement = () => {
                     ? 'text-white shadow-md'
                     : 'text-gray-500 hover:text-gray-700 hover:bg-white'
                     }`}
-                  style={viewMode === 'table' ? { backgroundColor: 'rgb(81, 96, 146)' } : {}}
+                  style={viewMode === 'table' ? { backgroundColor: 'rgb(249, 115, 22)' } : {}}
                   title="Table View"
                 >
                   <Table className="w-4 h-4" />
@@ -713,7 +713,7 @@ const ResearchManagement = () => {
                     ? 'text-white shadow-md'
                     : 'text-gray-500 hover:text-gray-700 hover:bg-white'
                     }`}
-                  style={viewMode === 'grid' ? { backgroundColor: 'rgb(81, 96, 146)' } : {}}
+                  style={viewMode === 'grid' ? { backgroundColor: 'rgb(249, 115, 22)' } : {}}
                   title="Grid View"
                 >
                   <Grid3X3 className="w-4 h-4" />
@@ -726,7 +726,7 @@ const ResearchManagement = () => {
                     ? 'text-white shadow-md'
                     : 'text-gray-500 hover:text-gray-700 hover:bg-white'
                     }`}
-                  style={viewMode === 'list' ? { backgroundColor: 'rgb(81, 96, 146)' } : {}}
+                  style={viewMode === 'list' ? { backgroundColor: 'rgb(249, 115, 22)' } : {}}
                   title="List View"
                 >
                   <List className="w-4 h-4" />
@@ -818,7 +818,7 @@ const ResearchManagement = () => {
                 animate={{ rotate: 360 }}
                 transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
                 className="w-8 h-8 border-3 border-t-transparent rounded-full"
-                style={{ borderColor: 'rgb(81, 96, 146)', borderTopColor: 'transparent', borderWidth: '3px' }}
+                style={{ borderColor: 'rgb(249, 115, 22)', borderTopColor: 'transparent', borderWidth: '3px' }}
               />
               <span className="text-xs text-gray-600 font-medium">Loading researches...</span>
             </div>
@@ -924,7 +924,7 @@ const ResearchManagement = () => {
                     animate={{ rotate: 360 }}
                     transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
                     className="w-12 h-12 border-4 border-t-transparent rounded-full"
-                    style={{ borderColor: 'rgb(81, 96, 146)', borderTopColor: 'transparent' }}
+                    style={{ borderColor: 'rgb(249, 115, 22)', borderTopColor: 'transparent' }}
                   />
                   <span className="text-gray-700 text-sm font-semibold">Processing...</span>
                 </div>

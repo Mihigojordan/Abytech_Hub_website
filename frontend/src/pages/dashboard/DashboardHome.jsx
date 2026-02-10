@@ -249,8 +249,8 @@ const DashboardHome = ({ role }) => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100 flex items-center justify-center">
         <div className="flex flex-col items-center space-y-3">
-          <RefreshCw className="w-8 h-8 animate-spin" style={{ color: 'rgb(81, 96, 146)' }} />
-          <span className="text-sm font-medium" style={{ color: 'rgb(81, 96, 146)' }}>Loading dashboard...</span>
+          <RefreshCw className="w-8 h-8 animate-spin text-orange-500" />
+          <span className="text-sm font-medium text-orange-500">Loading dashboard...</span>
         </div>
       </div>
     );
@@ -317,12 +317,10 @@ const DashboardHome = ({ role }) => {
                       setShowCustomFilter(true);
                     }
                   }}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                    filterType === btn.value
-                      ? 'text-white shadow-md'
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${filterType === btn.value
+                      ? 'bg-orange-500 text-white shadow-md'
                       : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                  }`}
-                  style={filterType === btn.value ? { backgroundColor: 'rgb(81, 96, 146)' } : {}}
+                    }`}
                 >
                   {btn.label}
                 </button>
@@ -370,8 +368,7 @@ const DashboardHome = ({ role }) => {
                     }
                     setFilterType('custom');
                   }}
-                  className="px-3 py-1.5 text-white rounded-lg text-xs font-medium hover:opacity-90 transition-all"
-                  style={{ backgroundColor: 'rgb(81, 96, 146)' }}
+                  className="px-3 py-1.5 bg-orange-500 text-white rounded-lg text-xs font-medium hover:bg-orange-600 transition-all"
                 >
                   Apply Filter
                 </button>
@@ -440,8 +437,8 @@ const DashboardHome = ({ role }) => {
                   dashboardData.reports.map((report) => (
                     <div key={report.id} className="flex items-center justify-between p-3 bg-slate-50/50 rounded-lg hover:bg-slate-100/50 transition-all group">
                       <div className="flex items-center gap-2.5 flex-1 min-w-0">
-                        <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                          <FileText className="w-4 h-4 text-[#ff5a00]" />
+                        <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <FileText className="w-4 h-4 text-orange-500" />
                         </div>
                         <div className="min-w-0 flex-1">
                           <p className="font-semibold text-slate-900 text-xs truncate">{report.title}</p>
@@ -451,8 +448,7 @@ const DashboardHome = ({ role }) => {
                       <div className="flex items-center gap-1.5 flex-shrink-0">
                         <button
                           onClick={() => handlePreviewReport(report)}
-                          className="p-1.5 hover:bg-blue-100 rounded-lg transition-all"
-                          style={{ color: 'rgb(81, 96, 146)' }}
+                          className="p-1.5 text-orange-500 hover:bg-orange-100 rounded-lg transition-all"
                           title="Preview Report"
                         >
                           <Eye className="w-3.5 h-3.5" />
@@ -475,8 +471,7 @@ const DashboardHome = ({ role }) => {
               <div className="mt-3 pt-3 border-t border-slate-100">
                 <button
                   onClick={() => window.location.href = '/admin/dashboard/report'}
-                  className="w-full text-xs font-medium py-2 hover:opacity-80 transition-all"
-                  style={{ color: 'rgb(81, 96, 146)' }}
+                  className="w-full text-xs font-medium text-orange-500 py-2 hover:text-orange-600 transition-all"
                 >
                   View All Reports →
                 </button>
@@ -529,8 +524,7 @@ const DashboardHome = ({ role }) => {
               <div className="mt-3 pt-3 border-t border-slate-100">
                 <button
                   onClick={() => window.location.href = '/admin/dashboard/expense'}
-                  className="w-full text-xs font-medium py-2 hover:opacity-80 transition-all"
-                  style={{ color: 'rgb(81, 96, 146)' }}
+                  className="w-full text-xs font-medium text-orange-500 py-2 hover:text-orange-600 transition-all"
                 >
                   View All Expenses →
                 </button>
@@ -548,8 +542,7 @@ const DashboardHome = ({ role }) => {
                 <h3 className="text-sm font-bold text-slate-900">Admin Overview</h3>
                 <button
                   onClick={() => window.location.href = '/admin/dashboard/users'}
-                  className="text-xs font-medium hover:opacity-80"
-                  style={{ color: 'rgb(81, 96, 146)' }}
+                  className="text-xs font-medium text-orange-500 hover:text-orange-600"
                 >
                   View Details
                 </button>
@@ -560,7 +553,7 @@ const DashboardHome = ({ role }) => {
                 {[...new Set([...dashboardData.reports, ...dashboardData.expenses].map(item => item.admin?.id))]
                   .map((adminId) => {
                     const admin = dashboardData.reports.find(r => r.admin?.id === adminId)?.admin ||
-                                  dashboardData.expenses.find(e => e.admin?.id === adminId)?.admin;
+                      dashboardData.expenses.find(e => e.admin?.id === adminId)?.admin;
                     const adminReports = dashboardData.reports.filter(r => r.admin?.id === adminId).length;
                     const adminExpenses = dashboardData.expenses.filter(e => e.admin?.id === adminId).length;
                     return {
@@ -618,8 +611,7 @@ const DashboardHome = ({ role }) => {
               <div className="mt-3 pt-3 border-t border-slate-100">
                 <button
                   onClick={() => window.location.href = '/admin/dashboard/expense'}
-                  className="w-full text-xs font-medium py-2 hover:opacity-80 transition-all"
-                  style={{ color: 'rgb(81, 96, 146)' }}
+                  className="w-full text-xs font-medium text-orange-500 py-2 hover:text-orange-600 transition-all"
                 >
                   View All Metrics →
                 </button>

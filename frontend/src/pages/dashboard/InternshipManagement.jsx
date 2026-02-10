@@ -9,7 +9,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import internshipService from '../../services/internshipService';
 
-const PRIMARY_COLOR = 'rgb(81, 96, 146)';
+const PRIMARY_COLOR = 'rgb(249, 115, 22)';
 const PRIMARY_LIGHT = 'rgba(81, 96, 146, 0.1)';
 
 const STATUS_CONFIG = {
@@ -214,13 +214,13 @@ const InternshipManagement = () => {
         <table className="w-full text-sm">
           <thead style={{ backgroundColor: 'rgba(81, 96, 146, 0.05)' }}>
             <tr>
-              <th className="text-left py-4 px-6 font-semibold text-[rgb(81,96,146)]">Applicant</th>
-              <th className="text-left py-4 px-6 font-semibold text-[rgb(81,96,146)] hidden md:table-cell">Type</th>
-              <th className="text-left py-4 px-6 font-semibold text-[rgb(81,96,146)]">Period</th>
-              <th className="text-left py-4 px-6 font-semibold text-[rgb(81,96,146)]">Status</th>
-              <th className="text-left py-4 px-6 font-semibold text-[rgb(81,96,146)] hidden lg:table-cell">Score</th>
-              <th className="text-left py-4 px-6 font-semibold text-[rgb(81,96,146)]">Applied</th>
-              <th className="text-right py-4 px-6 font-semibold text-[rgb(81,96,146)]">Actions</th>
+              <th className="text-left py-4 px-6 font-semibold text-orange-500">Applicant</th>
+              <th className="text-left py-4 px-6 font-semibold text-orange-500 hidden md:table-cell">Type</th>
+              <th className="text-left py-4 px-6 font-semibold text-orange-500">Period</th>
+              <th className="text-left py-4 px-6 font-semibold text-orange-500">Status</th>
+              <th className="text-left py-4 px-6 font-semibold text-orange-500 hidden lg:table-cell">Score</th>
+              <th className="text-left py-4 px-6 font-semibold text-orange-500">Applied</th>
+              <th className="text-right py-4 px-6 font-semibold text-orange-500">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
@@ -234,7 +234,7 @@ const InternshipManagement = () => {
               >
                 <td className="py-4 px-6">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-[rgb(81,96,146)] text-white font-medium flex items-center justify-center flex-shrink-0">
+                    <div className="w-10 h-10 rounded-full bg-orange-500 text-white font-medium flex items-center justify-center flex-shrink-0">
                       {app.fullName?.charAt(0) || '?'}
                     </div>
                     <div>
@@ -325,7 +325,7 @@ const InternshipManagement = () => {
           <div className="relative">
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-3 flex-1">
-                <div className="w-12 h-12 rounded-full bg-[rgb(81,96,146)] text-white font-medium flex items-center justify-center flex-shrink-0">
+                <div className="w-12 h-12 rounded-full bg-orange-500 text-white font-medium flex items-center justify-center flex-shrink-0">
                   {app.fullName?.charAt(0) || '?'}
                 </div>
                 <div className="min-w-0">
@@ -421,7 +421,7 @@ const InternshipManagement = () => {
         >
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-4 flex-1 min-w-0">
-              <div className="w-12 h-12 rounded-full bg-[rgb(81,96,146)] text-white font-medium flex items-center justify-center flex-shrink-0">
+              <div className="w-12 h-12 rounded-full bg-orange-500 text-white font-medium flex items-center justify-center flex-shrink-0">
                 {app.fullName?.charAt(0) || '?'}
               </div>
 
@@ -508,7 +508,7 @@ const InternshipManagement = () => {
                 >
                   <Sparkles className="w-6 h-6" style={{ color: PRIMARY_COLOR }} />
                 </motion.div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-[rgb(81,96,146)]">Internship Applications</h1>
+                <h1 className="text-2xl sm:text-3xl font-bold text-orange-500">Internship Applications</h1>
               </div>
               <p className="text-sm text-gray-600">Review and manage incoming internship applications</p>
             </div>
@@ -540,7 +540,7 @@ const InternshipManagement = () => {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setViewMode('table')}
-                  className={`p-2.5 rounded transition-all ${viewMode === 'table' ? 'bg-[rgb(81,96,146)] text-white shadow-sm' : 'text-gray-600 hover:bg-white'}`}
+                  className={`p-2.5 rounded transition-all ${viewMode === 'table' ? 'bg-orange-500 text-white shadow-sm' : 'text-gray-600 hover:bg-white'}`}
                   title="Table View"
                 >
                   <TableIcon className="w-5 h-5" />
@@ -549,7 +549,7 @@ const InternshipManagement = () => {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setViewMode('grid')}
-                  className={`p-2.5 rounded transition-all ${viewMode === 'grid' ? 'bg-[rgb(81,96,146)] text-white shadow-sm' : 'text-gray-600 hover:bg-white'}`}
+                  className={`p-2.5 rounded transition-all ${viewMode === 'grid' ? 'bg-orange-500 text-white shadow-sm' : 'text-gray-600 hover:bg-white'}`}
                   title="Grid View"
                 >
                   <Grid3X3 className="w-5 h-5" />
@@ -558,7 +558,7 @@ const InternshipManagement = () => {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setViewMode('list')}
-                  className={`p-2.5 rounded transition-all ${viewMode === 'list' ? 'bg-[rgb(81,96,146)] text-white shadow-sm' : 'text-gray-600 hover:bg-white'}`}
+                  className={`p-2.5 rounded transition-all ${viewMode === 'list' ? 'bg-orange-500 text-white shadow-sm' : 'text-gray-600 hover:bg-white'}`}
                   title="List View"
                 >
                   <List className="w-5 h-5" />
@@ -614,7 +614,7 @@ const InternshipManagement = () => {
                 placeholder="Search by name, email, institution..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 text-sm border border-gray-200 rounded-lg focus:border-[rgb(81,96,146)] focus:ring-2 focus:ring-[rgb(81,96,146)]/20 transition-all"
+                className="w-full pl-12 pr-4 py-3 text-sm border border-gray-200 rounded-lg focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
               />
               {searchTerm && (
                 <button
@@ -634,7 +634,7 @@ const InternshipManagement = () => {
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="w-full pl-11 pr-4 py-3 text-sm border border-gray-200 rounded-lg focus:border-[rgb(81,96,146)] focus:ring-2 focus:ring-[rgb(81,96,146)]/20 appearance-none bg-white cursor-pointer"
+                  className="w-full pl-11 pr-4 py-3 text-sm border border-gray-200 rounded-lg focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 appearance-none bg-white cursor-pointer"
                 >
                   <option value="">All Statuses</option>
                   {Object.entries(STATUS_CONFIG).map(([key, { label }]) => (
@@ -650,7 +650,7 @@ const InternshipManagement = () => {
                 <select
                   value={typeFilter}
                   onChange={(e) => setTypeFilter(e.target.value)}
-                  className="w-full pl-11 pr-4 py-3 text-sm border border-gray-200 rounded-lg focus:border-[rgb(81,96,146)] focus:ring-2 focus:ring-[rgb(81,96,146)]/20 appearance-none bg-white cursor-pointer"
+                  className="w-full pl-11 pr-4 py-3 text-sm border border-gray-200 rounded-lg focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 appearance-none bg-white cursor-pointer"
                 >
                   <option value="">All Types</option>
                   {Object.entries(TYPE_CONFIG).map(([key, { label }]) => (
@@ -754,11 +754,10 @@ const InternshipManagement = () => {
                         whileHover={{ scale: 1.08 }}
                         whileTap={{ scale: 0.95 }}
                         onClick={() => setCurrentPage(page)}
-                        className={`px-4 py-2 text-sm rounded-md ${
-                          currentPage === page
-                            ? 'bg-[rgb(81,96,146)] text-white font-medium shadow-sm'
+                        className={`px-4 py-2 text-sm rounded-md ${currentPage === page
+                            ? 'bg-orange-500 text-white font-medium shadow-sm'
                             : 'text-gray-600 hover:bg-gray-50 border border-gray-200'
-                        }`}
+                          }`}
                       >
                         {page}
                       </motion.button>
@@ -800,11 +799,10 @@ const InternshipManagement = () => {
             className="fixed top-6 right-6 z-50"
           >
             <div
-              className={`flex items-center gap-3 px-6 py-4 rounded-xl shadow-2xl text-sm border ${
-                operationStatus.type === 'success'
+              className={`flex items-center gap-3 px-6 py-4 rounded-xl shadow-2xl text-sm border ${operationStatus.type === 'success'
                   ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-300 text-green-800'
                   : 'bg-gradient-to-r from-red-50 to-rose-50 border-red-300 text-red-800'
-              }`}
+                }`}
             >
               {operationStatus.type === 'success' ? (
                 <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />

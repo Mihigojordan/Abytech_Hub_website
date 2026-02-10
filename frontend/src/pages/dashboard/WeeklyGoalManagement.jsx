@@ -50,7 +50,7 @@ const WeeklyGoalManagement = () => {
   const [operationLoading, setOperationLoading] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
 
-  const primaryColor = 'rgb(81, 96, 146)';
+  const primaryColor = 'rgb(249, 115, 22)';
 
   useEffect(() => {
     loadGoals();
@@ -227,7 +227,7 @@ const WeeklyGoalManagement = () => {
                 >
                   <Sparkles className="w-5 h-5" style={{ color: primaryColor }} />
                 </motion.div>
-                <h1 className="text-xl sm:text-2xl font-bold text-[rgb(81,96,146)]">
+                <h1 className="text-xl sm:text-2xl font-bold text-orange-500">
                   Weekly Goals
                 </h1>
               </div>
@@ -248,7 +248,7 @@ const WeeklyGoalManagement = () => {
                 whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => { resetForm(); setShowModal(true); }}
-                className="flex items-center space-x-2 text-white px-4 py-2 rounded-lg font-medium shadow-md hover:shadow-lg text-sm transition-all bg-[rgb(81,96,146)]"
+                className="flex items-center space-x-2 text-white px-4 py-2 rounded-lg font-medium shadow-md hover:shadow-lg text-sm transition-all bg-orange-500 hover:bg-orange-600"
               >
                 <Plus className="w-4 h-4" />
                 <span>New Goal</span>
@@ -303,7 +303,7 @@ const WeeklyGoalManagement = () => {
                 placeholder="Search goals by title..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-200 rounded-lg focus:border-[rgb(81,96,146)] focus:ring-2 focus:ring-[rgb(81,96,146)]/20 transition-all"
+                className="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-200 rounded-lg focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
               />
               {searchTerm && (
                 <button
@@ -322,7 +322,7 @@ const WeeklyGoalManagement = () => {
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-200 rounded-lg focus:border-[rgb(81,96,146)] focus:ring-2 focus:ring-[rgb(81,96,146)]/20 appearance-none bg-white cursor-pointer transition-all"
+                className="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-200 rounded-lg focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 appearance-none bg-white cursor-pointer transition-all"
               >
                 <option value="">All Statuses</option>
                 {Object.entries(STATUS_CONFIG).map(([key, { label }]) => (
@@ -378,7 +378,7 @@ const WeeklyGoalManagement = () => {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => { resetForm(); setShowModal(true); }}
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-[rgb(81,96,146)] text-white rounded-lg shadow-md hover:shadow-lg text-sm font-medium"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-orange-500 text-white rounded-lg shadow-md hover:shadow-lg text-sm font-medium hover:bg-orange-600"
             >
               <Plus className="w-4 h-4" />
               Create Goal
@@ -474,7 +474,7 @@ const WeeklyGoalManagement = () => {
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                             onClick={() => { setSelectedGoal(goal); setShowTaskModal(true); }}
-                            className="text-[rgb(81,96,146)] hover:text-[rgb(60,75,120)] text-xs font-medium flex items-center gap-1"
+                            className="text-orange-500 hover:text-orange-600 text-xs font-medium flex items-center gap-1"
                           >
                             <Plus className="w-3.5 h-3.5" />
                             Add
@@ -507,7 +507,7 @@ const WeeklyGoalManagement = () => {
                     {tasks.length === 0 && (
                       <button
                         onClick={() => { setSelectedGoal(goal); setShowTaskModal(true); }}
-                        className="w-full py-2.5 mt-2 border border-dashed border-gray-200 rounded-lg text-xs text-gray-500 hover:border-[rgb(81,96,146)] hover:text-[rgb(81,96,146)] transition-colors"
+                        className="w-full py-2.5 mt-2 border border-dashed border-gray-200 rounded-lg text-xs text-gray-500 hover:border-orange-500 hover:text-orange-500 transition-colors"
                       >
                         + Add first task
                       </button>
@@ -557,11 +557,10 @@ const WeeklyGoalManagement = () => {
                     whileHover={{ scale: 1.08 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => setCurrentPage(page)}
-                    className={`px-3.5 py-1.5 text-sm rounded-md ${
-                      currentPage === page
-                        ? 'bg-[rgb(81,96,146)] text-white font-medium shadow-sm'
-                        : 'text-gray-600 hover:bg-gray-50 border border-gray-200'
-                    }`}
+                    className={`px-3.5 py-1.5 text-sm rounded-md ${currentPage === page
+                      ? 'bg-orange-500 text-white font-medium shadow-sm'
+                      : 'text-gray-600 hover:bg-gray-50 border border-gray-200'
+                      }`}
                   >
                     {page}
                   </motion.button>
@@ -738,7 +737,7 @@ const WeeklyGoalManagement = () => {
                     required
                     value={formData.title}
                     onChange={e => setFormData({ ...formData, title: e.target.value })}
-                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:border-[rgb(81,96,146)] focus:ring-2 focus:ring-[rgb(81,96,146)]/20 transition-all"
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
                   />
                 </div>
 
@@ -748,7 +747,7 @@ const WeeklyGoalManagement = () => {
                     value={formData.description}
                     onChange={e => setFormData({ ...formData, description: e.target.value })}
                     rows={3}
-                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:border-[rgb(81,96,146)] focus:ring-2 focus:ring-[rgb(81,96,146)]/20 transition-all resize-none"
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all resize-none"
                   />
                 </div>
 
@@ -760,7 +759,7 @@ const WeeklyGoalManagement = () => {
                       required
                       value={formData.weekStart}
                       onChange={e => setFormData({ ...formData, weekStart: e.target.value })}
-                      className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:border-[rgb(81,96,146)] focus:ring-2 focus:ring-[rgb(81,96,146)]/20"
+                      className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20"
                     />
                   </div>
                   <div>
@@ -770,7 +769,7 @@ const WeeklyGoalManagement = () => {
                       required
                       value={formData.weekEnd}
                       onChange={e => setFormData({ ...formData, weekEnd: e.target.value })}
-                      className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:border-[rgb(81,96,146)] focus:ring-2 focus:ring-[rgb(81,96,146)]/20"
+                      className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20"
                     />
                   </div>
                 </div>
@@ -780,7 +779,7 @@ const WeeklyGoalManagement = () => {
                   <select
                     value={formData.status}
                     onChange={e => setFormData({ ...formData, status: e.target.value })}
-                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:border-[rgb(81,96,146)] focus:ring-2 focus:ring-[rgb(81,96,146)]/20 appearance-none bg-white"
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 appearance-none bg-white"
                   >
                     {Object.entries(STATUS_CONFIG).map(([key, { label }]) => (
                       <option key={key} value={key}>{label}</option>
@@ -798,7 +797,7 @@ const WeeklyGoalManagement = () => {
                   </button>
                   <button
                     type="submit"
-                    className="px-6 py-2.5 text-sm font-medium bg-[rgb(81,96,146)] text-white rounded-lg hover:bg-[rgb(60,75,120)] shadow-md transition-all"
+                    className="px-6 py-2.5 text-sm font-medium bg-orange-500 text-white rounded-lg hover:bg-orange-600 shadow-md transition-all"
                   >
                     {selectedGoal ? 'Update Goal' : 'Create Goal'}
                   </button>
@@ -895,7 +894,7 @@ const WeeklyGoalManagement = () => {
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={() => { setShowViewModal(false); setShowTaskModal(true); }}
-                      className="flex items-center gap-1.5 text-[rgb(81,96,146)] hover:text-[rgb(60,75,120)] text-sm font-medium"
+                      className="flex items-center gap-1.5 text-orange-500 hover:text-orange-600 text-sm font-medium"
                     >
                       <Plus className="w-4 h-4" />
                       Add Task
@@ -1007,7 +1006,7 @@ const WeeklyGoalManagement = () => {
                     value={newTask.title}
                     onChange={e => setNewTask({ ...newTask, title: e.target.value })}
                     placeholder="Enter task title"
-                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:border-[rgb(81,96,146)] focus:ring-2 focus:ring-[rgb(81,96,146)]/20 transition-all"
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
                     required
                   />
                 </div>
@@ -1019,7 +1018,7 @@ const WeeklyGoalManagement = () => {
                     onChange={e => setNewTask({ ...newTask, description: e.target.value })}
                     rows={3}
                     placeholder="Task details or notes..."
-                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:border-[rgb(81,96,146)] focus:ring-2 focus:ring-[rgb(81,96,146)]/20 transition-all resize-none"
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all resize-none"
                   />
                 </div>
 
@@ -1034,11 +1033,10 @@ const WeeklyGoalManagement = () => {
                   <button
                     onClick={handleAddTask}
                     disabled={!newTask.title.trim()}
-                    className={`px-6 py-2.5 text-sm font-medium rounded-lg text-white transition-all shadow-md ${
-                      newTask.title.trim()
-                        ? 'bg-[rgb(81,96,146)] hover:bg-[rgb(60,75,120)]'
-                        : 'bg-gray-300 cursor-not-allowed'
-                    }`}
+                    className={`px-6 py-2.5 text-sm font-medium rounded-lg text-white transition-all shadow-md ${newTask.title.trim()
+                      ? 'bg-orange-500 hover:bg-orange-600'
+                      : 'bg-gray-300 cursor-not-allowed'
+                      }`}
                   >
                     Add Task
                   </button>

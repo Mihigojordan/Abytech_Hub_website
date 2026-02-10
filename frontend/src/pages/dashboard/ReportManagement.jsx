@@ -336,23 +336,23 @@ const ReportDashboard = () => {
           <thead style={{ backgroundColor: 'rgba(81, 96, 146, 0.05)' }}>
             <tr>
               <th className="text-left py-3 px-4 font-semibold cursor-pointer hover:bg-gray-50 transition-colors"
-                style={{ color: 'rgb(81, 96, 146)' }}
+                style={{ color: 'rgb(249, 115, 22)' }}
                 onClick={() => { setSortBy('title'); setSortOrder(sortBy === 'title' ? (sortOrder === 'asc' ? 'desc' : 'asc') : 'asc'); }}>
                 <div className="flex items-center space-x-1">
                   <span>Title</span>
                   <ChevronDown className={`w-3 h-3 transition-transform ${sortBy === 'title' ? (sortOrder === 'asc' ? 'rotate-180' : '') : 'opacity-40'}`} />
                 </div>
               </th>
-              <th className="text-left py-3 px-4 font-semibold hidden md:table-cell" style={{ color: 'rgb(81, 96, 146)' }}>Created By</th>
+              <th className="text-left py-3 px-4 font-semibold hidden md:table-cell" style={{ color: 'rgb(249, 115, 22)' }}>Created By</th>
               <th className="text-left py-3 px-4 font-semibold cursor-pointer hover:bg-gray-50 transition-colors"
-                style={{ color: 'rgb(81, 96, 146)' }}
+                style={{ color: 'rgb(249, 115, 22)' }}
                 onClick={() => { setSortBy('createdAt'); setSortOrder(sortBy === 'createdAt' ? (sortOrder === 'asc' ? 'desc' : 'asc') : 'asc'); }}>
                 <div className="flex items-center space-x-1">
                   <span>Created</span>
                   <ChevronDown className={`w-3 h-3 transition-transform ${sortBy === 'createdAt' ? (sortOrder === 'asc' ? 'rotate-180' : '') : 'opacity-40'}`} />
                 </div>
               </th>
-              <th className="text-right py-3 px-4 font-semibold" style={{ color: 'rgb(81, 96, 146)' }}>Actions</th>
+              <th className="text-right py-3 px-4 font-semibold" style={{ color: 'rgb(249, 115, 22)' }}>Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
@@ -423,7 +423,7 @@ const ReportDashboard = () => {
                 className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
                 style={{ backgroundColor: 'rgba(81, 96, 146, 0.1)' }}
               >
-                <FileText className="w-5 h-5" style={{ color: 'rgb(81, 96, 146)' }} />
+                <FileText className="w-5 h-5" style={{ color: 'rgb(249, 115, 22)' }} />
               </motion.div>
             </div>
 
@@ -493,7 +493,7 @@ const ReportDashboard = () => {
           <div className="flex items-center justify-between">
             <div className="flex-1 min-w-0 flex items-center space-x-3">
               <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: 'rgba(81, 96, 146, 0.1)' }}>
-                <FileText className="w-5 h-5" style={{ color: 'rgb(81, 96, 146)' }} />
+                <FileText className="w-5 h-5" style={{ color: 'rgb(249, 115, 22)' }} />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center flex-wrap gap-2 mb-1">
@@ -588,7 +588,7 @@ const ReportDashboard = () => {
                 ? 'text-white font-semibold shadow-sm'
                 : 'text-gray-600 bg-white border border-gray-200 hover:bg-gray-50'
                 }`}
-              style={currentPage === page ? { backgroundColor: 'rgb(81, 96, 146)' } : {}}
+              style={currentPage === page ? { backgroundColor: 'rgb(249, 115, 22)' } : {}}
             >
               {page}
             </motion.button>
@@ -622,7 +622,7 @@ const ReportDashboard = () => {
       label: 'Total Reports',
       value: stats.totalReports,
       icon: FileText,
-      color: 'rgb(81, 96, 146)',
+      color: 'rgb(249, 115, 22)',
       bgColor: 'rgba(81, 96, 146, 0.1)',
       loading: loadingStats.total,
       gradient: 'from-blue-500 to-indigo-600'
@@ -681,9 +681,9 @@ const ReportDashboard = () => {
                   animate={{ rotate: [0, 10, -10, 0] }}
                   transition={{ duration: 2, repeat: Infinity, repeatDelay: 5 }}
                 >
-                  <Sparkles className="w-5 h-5" style={{ color: 'rgb(81, 96, 146)' }} />
+                  <Sparkles className="w-5 h-5" style={{ color: 'rgb(249, 115, 22)' }} />
                 </motion.div>
-                <h1 className="text-xl sm:text-2xl font-bold text-[rgb(81,96,146)] bg-clip-text">
+                <h1 className="text-xl sm:text-2xl font-bold text-orange-500 bg-clip-text">
                   Report Management
                 </h1>
               </div>
@@ -715,7 +715,7 @@ const ReportDashboard = () => {
                 whileTap={{ scale: 0.95 }}
                 onClick={handleCreateReport}
                 disabled={operationLoading}
-                className="flex items-center space-x-2 text-white px-3 py-2 rounded-lg font-medium shadow-md hover:shadow-lg text-xs transition-all bg-[rgb(81,96,146)] hover:to-indigo-700"
+                className="flex items-center space-x-2 text-white px-3 py-2 rounded-lg font-medium shadow-md hover:shadow-lg text-xs transition-all bg-orange-500 hover:bg-orange-600"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Create Report</span>
@@ -807,7 +807,7 @@ const ReportDashboard = () => {
                     ? 'text-white shadow-md'
                     : 'text-gray-500 hover:text-gray-700 hover:bg-white'
                     }`}
-                  style={viewMode === 'table' ? { backgroundColor: 'rgb(81, 96, 146)' } : {}}
+                  style={viewMode === 'table' ? { backgroundColor: 'rgb(249, 115, 22)' } : {}}
                   title="Table View"
                 >
                   <Table className="w-4 h-4" />
@@ -820,7 +820,7 @@ const ReportDashboard = () => {
                     ? 'text-white shadow-md'
                     : 'text-gray-500 hover:text-gray-700 hover:bg-white'
                     }`}
-                  style={viewMode === 'grid' ? { backgroundColor: 'rgb(81, 96, 146)' } : {}}
+                  style={viewMode === 'grid' ? { backgroundColor: 'rgb(249, 115, 22)' } : {}}
                   title="Grid View"
                 >
                   <Grid3X3 className="w-4 h-4" />
@@ -833,7 +833,7 @@ const ReportDashboard = () => {
                     ? 'text-white shadow-md'
                     : 'text-gray-500 hover:text-gray-700 hover:bg-white'
                     }`}
-                  style={viewMode === 'list' ? { backgroundColor: 'rgb(81, 96, 146)' } : {}}
+                  style={viewMode === 'list' ? { backgroundColor: 'rgb(249, 115, 22)' } : {}}
                   title="List View"
                 >
                   <List className="w-4 h-4" />
@@ -946,7 +946,7 @@ const ReportDashboard = () => {
                 animate={{ rotate: 360 }}
                 transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
                 className="w-8 h-8 border-3 border-t-transparent rounded-full"
-                style={{ borderColor: 'rgb(81, 96, 146)', borderTopColor: 'transparent', borderWidth: '3px' }}
+                style={{ borderColor: 'rgb(249, 115, 22)', borderTopColor: 'transparent', borderWidth: '3px' }}
               />
               <span className="text-xs text-gray-600 font-medium">Loading reports...</span>
             </div>
@@ -1057,7 +1057,7 @@ const ReportDashboard = () => {
                     animate={{ rotate: 360 }}
                     transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
                     className="w-12 h-12 border-4 border-t-transparent rounded-full"
-                    style={{ borderColor: 'rgb(81, 96, 146)', borderTopColor: 'transparent' }}
+                    style={{ borderColor: 'rgb(249, 115, 22)', borderTopColor: 'transparent' }}
                   />
                   <span className="text-gray-700 text-sm font-semibold">Processing...</span>
                 </div>
