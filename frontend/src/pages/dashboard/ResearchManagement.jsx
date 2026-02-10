@@ -580,7 +580,7 @@ const ResearchManagement = () => {
                 >
                   <Sparkles className="w-5 h-5" style={{ color: 'rgb(249, 115, 22)' }} />
                 </motion.div>
-                <h1 className="text-xl sm:text-2xl font-bold text-[rgb(81,96,146)] bg-clip-text">
+                <h1 className="text-xl sm:text-2xl font-bold text-orange-500 bg-clip-text">
                   Research Management
                 </h1>
               </div>
@@ -612,7 +612,7 @@ const ResearchManagement = () => {
                 whileTap={{ scale: 0.95 }}
                 onClick={handleCreateResearch}
                 disabled={operationLoading}
-                className="flex items-center space-x-2 text-white px-3 py-2 rounded-lg font-medium shadow-md hover:shadow-lg text-xs transition-all bg-[rgb(81,96,146)] hover:to-indigo-700"
+                className="flex items-center space-x-2 text-white px-3 py-2 rounded-lg font-medium shadow-md hover:shadow-lg text-xs transition-all bg-orange-500 hover:bg-orange-600"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>New Research</span>
