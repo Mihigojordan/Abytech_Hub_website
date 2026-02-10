@@ -53,7 +53,7 @@ const AdminAvatar = ({ admin, size = 'md' }: AdminAvatarProps) => {
 
   return (
     <div className={`${sizeClass} rounded-full flex items-center justify-center`} style={{ backgroundColor: 'rgba(81, 96, 146, 0.1)' }}>
-      <User className={iconSize} style={{ color: 'rgb(81, 96, 146)' }} />
+      <User className={iconSize} style={{ color: 'rgb(249, 115, 22)' }} />
     </div>
   );
 };
@@ -206,12 +206,12 @@ const EmployeeDirectoryPage = () => {
         <table className="w-full text-xs">
           <thead style={{ backgroundColor: 'rgba(81, 96, 146, 0.05)' }}>
             <tr>
-              <th className="text-left py-2 px-3 font-semibold" style={{ color: 'rgb(81, 96, 146)' }}>Admin</th>
-              <th className="text-left py-2 px-3 font-semibold hidden md:table-cell" style={{ color: 'rgb(81, 96, 146)' }}>Email</th>
-              <th className="text-left py-2 px-3 font-semibold hidden lg:table-cell" style={{ color: 'rgb(81, 96, 146)' }}>Phone</th>
-              <th className="text-left py-2 px-3 font-semibold hidden xl:table-cell" style={{ color: 'rgb(81, 96, 146)' }}>Created</th>
-              <th className="text-left py-2 px-3 font-semibold" style={{ color: 'rgb(81, 96, 146)' }}>Status</th>
-              <th className="text-right py-2 px-3 font-semibold" style={{ color: 'rgb(81, 96, 146)' }}>Actions</th>
+              <th className="text-left py-2 px-3 font-semibold" style={{ color: 'rgb(249, 115, 22)' }}>Admin</th>
+              <th className="text-left py-2 px-3 font-semibold hidden md:table-cell" style={{ color: 'rgb(249, 115, 22)' }}>Email</th>
+              <th className="text-left py-2 px-3 font-semibold hidden lg:table-cell" style={{ color: 'rgb(249, 115, 22)' }}>Phone</th>
+              <th className="text-left py-2 px-3 font-semibold hidden xl:table-cell" style={{ color: 'rgb(249, 115, 22)' }}>Created</th>
+              <th className="text-left py-2 px-3 font-semibold" style={{ color: 'rgb(249, 115, 22)' }}>Status</th>
+              <th className="text-right py-2 px-3 font-semibold" style={{ color: 'rgb(249, 115, 22)' }}>Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
@@ -337,7 +337,7 @@ const EmployeeDirectoryPage = () => {
   );
 
   const statusTabs = [
-    { key: 'ALL', label: 'All Admins', count: allAdmins.length, color: 'rgb(81, 96, 146)' },
+    { key: 'ALL', label: 'All Admins', count: allAdmins.length, color: 'rgb(249, 115, 22)' },
     { key: 'ACTIVE', label: 'Active', count: allAdmins.filter(a => a.status === 'ACTIVE').length, color: 'rgb(34, 197, 94)' },
     { key: 'INACTIVE', label: 'Inactive', count: allAdmins.filter(a => a.status === 'INACTIVE').length, color: 'rgb(239, 68, 68)' },
   ] as const;
@@ -349,7 +349,7 @@ const EmployeeDirectoryPage = () => {
         <div className="mx-auto px-4 sm:px-6 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-xl sm:text-2xl font-bold" style={{ color: 'rgb(81, 96, 146)' }}>Admin Directory</h1>
+              <h1 className="text-xl sm:text-2xl font-bold" style={{ color: 'rgb(249, 115, 22)' }}>Admin Directory</h1>
               <p className="text-xs text-gray-600 mt-1">Contact and manage admin information</p>
             </div>
             <div className="flex items-center space-x-2">
@@ -431,7 +431,7 @@ const EmployeeDirectoryPage = () => {
                     whileTap={{ scale: 0.95 }}
                     onClick={() => setViewMode(mode)}
                     className={`p-2 rounded-lg transition-colors ${viewMode === mode ? 'text-white shadow-sm' : 'text-gray-600 hover:bg-gray-100'}`}
-                    style={viewMode === mode ? { backgroundColor: 'rgb(81, 96, 146)' } : {}}
+                    style={viewMode === mode ? { backgroundColor: 'rgb(249, 115, 22)' } : {}}
                     title={`${mode.charAt(0).toUpperCase() + mode.slice(1)} View`}
                   >
                     {mode === 'table' && <Table className="w-4 h-4" />}
@@ -509,7 +509,7 @@ const EmployeeDirectoryPage = () => {
         {loading ? (
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12 text-center">
             <div className="inline-flex items-center space-x-2">
-              <div className="w-5 h-5 border-2 rounded-full animate-spin" style={{ borderColor: 'rgb(81, 96, 146)', borderTopColor: 'transparent' }}></div>
+              <div className="w-5 h-5 border-2 rounded-full animate-spin" style={{ borderColor: 'rgb(249, 115, 22)', borderTopColor: 'transparent' }}></div>
               <span className="text-xs text-gray-600">Loading admins...</span>
             </div>
           </div>
