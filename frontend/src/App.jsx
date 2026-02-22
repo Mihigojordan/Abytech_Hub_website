@@ -62,7 +62,7 @@ const EmployeeeDashboard = lazy(() => import("./pages/dashboard/EmployeeManageme
 const ReportDashboard = lazy(() => import("./pages/dashboard/ReportManagement"));
 const UpsertReportPage = lazy(() => import("./components/dashboard/report/UpsertReportPage"));
 const ReportViewPage = lazy(() => import("./components/dashboard/report/ReportViewPage"));
-const AdminProfilePage = lazy(() => import("./pages/ProfilePage"));
+const AdminProfilePage = lazy(() => import("./components/dashboard/profile/admin/ProfileSettings"));
 const AdminProfileEdit = lazy(() => import("./pages/EditProfilePage"));
 
 // Loading UI

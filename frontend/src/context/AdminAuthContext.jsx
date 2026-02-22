@@ -1,10 +1,7 @@
-import React, {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-} from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import adminAuthService from '../services/adminAuthService';
+import pushNotificationService from '../services/pushNotificationService';
+import { getClientDescription } from '../stores/detectDevice';
 import { API_URL } from '../api/api';
 
 export const AdminAuthContext = createContext({
@@ -18,6 +15,8 @@ export const AdminAuthContext = createContext({
   loginWithGoogle: () => {},
   subscribeToNotifications: () => Promise.resolve(),
   unsubscribeFromNotifications: () => Promise.resolve(),
+  unsubscribeAllDevices: () => Promise.resolve(),
+  getSubscriptions: () => Promise.resolve([]),
   isAuthenticated: false,
   isLocked: false,
   isLoading: true,
@@ -34,182 +33,183 @@ export const AdminAuthContextProvider = ({ children }) => {
   const updateAuthState = (authData) => {
     setUser(authData.user);
     setIsAuthenticated(authData.isAuthenticated);
-    setIsLocked(authData.isLocked);
-    setIsSubscribedToNotifications(!!authData.user?.subscription);
+    setIsLocked(authData.isLocked ?? false);
+    if (!authData.isAuthenticated) {
+      setIsSubscribedToNotifications(false);
+    }
   };
 
-  // Helper function to convert VAPID key
+  // 🔧 Helper: convert VAPID key
   const urlBase64ToUint8Array = (base64String) => {
-    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
     const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
     const rawData = window.atob(base64);
     return Uint8Array.from([...rawData].map((char) => char.charCodeAt(0)));
   };
 
-  // Subscribe to push notifications
-  const subscribeToNotifications = async () => {
-    if (!user?.id) {
-      throw new Error('User must be logged in to subscribe');
-    }
+  // 🔔 Subscribe to push notifications
+  const subscribeToNotifications = async (label) => {
+    if (!user?.id) throw new Error('Admin must be logged in to subscribe');
 
     try {
-      // 1. Check if browser supports notifications
       if (!('Notification' in window) || !('serviceWorker' in navigator)) {
-        throw new Error('Push notifications not supported');
+        throw new Error('Push notifications not supported in this browser');
       }
 
-      // 2. Request permission
       const permission = await Notification.requestPermission();
-      if (permission !== 'granted') {
-        throw new Error('Notification permission denied');
-      }
+      if (permission !== 'granted') throw new Error('Notification permission denied');
 
-      // 3. Wait for service worker to be ready
       const registration = await navigator.serviceWorker.ready;
 
-      // 4. Get VAPID public key from environment
       const publicVapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
-      if (!publicVapidKey) {
-        throw new Error('VAPID public key not configured');
-      }
+      if (!publicVapidKey) throw new Error('VAPID public key not configured');
 
-      // 5. Subscribe to push manager
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(publicVapidKey),
       });
 
-      // 6. Send subscription to backend
-      const response = await fetch(`${API_URL}/notifications/subscribe/${user.id}`, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
+      const subscriptionObject = subscription.toJSON();
+
+      // Detect Firefox vs Chrome encoding
+      const contentEncoding = subscriptionObject.keys
+        ? 'aes128gcm'
+        : 'aesgcm';
+
+      await pushNotificationService.subscribe({
+        userId: user.id,
+        type: 'ADMIN', // UserType
+        subscription: {
+          endpoint: subscriptionObject.endpoint,
+          p256dh: subscriptionObject.keys?.p256dh ?? null,
+          auth: subscriptionObject.keys?.auth ?? null,
+          contentEncoding,
         },
-        credentials: 'include', // Send cookies
-        body: JSON.stringify({ subscription }),
+        label: label || getClientDescription()?.description || 'Admin Device',
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to save subscription on server');
-      }
-
-      const data = await response.json();
-      
-      // Update user state with new subscription
-      setUser(data.admin);
       setIsSubscribedToNotifications(true);
-
-      console.log('✅ Successfully subscribed to push notifications');
-      return { success: true, message: 'Subscribed successfully' };
+      console.log('✅ Admin subscribed to push notifications');
+      return { success: true, message: 'Successfully subscribed to notifications' };
     } catch (error) {
       console.error('❌ Error subscribing to notifications:', error);
-      throw error;
+      throw new Error(error?.message || 'Failed to subscribe to notifications');
     }
   };
 
-  // Unsubscribe from push notifications
+  // 🔕 Unsubscribe current device
   const unsubscribeFromNotifications = async () => {
-    if (!user?.id) {
-      throw new Error('User must be logged in');
-    }
+    if (!user?.id) throw new Error('Admin must be logged in');
 
     try {
-      // 1. Unsubscribe from push manager
       const registration = await navigator.serviceWorker.ready;
       const subscription = await registration.pushManager.getSubscription();
-      
+
       if (subscription) {
+        const endpoint = subscription.endpoint;
         await subscription.unsubscribe();
+
+        await pushNotificationService.unsubscribeDevice({
+          userId: user.id,
+          type: 'ADMIN',
+          endpoint,
+        });
       }
 
-      // 2. Remove subscription from backend
-      const response = await fetch(`${API_URL}/notifications/unsubscribe/${user.id}`, {
-        method: 'DELETE',
-        credentials: 'include',
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to remove subscription from server');
-      }
-
-      // Update user state
-      setUser({ ...user, subscription: null });
       setIsSubscribedToNotifications(false);
-
-      console.log('✅ Successfully unsubscribed from push notifications');
-      return { success: true, message: 'Unsubscribed successfully' };
+      console.log('✅ Admin unsubscribed from push notifications');
+      return { success: true, message: 'Successfully unsubscribed from notifications' };
     } catch (error) {
       console.error('❌ Error unsubscribing from notifications:', error);
-      throw error;
+      throw new Error(error?.message || 'Failed to unsubscribe from notifications');
     }
   };
 
-  // Auto-subscribe on login (optional)
-  useEffect(() => {
-    const autoSubscribe = async () => {
-      // Only run if authenticated and not already subscribed
-      if (!isAuthenticated || isLoading || !user?.id || user?.subscription) {
-        return;
+  // 🔕 Unsubscribe all devices
+  const unsubscribeAllDevices = async () => {
+    if (!user?.id) throw new Error('Admin must be logged in');
+
+    try {
+      await pushNotificationService.unsubscribeAllDevices({
+        userId: user.id,
+        type: 'ADMIN',
+      });
+
+      const registration = await navigator.serviceWorker.ready;
+      const subscription = await registration.pushManager.getSubscription();
+      if (subscription) await subscription.unsubscribe();
+
+      setIsSubscribedToNotifications(false);
+      console.log('✅ All admin devices unsubscribed');
+      return { success: true, message: 'Successfully unsubscribed all devices' };
+    } catch (error) {
+      console.error('❌ Error unsubscribing all devices:', error);
+      throw new Error(error?.message || 'Failed to unsubscribe all devices');
+    }
+  };
+
+  // 📋 Get all subscriptions
+  const getSubscriptions = async () => {
+    if (!user?.id) throw new Error('Admin must be logged in');
+
+    try {
+      return await pushNotificationService.getSubscriptions(user.id, 'ADMIN');
+    } catch (error) {
+      console.error('❌ Error fetching subscriptions:', error);
+      throw new Error(error?.message || 'Failed to fetch subscriptions');
+    }
+  };
+
+  // 🔍 Check if current device is subscribed
+  const checkSubscriptionStatus = async () => {
+    if (!user?.id || !isAuthenticated) return;
+
+    try {
+      const registration = await navigator.serviceWorker.ready;
+      const subscription = await registration.pushManager.getSubscription();
+
+      if (subscription) {
+        const subscriptions = await pushNotificationService.getSubscriptions(user.id, 'ADMIN');
+        const isSubscribed = subscriptions.some((sub) => sub.endpoint === subscription.endpoint);
+        setIsSubscribedToNotifications(isSubscribed);
+      } else {
+        setIsSubscribedToNotifications(false);
       }
+    } catch (error) {
+      console.warn('Could not check subscription status:', error);
+      setIsSubscribedToNotifications(false);
+    }
+  };
 
-      // Check if user wants auto-subscribe (you can add a preference)
-      const autoSubscribeEnabled = localStorage.getItem('autoSubscribePush') === 'true';
-      
-      if (autoSubscribeEnabled) {
-        try {
-          await subscribeToNotifications();
-        } catch (error) {
-          console.warn('Auto-subscribe failed:', error);
-        }
-      }
-    };
-
-    autoSubscribe();
-  }, [isAuthenticated, isLoading, user]);
-
-  // Login with email/password
+  // 🔹 Login
   const login = async (data) => {
     try {
       const response = await adminAuthService.adminLogin(data);
-
       if (response?.authenticated) {
         const userProfile = await adminAuthService.getAdminProfile();
         if (userProfile?.admin) {
-          updateAuthState({
-            user: userProfile.admin,
-            isAuthenticated: true,
-            isLocked: false,
-          });
+          updateAuthState({ user: userProfile.admin, isAuthenticated: true, isLocked: false });
         }
       }
-
       return response;
     } catch (error) {
       throw new Error(error.message);
     }
   };
 
-  // Login with Google
+  // 🔹 Login with Google
   const loginWithGoogle = (popup = false, uri = null) => {
-    const redirectUri = uri;
-    const stateObj = { redirectUri, popup };
+    const stateObj = { redirectUri: uri, popup };
     const stateParam = encodeURIComponent(JSON.stringify(stateObj));
-
     const googleUrl = uri
       ? `${API_URL}/admin/google?state=${stateParam}`
       : `${API_URL}/admin/google`;
 
     if (popup) {
-      const popupWindow = window.open(
-        googleUrl,
-        'Google Login',
-        'width=500,height=600'
-      );
-
+      window.open(googleUrl, 'Google Login', 'width=500,height=600');
       window.addEventListener('message', (event) => {
         if (event.origin !== API_URL) return;
         const data = event.data;
-
         if (data.token) {
           localStorage.setItem('token', data.token);
           window.location.href = data.redirect;
@@ -222,6 +222,7 @@ export const AdminAuthContextProvider = ({ children }) => {
     }
   };
 
+  // 🔹 Logout
   const logout = async () => {
     try {
       const response = await adminAuthService.logout();
@@ -256,11 +257,7 @@ export const AdminAuthContextProvider = ({ children }) => {
   const updateAdmin = async (updateData) => {
     if (!user?.id) throw new Error('No logged-in admin to update');
     const updated = await adminAuthService.updateAdmin(user.id, updateData);
-    updateAuthState({
-      user: updated,
-      isAuthenticated: true,
-      isLocked: updated.isLocked || false,
-    });
+    updateAuthState({ user: updated, isAuthenticated: true, isLocked: updated.isLocked || false });
     return updated;
   };
 
@@ -276,11 +273,7 @@ export const AdminAuthContextProvider = ({ children }) => {
     try {
       const response = await adminAuthService.getAdminProfile();
       if (response?.authenticated && response.admin) {
-        updateAuthState({
-          user: response.admin,
-          isAuthenticated: true,
-          isLocked: response.admin.isLocked || false,
-        });
+        updateAuthState({ user: response.admin, isAuthenticated: true, isLocked: response.admin.isLocked || false });
       } else {
         updateAuthState({ user: null, isAuthenticated: false, isLocked: false });
       }
@@ -291,11 +284,33 @@ export const AdminAuthContextProvider = ({ children }) => {
     }
   };
 
+  useEffect(() => { checkAuthStatus(); }, []);
+
+  // 🔍 Check subscription status when authenticated
   useEffect(() => {
-    checkAuthStatus();
-  }, []);
+    if (isAuthenticated && !isLoading && user?.id) {
+      checkSubscriptionStatus();
+    }
+  }, [isAuthenticated, isLoading, user?.id]);
+
+  // 🔔 Auto-subscribe on login
+  useEffect(() => {
+    const autoSubscribe = async () => {
+      if (!isAuthenticated || isLoading || !user?.id || isSubscribedToNotifications) return;
+
+      try {
+        const client = getClientDescription();
+        await subscribeToNotifications(client?.description || 'Auto-subscribed admin device');
+      } catch (error) {
+        console.warn('Auto-subscribe failed:', error);
+      }
+    };
+
+    autoSubscribe();
+  }, [isAuthenticated, isLoading, user?.id, isSubscribedToNotifications]);
 
   const values = {
+    user,
     login,
     logout,
     lockAdmin,
@@ -305,10 +320,11 @@ export const AdminAuthContextProvider = ({ children }) => {
     loginWithGoogle,
     subscribeToNotifications,
     unsubscribeFromNotifications,
-    user,
-    isLoading,
+    unsubscribeAllDevices,
+    getSubscriptions,
     isAuthenticated,
     isLocked,
+    isLoading,
     isSubscribedToNotifications,
   };
 
@@ -321,8 +337,6 @@ export const AdminAuthContextProvider = ({ children }) => {
 
 export default function useAdminAuth() {
   const context = useContext(AdminAuthContext);
-  if (!context) {
-    throw new Error('useAdminAuth must be used within AdminAuthContextProvider');
-  }
+  if (!context) throw new Error('useAdminAuth must be used within AdminAuthContextProvider');
   return context;
 }

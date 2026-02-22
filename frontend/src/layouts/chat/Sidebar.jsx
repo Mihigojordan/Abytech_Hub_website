@@ -41,15 +41,15 @@ const Sidebar = ({ onConversationCreated }) => {
                     <button className="w-10 h-10 flex items-center justify-center text-dashboard-600 bg-dashboard-50 rounded-lg">
                         <MessageSquare className="w-5 h-5" />
                     </button>
-                    
+
                 </div>
 
                 <div className="flex flex-col items-center space-y-4">
-                 
+
                     <Avatar
                         avatar={currentUser?.profileImage}
-                        initial={currentUser?.name?.charAt(0)?.toUpperCase() || currentUser?.adminName?.charAt(0)?.toUpperCase() }
-                        name={currentUser?.name ||  currentUser?.adminName  || 'User'}
+                        initial={currentUser?.name?.charAt(0)?.toUpperCase() || currentUser?.adminName?.charAt(0)?.toUpperCase()}
+                        name={currentUser?.name || currentUser?.adminName || 'User'}
                         size="md"
                         online={false}
                     />
