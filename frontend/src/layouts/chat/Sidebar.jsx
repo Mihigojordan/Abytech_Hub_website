@@ -7,7 +7,7 @@ import useAdminAuth from '../../context/AdminAuthContext';
 /**
  * Sidebar layout component - left navigation bar with icons
  */
-const Sidebar = ({ onConversationCreated }) => {
+const Sidebar = ({ onConversationCreated, selectedChatId }) => {
     const [showCreateModal, setShowCreateModal] = useState(false);
     const { user: currentUser } = useAdminAuth();
 
@@ -20,7 +20,7 @@ const Sidebar = ({ onConversationCreated }) => {
 
     return (
         <>
-            <div className="w-16 bg-white border-r border-gray-200 flex flex-col items-center py-6 space-y-8">
+            <div className={`w-16 bg-white border-r border-gray-200 flex-col items-center py-6 space-y-8 h-full ${selectedChatId ? 'hidden md:flex' : 'flex'}`}>
                 <div className="w-10 h-10 bg-dashboard-600 rounded-lg flex items-center justify-center">
                     <MessageSquare className="w-6 h-6 text-white" />
                 </div>

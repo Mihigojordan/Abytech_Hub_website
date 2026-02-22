@@ -60,7 +60,7 @@ export const createUnifiedUploadConfig = (): MulterOptions => ({
     },
   }),
   fileFilter: (req, file, cb) => {
-    const allowedTypes = /jpeg|jpg|png|webp|pdf/;
+    const allowedTypes = /jpeg|jpg|png|webp|gif|svg|pdf|doc|docx|xls|xlsx|ppt|pptx|txt|csv|zip|rar|7z|mp4|mp3|wav|ogg/;
     const isValidExt = allowedTypes.test(
       path.extname(file.originalname).toLowerCase(),
     );

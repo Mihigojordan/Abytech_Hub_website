@@ -12,7 +12,7 @@ const CombinedMessage = ({ message, onMenuAction, showMenu, setShowMenu, onMedia
     const handleMediaClick = () => {
         const allMedia = [
             ...(message.images || []).map(url => ({ type: 'image', url })),
-            ...(message.files || []).map(f => ({ type: 'file', name: f.fileName, size: f.fileSize }))
+            ...(message.files || []).map(f => ({ type: 'file', name: f.fileName, size: f.fileSize, fileUrl: f.fileUrl, url: f }))
         ];
         onMediaView(allMedia, 0, message.timestamp);
     };
@@ -20,7 +20,7 @@ const CombinedMessage = ({ message, onMenuAction, showMenu, setShowMenu, onMedia
     const handleFileClick = (fileIndex) => {
         const allMedia = [
             ...(message.images || []).map(url => ({ type: 'image', url: url })),
-            ...(message.files || []).map(f => ({ type: 'file', name: f.fileName, size: f.fileSize }))
+            ...(message.files || []).map(f => ({ type: 'file', name: f.fileName, size: f.fileSize, fileUrl: f.fileUrl, url: f }))
         ];
         const index = (message.images?.length || 0) + fileIndex;
         onMediaView(allMedia, index, message.timestamp);
@@ -70,9 +70,9 @@ const CombinedMessage = ({ message, onMenuAction, showMenu, setShowMenu, onMedia
             <div className={`flex items-center text-xs ${message.isSent ? 'text-gray-400' : 'text-gray-500'}`}>
                 <Clock className="w-3 h-3 mr-1" />
                 {formatTime(message.timestamp)}
-                 {message.edited && (
-                            <span className="ml-2 italic">(edited)</span>
-                        )}
+                {message.edited && (
+                    <span className="ml-2 italic">(edited)</span>
+                )}
 
                 {/* Read receipts for sent messages */}
                 {message.isSent && (

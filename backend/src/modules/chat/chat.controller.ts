@@ -96,28 +96,27 @@ export class ChatController {
         const senderId = req.user?.id;
         const senderType = req.user?.type || 'ADMIN';
 
-        // Use local disk storage for images (no Cloudinary)
+        // Upload images to Cloudinary
         if (files?.chatImages && files.chatImages.length > 0) {
             dto.images = [];
             for (let i = 0; i < files.chatImages.length; i++) {
                 const file = files.chatImages[i];
-                // Store relative path from project root (e.g., 'uploads/chat_images/file.jpg')
-                const relativePath = file.path.replace(process.cwd() + '\\', '').replace(/\\/g, '/');
+                const result = await this.cloudinaryService.uploadChatImage(file.path);
                 dto.images.push({
-                    imageUrl: '/' + relativePath, // Serve with leading slash for static files
+                    imageUrl: result.secure_url,
                     imageOrder: i,
                 });
             }
         }
 
-        // Use local disk storage for files (no Cloudinary)
+        // Upload files to Cloudinary
         if (files?.chatFiles && files.chatFiles.length > 0) {
             const uploadedFiles: NonNullable<SendMessageDto['files']> = [];
             for (let i = 0; i < files.chatFiles.length; i++) {
                 const file = files.chatFiles[i];
-                // Store relative path from project root
-                const relativePath = file.path.replace(process.cwd() + '\\', '').replace(/\\/g, '/');
-                // Format file size as human-readable string (KB or MB)
+                const result = await this.cloudinaryService.uploadChatFile(file.path);
+
+                // Format file size as human-readable string
                 const sizeInBytes = file.size;
                 let formattedSize: string;
                 if (sizeInBytes >= 1024 * 1024) {
@@ -129,7 +128,7 @@ export class ChatController {
                 }
 
                 uploadedFiles.push({
-                    fileUrl: '/' + relativePath, // Serve with leading slash for static files
+                    fileUrl: result.secure_url,
                     fileName: file.originalname,
                     fileSize: formattedSize,
                     fileType: file.mimetype,

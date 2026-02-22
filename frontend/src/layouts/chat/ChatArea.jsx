@@ -50,7 +50,8 @@ const ChatArea = ({
     setMessageRef,
     unreadCount = 0,
     onConversationUpdated,
-    isSending = false
+    isSending = false,
+    onBack
 }) => {
     const [showAddMemberModal, setShowAddMemberModal] = useState(false);
     const [readByModal, setReadByModal] = useState({ isOpen: false, message: null });
@@ -79,7 +80,7 @@ const ChatArea = ({
 
     if (!selectedConversation) {
         return (
-            <div className="flex-1 flex items-center justify-center bg-gray-50">
+            <div className="flex-1 flex items-center justify-center bg-gray-50 h-full">
                 <div className="text-center px-8">
                     <div className="w-24 h-24 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-6">
                         <MessageSquare className="w-12 h-12 text-indigo-600" />
@@ -99,12 +100,13 @@ const ChatArea = ({
     }
 
     return (
-        <div className="flex-1 flex flex-col bg-white relative">
+        <div className="flex-1 flex flex-col bg-white relative h-full min-h-0">
             {/* Chat Header */}
             <ChatHeader
                 conversation={selectedConversation}
                 isTyping={isTyping}
                 onAddMember={selectedConversation?.isGroup ? () => setShowAddMemberModal(true) : null}
+                onBack={onBack}
             />
 
             {/* Messages Container */}

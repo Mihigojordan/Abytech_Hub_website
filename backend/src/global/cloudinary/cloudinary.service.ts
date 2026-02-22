@@ -15,7 +15,7 @@ export class CloudinaryService {
       const result = await cloudinary.uploader.upload(filePath, {
         folder: 'abytech/report',
         resource_type: 'raw',
-        type: 'upload', 
+        type: 'upload',
       });
 
       await unlink(filePath); // remove local file after upload
@@ -23,6 +23,46 @@ export class CloudinaryService {
       return result;
     } catch (error: any) {
       throw new InternalServerErrorException(error.message);
+    }
+  }
+
+  async uploadChatImage(filePath: string) {
+    try {
+      if (!fs.existsSync(filePath)) {
+        throw new BadRequestException('File not found');
+      }
+
+      const result = await cloudinary.uploader.upload(filePath, {
+        folder: 'abytech/chat/images',
+        resource_type: 'image',
+        type: 'upload',
+      });
+
+      await unlink(filePath);
+
+      return result;
+    } catch (error: any) {
+      throw new InternalServerErrorException(`Chat image upload failed: ${error.message}`);
+    }
+  }
+
+  async uploadChatFile(filePath: string) {
+    try {
+      if (!fs.existsSync(filePath)) {
+        throw new BadRequestException('File not found');
+      }
+
+      const result = await cloudinary.uploader.upload(filePath, {
+        folder: 'abytech/chat/files',
+        resource_type: 'raw',
+        type: 'upload',
+      });
+
+      await unlink(filePath);
+
+      return result;
+    } catch (error: any) {
+      throw new InternalServerErrorException(`Chat file upload failed: ${error.message}`);
     }
   }
 

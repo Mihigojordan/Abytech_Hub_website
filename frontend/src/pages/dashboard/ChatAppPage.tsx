@@ -7,6 +7,7 @@ import ChatArea from '../../layouts/chat/ChatArea';
 import DragDropOverlay from '../../components/dashboard/chat/ui/DragDropOverlay';
 import MediaViewer from '../../components/dashboard/chat/ui/MediaViewer';
 import ForwardModal from '../../components/dashboard/chat/ui/ForwardModal';
+import { API_URL } from '../../api/api';
 
 // Custom hooks
 import { useMessages } from '../../hooks/chat/useMessages';
@@ -719,11 +720,46 @@ const ChatApp = () => {
         }));
     };
 
-    const downloadMedia = (media: any) => {
-        const link = document.createElement('a');
-        link.href = media.url || '#';
-        link.download = media.name || 'download';
-        link.click();
+    const downloadMedia = async (media: any) => {
+        try {
+            // Resolve the actual URL (handles both relative and absolute URLs)
+            let url = '';
+            if (media.type === 'image') {
+                url = media.url?.imageUrl || media.url || '';
+            } else {
+                url = media.url?.fileUrl || media.fileUrl || media.url || '';
+            }
+
+            // If it's a relative URL, prepend the API base
+            if (url && !url.startsWith('http://') && !url.startsWith('https://')) {
+                const path = url.startsWith('/') ? url : `/${url}`;
+                url = `${API_URL}${path}`;
+            }
+
+            if (!url) return;
+
+            // Fetch the file as a blob for a real download
+            const response = await fetch(url);
+            const blob = await response.blob();
+            const blobUrl = window.URL.createObjectURL(blob);
+
+            const link = document.createElement('a');
+            link.href = blobUrl;
+            link.download = media.name || media.fileName || 'download';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            // Clean up the blob URL
+            window.URL.revokeObjectURL(blobUrl);
+        } catch (error) {
+            console.error('Download failed:', error);
+            // Fallback: open in new tab
+            const fallbackUrl = media.url?.imageUrl || media.url?.fileUrl || media.fileUrl || media.url || '';
+            if (fallbackUrl) {
+                window.open(fallbackUrl.startsWith('http') ? fallbackUrl : `${API_URL}${fallbackUrl}`, '_blank');
+            }
+        }
     };
 
     // Helper function to check if a user is online
@@ -752,6 +788,11 @@ const ChatApp = () => {
         };
     }, [selectedChatId, conversations, isUserOnline]);
 
+    const handleBack = () => {
+        setSelectedChatId(null);
+        navigate('/admin/dashboard/chat', { replace: true });
+    };
+
     const handleNewConversation = (conversation) => {
         setConversations(prev => ({
             ...prev,
@@ -762,8 +803,11 @@ const ChatApp = () => {
     };
 
     return (
-        <div className="flex h-screen bg-gray-100">
-            <Sidebar onConversationCreated={handleNewConversation} />
+        <div className="flex h-[90vh] xl:h-[92vh] bg-gray-100 overflow-hidden">
+            <Sidebar
+                onConversationCreated={handleNewConversation}
+                selectedChatId={selectedChatId}
+            />
 
             <ChatList
                 conversations={conversations}
@@ -780,47 +824,52 @@ const ChatApp = () => {
                 isLoading={loading}
             />
 
-            <ChatArea
-                selectedConversation={selectedConversation}
-                messages={messages}
-                hasMore={hasMore}
-                isLoadingMore={isLoadingMore}
-                isLoadingInitial={messagesLoading && messages.length === 0}
-                showScrollButton={showScrollButton}
-                unreadCount={unreadCounts[selectedChatId] || 0}
-                scrollToBottom={scrollToBottom}
-                scrollToMessage={scrollToMessage}
-                loadMoreTriggerRef={loadMoreTriggerRef}
-                messagesEndRef={messagesEndRef}
-                messagesContainerRef={messagesContainerRef}
-                messageInput={messageInput}
-                onMessageInputChange={handleInputChange}
-                onSendMessage={handleSendMessage}
-                textareaRef={textareaRef}
-                fileInputRef={fileInputRef}
-                imageInputRef={imageInputRef}
-                onFileUpload={handleFileUpload}
-                uploadedFiles={uploadedFiles}
-                onRemoveFile={removeFile}
-                onClearFiles={clearFiles}
-                editingMessage={editingMessage}
-                replyingTo={replyingTo}
-                onCancelEditReply={handleCancelEditReply}
-                selectionMode={selectionMode}
-                selectedMessages={selectedMessages}
-                onCancelSelection={clearSelection}
-                onBulkAction={handleBulkActionWrapper}
-                isTyping={isTyping}
-                showMenu={showMenu}
-                setShowMenu={setShowMenu}
-                onToggleSelection={handleToggleSelection}
-                onMessageAction={handleMessageActionWrapper}
-                onMediaView={handleMediaView}
-                allMessages={allMessages}
-                setMessageRef={setMessageRef}
-                isSending={isSending}
-            />
+            <div className={`flex-1 flex flex-col h-full min-w-0 ${!selectedChatId ? 'hidden md:flex' : 'flex'}`}>
+                <ChatArea
+                    selectedConversation={selectedConversation}
+                    messages={messages}
+                    hasMore={hasMore}
+                    isLoadingMore={isLoadingMore}
+                    isLoadingInitial={messagesLoading && messages.length === 0}
+                    showScrollButton={showScrollButton}
+                    unreadCount={unreadCounts[selectedChatId] || 0}
+                    scrollToBottom={scrollToBottom}
+                    scrollToMessage={scrollToMessage}
+                    loadMoreTriggerRef={loadMoreTriggerRef}
+                    messagesEndRef={messagesEndRef}
+                    messagesContainerRef={messagesContainerRef}
+                    messageInput={messageInput}
+                    onMessageInputChange={handleInputChange}
+                    onSendMessage={handleSendMessage}
+                    textareaRef={textareaRef}
+                    fileInputRef={fileInputRef}
+                    imageInputRef={imageInputRef}
+                    onFileUpload={handleFileUpload}
+                    uploadedFiles={uploadedFiles}
+                    onRemoveFile={removeFile}
+                    onClearFiles={clearFiles}
+                    editingMessage={editingMessage}
+                    replyingTo={replyingTo}
+                    onCancelEditReply={handleCancelEditReply}
+                    selectionMode={selectionMode}
+                    selectedMessages={selectedMessages}
+                    onCancelSelection={clearSelection}
+                    onBulkAction={handleBulkActionWrapper}
+                    isTyping={isTyping}
+                    showMenu={showMenu}
+                    setShowMenu={setShowMenu}
+                    onToggleSelection={handleToggleSelection}
+                    onMessageAction={handleMessageActionWrapper}
+                    onMediaView={handleMediaView}
+                    allMessages={allMessages}
+                    setMessageRef={setMessageRef}
+                    onConversationUpdated={fetchMessages}
+                    isSending={isSending}
+                    onBack={handleBack}
+                />
+            </div>
 
+            {/* Drag & Drop Overlay */}
             <DragDropOverlay isVisible={isDragging} />
 
             <MediaViewer

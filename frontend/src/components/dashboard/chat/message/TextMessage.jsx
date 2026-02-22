@@ -20,7 +20,7 @@ const TextMessage = ({ message, onMenuAction, showMenu, setShowMenu, selectionMo
                         <span className="italic">Forwarded</span>
                     </div>
                 )}
-                <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                <p className="text-sm whitespace-pre-wrap break-words overflow-wrap-anywhere">{message.content}</p>
                 <div className={`flex items-center justify-between text-xs mt-1 ${message.isSent ? 'text-gray-400' : 'text-white opacity-80'}`}>
                     <div className="flex items-center">
                         <Clock className="w-3 h-3 mr-1" />

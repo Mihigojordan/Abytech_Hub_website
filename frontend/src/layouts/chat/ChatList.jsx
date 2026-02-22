@@ -74,7 +74,7 @@ const ChatList = ({
     });
 
     return (
-        <div className="w-96 bg-gray-50 border-r border-gray-200 flex flex-col h-full">
+        <div className={`w-full md:w-96 bg-gray-50 border-r border-gray-200 flex flex-col h-full ${selectedChatId ? 'hidden md:flex' : 'flex'}`}>
             {/* Header with search */}
             <ChatListHeader
                 searchQuery={searchQuery}
