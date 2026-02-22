@@ -7,6 +7,7 @@ import { AdminAuthContextProvider } from './context/AdminAuthContext.jsx';
 import { SocketProvider } from './context/SocketContext.jsx';
 import { registerSW } from 'virtual:pwa-register';
 import { HelmetProvider } from 'react-helmet-async';
+import {NotificationProvider} from './context/NotificationContext.tsx'
 
 const updateSW = registerSW({
   onNeedRefresh() {
@@ -36,9 +37,12 @@ const updateSW = registerSW({
 createRoot(document.getElementById("root")).render(
   <StrictMode>
     <HelmetProvider>
+
       <SocketProvider serverUrl={import.meta.env.VITE_API_URL}>
         <AdminAuthContextProvider>
+      <NotificationProvider>
           <App />
+      </NotificationProvider>
         </AdminAuthContextProvider>
       </SocketProvider>
     </HelmetProvider>

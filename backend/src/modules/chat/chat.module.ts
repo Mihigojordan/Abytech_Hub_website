@@ -7,10 +7,12 @@ import { PrismaModule } from '../../prisma/prisma.module';
 import { CloudinaryService } from 'src/global/cloudinary/cloudinary.service';
 import { JwtModule } from '@nestjs/jwt';
 import { ChatAuthGuard } from 'src/guards/chatAuth.guard';
+import { NotificationModule } from '../notification/notification.module';
 
 @Module({
     imports: [
         PrismaModule,
+        NotificationModule,
         JwtModule.register({
             secret: process.env.Jwt_SECRET_KEY || 'secretkey',
             signOptions: { expiresIn: '7d' },

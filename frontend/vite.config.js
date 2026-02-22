@@ -67,6 +67,12 @@ export default defineConfig({
                         sizes: '192x192',
                         type: 'image/png'
                     },
+                        {
+                        src: '/pwa-192x192.png',
+                        sizes: '192x192',
+                        type: 'image/png',
+                        purpose:"monochrome"
+                    },
                     {
                         src: '/pwa-384x384.png',
                         sizes: '384x384',

@@ -2,6 +2,7 @@ import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CacheService } from './cache.service';
 import { ChatGateway } from './chat.gateway';
+import { NotificationService } from '../notification/notification.service';
 
 // Inline DTOs
 export interface CreateConversationDto {
@@ -47,6 +48,7 @@ export class ChatService {
         private cache: CacheService,
         @Inject(forwardRef(() => ChatGateway))
         private chatGateway: ChatGateway,
+        private notificationService: NotificationService,
     ) { }
 
     // ====================
@@ -472,6 +474,56 @@ export class ChatService {
         // Return updated conversation
         const updatedConversation = await this.getConversation(conversationId, requesterId, requesterType);
 
+        // Notify ALL participants about new members
+        // Fetch requester name
+        let requesterName = 'Someone';
+        if (requesterType === 'ADMIN') {
+            const admin = await this.prisma.admin.findUnique({ where: { id: requesterId } });
+            requesterName = admin?.adminName || 'Admin';
+        } else {
+            const user = await this.prisma.user.findUnique({ where: { id: requesterId } });
+            requesterName = user?.name || 'User';
+        }
+
+        // Fetch new members names for the message
+        const newMemberNames = [] as any;
+        for (const p of newParticipants) {
+            if (p.participantType === 'ADMIN') {
+                const admin = await this.prisma.admin.findUnique({ where: { id: p.participantId } }) as any;
+                if(admin){
+
+                    newMemberNames.push(admin?.adminName as any || 'Admin');
+                }
+            } else {
+                const user = await this.prisma.user.findUnique({ where: { id: p.participantId } }) as any;
+                if(user){
+
+                    newMemberNames.push(user?.name as any || 'User');
+                }
+            }
+        }
+
+        const notificationMessage = `Added ${newMemberNames.join(', ')} to the group`;
+
+        if (updatedConversation && updatedConversation.participants) {
+            const recipients = updatedConversation.participants.filter(p =>
+                !(p.participantId === requesterId && p.participantType === requesterType)
+            );
+
+            this.notificationService.createNotification({
+                recipients: recipients.map(p => ({
+                    id: p.participantId,
+                    type: p.participantType as 'ADMIN' | 'USER',
+                    read: false,
+                    link: `/admin/dashboard/chat/${conversationId}`
+                })),
+                senderId: requesterId,
+                senderType: requesterType,
+                title: `${requesterName} added members`,
+                message: notificationMessage,
+            }).catch(err => console.error('Failed to send add member notification:', err));
+        }
+
         return {
             addedCount: newParticipants.length,
             conversation: updatedConversation
@@ -644,7 +696,7 @@ export class ChatService {
             const enrichedReaders = (msg.readers || []).map((reader: any) => {
                 let readerName = 'Unknown';
                 let readerAvatar = null as any;
-                let readerInitial = null as any; 
+                let readerInitial = null as any;
 
                 if (reader.readerType === 'ADMIN') {
                     const admin = adminMap.get(reader.readerId);
@@ -767,6 +819,32 @@ export class ChatService {
                 !(p.participantId === senderId && p.participantType === senderType)
             );
             this.chatGateway.broadcastNewMessage(enrichedMessage, recipients as any[]);
+
+            // Send notification to recipients
+            const senderName = enrichedMessage.senderName || 'Someone';
+
+            let title = `New message from ${senderName}`;
+            if (dto.replyToMessageId) {
+                title = `${senderName} replied to a message`;
+            }
+
+            const notificationMessage = dto.type === 'text'
+                ? (dto.content?.substring(0, 50) + ((dto.content?.length || 0) > 50 ? '...' : '') || 'Sent a message')
+                : 'Sent an attachment';
+
+            // We don't await this to avoid blocking the response
+            this.notificationService.createNotification({
+                recipients: recipients.map(p => ({
+                    id: p.participantId,
+                    type: p.participantType as 'ADMIN' | 'USER',
+                    read: false,
+                    link: `/admin/dashboard/chat/${dto.conversationId}`
+                })),
+                senderId,
+                senderType,
+                title,
+                message: notificationMessage,
+            }).catch(err => console.error('Failed to send chat notification:', err));
         }
 
         return enrichedMessage;
@@ -919,6 +997,36 @@ export class ChatService {
                 content,
                 recipients as any[]
             );
+
+            // Send notification for edit
+            // Find sender details for the notification title
+            let senderName = 'Someone';
+            if (userType === 'ADMIN') {
+                const admin = await this.prisma.admin.findUnique({ where: { id: userId } });
+                senderName = admin?.adminName || 'Admin';
+            } else {
+                const user = await this.prisma.user.findUnique({ where: { id: userId } });
+                senderName = user?.name || 'User';
+            }
+
+            const otherRecipients = recipients.filter(p =>
+                !(p.participantId === userId && p.participantType === userType)
+            );
+
+            if (otherRecipients.length > 0) {
+                this.notificationService.createNotification({
+                    recipients: otherRecipients.map(p => ({
+                        id: p.participantId,
+                        type: p.participantType as 'ADMIN' | 'USER',
+                        read: false,
+                        link: `/admin/dashboard/chat/${message.conversationId}`
+                    })),
+                    senderId: userId,
+                    senderType: userType,
+                    title: `${senderName} edited a message`,
+                    message: content.substring(0, 50) + (content.length > 50 ? '...' : ''),
+                }).catch(err => console.error('Failed to send edit notification:', err));
+            }
         }
 
         return enrichedUpdated;
@@ -1146,6 +1254,40 @@ export class ChatService {
             // Broadcast each enriched forwarded message to ALL participants
             for (const msg of enrichedForwardedMessages) {
                 this.chatGateway.broadcastNewMessage(msg, targetConv.participants as any[]);
+            }
+
+            // Send notification for forwarded messages
+            // Identify forwarder name
+            let forwarderName = 'Someone';
+            if (forwarderType === 'ADMIN') {
+                const admin = await this.prisma.admin.findUnique({ where: { id: forwarderId } });
+                forwarderName = admin?.adminName || 'Admin';
+            } else {
+                const user = await this.prisma.user.findUnique({ where: { id: forwarderId } });
+                forwarderName = user?.name || 'User';
+            }
+
+            // Notify other participants in the target conversation
+            const recipients = targetConv.participants.filter(p =>
+                !(p.participantId === forwarderId && p.participantType === forwarderType)
+            );
+
+            if (recipients.length > 0) {
+                const messageCount = dto.messageIds.length;
+                const notificationMessage = messageCount === 1 ? 'Forwarded a message' : `Forwarded ${messageCount} messages`;
+
+                this.notificationService.createNotification({
+                    recipients: recipients.map(p => ({
+                        id: p.participantId,
+                        type: p.participantType as 'ADMIN' | 'USER',
+                        read: false,
+                        link: `/admin/dashboard/chat/${dto.targetConversationId}`
+                    })),
+                    senderId: forwarderId,
+                    senderType: forwarderType,
+                    title: `${forwarderName} forwarded messages`,
+                    message: notificationMessage,
+                }).catch(err => console.error('Failed to send forward notification:', err));
             }
         }
 
