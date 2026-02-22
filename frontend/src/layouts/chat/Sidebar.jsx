@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { MessageSquare, Users, Settings, Moon, Globe, UserPlus } from 'lucide-react';
+import { MessageSquare, Users, UserPlus } from 'lucide-react';
 import CreateConversationModal from '../../components/dashboard/chat/ui/CreateConversationModal';
 import Avatar from '../../components/dashboard/chat/ui/Avatar';
 import useAdminAuth from '../../context/AdminAuthContext';
+import PWASidebarInstall from '../../components/PWASidebarInstall';
 
 /**
  * Sidebar layout component - left navigation bar with icons
@@ -45,6 +46,9 @@ const Sidebar = ({ onConversationCreated, selectedChatId }) => {
                 </div>
 
                 <div className="flex flex-col items-center space-y-4">
+
+                    {/* PWA install button */}
+                    <PWASidebarInstall variant="sidebar" />
 
                     <Avatar
                         avatar={currentUser?.profileImage}
