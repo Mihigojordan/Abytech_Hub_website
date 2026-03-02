@@ -40,6 +40,8 @@ import PWAPushNotifications from "./pages/PWATestingPage";
 
 import ChatApp from "./pages/dashboard/ChatAppPage";
 import MeetingManagement from "./pages/dashboard/MeetingManagement";
+import MeetingFormPage from "./pages/dashboard/MeetingFormPage";
+import MeetingViewPage from "./pages/dashboard/MeetingViewPage";
 import WeeklyGoalManagement from "./pages/dashboard/WeeklyGoalManagement";
 import InternshipManagement from "./pages/dashboard/InternshipManagement";
 import HostedWebsiteManagement from "./pages/dashboard/HostedWebsiteManagement";
@@ -150,6 +152,9 @@ const router = createBrowserRouter([
           { path: 'hosted-website', element: <HostedWebsiteManagement /> },
           { path: 'demo-request', element: <DemoRequestManagement /> },
           { path: 'meetings', element: <MeetingManagement /> },
+          { path: 'meetings/create', element: <MeetingFormPage /> },
+          { path: 'meetings/edit/:id', element: <MeetingFormPage /> },
+          { path: 'meetings/view/:id', element: <MeetingViewPage /> },
           { path: 'research', element: <ResearchManagement /> },
           // {path:'profile' , element:<AdminProfilePage />},
 

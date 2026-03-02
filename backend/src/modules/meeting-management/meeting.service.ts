@@ -13,6 +13,8 @@ export class MeetingService {
       // Parse dates
       const startTime = new Date(data.startTime);
       const endTime = data.endTime ? new Date(data.endTime) : null;
+      console.log(data);
+      
 
       // Validate dates
       if (endTime && endTime <= startTime) {

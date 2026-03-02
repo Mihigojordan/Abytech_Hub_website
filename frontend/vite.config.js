@@ -30,7 +30,7 @@ export default defineConfig({
                 background_color: '#f0f9ff',
                 display: 'standalone',
                 orientation: 'portrait-primary',
-                start_url: '/',
+                start_url: '/admin/dashboard/',
                 scope: '/',
                 categories: ['technology', 'productivity', 'tools'],
                 prefer_related_applications: false,

@@ -16,6 +16,7 @@ import { DemoRequestModule } from './modules/demo-request-management/demo-reques
 import { WeeklyGoalModule } from './modules/weekly-goal-management/weekly-goal.module';
 import { NotificationModule } from './modules/notification/notification.module';
 import { PushNotificationsModule } from './modules/push-notification/push-notification.module';
+import { ResearchModule } from './modules/research-management/research.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { PushNotificationsModule } from './modules/push-notification/push-notifi
     ChatModule,
     UserAuthModule,
     MeetingModule,
+    ResearchModule,
     InternshipModule,
     HostedWebsiteModule,
     DemoRequestModule,

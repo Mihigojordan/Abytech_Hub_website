@@ -69,7 +69,7 @@ model Admin {
 
 model Notification {
   id          String   @id @default(cuid())
-  recipients  Json     // [{id: string, type: "ADMIN" | "USER", read: false, link: string | null}]
+  recipients  Json     // [{id: string, type: "ADMIN" | "STAFF", read: false, link: string | null}]
   senderId    String?
   senderType  SenderType?
   title       String
@@ -81,7 +81,7 @@ model Notification {
 
 enum SenderType {
   ADMIN
-  USER
+  STAFF
 }
 
 model PushSubscription {
@@ -101,7 +101,7 @@ model PushSubscription {
 
 enum UserType {
   ADMIN
-  USER
+  STAFF
 }
 
 
@@ -185,7 +185,7 @@ enum ResearchType {
 model Meeting {
   id          String   @id @default(cuid())
   title       String
-  description String?
+  description String?  @db.LongText
 
   startTime   DateTime
   endTime     DateTime?
@@ -198,17 +198,17 @@ model Meeting {
   // JSON sections
   participants Json? 
   // [
-  //   { "adminId": "id", "name": "John", "attended": true }
+  //   { "adminId": "id", email:'john@gmail.com' ,"name": "John", "attended": true }
   // ]
 
   keyPoints   Json?
   // [
-  //   { "title": "Database Issue", "notes": "...", "actionItems": [...] }
+  //   { "title": "Database Issue", "notes": "...", }
   // ]
 
   actionItems Json?
   // [
-  //   { "task": "Fix API", "assignedToId": "id", "dueDate": "...", "completed": false }
+  //   { "task": "Fix API", "assignedToId": "id", name:"john", "dueDate": "...", "completed": false }
   // ]
 
   attachments Json?
@@ -348,7 +348,7 @@ model WeeklyGoal {
   tasks       Json? // [{ title, description, done }]
 
   // End-of-week reflection
-  reviewNotes String?
+  reviewNotes String?  @db.LongText  [{adminId:"id",name:'serge',notes:"...."}]
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
