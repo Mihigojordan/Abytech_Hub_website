@@ -348,7 +348,7 @@ model WeeklyGoal {
   tasks       Json? // [{ title, description, done }]
 
   // End-of-week reflection
-  reviewNotes String?  @db.LongText  [{adminId:"id",name:'serge',notes:"...."}]
+  reviewNotes String?  @db.LongText // [{adminId:"id",name:'serge',notes:"...."}]
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
