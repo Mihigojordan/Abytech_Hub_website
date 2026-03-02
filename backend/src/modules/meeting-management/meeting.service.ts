@@ -2,10 +2,30 @@ import { Injectable, BadRequestException, NotFoundException } from '@nestjs/comm
 import { PrismaService } from 'src/prisma/prisma.service';
 import { deleteFile } from 'src/common/utils/file-upload.utils';
 import { MeetingStatus } from '../../../generated/prisma';
+import { NotificationService } from '../notification/notification.service';
 
 @Injectable()
 export class MeetingService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private notificationService: NotificationService,
+  ) {}
+
+  // Helper: Get all admins for notifications
+  private async getAllAdminIds(): Promise<string[]> {
+    const admins = await this.prisma.admin.findMany({ select: { id: true } });
+    return admins.map(a => a.id);
+  }
+
+  // Helper: Get admin name by ID
+  private async getAdminName(adminId: string): Promise<string> {
+    const admin = await this.prisma.admin.findUnique({
+      where: { id: adminId },
+      select: { adminName: true },
+    });
+    return admin?.adminName || 'Unknown';
+  }
+
 
   // Create meeting
   async create(data: any, adminId: string) {
@@ -13,15 +33,13 @@ export class MeetingService {
       // Parse dates
       const startTime = new Date(data.startTime);
       const endTime = data.endTime ? new Date(data.endTime) : null;
-      console.log(data);
-      
 
       // Validate dates
       if (endTime && endTime <= startTime) {
         throw new BadRequestException('End time must be after start time');
       }
 
-      return await this.prisma.meeting.create({
+      const meeting = await this.prisma.meeting.create({
         data: {
           title: data.title,
           description: data.description,
@@ -38,6 +56,25 @@ export class MeetingService {
         },
         include: { createdBy: true },
       });
+
+      // Send notification to all admins
+      const adminIds = await this.getAllAdminIds();
+      const senderName = await this.getAdminName(adminId);
+
+      this.notificationService.createNotification({
+        recipients: adminIds.map(id => ({
+          id,
+          type: 'ADMIN' as const,
+          read: id === adminId,
+          link: `/admin/dashboard/meetings`,
+        })),
+        senderId: adminId,
+        senderType: 'ADMIN',
+        title: 'New Meeting Scheduled',
+        message: `${senderName} scheduled a new meeting: "${meeting.title}"`,
+      }).catch(err => console.error('Failed to send notification:', err));
+
+      return meeting;
     } catch (error) {
       if (error instanceof BadRequestException) throw error;
       throw new BadRequestException('Failed to create meeting: ' + error.message);
@@ -143,7 +180,7 @@ export class MeetingService {
   }
 
   // Update meeting
-  async update(id: string, data: any) {
+  async update(id: string, data: any, adminId?: string) {
     const meeting = await this.prisma.meeting.findUnique({ where: { id } });
     if (!meeting) {
       throw new NotFoundException('Meeting not found');
@@ -172,25 +209,67 @@ export class MeetingService {
       }
     }
 
-    return this.prisma.meeting.update({
+    const updatedMeeting = await this.prisma.meeting.update({
       where: { id },
       data: updateData,
       include: { createdBy: true },
     });
+
+    // Send notification to all admins
+    if (adminId) {
+      const adminIds = await this.getAllAdminIds();
+      const senderName = await this.getAdminName(adminId);
+
+      this.notificationService.createNotification({
+        recipients: adminIds.map(aid => ({
+          id: aid,
+          type: 'ADMIN' as const,
+          read: aid === adminId,
+          link: `/admin/dashboard/meetings`,
+        })),
+        senderId: adminId,
+        senderType: 'ADMIN',
+        title: 'Meeting Updated',
+        message: `${senderName} updated the meeting: "${updatedMeeting.title}"`,
+      }).catch(err => console.error('Failed to send notification:', err));
+    }
+
+    return updatedMeeting;
   }
 
   // Update meeting status
-  async updateStatus(id: string, status: MeetingStatus) {
+  async updateStatus(id: string, status: MeetingStatus, adminId?: string) {
     const meeting = await this.prisma.meeting.findUnique({ where: { id } });
     if (!meeting) {
       throw new NotFoundException('Meeting not found');
     }
 
-    return this.prisma.meeting.update({
+    const updatedMeeting = await this.prisma.meeting.update({
       where: { id },
       data: { status },
       include: { createdBy: true },
     });
+
+    // Send notification to participants and all admins
+    if (adminId) {
+      const adminIds = await this.getAllAdminIds();
+      const senderName = await this.getAdminName(adminId);
+
+      this.notificationService.createNotification({
+        recipients: adminIds.map(aid => ({
+          id: aid,
+          type: 'ADMIN' as const,
+          read: aid === adminId,
+          link: `/admin/dashboard/meetings`,
+        })),
+        senderId: adminId,
+        senderType: 'ADMIN',
+        title: 'Meeting Status Changed',
+        message: `${senderName} changed meeting "${updatedMeeting.title}" status to ${status}`,
+      }).catch(err => console.error('Failed to send notification:', err));
+    }
+
+    return updatedMeeting;
   }
 
   // Add participant to meeting
@@ -324,11 +403,13 @@ export class MeetingService {
   }
 
   // Delete meeting
-  async remove(id: string) {
+  async remove(id: string, adminId?: string) {
     const meeting = await this.prisma.meeting.findUnique({ where: { id } });
     if (!meeting) {
       throw new NotFoundException('Meeting not found');
     }
+
+    const meetingTitle = meeting.title;
 
     // Delete attached files
     if (meeting.attachments) {
@@ -337,7 +418,28 @@ export class MeetingService {
       }
     }
 
-    return this.prisma.meeting.delete({ where: { id } });
+    const deleted = await this.prisma.meeting.delete({ where: { id } });
+
+    // Send notification to all admins
+    if (adminId) {
+      const adminIds = await this.getAllAdminIds();
+      const senderName = await this.getAdminName(adminId);
+
+      this.notificationService.createNotification({
+        recipients: adminIds.map(aid => ({
+          id: aid,
+          type: 'ADMIN' as const,
+          read: aid === adminId,
+          link: `/admin/dashboard/meetings`,
+        })),
+        senderId: adminId,
+        senderType: 'ADMIN',
+        title: 'Meeting Deleted',
+        message: `${senderName} deleted the meeting: "${meetingTitle}"`,
+      }).catch(err => console.error('Failed to send notification:', err));
+    }
+
+    return deleted;
   }
 
   // Get meeting statistics

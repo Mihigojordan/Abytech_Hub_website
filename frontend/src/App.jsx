@@ -43,10 +43,14 @@ import MeetingManagement from "./pages/dashboard/MeetingManagement";
 import MeetingFormPage from "./pages/dashboard/MeetingFormPage";
 import MeetingViewPage from "./pages/dashboard/MeetingViewPage";
 import WeeklyGoalManagement from "./pages/dashboard/WeeklyGoalManagement";
+import WeeklyGoalFormPage from "./pages/dashboard/WeeklyGoalFormPage";
+import WeeklyGoalViewPage from "./pages/dashboard/WeeklyGoalViewPage";
 import InternshipManagement from "./pages/dashboard/InternshipManagement";
 import HostedWebsiteManagement from "./pages/dashboard/HostedWebsiteManagement";
 import DemoRequestManagement from "./pages/dashboard/DemoRequestManagement";
 import ResearchManagement from "./pages/dashboard/ResearchManagement";
+import ResearchFormPage from "./pages/dashboard/ResearchFormPage";
+import ResearchViewPage from "./pages/dashboard/ResearchViewPage";
 
 // Lazy-loaded pages
 const ProjectsPage = lazy(() => import("./pages/Projects/ProjectPages"));
@@ -148,6 +152,9 @@ const router = createBrowserRouter([
           { path: 'chat', element: <ChatApp /> },
           { path: 'chat/:conversationId', element: <ChatApp /> },
           { path: 'weekly-goals', element: <WeeklyGoalManagement /> },
+          { path: 'weekly-goals/new', element: <WeeklyGoalFormPage /> },
+          { path: 'weekly-goals/edit/:id', element: <WeeklyGoalFormPage /> },
+          { path: 'weekly-goals/view/:id', element: <WeeklyGoalViewPage /> },
           { path: 'internships', element: <InternshipManagement /> },
           { path: 'hosted-website', element: <HostedWebsiteManagement /> },
           { path: 'demo-request', element: <DemoRequestManagement /> },
@@ -156,6 +163,9 @@ const router = createBrowserRouter([
           { path: 'meetings/edit/:id', element: <MeetingFormPage /> },
           { path: 'meetings/view/:id', element: <MeetingViewPage /> },
           { path: 'research', element: <ResearchManagement /> },
+          { path: 'research/create', element: <ResearchFormPage /> },
+          { path: 'research/edit/:id', element: <ResearchFormPage /> },
+          { path: 'research/view/:id', element: <ResearchViewPage /> },
           // {path:'profile' , element:<AdminProfilePage />},
 
         ]

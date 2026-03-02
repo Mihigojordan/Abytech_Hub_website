@@ -254,7 +254,7 @@ export default function WeeklyGoalForm({
         .tab-bar::-webkit-scrollbar { display: none; }
       `}</style>
 
-      <div className="wgf-wrap w-full max-w-3xl">
+      <div className="wgf-wrap w-full ">
 
         {/* ── Header ── */}
         <div className="mb-7">

@@ -1,10 +1,29 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { WeeklyGoalStatus } from '../../../generated/prisma';
+import { NotificationService } from '../notification/notification.service';
 
 @Injectable()
 export class WeeklyGoalService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private notificationService: NotificationService,
+  ) {}
+
+  // Helper: Get all admins for notifications
+  private async getAllAdminIds(): Promise<string[]> {
+    const admins = await this.prisma.admin.findMany({ select: { id: true } });
+    return admins.map(a => a.id);
+  }
+
+  // Helper: Get admin name by ID
+  private async getAdminName(adminId: string): Promise<string> {
+    const admin = await this.prisma.admin.findUnique({
+      where: { id: adminId },
+      select: { adminName: true },
+    });
+    return admin?.adminName || 'Unknown';
+  }
 
   // Create weekly goal
   async create(data: any, adminId: string) {
@@ -22,7 +41,7 @@ export class WeeklyGoalService {
         tasks = JSON.parse(tasks);
       }
 
-      return await this.prisma.weeklyGoal.create({
+      const goal = await this.prisma.weeklyGoal.create({
         data: {
           title: data.title,
           description: data.description,
@@ -35,6 +54,25 @@ export class WeeklyGoalService {
         },
         include: { owner: true },
       });
+
+      // Send notification to all admins
+      const adminIds = await this.getAllAdminIds();
+      const senderName = await this.getAdminName(adminId);
+
+      this.notificationService.createNotification({
+        recipients: adminIds.map(id => ({
+          id,
+          type: 'ADMIN' as const,
+          read: id === adminId,
+          link: `/admin/dashboard/weekly-goals`,
+        })),
+        senderId: adminId,
+        senderType: 'ADMIN',
+        title: 'New Weekly Goal Created',
+        message: `${senderName} created a new weekly goal: "${goal.title}"`,
+      }).catch(err => console.error('Failed to send notification:', err));
+
+      return goal;
     } catch (error) {
       if (error instanceof BadRequestException) throw error;
       throw new BadRequestException('Failed to create weekly goal: ' + error.message);
@@ -142,7 +180,7 @@ export class WeeklyGoalService {
   }
 
   // Update weekly goal
-  async update(id: string, data: any) {
+  async update(id: string, data: any, adminId?: string) {
     const goal = await this.prisma.weeklyGoal.findUnique({ where: { id } });
     if (!goal) {
       throw new NotFoundException('Weekly goal not found');
@@ -162,25 +200,67 @@ export class WeeklyGoalService {
       updateData.tasks = JSON.parse(data.tasks);
     }
 
-    return this.prisma.weeklyGoal.update({
+    const updatedGoal = await this.prisma.weeklyGoal.update({
       where: { id },
       data: updateData,
       include: { owner: true },
     });
+
+    // Send notification to all admins
+    if (adminId) {
+      const adminIds = await this.getAllAdminIds();
+      const senderName = await this.getAdminName(adminId);
+
+      this.notificationService.createNotification({
+        recipients: adminIds.map(aid => ({
+          id: aid,
+          type: 'ADMIN' as const,
+          read: aid === adminId,
+          link: `/admin/dashboard/weekly-goals`,
+        })),
+        senderId: adminId,
+        senderType: 'ADMIN',
+        title: 'Weekly Goal Updated',
+        message: `${senderName} updated the weekly goal: "${updatedGoal.title}"`,
+      }).catch(err => console.error('Failed to send notification:', err));
+    }
+
+    return updatedGoal;
   }
 
   // Update status
-  async updateStatus(id: string, status: WeeklyGoalStatus) {
+  async updateStatus(id: string, status: WeeklyGoalStatus, adminId?: string) {
     const goal = await this.prisma.weeklyGoal.findUnique({ where: { id } });
     if (!goal) {
       throw new NotFoundException('Weekly goal not found');
     }
 
-    return this.prisma.weeklyGoal.update({
+    const updatedGoal = await this.prisma.weeklyGoal.update({
       where: { id },
       data: { status },
       include: { owner: true },
     });
+
+    // Send notification to all admins
+    if (adminId) {
+      const adminIds = await this.getAllAdminIds();
+      const senderName = await this.getAdminName(adminId);
+
+      this.notificationService.createNotification({
+        recipients: adminIds.map(aid => ({
+          id: aid,
+          type: 'ADMIN' as const,
+          read: aid === adminId,
+          link: `/admin/dashboard/weekly-goals`,
+        })),
+        senderId: adminId,
+        senderType: 'ADMIN',
+        title: 'Weekly Goal Status Changed',
+        message: `${senderName} changed goal "${updatedGoal.title}" status to ${status}`,
+      }).catch(err => console.error('Failed to send notification:', err));
+    }
+
+    return updatedGoal;
   }
 
   // Update progress
@@ -309,13 +389,36 @@ export class WeeklyGoalService {
   }
 
   // Delete weekly goal
-  async remove(id: string) {
+  async remove(id: string, adminId?: string) {
     const goal = await this.prisma.weeklyGoal.findUnique({ where: { id } });
     if (!goal) {
       throw new NotFoundException('Weekly goal not found');
     }
 
-    return this.prisma.weeklyGoal.delete({ where: { id } });
+    const goalTitle = goal.title;
+
+    const deleted = await this.prisma.weeklyGoal.delete({ where: { id } });
+
+    // Send notification to all admins
+    if (adminId) {
+      const adminIds = await this.getAllAdminIds();
+      const senderName = await this.getAdminName(adminId);
+
+      this.notificationService.createNotification({
+        recipients: adminIds.map(aid => ({
+          id: aid,
+          type: 'ADMIN' as const,
+          read: aid === adminId,
+          link: `/admin/dashboard/weekly-goals`,
+        })),
+        senderId: adminId,
+        senderType: 'ADMIN',
+        title: 'Weekly Goal Deleted',
+        message: `${senderName} deleted the weekly goal: "${goalTitle}"`,
+      }).catch(err => console.error('Failed to send notification:', err));
+    }
+
+    return deleted;
   }
 
   // Get statistics

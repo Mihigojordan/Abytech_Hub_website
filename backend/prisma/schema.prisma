@@ -137,10 +137,10 @@ model Research {
   description     String?
 
   // Research content sections
-  problem         Json? // problem statement
-  objective       Json? // research objectives
-  methodology     Json? // methods used
-  findings        Json? // results / findings
+  problem         Json? // problem statement [{ title, description }]
+  objective       Json? // research objectives [{ title, description }]
+  methodology     Json? // methods used [{ title, description }]
+  findings        Json? // results / findings [{ title, description }]
   conclusion      Json?
   recommendations Json?
 

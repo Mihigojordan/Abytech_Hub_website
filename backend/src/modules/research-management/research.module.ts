@@ -3,8 +3,10 @@ import { ResearchController } from './research.controller';
 import { ResearchService } from './research.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CloudinaryService } from 'src/global/cloudinary/cloudinary.service';
+import { NotificationModule } from '../notification/notification.module';
 
 @Module({
+  imports: [NotificationModule],
   controllers: [ResearchController],
   providers: [
     ResearchService,
