@@ -133,6 +133,13 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onToggle, }) => {
 
       },
       {
+        id: "meeting",
+        label: "Meeting Management ",
+        icon: Calendar,
+        path: `${basePath}/meetings`,
+
+      },
+      {
         id: "weekly-goals",
         label: "Weekly Goals Management ",
         icon: Target,
@@ -147,33 +154,26 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onToggle, }) => {
 
       },
       {
-        id: "meeting",
-        label: "Meeting Management ",
-        icon: Calendar,
-        path: `${basePath}/meetings`,
-
-      },
-      {
         id: "hosted-web",
         label: "Hosted Website Management ",
         icon: Globe,
         path: `${basePath}/hosted-website`,
 
       },
-      {
-        id: "internships",
-        label: "Internship Management ",
-        icon: GraduationCap,
-        path: `${basePath}/internships`,
+      // {
+      //   id: "internships",
+      //   label: "Internship Management ",
+      //   icon: GraduationCap,
+      //   path: `${basePath}/internships`,
 
-      },
-      {
-        id: "demo-request",
-        label: "Demo Request Management ",
-        icon: Monitor,
-        path: `${basePath}/demo-request`,
+      // },
+      // {
+      //   id: "demo-request",
+      //   label: "Demo Request Management ",
+      //   icon: Monitor,
+      //   path: `${basePath}/demo-request`,
 
-      },
+      // },
 
 
     ];
