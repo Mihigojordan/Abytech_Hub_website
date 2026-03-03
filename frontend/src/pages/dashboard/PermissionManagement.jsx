@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
     Search, RefreshCw, XCircle, CheckCircle,
     Eye, User, AlertCircle, X, Shield, ShieldAlert,
-    Save
+    Save, Sprout
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import adminAuthService from '../../services/adminAuthService';
@@ -79,6 +79,7 @@ const PermissionManagement = () => {
     const [isSuperAdmin, setIsSuperAdmin] = useState(false);
     const [selectedPermissions, setSelectedPermissions] = useState([]);
     const [isSaving, setIsSaving] = useState(false);
+    const [isSeeding, setIsSeeding] = useState(false);
 
     useEffect(() => { loadData(); }, []);
 
@@ -102,6 +103,19 @@ const PermissionManagement = () => {
             setAdmins([]);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleSeedPermissions = async () => {
+        try {
+            setIsSeeding(true);
+            await permissionService.seedPermissions();
+            showOperationStatus('success', 'Permissions seeded successfully!');
+            await loadData();
+        } catch (err) {
+            showOperationStatus('error', err.message || 'Failed to seed permissions');
+        } finally {
+            setIsSeeding(false);
         }
     };
 
@@ -171,10 +185,17 @@ const PermissionManagement = () => {
                             <h1 className="text-xl sm:text-2xl font-bold" style={{ color: 'rgb(249, 115, 22)' }}>Permission Management</h1>
                             <p className="text-xs text-gray-600 mt-1">Manage access control and super admin status</p>
                         </div>
-                        <motion.button whileHover={{ scale: 1.05 }} onClick={loadData} disabled={loading}
-                            className="flex items-center space-x-2 px-3 py-2 text-xs text-gray-600 hover:text-gray-900 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50">
-                            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} /><span className="hidden sm:inline">Refresh</span>
-                        </motion.button>
+                        <div className="flex items-center space-x-2">
+                            <motion.button whileHover={{ scale: 1.05 }} onClick={handleSeedPermissions} disabled={isSeeding}
+                                className="flex items-center space-x-2 px-3 py-2 text-xs text-white bg-orange-500 hover:bg-orange-600 rounded-lg disabled:opacity-50 shadow-sm transition-colors">
+                                {isSeeding ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Sprout className="w-3.5 h-3.5" />}
+                                <span className="hidden sm:inline">Seed Permissions</span>
+                            </motion.button>
+                            <motion.button whileHover={{ scale: 1.05 }} onClick={loadData} disabled={loading}
+                                className="flex items-center space-x-2 px-3 py-2 text-xs text-gray-600 hover:text-gray-900 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50">
+                                <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} /><span className="hidden sm:inline">Refresh</span>
+                            </motion.button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -208,8 +229,8 @@ const PermissionManagement = () => {
                                     key={admin.id}
                                     onClick={() => handleSelectAdmin(admin)}
                                     className={`w-full text-left flex items-center p-3 rounded-lg transition-colors border ${selectedAdmin?.id === admin.id
-                                            ? 'bg-blue-50 border-blue-200 shadow-sm'
-                                            : 'bg-white border-transparent hover:border-gray-200 hover:bg-white hover:shadow-sm'
+                                        ? 'bg-blue-50 border-blue-200 shadow-sm'
+                                        : 'bg-white border-transparent hover:border-gray-200 hover:bg-white hover:shadow-sm'
                                         }`}
                                 >
                                     <AdminAvatar admin={admin} size="md" />
