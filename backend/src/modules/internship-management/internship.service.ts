@@ -1,10 +1,64 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { InternshipStatus, InternshipType, InternshipPeriod } from '../../../generated/prisma';
+import { NotificationService } from '../notification/notification.service';
+import { AdminService } from '../admin-management/admin.service';
+import { EmailService } from 'src/global/email/email.service';
 
 @Injectable()
 export class InternshipService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private notificationService: NotificationService,
+    private adminService: AdminService,
+    private emailService: EmailService,
+  ) { }
+
+  // Helper: Generate random password
+  private generatePassword(length = 12): string {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$%&*';
+    let password = '';
+    for (let i = 0; i < length; i++) {
+      password += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return password;
+  }
+
+  // Helper: Format internship type for display
+  private formatInternshipType(type: InternshipType): string {
+    const typeMap: Record<InternshipType, string> = {
+      SOFTWARE_DEVELOPMENT: 'Software Development',
+      UI_UX: 'UI/UX Design',
+      DATA: 'Data & Analytics',
+      MARKETING: 'Digital Marketing',
+      IT_SUPPORT: 'IT Support',
+      OTHER: 'General',
+    };
+    return typeMap[type] || type;
+  }
+
+  // Helper: Get HR admins for notifications
+  private async getHrAdminIds(): Promise<string[]> {
+    const admins = await this.prisma.admin.findMany({
+      where: {
+        OR: [
+          { isSuperAdmin: true },
+          { permissions: { some: { permission: { name: 'internship_management' } } } }
+        ]
+      },
+      select: { id: true },
+    });
+    return admins.map(a => a.id);
+  }
+
+  // Helper: Get admin name by ID
+  private async getAdminName(adminId: string): Promise<string> {
+    const admin = await this.prisma.admin.findUnique({
+      where: { id: adminId },
+      select: { adminName: true },
+    });
+    return admin?.adminName || 'Unknown';
+  }
 
   // Create internship application (public - no auth required)
   async create(data: any) {
@@ -19,7 +73,7 @@ export class InternshipService {
         skills = JSON.parse(skills);
       }
 
-      return await this.prisma.internshipApplication.create({
+      const application = await this.prisma.internshipApplication.create({
         data: {
           fullName: data.fullName,
           email: data.email,
@@ -41,6 +95,22 @@ export class InternshipService {
           linkedinUrl: data.linkedinUrl,
         },
       });
+
+      // Send notification to HR admins about new application
+      const adminIds = await this.getHrAdminIds();
+
+      this.notificationService.createNotification({
+        recipients: adminIds.map(id => ({
+          id,
+          type: 'ADMIN' as const,
+          read: false,
+          link: `/admin/dashboard/internships`,
+        })),
+        title: 'New Internship Application',
+        message: `${application.fullName} submitted an internship application for ${application.internshipType}`,
+      }).catch(err => console.error('Failed to send notification:', err));
+
+      return application;
     } catch (error) {
       throw new BadRequestException('Failed to submit application: ' + error.message);
     }
@@ -154,17 +224,85 @@ export class InternshipService {
   }
 
   // Update application status
-  async updateStatus(id: string, status: InternshipStatus) {
+  async updateStatus(id: string, status: InternshipStatus, adminId?: string) {
     const application = await this.prisma.internshipApplication.findUnique({ where: { id } });
     if (!application) {
       throw new NotFoundException('Application not found');
     }
 
-    return this.prisma.internshipApplication.update({
+    const updatedApplication = await this.prisma.internshipApplication.update({
       where: { id },
       data: { status },
       include: { reviewedBy: true },
     });
+
+    // If status is ACCEPTED, create admin account and send credentials email
+    if (status === 'ACCEPTED') {
+      try {
+        // Check if admin already exists with this email
+        const existingAdmin = await this.adminService.findAdminByEmail(application.email);
+
+        if (!existingAdmin) {
+          // Generate random password
+          const tempPassword = this.generatePassword();
+
+          // Create admin account for the intern
+          await this.adminService.registerAdmin({
+            adminName: application.fullName,
+            adminEmail: application.email,
+            password: tempPassword,
+          });
+          console.log('sent the email')
+
+          // Send acceptance email with credentials
+          const dashboardUrl = process.env.FRONTEND_URL
+            ? `${process.env.FRONTEND_URL}/auth/admin/login`
+            : 'https://abytechhub.com/auth/admin/login';
+
+          await this.emailService.sendEmail(
+            application.email,
+            'Congratulations! Your Internship Application Has Been Accepted',
+            'Internship-acceptance-notification',
+            {
+              fullName: application.fullName,
+              email: application.email,
+              password: tempPassword,
+              internshipType: this.formatInternshipType(application.internshipType),
+              dashboardUrl,
+              year: new Date().getFullYear(),
+            },
+          );
+        }
+      } catch (error) {
+        console.error('Failed to create admin account or send email:', error);
+        // Don't throw - the status update was successful, just log the error
+      }
+    }
+
+    // Send notification to HR admins
+    if (adminId) {
+      const adminIds = await this.getHrAdminIds();
+      const senderName = await this.getAdminName(adminId);
+
+      this.notificationService.createNotification({
+        recipients: adminIds.map(aid => ({
+          id: aid,
+          type: 'ADMIN' as const,
+          read: aid === adminId,
+          link: `/admin/dashboard/internships`,
+        })),
+        senderId: adminId,
+        senderType: 'ADMIN',
+        title: status === 'ACCEPTED' ? 'Intern Approved' : (status === 'REJECTED' ? 'Intern Rejected' : 'Application Status Updated'),
+        message: status === 'ACCEPTED'
+          ? `${senderName} approved ${application.fullName}'s internship application`
+          : (status === 'REJECTED'
+            ? `${senderName} rejected ${application.fullName}'s internship application`
+            : `${senderName} changed ${application.fullName}'s application status to ${status}`),
+      }).catch(err => console.error('Failed to send notification:', err));
+    }
+
+    return updatedApplication;
   }
 
   // Review application (by admin)
@@ -174,7 +312,7 @@ export class InternshipService {
       throw new NotFoundException('Application not found');
     }
 
-    return this.prisma.internshipApplication.update({
+    const reviewedApplication = await this.prisma.internshipApplication.update({
       where: { id },
       data: {
         reviewedById: adminId,
@@ -185,20 +323,62 @@ export class InternshipService {
       },
       include: { reviewedBy: true },
     });
+
+    // Send notification to HR admins
+    const adminIds = await this.getHrAdminIds();
+    const senderName = await this.getAdminName(adminId);
+
+    this.notificationService.createNotification({
+      recipients: adminIds.map(aid => ({
+        id: aid,
+        type: 'ADMIN' as const,
+        read: aid === adminId,
+        link: `/admin/dashboard/internships`,
+      })),
+      senderId: adminId,
+      senderType: 'ADMIN',
+      title: 'Application Reviewed',
+      message: `${senderName} reviewed ${application.fullName}'s application${reviewData.score ? ` (Score: ${reviewData.score})` : ''}`,
+    }).catch(err => console.error('Failed to send notification:', err));
+
+    return reviewedApplication;
   }
 
   // Toggle shortlist status
-  async toggleShortlist(id: string) {
+  async toggleShortlist(id: string, adminId?: string) {
     const application = await this.prisma.internshipApplication.findUnique({ where: { id } });
     if (!application) {
       throw new NotFoundException('Application not found');
     }
 
-    return this.prisma.internshipApplication.update({
+    const newShortlistStatus = !application.isShortlisted;
+
+    const updatedApplication = await this.prisma.internshipApplication.update({
       where: { id },
-      data: { isShortlisted: !application.isShortlisted },
+      data: { isShortlisted: newShortlistStatus },
       include: { reviewedBy: true },
     });
+
+    // Send notification to HR admins
+    if (adminId) {
+      const adminIds = await this.getHrAdminIds();
+      const senderName = await this.getAdminName(adminId);
+
+      this.notificationService.createNotification({
+        recipients: adminIds.map(aid => ({
+          id: aid,
+          type: 'ADMIN' as const,
+          read: aid === adminId,
+          link: `/admin/dashboard/internships`,
+        })),
+        senderId: adminId,
+        senderType: 'ADMIN',
+        title: newShortlistStatus ? 'Applicant Shortlisted' : 'Applicant Removed from Shortlist',
+        message: `${senderName} ${newShortlistStatus ? 'shortlisted' : 'removed from shortlist'} ${application.fullName}'s application`,
+      }).catch(err => console.error('Failed to send notification:', err));
+    }
+
+    return updatedApplication;
   }
 
   // Mark as contacted
@@ -224,13 +404,36 @@ export class InternshipService {
   }
 
   // Delete application
-  async remove(id: string) {
+  async remove(id: string, adminId?: string) {
     const application = await this.prisma.internshipApplication.findUnique({ where: { id } });
     if (!application) {
       throw new NotFoundException('Application not found');
     }
 
-    return this.prisma.internshipApplication.delete({ where: { id } });
+    const applicantName = application.fullName;
+
+    const deleted = await this.prisma.internshipApplication.delete({ where: { id } });
+
+    // Send notification to HR admins
+    if (adminId) {
+      const adminIds = await this.getHrAdminIds();
+      const senderName = await this.getAdminName(adminId);
+
+      this.notificationService.createNotification({
+        recipients: adminIds.map(aid => ({
+          id: aid,
+          type: 'ADMIN' as const,
+          read: aid === adminId,
+          link: `/admin/dashboard/internships`,
+        })),
+        senderId: adminId,
+        senderType: 'ADMIN',
+        title: 'Application Deleted',
+        message: `${senderName} deleted ${applicantName}'s internship application`,
+      }).catch(err => console.error('Failed to send notification:', err));
+    }
+
+    return deleted;
   }
 
   // Get application statistics

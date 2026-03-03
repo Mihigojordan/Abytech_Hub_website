@@ -5,9 +5,11 @@ import { CloudinaryService } from 'src/global/cloudinary/cloudinary.service';
 import { NotificationService } from 'src/global/notification/notification.service';
 import { ReportGateway } from './report.gateway';
 import { NotificationsService } from '../admin-management/notification/notifications.service';
+import { PermissionModule } from '../permission-management/permission.module';
 
 @Module({
+  imports: [PermissionModule],
   controllers: [ReportController],
-  providers: [ReportService,CloudinaryService,NotificationService,NotificationsService,ReportGateway],
+  providers: [ReportService, CloudinaryService, NotificationService, NotificationsService, ReportGateway],
 })
 export class ReportModule {}

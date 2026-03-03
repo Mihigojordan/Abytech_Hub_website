@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Edit, Trash2, Search, Eye, ChevronLeft, ChevronRight,
   X, RefreshCw, Star, StarOff, Phone, Mail, MapPin, FileText,
   CheckCircle, XCircle, AlertCircle, Clock, User, Briefcase, GraduationCap,
   Sparkles, Filter, Download, LayoutGrid, List, Table2, ChevronsLeft, ChevronsRight,
-  Calendar, ExternalLink, Loader2, Table as TableIcon, Grid3X3
+  Calendar, ExternalLink, Loader2, Table as TableIcon, Grid3X3, UserCheck, UserX,
+  AlertTriangle, Send, Shield
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import internshipService from '../../services/internshipService';
@@ -37,6 +39,7 @@ const PERIOD_CONFIG = {
 };
 
 const InternshipManagement = () => {
+  const navigate = useNavigate();
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -55,6 +58,10 @@ const InternshipManagement = () => {
   const [operationStatus, setOperationStatus] = useState(null);
   const [operationLoading, setOperationLoading] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [acceptConfirm, setAcceptConfirm] = useState(null);
+  const [rejectConfirm, setRejectConfirm] = useState(null);
+  const [acceptLoading, setAcceptLoading] = useState(false);
+  const [rejectLoading, setRejectLoading] = useState(false);
 
   useEffect(() => {
     loadApplications();
@@ -154,6 +161,36 @@ const InternshipManagement = () => {
     }
   };
 
+  const handleAcceptIntern = async (application) => {
+    setAcceptLoading(true);
+    try {
+      await internshipService.updateApplicationStatus(application.id, 'ACCEPTED');
+      showOperationMessage('success', `${application.fullName} has been accepted! Admin account created and email sent.`);
+      setAcceptConfirm(null);
+      loadApplications();
+      loadStats();
+    } catch (err) {
+      showOperationMessage('error', err.message || 'Failed to accept intern');
+    } finally {
+      setAcceptLoading(false);
+    }
+  };
+
+  const handleRejectIntern = async (application) => {
+    setRejectLoading(true);
+    try {
+      await internshipService.updateApplicationStatus(application.id, 'REJECTED');
+      showOperationMessage('success', `${application.fullName}'s application has been rejected`);
+      setRejectConfirm(null);
+      loadApplications();
+      loadStats();
+    } catch (err) {
+      showOperationMessage('error', err.message || 'Failed to reject application');
+    } finally {
+      setRejectLoading(false);
+    }
+  };
+
   const handleExportCSV = () => {
     const headers = ['Full Name', 'Email', 'Phone', 'Institution', 'Type', 'Period', 'Status', 'Score', 'Applied Date'];
     const rows = applications.map(app => [
@@ -195,13 +232,13 @@ const InternshipManagement = () => {
   const activeFiltersCount = [statusFilter, typeFilter].filter(Boolean).length;
 
   const statCards = [
-    { label: 'Total Applications', value: stats.total, icon: User, gradient: 'from-violet-500 to-purple-600' },
-    { label: 'Pending', value: stats.pending, icon: Clock, gradient: 'from-amber-500 to-orange-600' },
-    { label: 'Reviewing', value: stats.reviewing, icon: Eye, gradient: 'from-blue-500 to-indigo-600' },
-    { label: 'Accepted', value: stats.accepted, icon: CheckCircle, gradient: 'from-emerald-500 to-green-600' },
-    { label: 'Rejected', value: stats.rejected, icon: XCircle, gradient: 'from-red-500 to-rose-600' },
-    { label: 'Waitlisted', value: stats.waitlisted, icon: Clock, gradient: 'from-purple-500 to-pink-600' },
-    { label: 'Shortlisted', value: stats.shortlisted, icon: Star, gradient: 'from-yellow-500 to-amber-600' },
+    { label: 'Total', value: stats.total, icon: User, color: PRIMARY_COLOR, bgColor: 'rgba(249,115,22,0.1)', gradient: 'from-orange-500 to-amber-600' },
+    { label: 'Pending', value: stats.pending, icon: Clock, color: 'rgb(234,179,8)', bgColor: 'rgba(234,179,8,0.1)', gradient: 'from-yellow-500 to-amber-600' },
+    { label: 'Reviewing', value: stats.reviewing, icon: Eye, color: 'rgb(59,130,246)', bgColor: 'rgba(59,130,246,0.1)', gradient: 'from-blue-500 to-indigo-600' },
+    { label: 'Accepted', value: stats.accepted, icon: CheckCircle, color: 'rgb(34,197,94)', bgColor: 'rgba(34,197,94,0.1)', gradient: 'from-green-500 to-emerald-600' },
+    { label: 'Rejected', value: stats.rejected, icon: XCircle, color: 'rgb(239,68,68)', bgColor: 'rgba(239,68,68,0.1)', gradient: 'from-red-500 to-rose-600' },
+    { label: 'Waitlisted', value: stats.waitlisted, icon: AlertCircle, color: 'rgb(168,85,247)', bgColor: 'rgba(168,85,247,0.1)', gradient: 'from-purple-500 to-violet-600' },
+    { label: 'Shortlisted', value: stats.shortlisted, icon: Star, color: 'rgb(245,158,11)', bgColor: 'rgba(245,158,11,0.1)', gradient: 'from-amber-500 to-orange-600' },
   ];
 
   // ────────────────────────────────────────────────
@@ -275,7 +312,7 @@ const InternshipManagement = () => {
                     <motion.button
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.95 }}
-                      onClick={() => { setSelectedApplication(app); setShowViewModal(true); }}
+                      onClick={() => navigate(`/admin/dashboard/internships/view/${app.id}`)}
                       className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-md"
                       title="View Details"
                     >
@@ -285,11 +322,33 @@ const InternshipManagement = () => {
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={() => { setSelectedApplication(app); setReviewData({ score: app.score || 0, reviewNotes: app.reviewNotes || '', status: app.status }); setShowReviewModal(true); }}
-                      className="p-1.5 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-md"
+                      className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-md"
                       title="Review / Edit"
                     >
                       <Edit className="w-4 h-4" />
                     </motion.button>
+                    {app.status !== 'ACCEPTED' && (
+                      <motion.button
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => setAcceptConfirm(app)}
+                        className="p-1.5 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-md"
+                        title="Accept Intern"
+                      >
+                        <UserCheck className="w-4 h-4" />
+                      </motion.button>
+                    )}
+                    {app.status !== 'REJECTED' && (
+                      <motion.button
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => setRejectConfirm(app)}
+                        className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-md"
+                        title="Reject Application"
+                      >
+                        <UserX className="w-4 h-4" />
+                      </motion.button>
+                    )}
                     <motion.button
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.95 }}
@@ -380,7 +439,7 @@ const InternshipManagement = () => {
                 <motion.button
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.95 }}
-                  onClick={() => { setSelectedApplication(app); setShowViewModal(true); }}
+                  onClick={() => navigate(`/admin/dashboard/internships/view/${app.id}`)}
                   className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-md"
                 >
                   <Eye className="w-4 h-4" />
@@ -389,10 +448,32 @@ const InternshipManagement = () => {
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => { setSelectedApplication(app); setReviewData({ score: app.score || 0, reviewNotes: app.reviewNotes || '', status: app.status }); setShowReviewModal(true); }}
-                  className="p-1.5 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-md"
+                  className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-md"
                 >
                   <Edit className="w-4 h-4" />
                 </motion.button>
+                {app.status !== 'ACCEPTED' && (
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setAcceptConfirm(app)}
+                    className="p-1.5 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-md"
+                    title="Accept Intern"
+                  >
+                    <UserCheck className="w-4 h-4" />
+                  </motion.button>
+                )}
+                {app.status !== 'REJECTED' && (
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setRejectConfirm(app)}
+                    className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-md"
+                    title="Reject Application"
+                  >
+                    <UserX className="w-4 h-4" />
+                  </motion.button>
+                )}
                 <motion.button
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.95 }}
@@ -460,7 +541,7 @@ const InternshipManagement = () => {
               <motion.button
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => { setSelectedApplication(app); setShowViewModal(true); }}
+                onClick={() => navigate(`/admin/dashboard/internships/view/${app.id}`)}
                 className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-md"
                 title="View"
               >
@@ -470,11 +551,33 @@ const InternshipManagement = () => {
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => { setSelectedApplication(app); setReviewData({ score: app.score || 0, reviewNotes: app.reviewNotes || '', status: app.status }); setShowReviewModal(true); }}
-                className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-md"
+                className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-md"
                 title="Review/Edit"
               >
                 <Edit className="w-4 h-4" />
               </motion.button>
+              {app.status !== 'ACCEPTED' && (
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setAcceptConfirm(app)}
+                  className="p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-md"
+                  title="Accept Intern"
+                >
+                  <UserCheck className="w-4 h-4" />
+                </motion.button>
+              )}
+              {app.status !== 'REJECTED' && (
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setRejectConfirm(app)}
+                  className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-md"
+                  title="Reject Application"
+                >
+                  <UserX className="w-4 h-4" />
+                </motion.button>
+              )}
               <motion.button
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.95 }}
@@ -570,32 +673,62 @@ const InternshipManagement = () => {
       </div>
 
       <div className="mx-auto px-4 sm:px-6 py-8 space-y-8">
-        {/* Stats Cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-4">
-          {statCards.map((stat, i) => (
+        {/* Stats Cards — 4-col primary row + 3-col secondary row */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {statCards.slice(0, 4).map((stat, i) => (
             <motion.div
               key={i}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.07 }}
+              transition={{ delay: i * 0.08 }}
               whileHover={{ y: -4, scale: 1.02 }}
-              className="relative p-5 rounded-xl shadow-sm border border-gray-100 bg-white overflow-hidden group"
+              className="relative p-4 rounded-xl shadow-sm border border-gray-100 bg-white overflow-hidden group cursor-pointer"
             >
-              <div className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-300`} />
-              <div className="relative flex items-center space-x-4">
+              <div className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-300`} />
+              <div className="relative flex items-center space-x-3">
                 <motion.div
                   whileHover={{ rotate: 360, scale: 1.1 }}
-                  transition={{ duration: 0.6 }}
-                  className="p-3 rounded-xl shadow-sm"
-                  style={{ backgroundColor: PRIMARY_LIGHT }}
+                  transition={{ duration: 0.5 }}
+                  className="p-2.5 rounded-lg shadow-sm flex-shrink-0"
+                  style={{ backgroundColor: stat.bgColor }}
                 >
-                  <stat.icon className="w-6 h-6" style={{ color: PRIMARY_COLOR }} />
+                  <stat.icon className="w-4 h-4" style={{ color: stat.color }} />
                 </motion.div>
-                <div>
-                  <p className="text-xl font-bold text-gray-900">{stat.value}</p>
-                  <p className="text-sm text-gray-600">{stat.label}</p>
+                <div className="flex-1">
+                  <p className="text-xs font-medium text-gray-600 mb-0.5">{stat.label}</p>
+                  <p className="text-lg font-bold text-gray-900">{stat.value ?? '-'}</p>
                 </div>
               </div>
+              <div className="absolute top-0 right-0 w-14 h-14 opacity-10 rounded-bl-full" style={{ background: stat.color }} />
+            </motion.div>
+          ))}
+        </div>
+        <div className="grid grid-cols-3 gap-3">
+          {statCards.slice(4).map((stat, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: (i + 4) * 0.08 }}
+              whileHover={{ y: -4, scale: 1.02 }}
+              className="relative p-4 rounded-xl shadow-sm border border-gray-100 bg-white overflow-hidden group cursor-pointer"
+            >
+              <div className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-300`} />
+              <div className="relative flex items-center space-x-3">
+                <motion.div
+                  whileHover={{ rotate: 360, scale: 1.1 }}
+                  transition={{ duration: 0.5 }}
+                  className="p-2.5 rounded-lg shadow-sm flex-shrink-0"
+                  style={{ backgroundColor: stat.bgColor }}
+                >
+                  <stat.icon className="w-4 h-4" style={{ color: stat.color }} />
+                </motion.div>
+                <div className="flex-1">
+                  <p className="text-xs font-medium text-gray-600 mb-0.5">{stat.label}</p>
+                  <p className="text-lg font-bold text-gray-900">{stat.value ?? '-'}</p>
+                </div>
+              </div>
+              <div className="absolute top-0 right-0 w-14 h-14 opacity-10 rounded-bl-full" style={{ background: stat.color }} />
             </motion.div>
           ))}
         </div>
@@ -755,8 +888,8 @@ const InternshipManagement = () => {
                         whileTap={{ scale: 0.95 }}
                         onClick={() => setCurrentPage(page)}
                         className={`px-4 py-2 text-sm rounded-md ${currentPage === page
-                            ? 'bg-orange-500 text-white font-medium shadow-sm'
-                            : 'text-gray-600 hover:bg-gray-50 border border-gray-200'
+                          ? 'bg-orange-500 text-white font-medium shadow-sm'
+                          : 'text-gray-600 hover:bg-gray-50 border border-gray-200'
                           }`}
                       >
                         {page}
@@ -800,8 +933,8 @@ const InternshipManagement = () => {
           >
             <div
               className={`flex items-center gap-3 px-6 py-4 rounded-xl shadow-2xl text-sm border ${operationStatus.type === 'success'
-                  ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-300 text-green-800'
-                  : 'bg-gradient-to-r from-red-50 to-rose-50 border-red-300 text-red-800'
+                ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-300 text-green-800'
+                : 'bg-gradient-to-r from-red-50 to-rose-50 border-red-300 text-red-800'
                 }`}
             >
               {operationStatus.type === 'success' ? (
@@ -894,6 +1027,146 @@ const InternshipManagement = () => {
                   className="px-7 py-3 text-sm font-medium bg-gradient-to-r from-red-600 to-rose-600 text-white rounded-xl hover:from-red-700 hover:to-rose-700 shadow-md transition-all"
                 >
                   Delete Application
+                </motion.button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Accept Confirmation Modal */}
+      <AnimatePresence>
+        {acceptConfirm && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/40 backdrop-blur-md flex items-center justify-center z-50 p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.85, y: 30 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.85, y: 30 }}
+              className="bg-white rounded-2xl p-7 w-full max-w-md shadow-2xl"
+            >
+              <div className="flex items-start gap-5 mb-6">
+                <div className="w-14 h-14 bg-gradient-to-br from-emerald-100 to-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <UserCheck className="w-7 h-7 text-emerald-600" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">Accept Intern?</h3>
+                  <p className="text-gray-600">This will create an admin account for the intern.</p>
+                </div>
+              </div>
+
+              <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 mb-6 space-y-3">
+                <p className="text-gray-700">
+                  You are about to accept <span className="font-bold text-gray-900">{acceptConfirm.fullName}</span> as an intern.
+                </p>
+                <div className="flex items-start gap-2 text-sm text-emerald-700">
+                  <Shield className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                  <span>An admin account will be created with their email</span>
+                </div>
+                <div className="flex items-start gap-2 text-sm text-emerald-700">
+                  <Send className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                  <span>Login credentials will be sent to <strong>{acceptConfirm.email}</strong></span>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-4">
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => setAcceptConfirm(null)}
+                  disabled={acceptLoading}
+                  className="px-7 py-3 text-sm font-medium text-gray-700 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Cancel
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: acceptLoading ? 1 : 1.02 }}
+                  whileTap={{ scale: acceptLoading ? 1 : 0.98 }}
+                  onClick={() => handleAcceptIntern(acceptConfirm)}
+                  disabled={acceptLoading}
+                  className="px-7 py-3 text-sm font-medium bg-gradient-to-r from-emerald-600 to-green-600 text-white rounded-xl hover:from-emerald-700 hover:to-green-700 shadow-md transition-all flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                >
+                  {acceptLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Accepting...
+                    </>
+                  ) : (
+                    <>
+                      <UserCheck className="w-4 h-4" />
+                      Accept Intern
+                    </>
+                  )}
+                </motion.button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Reject Confirmation Modal */}
+      <AnimatePresence>
+        {rejectConfirm && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/40 backdrop-blur-md flex items-center justify-center z-50 p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.85, y: 30 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.85, y: 30 }}
+              className="bg-white rounded-2xl p-7 w-full max-w-md shadow-2xl"
+            >
+              <div className="flex items-start gap-5 mb-6">
+                <div className="w-14 h-14 bg-gradient-to-br from-red-100 to-rose-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <UserX className="w-7 h-7 text-red-600" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">Reject Application?</h3>
+                  <p className="text-gray-600">This will mark the application as rejected.</p>
+                </div>
+              </div>
+
+              <div className="bg-gray-50 rounded-xl p-4 mb-6">
+                <p className="text-gray-700">
+                  Are you sure you want to reject <span className="font-bold text-gray-900">{rejectConfirm.fullName}'s</span> internship application?
+                </p>
+              </div>
+
+              <div className="flex justify-end gap-4">
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => setRejectConfirm(null)}
+                  disabled={rejectLoading}
+                  className="px-7 py-3 text-sm font-medium text-gray-700 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Cancel
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: rejectLoading ? 1 : 1.02 }}
+                  whileTap={{ scale: rejectLoading ? 1 : 0.98 }}
+                  onClick={() => handleRejectIntern(rejectConfirm)}
+                  disabled={rejectLoading}
+                  className="px-7 py-3 text-sm font-medium bg-gradient-to-r from-red-600 to-rose-600 text-white rounded-xl hover:from-red-700 hover:to-rose-700 shadow-md transition-all flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                >
+                  {rejectLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Rejecting...
+                    </>
+                  ) : (
+                    <>
+                      <UserX className="w-4 h-4" />
+                      Reject Application
+                    </>
+                  )}
                 </motion.button>
               </div>
             </motion.div>
@@ -1036,27 +1309,59 @@ const InternshipManagement = () => {
                 </div>
               </div>
 
-              <div className="p-6 border-t border-gray-200 flex justify-end gap-4">
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => setShowViewModal(false)}
-                  className="px-8 py-3 text-base font-medium text-gray-700 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
-                >
-                  Close
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => {
-                    setShowViewModal(false);
-                    setReviewData({ score: selectedApplication.score || 0, reviewNotes: selectedApplication.reviewNotes || '', status: selectedApplication.status });
-                    setShowReviewModal(true);
-                  }}
-                  className="px-8 py-3 text-base font-medium bg-[rgb(81,96,146)] text-white rounded-xl hover:bg-[rgb(60,75,120)] shadow-md transition-all"
-                >
-                  Review / Edit
-                </motion.button>
+              <div className="p-6 border-t border-gray-200 flex flex-wrap justify-between gap-4">
+                <div className="flex gap-3">
+                  {selectedApplication.status !== 'ACCEPTED' && (
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => {
+                        setShowViewModal(false);
+                        setAcceptConfirm(selectedApplication);
+                      }}
+                      className="px-6 py-3 text-base font-medium bg-gradient-to-r from-emerald-600 to-green-600 text-white rounded-xl hover:from-emerald-700 hover:to-green-700 shadow-md transition-all flex items-center gap-2"
+                    >
+                      <UserCheck className="w-5 h-5" />
+                      Accept
+                    </motion.button>
+                  )}
+                  {selectedApplication.status !== 'REJECTED' && (
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => {
+                        setShowViewModal(false);
+                        setRejectConfirm(selectedApplication);
+                      }}
+                      className="px-6 py-3 text-base font-medium bg-gradient-to-r from-red-600 to-rose-600 text-white rounded-xl hover:from-red-700 hover:to-rose-700 shadow-md transition-all flex items-center gap-2"
+                    >
+                      <UserX className="w-5 h-5" />
+                      Reject
+                    </motion.button>
+                  )}
+                </div>
+                <div className="flex gap-3">
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setShowViewModal(false)}
+                    className="px-8 py-3 text-base font-medium text-gray-700 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
+                  >
+                    Close
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => {
+                      setShowViewModal(false);
+                      setReviewData({ score: selectedApplication.score || 0, reviewNotes: selectedApplication.reviewNotes || '', status: selectedApplication.status });
+                      setShowReviewModal(true);
+                    }}
+                    className="px-8 py-3 text-base font-medium bg-[rgb(81,96,146)] text-white rounded-xl hover:bg-[rgb(60,75,120)] shadow-md transition-all"
+                  >
+                    Review / Edit
+                  </motion.button>
+                </div>
               </div>
             </motion.div>
           </motion.div>

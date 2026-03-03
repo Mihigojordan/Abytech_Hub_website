@@ -8,11 +8,19 @@ export class WeeklyGoalService {
   constructor(
     private prisma: PrismaService,
     private notificationService: NotificationService,
-  ) {}
+  ) { }
 
-  // Helper: Get all admins for notifications
-  private async getAllAdminIds(): Promise<string[]> {
-    const admins = await this.prisma.admin.findMany({ select: { id: true } });
+  // Helper: Get manager admins for notifications
+  private async getManagerAdminIds(): Promise<string[]> {
+    const admins = await this.prisma.admin.findMany({
+      where: {
+        OR: [
+          { isSuperAdmin: true },
+          { permissions: { some: { permission: { name: 'weekly_management' } } } }
+        ]
+      },
+      select: { id: true },
+    });
     return admins.map(a => a.id);
   }
 
@@ -23,6 +31,37 @@ export class WeeklyGoalService {
       select: { adminName: true },
     });
     return admin?.adminName || 'Unknown';
+  }
+
+  // Helper: Notify admins of goal updates
+  private async notifyAdminsOfGoalUpdate(goal: any, type: 'COMPLETED' | 'PROGRESS_UPDATED' | 'TASK_CHANGED', extraInfo: string = '') {
+    try {
+      const adminIds = await this.getManagerAdminIds();
+      let title = '';
+      let message = '';
+      const ownerName = goal.owner?.adminName || 'An admin';
+
+      if (type === 'COMPLETED') {
+        title = 'Weekly Goal Completed 🎉';
+        message = `${ownerName} completed their weekly goal: "${goal.title}"`;
+      } else if (type === 'PROGRESS_UPDATED') {
+        title = 'Weekly Goal Progress Updated';
+        message = `${ownerName} updated progress for "${goal.title}" to ${goal.progress}%`;
+      } else if (type === 'TASK_CHANGED') {
+        title = 'Weekly Goal Tasks Updated';
+        message = `${ownerName} updated tasks for "${goal.title}"${extraInfo ? ` - ${extraInfo}` : ''}`;
+      }
+
+      await this.notificationService.createNotification({
+        recipients: adminIds.map(aid => ({
+          id: aid, type: 'ADMIN' as const, read: false, link: `/admin/dashboard/weekly-goals`,
+        })),
+        title,
+        message,
+      });
+    } catch (e) {
+      console.error('Failed to send notification:', e.message);
+    }
   }
 
   // Create weekly goal
@@ -55,8 +94,8 @@ export class WeeklyGoalService {
         include: { owner: true },
       });
 
-      // Send notification to all admins
-      const adminIds = await this.getAllAdminIds();
+      // Send notification to managers
+      const adminIds = await this.getManagerAdminIds();
       const senderName = await this.getAdminName(adminId);
 
       this.notificationService.createNotification({
@@ -206,9 +245,9 @@ export class WeeklyGoalService {
       include: { owner: true },
     });
 
-    // Send notification to all admins
+    // Send notification to managers
     if (adminId) {
-      const adminIds = await this.getAllAdminIds();
+      const adminIds = await this.getManagerAdminIds();
       const senderName = await this.getAdminName(adminId);
 
       this.notificationService.createNotification({
@@ -241,9 +280,9 @@ export class WeeklyGoalService {
       include: { owner: true },
     });
 
-    // Send notification to all admins
+    // Send notification to managers
     if (adminId) {
-      const adminIds = await this.getAllAdminIds();
+      const adminIds = await this.getManagerAdminIds();
       const senderName = await this.getAdminName(adminId);
 
       this.notificationService.createNotification({
@@ -282,11 +321,19 @@ export class WeeklyGoalService {
       status = 'IN_PROGRESS';
     }
 
-    return this.prisma.weeklyGoal.update({
+    const updatedGoal = await this.prisma.weeklyGoal.update({
       where: { id },
       data: { progress, status },
       include: { owner: true },
     });
+
+    if (progress === 100 && goal.status !== 'COMPLETED') {
+      await this.notifyAdminsOfGoalUpdate(updatedGoal, 'COMPLETED');
+    } else {
+      await this.notifyAdminsOfGoalUpdate(updatedGoal, 'PROGRESS_UPDATED');
+    }
+
+    return updatedGoal;
   }
 
   // Add task to goal
@@ -309,11 +356,15 @@ export class WeeklyGoalService {
     const completedCount = tasks.filter(t => t.done).length;
     const progress = Math.round((completedCount / tasks.length) * 100);
 
-    return this.prisma.weeklyGoal.update({
+    const updatedGoal = await this.prisma.weeklyGoal.update({
       where: { id },
       data: { tasks, progress },
       include: { owner: true },
     });
+
+    await this.notifyAdminsOfGoalUpdate(updatedGoal, 'TASK_CHANGED', 'Added a new task');
+
+    return updatedGoal;
   }
 
   // Toggle task completion
@@ -344,11 +395,19 @@ export class WeeklyGoalService {
       status = 'IN_PROGRESS';
     }
 
-    return this.prisma.weeklyGoal.update({
+    const updatedGoal = await this.prisma.weeklyGoal.update({
       where: { id },
       data: { tasks: updatedTasks, progress, status },
       include: { owner: true },
     });
+
+    if (progress === 100 && goal.status !== 'COMPLETED') {
+      await this.notifyAdminsOfGoalUpdate(updatedGoal, 'COMPLETED');
+    } else {
+      await this.notifyAdminsOfGoalUpdate(updatedGoal, 'TASK_CHANGED');
+    }
+
+    return updatedGoal;
   }
 
   // Remove task
@@ -367,25 +426,40 @@ export class WeeklyGoalService {
       ? Math.round((completedCount / updatedTasks.length) * 100)
       : 0;
 
-    return this.prisma.weeklyGoal.update({
+    const updatedGoal = await this.prisma.weeklyGoal.update({
       where: { id },
       data: { tasks: updatedTasks, progress },
       include: { owner: true },
     });
+
+    await this.notifyAdminsOfGoalUpdate(updatedGoal, 'TASK_CHANGED', 'Removed a task');
+
+    return updatedGoal;
   }
 
   // Add review notes
   async addReviewNotes(id: string, reviewNotes: string) {
-    const goal = await this.prisma.weeklyGoal.findUnique({ where: { id } });
+    const goal = await this.prisma.weeklyGoal.findUnique({ where: { id }, include: { owner: true } });
     if (!goal) {
       throw new NotFoundException('Weekly goal not found');
     }
 
-    return this.prisma.weeklyGoal.update({
+    const updatedGoal = await this.prisma.weeklyGoal.update({
       where: { id },
       data: { reviewNotes },
       include: { owner: true },
     });
+
+    // Notify the goal owner
+    if (goal.ownerId) {
+      this.notificationService.createNotification({
+        recipients: [{ id: goal.ownerId, type: 'ADMIN', read: false, link: `/admin/dashboard/weekly-goals` }],
+        title: 'New Review Note Added',
+        message: `A manager added a review note to your weekly goal: "${goal.title}"`,
+      }).catch(err => console.error('Failed to send notification:', err));
+    }
+
+    return updatedGoal;
   }
 
   // Delete weekly goal
@@ -399,9 +473,9 @@ export class WeeklyGoalService {
 
     const deleted = await this.prisma.weeklyGoal.delete({ where: { id } });
 
-    // Send notification to all admins
+    // Send notification to managers
     if (adminId) {
-      const adminIds = await this.getAllAdminIds();
+      const adminIds = await this.getManagerAdminIds();
       const senderName = await this.getAdminName(adminId);
 
       this.notificationService.createNotification({

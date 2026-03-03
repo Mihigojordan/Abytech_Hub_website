@@ -21,6 +21,7 @@ import Whoweare from "./components/home/Whoweare";
 import WhoWeArePage from "./pages/about us/WhoWeArePage";
 const Services = lazy(() => import("./pages/services/Services"));
 const Training = lazy(() => import("./pages/Programs/Training"));
+const InternshipApplicationPage = lazy(() => import("./pages/InternshipApplicationPage"));
 
 // Pages (Lazy)
 const HomePage = lazy(() => import("./pages/HomePage"));
@@ -46,11 +47,35 @@ import WeeklyGoalManagement from "./pages/dashboard/WeeklyGoalManagement";
 import WeeklyGoalFormPage from "./pages/dashboard/WeeklyGoalFormPage";
 import WeeklyGoalViewPage from "./pages/dashboard/WeeklyGoalViewPage";
 import InternshipManagement from "./pages/dashboard/InternshipManagement";
+import InternshipViewPage from "./pages/dashboard/InternshipViewPage";
 import HostedWebsiteManagement from "./pages/dashboard/HostedWebsiteManagement";
 import DemoRequestManagement from "./pages/dashboard/DemoRequestManagement";
 import ResearchManagement from "./pages/dashboard/ResearchManagement";
 import ResearchFormPage from "./pages/dashboard/ResearchFormPage";
 import ResearchViewPage from "./pages/dashboard/ResearchViewPage";
+import SalaryManagement from "./pages/dashboard/SalaryManagement";
+import useAdminAuth from "./context/AdminAuthContext";
+
+// Permission route wrapper — redirects to dashboard if no permission
+const PermissionRoute = ({ permission, children }) => {
+  const { hasPermission, isLoading, isSuperAdmin } = useAdminAuth();
+  if (isLoading) return null;
+  if (isSuperAdmin) return children; // Super admins bypass check
+  if (permission && !hasPermission(permission)) {
+    return <Navigate to="/admin/dashboard" replace />;
+  }
+  return children;
+};
+
+// Super Admin route wrapper
+const SuperAdminRoute = ({ children }) => {
+  const { isSuperAdmin, isLoading } = useAdminAuth();
+  if (isLoading) return null;
+  if (!isSuperAdmin) {
+    return <Navigate to="/admin/dashboard" replace />;
+  }
+  return children;
+};
 
 // Lazy-loaded pages
 const ProjectsPage = lazy(() => import("./pages/Projects/ProjectPages"));
@@ -70,6 +95,7 @@ const UpsertReportPage = lazy(() => import("./components/dashboard/report/Upsert
 const ReportViewPage = lazy(() => import("./components/dashboard/report/ReportViewPage"));
 const AdminProfilePage = lazy(() => import("./components/dashboard/profile/admin/ProfileSettings"));
 const AdminProfileEdit = lazy(() => import("./pages/EditProfilePage"));
+const PermissionManagement = lazy(() => import("./pages/dashboard/PermissionManagement"));
 
 // Loading UI
 const LoadingSpinner = () => (
@@ -103,7 +129,6 @@ const router = createBrowserRouter([
       // services
       { path: "services", element: <SuspenseWrapper><Services /></SuspenseWrapper> },
 
-
       // about 
       { path: "about-us", element: <SuspenseWrapper><AboutUs /></SuspenseWrapper> },
       { path: "empowering-inclusion", element: <SuspenseWrapper><EmpoweringPage /></SuspenseWrapper> },
@@ -112,18 +137,13 @@ const router = createBrowserRouter([
       { path: "Vision-mission", element: <SuspenseWrapper><MissionVisionPage /></SuspenseWrapper> },
       { path: "who-we-are", element: <SuspenseWrapper><WhoWeArePage /></SuspenseWrapper> },
 
-
-
-
-
-
       { path: "team-member", element: <SuspenseWrapper><TeamMember /></SuspenseWrapper> },
 
-
-      // training programs 
+      // training programs
       { path: "training", element: <SuspenseWrapper><Training /></SuspenseWrapper> },
 
-
+      // internship application
+      { path: "internship", element: <SuspenseWrapper><InternshipApplicationPage /></SuspenseWrapper> },
 
       { path: "contact-us", element: <SuspenseWrapper><ContactUs /></SuspenseWrapper> },
     ],
@@ -140,34 +160,35 @@ const router = createBrowserRouter([
         element: <SuspenseWrapper><DashboardLayout /> </SuspenseWrapper>,
         children: [
           { index: true, element: <DashboardHome /> },
-          { path: 'expense', element: <ExpenseDashboard /> },
-          { path: 'employee', element: <EmployeeeDashboard /> },
+          { path: 'expense', element: <PermissionRoute permission="expense_management"><ExpenseDashboard /></PermissionRoute> },
+          { path: 'employee', element: <PermissionRoute permission="employee_management"><EmployeeeDashboard /></PermissionRoute> },
           { path: 'report', element: <ReportDashboard /> },
           { path: 'report/create', element: <UpsertReportPage /> },
           { path: 'report/edit/:id', element: <UpsertReportPage /> },
           { path: 'report/view/:id', element: <ReportViewPage /> },
           { path: 'profile/:id', element: <AdminProfilePage /> },
           { path: 'edit-profile/:id', element: <AdminProfileEdit /> },
+          { path: 'permissions', element: <SuperAdminRoute><PermissionManagement /></SuperAdminRoute> },
 
-          { path: 'chat', element: <ChatApp /> },
-          { path: 'chat/:conversationId', element: <ChatApp /> },
-          { path: 'weekly-goals', element: <WeeklyGoalManagement /> },
-          { path: 'weekly-goals/new', element: <WeeklyGoalFormPage /> },
-          { path: 'weekly-goals/edit/:id', element: <WeeklyGoalFormPage /> },
-          { path: 'weekly-goals/view/:id', element: <WeeklyGoalViewPage /> },
-          { path: 'internships', element: <InternshipManagement /> },
-          { path: 'hosted-website', element: <HostedWebsiteManagement /> },
+          { path: 'chat', element: <PermissionRoute permission="chat_management"><ChatApp /></PermissionRoute> },
+          { path: 'chat/:conversationId', element: <PermissionRoute permission="chat_management"><ChatApp /></PermissionRoute> },
+          { path: 'weekly-goals', element: <PermissionRoute permission="weekly_management"><WeeklyGoalManagement /></PermissionRoute> },
+          { path: 'weekly-goals/new', element: <PermissionRoute permission="weekly_management"><WeeklyGoalFormPage /></PermissionRoute> },
+          { path: 'weekly-goals/edit/:id', element: <PermissionRoute permission="weekly_management"><WeeklyGoalFormPage /></PermissionRoute> },
+          { path: 'weekly-goals/view/:id', element: <PermissionRoute permission="weekly_management"><WeeklyGoalViewPage /></PermissionRoute> },
+          { path: 'internships', element: <PermissionRoute permission="internship_management"><InternshipManagement /></PermissionRoute> },
+          { path: 'internships/view/:id', element: <PermissionRoute permission="internship_management"><InternshipViewPage /></PermissionRoute> },
+          { path: 'hosted-website', element: <PermissionRoute permission="hosted_website"><HostedWebsiteManagement /></PermissionRoute> },
           { path: 'demo-request', element: <DemoRequestManagement /> },
-          { path: 'meetings', element: <MeetingManagement /> },
-          { path: 'meetings/create', element: <MeetingFormPage /> },
-          { path: 'meetings/edit/:id', element: <MeetingFormPage /> },
-          { path: 'meetings/view/:id', element: <MeetingViewPage /> },
-          { path: 'research', element: <ResearchManagement /> },
-          { path: 'research/create', element: <ResearchFormPage /> },
-          { path: 'research/edit/:id', element: <ResearchFormPage /> },
-          { path: 'research/view/:id', element: <ResearchViewPage /> },
-          // {path:'profile' , element:<AdminProfilePage />},
-
+          { path: 'meetings', element: <PermissionRoute permission="meeting_management"><MeetingManagement /></PermissionRoute> },
+          { path: 'meetings/create', element: <PermissionRoute permission="meeting_management"><MeetingFormPage /></PermissionRoute> },
+          { path: 'meetings/edit/:id', element: <PermissionRoute permission="meeting_management"><MeetingFormPage /></PermissionRoute> },
+          { path: 'meetings/view/:id', element: <PermissionRoute permission="meeting_management"><MeetingViewPage /></PermissionRoute> },
+          { path: 'research', element: <PermissionRoute permission="research_management"><ResearchManagement /></PermissionRoute> },
+          { path: 'research/create', element: <PermissionRoute permission="research_management"><ResearchFormPage /></PermissionRoute> },
+          { path: 'research/edit/:id', element: <PermissionRoute permission="research_management"><ResearchFormPage /></PermissionRoute> },
+          { path: 'research/view/:id', element: <PermissionRoute permission="research_management"><ResearchViewPage /></PermissionRoute> },
+          { path: 'salary', element: <PermissionRoute permission="salary_management"> <SalaryManagement /></PermissionRoute> },
         ]
       }
     ]

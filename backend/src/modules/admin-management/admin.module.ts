@@ -22,6 +22,7 @@ import { NotificationsModule } from './notification/notifications.module';
     }),
     EmailModule,
     NotificationsModule,
-  ]
+  ],
+  exports: [AdminService],
 })
 export class AdminModule {}

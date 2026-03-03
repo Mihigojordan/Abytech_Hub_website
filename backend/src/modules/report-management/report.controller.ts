@@ -47,20 +47,25 @@ export class ReportController {
     return this.reportService.create(data, adminId);
   }
 
-  // ✅ Get all reports
-@Get()
-async findAll(
-  @Query('page') page = '1',
-  @Query('limit') limit = '10',
-  @Query('search') search = '',
-  @Query('filter') filter?: string,
-  @Query('from') from?: string,
-  @Query('to') to?: string,
-) {
-  const pageNum = parseInt(page, 10);
-  const limitNum = parseInt(limit, 10);
-  return this.reportService.findAll(pageNum, limitNum, search, filter, from, to);
-}
+  // ✅ Get all reports (permission-based: only own reports if no report_management permission)
+  @Get()
+  @UseGuards(AdminJwtAuthGuard)
+  async findAll(
+    @Req() req: RequestWithAdmin,
+    @Query('page') page = '1',
+    @Query('limit') limit = '10',
+    @Query('search') search = '',
+    @Query('filter') filter?: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+  ) {
+    const adminId = req.admin?.id;
+    if (!adminId) throw new HttpException('Unauthorized admin', 401);
+
+    const pageNum = parseInt(page, 10);
+    const limitNum = parseInt(limit, 10);
+    return this.reportService.findAll(adminId, pageNum, limitNum, search, filter, from, to);
+  }
 
   // ✅ Get one report
   @Get(':id')

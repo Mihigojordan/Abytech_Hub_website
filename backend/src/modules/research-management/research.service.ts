@@ -10,11 +10,19 @@ export class ResearchService {
     private prisma: PrismaService,
     private cloudinaryService: CloudinaryService,
     private notificationService: NotificationService,
-  ) {}
+  ) { }
 
-  // Helper: Get all admins for notifications
-  private async getAllAdminIds(): Promise<string[]> {
-    const admins = await this.prisma.admin.findMany({ select: { id: true } });
+  // Helper: Get research admins for notifications
+  private async getResearchAdminIds(): Promise<string[]> {
+    const admins = await this.prisma.admin.findMany({
+      where: {
+        OR: [
+          { isSuperAdmin: true },
+          { permissions: { some: { permission: { name: 'research_management' } } } }
+        ]
+      },
+      select: { id: true },
+    });
     return admins.map(a => a.id);
   }
 
@@ -39,7 +47,7 @@ export class ResearchService {
       });
 
       // Send notification to all admins
-      const adminIds = await this.getAllAdminIds();
+      const adminIds = await this.getResearchAdminIds();
       const senderName = await this.getAdminName(adminId);
 
       this.notificationService.createNotification({
@@ -128,7 +136,7 @@ export class ResearchService {
 
     // Send notification to all admins
     if (adminId) {
-      const adminIds = await this.getAllAdminIds();
+      const adminIds = await this.getResearchAdminIds();
       const senderName = await this.getAdminName(adminId);
 
       this.notificationService.createNotification({
@@ -166,7 +174,7 @@ export class ResearchService {
 
     // Send notification to all admins
     if (adminId) {
-      const adminIds = await this.getAllAdminIds();
+      const adminIds = await this.getResearchAdminIds();
       const senderName = await this.getAdminName(adminId);
 
       this.notificationService.createNotification({

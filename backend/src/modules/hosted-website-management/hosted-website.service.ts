@@ -1,10 +1,20 @@
 import { Injectable, BadRequestException, NotFoundException, ConflictException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { WebsiteStatus } from '../../../generated/prisma';
+import { NotificationService } from '../notification/notification.service';
 
 @Injectable()
 export class HostedWebsiteService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private notificationService: NotificationService,
+  ) { }
+
+  // Helper: Get all admins for notifications
+  private async getAllAdminIds(): Promise<string[]> {
+    const admins = await this.prisma.admin.findMany({ select: { id: true } });
+    return admins.map(a => a.id);
+  }
 
   // Create hosted website
   async create(data: any) {
@@ -18,7 +28,7 @@ export class HostedWebsiteService {
         throw new ConflictException('Domain already registered');
       }
 
-      return await this.prisma.hostedWebsite.create({
+      const website = await this.prisma.hostedWebsite.create({
         data: {
           name: data.name,
           domain: data.domain,
@@ -26,6 +36,25 @@ export class HostedWebsiteService {
           status: data.status || 'ACTIVE',
         },
       });
+
+      try {
+        const adminIds = await this.getAllAdminIds();
+
+        await this.notificationService.createNotification({
+          recipients: adminIds.map(aid => ({
+            id: aid,
+            type: 'ADMIN' as const,
+            read: false,
+            link: `/admin/dashboard/websites/hosted`,
+          })),
+          title: 'New Hosted Website Added',
+          message: `The website "${website.name}" (${website.domain}) has been added`,
+        });
+      } catch (e) {
+        console.error('Failed to send notification:', e.message);
+      }
+
+      return website;
     } catch (error) {
       if (error instanceof ConflictException) throw error;
       throw new BadRequestException('Failed to create website: ' + error.message);
@@ -128,7 +157,7 @@ export class HostedWebsiteService {
       }
     }
 
-    return this.prisma.hostedWebsite.update({
+    const updated = await this.prisma.hostedWebsite.update({
       where: { id },
       data: {
         name: data.name,
@@ -137,6 +166,25 @@ export class HostedWebsiteService {
         status: data.status,
       },
     });
+
+    try {
+      const adminIds = await this.getAllAdminIds();
+
+      await this.notificationService.createNotification({
+        recipients: adminIds.map(aid => ({
+          id: aid,
+          type: 'ADMIN' as const,
+          read: false,
+          link: `/admin/dashboard/websites/hosted`,
+        })),
+        title: 'Hosted Website Updated',
+        message: `The website "${updated.name}" has been updated`,
+      });
+    } catch (e) {
+      console.error('Failed to send notification:', e.message);
+    }
+
+    return updated;
   }
 
   // Update website status
@@ -146,10 +194,29 @@ export class HostedWebsiteService {
       throw new NotFoundException('Website not found');
     }
 
-    return this.prisma.hostedWebsite.update({
+    const updated = await this.prisma.hostedWebsite.update({
       where: { id },
       data: { status },
     });
+
+    try {
+      const adminIds = await this.getAllAdminIds();
+
+      await this.notificationService.createNotification({
+        recipients: adminIds.map(aid => ({
+          id: aid,
+          type: 'ADMIN' as const,
+          read: false,
+          link: `/admin/dashboard/websites/hosted`,
+        })),
+        title: 'Website Status Changed',
+        message: `The website "${updated.name}" status changed to ${status}`,
+      });
+    } catch (e) {
+      console.error('Failed to send notification:', e.message);
+    }
+
+    return updated;
   }
 
   // Suspend website
@@ -174,7 +241,26 @@ export class HostedWebsiteService {
       throw new NotFoundException('Website not found');
     }
 
-    return this.prisma.hostedWebsite.delete({ where: { id } });
+    const deleted = await this.prisma.hostedWebsite.delete({ where: { id } });
+
+    try {
+      const adminIds = await this.getAllAdminIds();
+
+      await this.notificationService.createNotification({
+        recipients: adminIds.map(aid => ({
+          id: aid,
+          type: 'ADMIN' as const,
+          read: false,
+          link: `/admin/dashboard/websites/hosted`,
+        })),
+        title: 'Hosted Website Deleted',
+        message: `The website "${deleted.name}" has been deleted`,
+      });
+    } catch (e) {
+      console.error('Failed to send notification:', e.message);
+    }
+
+    return deleted;
   }
 
   // Get website statistics

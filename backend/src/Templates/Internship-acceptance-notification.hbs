@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Welcome to AbyTech-Hub</title>
+  <title>Internship Application Accepted</title>
   <style>
     * {
       margin: 0;
@@ -202,14 +202,20 @@
 
     <!-- Content -->
     <div class="email-content">
-      <h1 class="greeting">Welcome to the team, {{firstname}} {{lastname}}! 🎉</h1>
+      <h1 class="greeting">Congratulations, {{fullName}}! 🎉</h1>
 
       <p class="message">
-        You have been successfully registered into the <strong>AbyTech-Hub</strong> employee portal.
+        We are thrilled to inform you that your application for the <strong>{{internshipType}}</strong> internship at
+        AbyTech-Hub has been accepted!
+      </p>
+
+      <p class="message">
+        We were impressed by your skills and enthusiasm, and we believe you will be a great addition to our team as an
+        intern.
       </p>
 
       <div class="info-section">
-        <h2 class="info-title">Your Login Details</h2>
+        <h2 class="info-title">Your Access Credentials</h2>
         <p class="info-text" style="font-size: 16px;">
           <strong>Email:</strong> {{email}}<br><br>
           <strong>Temporary Password:</strong> <span
@@ -218,16 +224,15 @@
       </div>
 
       <p class="message" style="color: #666; font-size: 14px;">
-        <em>Please ensure you log into the system using the credentials above. For security purposes, please change your
-          password immediately after your first login.</em>
+        <em>Please change your password after your first login for security purposes.</em>
       </p>
 
       <div style="text-align: center; margin: 30px 0;">
-        <a href="http://localhost:5173/admin/login" class="cta-button">Login to Portal</a>
+        <a href="{{dashboardUrl}}" class="cta-button">Access Dashboard</a>
       </div>
 
       <p class="message" style="margin-top: 30px;">
-        Welcome to AbyTech-Hub! We're excited to have you on board.<br><br>
+        If you have any questions, feel free to reach out to us. Welcome aboard!<br><br>
         Best regards,<br>
         <strong style="color: #1A4D5C;">The AbyTech-Hub Team</strong>
       </p>
@@ -236,9 +241,10 @@
     <!-- Footer -->
     <div class="email-footer">
       <div class="footer-links">
-        <a href="#" class="footer-link">Portal Home</a>
-        <a href="#" class="footer-link">HR Policies</a>
-        <a href="#" class="footer-link">Support</a>
+        <a href="#" class="footer-link">About Us</a>
+        <a href="#" class="footer-link">Services</a>
+        <a href="#" class="footer-link">Internships</a>
+        <a href="#" class="footer-link">Contact</a>
       </div>
 
       <div class="social-links">

@@ -17,6 +17,8 @@ import { WeeklyGoalModule } from './modules/weekly-goal-management/weekly-goal.m
 import { NotificationModule } from './modules/notification/notification.module';
 import { PushNotificationsModule } from './modules/push-notification/push-notification.module';
 import { ResearchModule } from './modules/research-management/research.module';
+import { SalaryModule } from './modules/salary-management/salary.module';
+import { PermissionModule } from './modules/permission-management/permission.module';
 
 @Module({
   imports: [
@@ -35,6 +37,8 @@ import { ResearchModule } from './modules/research-management/research.module';
     WeeklyGoalModule,
     NotificationModule,
     PushNotificationsModule,
+    SalaryModule,
+    PermissionModule,
   ],
   controllers: [AppController],
 })

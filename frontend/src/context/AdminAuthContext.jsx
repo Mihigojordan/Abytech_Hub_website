@@ -1,8 +1,9 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import adminAuthService from '../services/adminAuthService';
 import pushNotificationService from '../services/pushNotificationService';
 import { getClientDescription } from '../stores/detectDevice';
 import { API_URL } from '../api/api';
+import { io } from 'socket.io-client';
 
 export const AdminAuthContext = createContext({
   user: null,
@@ -12,7 +13,7 @@ export const AdminAuthContext = createContext({
   unlockAdmin: () => Promise.resolve(),
   updateAdmin: () => Promise.resolve({}),
   deleteAdmin: () => Promise.resolve(),
-  loginWithGoogle: () => {},
+  loginWithGoogle: () => { },
   subscribeToNotifications: () => Promise.resolve(),
   unsubscribeFromNotifications: () => Promise.resolve(),
   unsubscribeAllDevices: () => Promise.resolve(),
@@ -21,6 +22,9 @@ export const AdminAuthContext = createContext({
   isLocked: false,
   isLoading: true,
   isSubscribedToNotifications: false,
+  permissions: [],
+  isSuperAdmin: false,
+  hasPermission: () => false,
 });
 
 export const AdminAuthContextProvider = ({ children }) => {
@@ -29,15 +33,31 @@ export const AdminAuthContextProvider = ({ children }) => {
   const [isLocked, setIsLocked] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubscribedToNotifications, setIsSubscribedToNotifications] = useState(false);
+  const [permissions, setPermissions] = useState([]);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  const socketRef = useRef(null);
 
   const updateAuthState = (authData) => {
     setUser(authData.user);
     setIsAuthenticated(authData.isAuthenticated);
     setIsLocked(authData.isLocked ?? false);
+    if (authData.user?.permissionNames) {
+      setPermissions(authData.user.permissionNames);
+    }
+    if (authData.user?.isSuperAdmin !== undefined) {
+      setIsSuperAdmin(authData.user.isSuperAdmin);
+    }
     if (!authData.isAuthenticated) {
       setIsSubscribedToNotifications(false);
+      setPermissions([]);
+      setIsSuperAdmin(false);
     }
   };
+
+  const hasPermission = useCallback((permissionName) => {
+    if (isSuperAdmin) return true;
+    return permissions.includes(permissionName);
+  }, [permissions, isSuperAdmin]);
 
   // 🔧 Helper: convert VAPID key
   const urlBase64ToUint8Array = (base64String) => {
@@ -309,6 +329,36 @@ export const AdminAuthContextProvider = ({ children }) => {
     autoSubscribe();
   }, [isAuthenticated, isLoading, user?.id, isSubscribedToNotifications]);
 
+  // 🔌 Socket connection for real-time permission updates
+  useEffect(() => {
+    if (!isAuthenticated || !user?.id) {
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+        socketRef.current = null;
+      }
+      return;
+    }
+
+    const socketUrl = API_URL.replace('/api', '');
+    const socket = io(socketUrl, { transports: ['websocket', 'polling'] });
+    socketRef.current = socket;
+
+    socket.on('connect', () => {
+      socket.emit('registerUser', { id: user.id, type: 'ADMIN' });
+    });
+
+    socket.on('permission:updated', (data) => {
+      console.log('🔑 Permission updated in real-time:', data);
+      if (data.permissions) setPermissions(data.permissions);
+      if (data.isSuperAdmin !== undefined) setIsSuperAdmin(data.isSuperAdmin);
+    });
+
+    return () => {
+      socket.disconnect();
+      socketRef.current = null;
+    };
+  }, [isAuthenticated, user?.id]);
+
   const values = {
     user,
     login,
@@ -326,6 +376,9 @@ export const AdminAuthContextProvider = ({ children }) => {
     isLocked,
     isLoading,
     isSubscribedToNotifications,
+    permissions,
+    isSuperAdmin,
+    hasPermission,
   };
 
   return (

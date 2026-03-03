@@ -112,8 +112,14 @@ export const ChatFileFields = [
 export const AttachmentsFileFields = [
   { name: 'attachments', maxCount: 10 },
 ];
+
+export const InternshipFileFields = [
+  { name: 'cv', maxCount: 1 },
+];
+
 export const ReportUploadConfig = createUnifiedUploadConfig();
 export const AdminUploadConfig = createUnifiedUploadConfig();
 export const ChatUploadConfig = createUnifiedUploadConfig();
 export const AttachmentsUploadConfig = createUnifiedUploadConfig();
+export const InternshipUploadConfig = createUnifiedUploadConfig();
 

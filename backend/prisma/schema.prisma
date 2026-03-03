@@ -36,6 +36,7 @@ model Admin {
   isLocked             Boolean?    @default(false)
   skills               Json? // array
   portifilio           Json? // array
+  isSuperAdmin         Boolean     @default(false) // Super admin has all permissions
 
   // files
   cv           String?
@@ -62,9 +63,14 @@ model Admin {
   internshipApplications InternshipApplication[]
   weeklyGoals WeeklyGoal[]
   demoRequests DemoRequest[]
+  salaries Salary[]
+
+  // Permission relation
+  permissions AdminPermission[]
 
   @@map("Admin")
 }
+
 
 
 model Notification {
@@ -615,6 +621,49 @@ enum ExpenseStatus{
 }
 
 
+model Salary {
+  id              String       @id @default(uuid())
+
+  // Pay period
+  month           Int          // 1–12
+  year            Int          // e.g. 2026
+
+  // Amounts
+  amount          Float        // requested salary amount
+  bonus           Float        @default(0)
+  deduction       Float        @default(0)
+  netAmount       Float        // amount + bonus - deduction (computed in service)
+
+  // Request details
+  reason          String?      @db.Text
+  status          SalaryStatus @default(PENDING)
+
+  // Who is requesting (the employee)
+  adminId         String
+  admin           Admin        @relation(fields: [adminId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  // Who approved/rejected
+  processedById   String?
+  processedAt     DateTime?
+  rejectionReason String?      @db.Text
+
+  paidAt          DateTime?
+
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  @@unique([adminId, month, year])
+  @@map("Salary")
+}
+
+enum SalaryStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  PAID
+}
+
+
 model Report{
   id         String   @id @default(uuid())
   title       String
@@ -645,6 +694,26 @@ model ReplyReport {
 }
 
 
+model Permission {
+  id          String            @id @default(cuid())
+  name        String            @unique
+  description String?
+  admins      AdminPermission[]
+  createdAt   DateTime          @default(now())
 
+  @@map("Permission")
+}
 
+model AdminPermission {
+  id           String     @id @default(cuid())
+  adminId      String
+  admin        Admin      @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  permissionId String
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  assignedBy   String?
+  assignedAt   DateTime   @default(now())
+
+  @@unique([adminId, permissionId])
+  @@map("AdminPermission")
+}
 

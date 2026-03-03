@@ -5,15 +5,16 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { NotificationService } from 'src/global/notification/notification.service';
 import { ReportGateway } from './report.gateway';
 import { NotificationsService } from '../admin-management/notification/notifications.service';
+import { PermissionService, PERMISSIONS } from '../permission-management/permission.service';
 
 @Injectable()
 export class ReportService {
   constructor(
     private prisma: PrismaService,
     private cloudinaryService: CloudinaryService,
-     private readonly notification: NotificationsService,
+    private readonly notification: NotificationsService,
     private readonly reportGateway: ReportGateway,
-
+    private readonly permissionService: PermissionService,
   ) { }
 
   // ✅ Create report with adminId
@@ -40,8 +41,9 @@ async create(data: any, adminId: string) {
   }
 }
 
-  // ✅ Fetch all reports
+  // ✅ Fetch all reports (permission-based filtering)
 async findAll(
+  adminId: string,
   page = 1,
   limit = 10,
   search = '',
@@ -51,6 +53,12 @@ async findAll(
 ) {
   try {
     const skip = (page - 1) * limit;
+
+    // Check if admin has report_management permission
+    const hasReportPermission = await this.permissionService.hasPermission(
+      adminId,
+      PERMISSIONS.REPORT_MANAGEMENT,
+    );
 
     // base search filter
     const where: any = search
@@ -75,6 +83,11 @@ async findAll(
           ],
         }
       : {};
+
+    // If admin doesn't have report_management permission, filter to only their reports
+    if (!hasReportPermission) {
+      where.adminId = adminId;
+    }
 
     // apply time filters if provided
     if (filter) {
@@ -119,7 +132,7 @@ async findAll(
     const [reports, total] = await Promise.all([
       this.prisma.report.findMany({
         where,
-        include: { admin: true,replies:true },
+        include: { admin: true, replies: true },
         orderBy: { createdAt: 'desc' },
         skip,
         take: limit,
@@ -136,6 +149,7 @@ async findAll(
         totalPages: Math.ceil(total / limit),
       },
       filter: filter || 'all',
+      hasReportPermission, // Let frontend know if admin can see all reports
     };
   } catch (error) {
     throw new BadRequestException('Failed to fetch reports: ' + error.message);

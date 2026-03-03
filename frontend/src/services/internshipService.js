@@ -1,9 +1,20 @@
 import api from '../api/api';
 
 class InternshipService {
-  // Submit application (public)
+  // Submit application (public) - supports FormData for file upload
   async submitApplication(data) {
     try {
+      // If data is FormData (file upload), send directly
+      if (data instanceof FormData) {
+        const response = await api.post('/internships/apply', data, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+        return response.data;
+      }
+
+      // Otherwise send as JSON (backwards compatibility)
       const payload = {
         fullName: data.fullName,
         email: data.email,
@@ -15,11 +26,8 @@ class InternshipService {
         city: data.city,
         internshipType: data.internshipType,
         period: data.period,
-        preferredStart: data.preferredStart,
-        preferredEnd: data.preferredEnd,
         coverLetter: data.coverLetter,
         skills: data.skills,
-        cvUrl: data.cvUrl,
         portfolioUrl: data.portfolioUrl,
         githubUrl: data.githubUrl,
         linkedinUrl: data.linkedinUrl,

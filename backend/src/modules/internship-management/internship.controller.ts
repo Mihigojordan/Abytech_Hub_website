@@ -10,19 +10,42 @@ import {
   UseGuards,
   Req,
   Query,
+  UseInterceptors,
+  UploadedFiles,
 } from '@nestjs/common';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { InternshipService } from './internship.service';
 import { AdminJwtAuthGuard } from 'src/guards/adminGuard.guard';
 import { RequestWithAdmin } from 'src/common/interfaces/admin.interface';
 import { InternshipStatus, InternshipType, InternshipPeriod } from '../../../generated/prisma';
+import { InternshipFileFields, InternshipUploadConfig } from 'src/common/utils/file-upload.utils';
 
 @Controller('internships')
 export class InternshipController {
   constructor(private readonly internshipService: InternshipService) {}
 
-  // Submit application (public - no auth required)
+  // Submit application (public - no auth required) with file upload
   @Post('apply')
-  async create(@Body() data: any) {
+  @UseInterceptors(FileFieldsInterceptor(InternshipFileFields, InternshipUploadConfig))
+  async create(
+    @Body() data: any,
+    @UploadedFiles() files: { cv?: Express.Multer.File[] },
+  ) {
+    // Add CV path to data if file was uploaded
+    if (files?.cv && files.cv.length > 0) {
+      const cvFile = files.cv[0];
+      data.cvUrl = `/uploads/admin_files/${cvFile.filename}`;
+    }
+
+    // Parse skills if it's a string
+    if (typeof data.skills === 'string') {
+      try {
+        data.skills = JSON.parse(data.skills);
+      } catch (e) {
+        data.skills = [];
+      }
+    }
+
     return this.internshipService.create(data);
   }
 

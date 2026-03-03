@@ -50,6 +50,7 @@ import {
   Globe,
   GraduationCap,
   Monitor,
+  Wallet,
 } from "lucide-react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 
@@ -69,6 +70,8 @@ interface NavItem {
   icon: React.ElementType;
   path: string;
   allowedRoles?: string[];
+  requiredPermission?: string;
+  requireSuperAdmin?: boolean;
 }
 
 interface DropdownGroup {
@@ -105,77 +108,82 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onToggle, }) => {
         path: basePath,
       },
       {
-        id: "expense ",
+        id: "expense",
         label: "Expense Management",
         icon: ShoppingBag,
         path: `${basePath}/expense`,
-
+        requiredPermission: 'expense_management',
+      },
+      {
+        id: "salary",
+        label: "Salary Management",
+        icon: Wallet,
+        path: `${basePath}/salary`,
+        requiredPermission: 'salary_management',
       },
       {
         id: "employee",
         label: "Employee Management",
         icon: Users2,
         path: `${basePath}/employee`,
-
+        requiredPermission: 'employee_management',
       },
       {
         id: "chat",
         label: "Chat Management",
         icon: MessageSquare,
         path: `${basePath}/chat`,
-
+        requiredPermission: 'chat_management',
       },
       {
         id: "report",
-        label: "Report Management ",
+        label: "Report Management",
         icon: ClipboardList,
         path: `${basePath}/report`,
-
+        // Always visible — behavior differs based on report_management perm
       },
       {
         id: "meeting",
-        label: "Meeting Management ",
+        label: "Meeting Management",
         icon: Calendar,
         path: `${basePath}/meetings`,
-
+        requiredPermission: 'meeting_management',
       },
       {
         id: "weekly-goals",
-        label: "Weekly Goals Management ",
+        label: "Weekly Goals Management",
         icon: Target,
         path: `${basePath}/weekly-goals`,
-
+        requiredPermission: 'weekly_management',
       },
       {
         id: "research",
-        label: "Research Management ",
+        label: "Research Management",
         icon: Microscope,
         path: `${basePath}/research`,
-
+        requiredPermission: 'research_management',
       },
       {
         id: "hosted-web",
-        label: "Hosted Website Management ",
+        label: "Hosted Website Management",
         icon: Globe,
         path: `${basePath}/hosted-website`,
-
+        requiredPermission: 'hosted_website',
       },
-      // {
-      //   id: "internships",
-      //   label: "Internship Management ",
-      //   icon: GraduationCap,
-      //   path: `${basePath}/internships`,
-
-      // },
-      // {
-      //   id: "demo-request",
-      //   label: "Demo Request Management ",
-      //   icon: Monitor,
-      //   path: `${basePath}/demo-request`,
-
-      // },
-
-
+      {
+        id: "internships",
+        label: "Internship Management",
+        icon: GraduationCap,
+        path: `${basePath}/internships`,
+        requiredPermission: 'internship_management',
+      },
+      {
+        id: "permissions",
+        label: "Permission Management",
+        icon: Users2,
+        path: `${basePath}/permissions`,
+        requireSuperAdmin: true,
+      },
     ];
   };
 
@@ -185,15 +193,27 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onToggle, }) => {
       .map((item) => {
         if ("items" in item) {
           const filteredItems = item.items.filter(
-            (subItem) => !subItem.allowedRoles || subItem.allowedRoles.includes(role)
+            (subItem) => {
+              if (subItem.requireSuperAdmin && !adminAuth.isSuperAdmin) return false;
+              if (adminAuth.isSuperAdmin) return true; // Super admin bypass
+              if (subItem.requiredPermission && !adminAuth.hasPermission(subItem.requiredPermission)) return false;
+              return true;
+            }
           );
           if (filteredItems.length === 0) return null;
           return { ...item, items: filteredItems };
         }
-        if (!item.allowedRoles || item.allowedRoles.includes(role)) {
-          return item;
+        // Check permission
+        if (item.requireSuperAdmin && !adminAuth.isSuperAdmin) {
+          return null;
         }
-        return null;
+        if (adminAuth.isSuperAdmin) {
+          return item; // Super admin bypass
+        }
+        if (item.requiredPermission && !adminAuth.hasPermission(item.requiredPermission)) {
+          return null;
+        }
+        return item;
       })
       .filter((item): item is NavItem | DropdownGroup => item !== null);
   };
