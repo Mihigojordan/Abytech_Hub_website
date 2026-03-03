@@ -8,7 +8,7 @@ import sharp from 'sharp'
 import path from 'path'
 
 // Your source image path
-const sourceImage = './abyteh_hub_logo.png';
+const sourceImage = './src/assets/tran.png';
 
 // Complete icon specifications for all platforms
 const iconSpecs = {
