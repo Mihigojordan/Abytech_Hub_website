@@ -18,14 +18,34 @@ import {
   Download,
   BarChart3,
   Activity,
-  Sparkles
+  Sparkles,
+  Briefcase,
+  GraduationCap,
+  FlaskConical,
+  Wallet,
+  Target
 } from 'lucide-react';
 import reportService from '../../services/reportService';
 import expenseService from '../../services/expenseService';
+import meetingService from '../../services/meetingService';
+import internshipService from '../../services/internshipService';
+import researchService from '../../services/researchService';
+import salaryService from '../../services/salaryService';
+import weeklyGoalService from '../../services/weeklyGoalService';
 import html2pdf from 'html2pdf.js';
 import Swal from 'sweetalert2';
+import useAdminAuth from '../../context/AdminAuthContext';
 
 const DashboardHome = ({ role }) => {
+  const { hasPermission, permissions, isSuperAdmin } = useAdminAuth();
+  const hasExpensePermission = hasPermission('expense_management');
+  const hasReportPermission = hasPermission('report_management');
+  const hasMeetingPermission = hasPermission('meeting_management');
+  const hasInternshipPermission = hasPermission('internship_management');
+  const hasResearchPermission = hasPermission('research_management');
+  const hasSalaryPermission = hasPermission('salary_management');
+  const hasWeeklyPermission = hasPermission('weekly_management');
+
   const [dashboardData, setDashboardData] = useState({
     reports: [],
     expenses: [],
@@ -37,6 +57,13 @@ const DashboardHome = ({ role }) => {
       recentActivity: 0,
       uniqueAdmins: 0
     }
+  });
+  const [moduleStats, setModuleStats] = useState({
+    meetings: { total: 0, scheduled: 0, completed: 0 },
+    internships: { total: 0, pending: 0, accepted: 0 },
+    research: { total: 0, inProgress: 0, published: 0 },
+    salary: { total: 0, pending: 0, paid: 0, totalNet: 0 },
+    weeklyGoals: { total: 0, completed: 0, inProgress: 0 },
   });
   const [loading, setLoading] = useState(true);
   const [filterType, setFilterType] = useState('all');
@@ -58,62 +85,20 @@ const DashboardHome = ({ role }) => {
         <title>${report.title}</title>
         <style>
           body { font-family: Arial, sans-serif; margin: 20px; }
-          .swal-preview-container .ql-editor {
-            padding: 1rem;
-          }
-          .swal-preview-container .ql-editor h1 {
-            font-size: 2em;
-            font-weight: bold;
-            margin-top: 0.67em;
-            margin-bottom: 0.67em;
-          }
-          .swal-preview-container .ql-editor h2 {
-            font-size: 1.5em;
-            font-weight: bold;
-            margin-top: 0.83em;
-            margin-bottom: 0.83em;
-          }
-          .swal-preview-container .ql-editor h3 {
-            font-size: 1.17em;
-            font-weight: bold;
-            margin-top: 1em;
-            margin-bottom: 1em;
-          }
-          .swal-preview-container .ql-editor ul,
-          .swal-preview-container .ql-editor ol {
-            padding-left: 1.5em;
-            margin-bottom: 1em;
-          }
-          .swal-preview-container .ql-editor ul {
-            list-style-type: disc;
-          }
-          .swal-preview-container .ql-editor ol {
-            list-style-type: decimal;
-          }
-          .swal-preview-container .ql-editor li {
-            margin-bottom: 0.5em;
-          }
-          .swal-preview-container .ql-editor p {
-            margin-bottom: 1em;
-          }
-          .swal-preview-container .ql-editor strong {
-            font-weight: bold;
-          }
-          .swal-preview-container .ql-editor em {
-            font-style: italic;
-          }
-          .swal-preview-container .ql-editor blockquote {
-            border-left: 4px solid #ccc;
-            padding-left: 1em;
-            margin-left: 0;
-            font-style: italic;
-          }
-          .ql-container {
-            min-height: 400px;
-          }
-          .ql-editor {
-            min-height: 400px;
-          }
+          .swal-preview-container .ql-editor { padding: 1rem; }
+          .swal-preview-container .ql-editor h1 { font-size: 2em; font-weight: bold; margin-top: 0.67em; margin-bottom: 0.67em; }
+          .swal-preview-container .ql-editor h2 { font-size: 1.5em; font-weight: bold; margin-top: 0.83em; margin-bottom: 0.83em; }
+          .swal-preview-container .ql-editor h3 { font-size: 1.17em; font-weight: bold; margin-top: 1em; margin-bottom: 1em; }
+          .swal-preview-container .ql-editor ul, .swal-preview-container .ql-editor ol { padding-left: 1.5em; margin-bottom: 1em; }
+          .swal-preview-container .ql-editor ul { list-style-type: disc; }
+          .swal-preview-container .ql-editor ol { list-style-type: decimal; }
+          .swal-preview-container .ql-editor li { margin-bottom: 0.5em; }
+          .swal-preview-container .ql-editor p { margin-bottom: 1em; }
+          .swal-preview-container .ql-editor strong { font-weight: bold; }
+          .swal-preview-container .ql-editor em { font-style: italic; }
+          .swal-preview-container .ql-editor blockquote { border-left: 4px solid #ccc; padding-left: 1em; margin-left: 0; font-style: italic; }
+          .ql-container { min-height: 400px; }
+          .ql-editor { min-height: 400px; }
           .text-left { text-align: left; }
         </style>
       </head>
@@ -138,7 +123,7 @@ const DashboardHome = ({ role }) => {
     html2pdf().set(options).from(element).save();
   };
 
-  // Fetch reports and expenses
+  // Fetch reports and expenses (expenses only if has permission)
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
@@ -156,13 +141,16 @@ const DashboardHome = ({ role }) => {
         };
         const filterParams = getFilterParams();
 
-        const [reportResponse, expenseResponse] = await Promise.all([
-          reportService.getAllReports({ ...filterParams, page: 1, limit: 9999 }),
-          expenseService.getAllExpenses({ ...filterParams, page: 1, limit: 9999 }),
-        ]);
-
+        // Always fetch reports (backend filters to own reports if no report_management permission)
+        const reportResponse = await reportService.getAllReports({ ...filterParams, page: 1, limit: 9999 });
         const reportData = reportResponse.data || reportResponse || [];
-        const expenseData = expenseResponse.data || expenseResponse || [];
+
+        // Only fetch expenses if admin has expense_management permission
+        let expenseData = [];
+        if (hasExpensePermission) {
+          const expenseResponse = await expenseService.getAllExpenses({ ...filterParams, page: 1, limit: 9999 });
+          expenseData = expenseResponse.data || expenseResponse || [];
+        }
 
         const recentActivity = reportData.length + expenseData.length;
 
@@ -183,7 +171,7 @@ const DashboardHome = ({ role }) => {
           keyMetrics,
           stats: {
             totalReports: reportResponse.pagination ? reportResponse.pagination.total : reportData.length,
-            totalExpenses: expenseResponse.pagination ? expenseResponse.pagination.total : expenseData.length,
+            totalExpenses: expenseData.length,
             totalAmount: expenseData.reduce((sum, expense) => sum + expense.amount, 0),
             recentActivity,
             uniqueAdmins: new Set([...reportData, ...expenseData].map(item => item.admin?.id)).size
@@ -196,9 +184,106 @@ const DashboardHome = ({ role }) => {
       }
     };
     fetchData();
-  }, [filterType, searchTerm, customStartDate, customEndDate]);
+  }, [filterType, searchTerm, customStartDate, customEndDate, hasExpensePermission]);
 
-  const statsCards = [
+  // Fetch module stats based on permissions (re-fetches when permissions change)
+  useEffect(() => {
+    const fetchModuleStats = async () => {
+      try {
+        const promises = [];
+        const keys = [];
+
+        if (hasMeetingPermission) {
+          keys.push('meetings');
+          promises.push(
+            meetingService.getMeetingStats().catch(() => null)
+          );
+        }
+
+        if (hasInternshipPermission) {
+          keys.push('internships');
+          promises.push(
+            internshipService.getApplicationStats().catch(() => null)
+          );
+        }
+
+        if (hasResearchPermission) {
+          keys.push('research');
+          promises.push(
+            researchService.getAllResearches({ page: 1, limit: 1 }).catch(() => null)
+          );
+        }
+
+        if (hasSalaryPermission) {
+          keys.push('salary');
+          promises.push(
+            salaryService.getStats().catch(() => null)
+          );
+        }
+
+        if (hasWeeklyPermission) {
+          keys.push('weeklyGoals');
+          promises.push(
+            weeklyGoalService.getWeeklyGoalStats().catch(() => null)
+          );
+        }
+
+        const results = await Promise.all(promises);
+        const newStats = { ...moduleStats };
+
+        results.forEach((result, index) => {
+          if (!result) return;
+          const key = keys[index];
+
+          switch (key) {
+            case 'meetings':
+              newStats.meetings = {
+                total: result.total || result.totalMeetings || 0,
+                scheduled: result.scheduled || result.scheduledCount || 0,
+                completed: result.completed || result.completedCount || 0,
+              };
+              break;
+            case 'internships':
+              newStats.internships = {
+                total: result.total || result.totalApplications || 0,
+                pending: result.pending || result.pendingCount || 0,
+                accepted: result.accepted || result.acceptedCount || 0,
+              };
+              break;
+            case 'research':
+              newStats.research = {
+                total: result.pagination?.total || result.total || 0,
+                inProgress: result.inProgress || 0,
+                published: result.published || 0,
+              };
+              break;
+            case 'salary':
+              newStats.salary = {
+                total: result.total || result.totalRequests || 0,
+                pending: result.pending || result.pendingCount || 0,
+                paid: result.paid || result.paidCount || 0,
+                totalNet: result.totalNet || result.totalNetAmount || 0,
+              };
+              break;
+            case 'weeklyGoals':
+              newStats.weeklyGoals = {
+                total: result.total || result.totalGoals || 0,
+                completed: result.completed || result.completedCount || 0,
+                inProgress: result.inProgress || result.inProgressCount || 0,
+              };
+              break;
+          }
+        });
+
+        setModuleStats(newStats);
+      } catch (error) {
+        console.error('Error fetching module stats:', error);
+      }
+    };
+    fetchModuleStats();
+  }, [permissions, isSuperAdmin, hasMeetingPermission, hasInternshipPermission, hasResearchPermission, hasSalaryPermission, hasWeeklyPermission]);
+
+  const allStatsCards = [
     {
       label: 'Total Reports',
       value: dashboardData.stats.totalReports,
@@ -207,7 +292,8 @@ const DashboardHome = ({ role }) => {
       gradient: 'from-blue-500 to-[#ff5a00]',
       bg: 'bg-blue-50',
       iconColor: 'text-[#ff5a00]',
-      trend: 'up'
+      trend: 'up',
+      visible: true,
     },
     {
       label: 'Total Expenses',
@@ -217,7 +303,8 @@ const DashboardHome = ({ role }) => {
       gradient: 'from-purple-500 to-purple-600',
       bg: 'bg-purple-50',
       iconColor: 'text-purple-600',
-      trend: 'up'
+      trend: 'up',
+      visible: hasExpensePermission,
     },
     {
       label: 'Total Amount',
@@ -227,7 +314,67 @@ const DashboardHome = ({ role }) => {
       gradient: 'from-emerald-500 to-emerald-600',
       bg: 'bg-emerald-50',
       iconColor: 'text-emerald-600',
-      trend: 'up'
+      trend: 'up',
+      visible: hasExpensePermission,
+    },
+    {
+      label: 'Meetings',
+      value: moduleStats.meetings.total,
+      subtitle: `${moduleStats.meetings.scheduled} scheduled`,
+      icon: Briefcase,
+      gradient: 'from-indigo-500 to-indigo-600',
+      bg: 'bg-indigo-50',
+      iconColor: 'text-indigo-600',
+      trend: 'up',
+      change: `${moduleStats.meetings.completed} done`,
+      visible: hasMeetingPermission,
+    },
+    {
+      label: 'Internships',
+      value: moduleStats.internships.total,
+      subtitle: `${moduleStats.internships.pending} pending`,
+      icon: GraduationCap,
+      gradient: 'from-pink-500 to-pink-600',
+      bg: 'bg-pink-50',
+      iconColor: 'text-pink-600',
+      trend: 'up',
+      change: `${moduleStats.internships.accepted} accepted`,
+      visible: hasInternshipPermission,
+    },
+    {
+      label: 'Research',
+      value: moduleStats.research.total,
+      icon: FlaskConical,
+      gradient: 'from-cyan-500 to-cyan-600',
+      bg: 'bg-cyan-50',
+      iconColor: 'text-cyan-600',
+      trend: 'up',
+      change: `${moduleStats.research.inProgress} in progress`,
+      visible: hasResearchPermission,
+    },
+    {
+      label: 'Salary Requests',
+      value: moduleStats.salary.total,
+      subtitle: `${moduleStats.salary.pending} pending`,
+      icon: Wallet,
+      gradient: 'from-amber-500 to-amber-600',
+      bg: 'bg-amber-50',
+      iconColor: 'text-amber-600',
+      trend: 'up',
+      change: `${moduleStats.salary.paid} paid`,
+      visible: hasSalaryPermission,
+    },
+    {
+      label: 'Weekly Goals',
+      value: moduleStats.weeklyGoals.total,
+      subtitle: `${moduleStats.weeklyGoals.inProgress} in progress`,
+      icon: Target,
+      gradient: 'from-teal-500 to-teal-600',
+      bg: 'bg-teal-50',
+      iconColor: 'text-teal-600',
+      trend: 'up',
+      change: `${moduleStats.weeklyGoals.completed} completed`,
+      visible: hasWeeklyPermission,
     },
     {
       label: 'Recent Activity',
@@ -237,9 +384,12 @@ const DashboardHome = ({ role }) => {
       gradient: 'from-orange-500 to-orange-600',
       bg: 'bg-orange-50',
       iconColor: 'text-orange-600',
-      trend: 'up'
+      trend: 'up',
+      visible: true,
     }
   ];
+
+  const statsCards = allStatsCards.filter(card => card.visible);
 
   const handlePreviewReport = (report) => {
     window.location.href = `/admin/dashboard/report/view/${report.id}`;
@@ -263,8 +413,8 @@ const DashboardHome = ({ role }) => {
         <div className="px-4 py-3">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-lg font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">Financial Dashboard</h1>
-              <p className="text-xs text-slate-600 mt-0.5">Welcome back! Here's your financial overview.</p>
+              <h1 className="text-lg font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">Dashboard Overview</h1>
+              <p className="text-xs text-slate-600 mt-0.5">Welcome back! Here's your overview.</p>
             </div>
             <div className="flex items-center gap-1.5">
               <button className="p-2 text-slate-500 hover:text-slate-700 hover:bg-white/50 rounded-lg transition-all">
@@ -290,7 +440,7 @@ const DashboardHome = ({ role }) => {
               <Search className="absolute left-3 top-2.5 text-slate-400" size={16} />
               <input
                 type="text"
-                placeholder="Search reports or expenses..."
+                placeholder="Search reports..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:border-transparent transition-all bg-white/50"
@@ -318,8 +468,8 @@ const DashboardHome = ({ role }) => {
                     }
                   }}
                   className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${filterType === btn.value
-                      ? 'bg-orange-500 text-white shadow-md'
-                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                    ? 'bg-orange-500 text-white shadow-md'
+                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                     }`}
                 >
                   {btn.label}
@@ -388,8 +538,8 @@ const DashboardHome = ({ role }) => {
           )}
         </div>
 
-        {/* Modern Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Modern Stats Cards — dynamic grid */}
+        <div className={`grid grid-cols-1 md:grid-cols-2 ${statsCards.length > 4 ? 'lg:grid-cols-4 xl:grid-cols-5' : 'lg:grid-cols-4'} gap-4`}>
           {statsCards.map((stat, index) => (
             <div
               key={index}
@@ -400,15 +550,7 @@ const DashboardHome = ({ role }) => {
                   <p className="text-xs text-slate-600 font-medium mb-1">{stat.label}</p>
                   <p className="text-xl font-bold text-slate-900">{stat.value}</p>
                   <div className="flex items-center mt-1.5">
-                    {stat.trend === 'up' ? (
-                      <ArrowUpRight className="w-3 h-3 text-emerald-500" />
-                    ) : (
-                      <ArrowDownRight className="w-3 h-3 text-red-500" />
-                    )}
-                    <span className={`text-xs font-semibold ml-1 ${stat.trend === 'up' ? 'text-emerald-600' : 'text-red-600'}`}>
-                      {stat.change}
-                    </span>
-                    <span className="text-xs text-slate-500 ml-1.5">vs last month</span>
+                    <span className="text-xs font-semibold text-slate-500">{stat.change}</span>
                   </div>
                 </div>
                 <div className={`w-11 h-11 ${stat.bg} rounded-xl flex items-center justify-center shadow-sm`}>
@@ -420,8 +562,8 @@ const DashboardHome = ({ role }) => {
         </div>
 
         {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {/* Recent Reports */}
+        <div className={`grid grid-cols-1 ${hasExpensePermission ? 'lg:grid-cols-2' : ''} gap-4`}>
+          {/* Recent Reports — always visible */}
           <div className="bg-white/80 backdrop-blur-sm rounded-xl border border-white/50 shadow-sm overflow-hidden">
             <div className="p-4 border-b border-slate-100">
               <div className="flex items-center justify-between">
@@ -479,146 +621,152 @@ const DashboardHome = ({ role }) => {
             </div>
           </div>
 
-          {/* Recent Expenses */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-xl border border-white/50 shadow-sm overflow-hidden">
-            <div className="p-4 border-b border-slate-100">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-bold text-slate-900">Recent Expenses</h3>
-                <div className="flex items-center gap-1 bg-yellow-50 px-2 py-1 rounded-lg">
-                  <DollarSign className="w-3.5 h-3.5 text-yellow-600" />
-                  <span className="text-xs font-semibold text-yellow-700">
-                    ${dashboardData.expenses.reduce((sum, exp) => sum + exp.amount, 0).toFixed(2)}
-                  </span>
+          {/* Recent Expenses — only visible with expense_management permission */}
+          {hasExpensePermission && (
+            <div className="bg-white/80 backdrop-blur-sm rounded-xl border border-white/50 shadow-sm overflow-hidden">
+              <div className="p-4 border-b border-slate-100">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-bold text-slate-900">Recent Expenses</h3>
+                  <div className="flex items-center gap-1 bg-yellow-50 px-2 py-1 rounded-lg">
+                    <DollarSign className="w-3.5 h-3.5 text-yellow-600" />
+                    <span className="text-xs font-semibold text-yellow-700">
+                      ${dashboardData.expenses.reduce((sum, exp) => sum + exp.amount, 0).toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div className="p-4">
+                <div className="space-y-2.5">
+                  {dashboardData.expenses.length > 0 ? (
+                    dashboardData.expenses.map((expense) => (
+                      <div key={expense.id} className="p-3 bg-slate-50/50 rounded-lg hover:bg-slate-100/50 transition-all">
+                        <div className="flex items-start justify-between mb-1.5">
+                          <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                            <div className="w-7 h-7 bg-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                              <DollarSign className="w-3.5 h-3.5 text-emerald-600" />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="font-semibold text-slate-900 text-xs truncate">{expense.title}</p>
+                              <p className="text-xs text-slate-500 truncate">{expense.description || 'N/A'}</p>
+                              <p className="text-xs text-slate-400">{expense.admin?.adminName || 'Unknown'}</p>
+                            </div>
+                          </div>
+                          <div className="flex flex-col items-end flex-shrink-0 ml-2">
+                            <span className="text-xs font-bold text-slate-900">${expense.amount.toFixed(2)}</span>
+                            <span className="text-xs text-slate-500">
+                              {new Date(expense.createdAt).toLocaleDateString()}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-slate-500 text-center text-xs py-6">No expenses found</p>
+                  )}
+                </div>
+                <div className="mt-3 pt-3 border-t border-slate-100">
+                  <button
+                    onClick={() => window.location.href = '/admin/dashboard/expense'}
+                    className="w-full text-xs font-medium text-orange-500 py-2 hover:text-orange-600 transition-all"
+                  >
+                    View All Expenses →
+                  </button>
                 </div>
               </div>
             </div>
-            <div className="p-4">
-              <div className="space-y-2.5">
-                {dashboardData.expenses.length > 0 ? (
-                  dashboardData.expenses.map((expense) => (
-                    <div key={expense.id} className="p-3 bg-slate-50/50 rounded-lg hover:bg-slate-100/50 transition-all">
-                      <div className="flex items-start justify-between mb-1.5">
-                        <div className="flex items-center gap-2.5 flex-1 min-w-0">
-                          <div className="w-7 h-7 bg-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                            <DollarSign className="w-3.5 h-3.5 text-emerald-600" />
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="font-semibold text-slate-900 text-xs truncate">{expense.title}</p>
-                            <p className="text-xs text-slate-500 truncate">{expense.description || 'N/A'}</p>
-                            <p className="text-xs text-slate-400">{expense.admin?.adminName || 'Unknown'}</p>
-                          </div>
-                        </div>
-                        <div className="flex flex-col items-end flex-shrink-0 ml-2">
-                          <span className="text-xs font-bold text-slate-900">${expense.amount.toFixed(2)}</span>
-                          <span className="text-xs text-slate-500">
-                            {new Date(expense.createdAt).toLocaleDateString()}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-slate-500 text-center text-xs py-6">No expenses found</p>
-                )}
-              </div>
-              <div className="mt-3 pt-3 border-t border-slate-100">
-                <button
-                  onClick={() => window.location.href = '/admin/dashboard/expense'}
-                  className="w-full text-xs font-medium text-orange-500 py-2 hover:text-orange-600 transition-all"
-                >
-                  View All Expenses →
-                </button>
-              </div>
-            </div>
-          </div>
+          )}
         </div>
 
-        {/* Bottom Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          {/* Admin Overview */}
-          <div className="lg:col-span-2 bg-white/80 backdrop-blur-sm rounded-xl border border-white/50 shadow-sm overflow-hidden">
-            <div className="p-4 border-b border-slate-100">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-bold text-slate-900">Admin Overview</h3>
-                <button
-                  onClick={() => window.location.href = '/admin/dashboard/users'}
-                  className="text-xs font-medium text-orange-500 hover:text-orange-600"
-                >
-                  View Details
-                </button>
+        {/* Bottom Section — only show if admin has relevant permissions */}
+        {(hasReportPermission || hasExpensePermission) && (
+          <div className={`grid grid-cols-1 ${hasExpensePermission ? 'lg:grid-cols-3' : ''} gap-4`}>
+            {/* Admin Overview — visible if has report or expense permission */}
+            <div className={`${hasExpensePermission ? 'lg:col-span-2' : ''} bg-white/80 backdrop-blur-sm rounded-xl border border-white/50 shadow-sm overflow-hidden`}>
+              <div className="p-4 border-b border-slate-100">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-bold text-slate-900">Admin Overview</h3>
+                  <button
+                    onClick={() => window.location.href = '/admin/dashboard/users'}
+                    className="text-xs font-medium text-orange-500 hover:text-orange-600"
+                  >
+                    View Details
+                  </button>
+                </div>
               </div>
-            </div>
-            <div className="p-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {[...new Set([...dashboardData.reports, ...dashboardData.expenses].map(item => item.admin?.id))]
-                  .map((adminId) => {
-                    const admin = dashboardData.reports.find(r => r.admin?.id === adminId)?.admin ||
-                      dashboardData.expenses.find(e => e.admin?.id === adminId)?.admin;
-                    const adminReports = dashboardData.reports.filter(r => r.admin?.id === adminId).length;
-                    const adminExpenses = dashboardData.expenses.filter(e => e.admin?.id === adminId).length;
-                    return {
-                      id: adminId,
-                      name: admin?.adminName || 'Unknown',
-                      totalItems: adminReports + adminExpenses
-                    };
-                  })
-                  .map((admin, index) => (
-                    <div key={index} className="p-3 border border-slate-200 rounded-lg hover:border-slate-300 hover:shadow-sm transition-all">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2.5">
-                          <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-                            <Building2 className="w-4 h-4 text-purple-600" />
-                          </div>
-                          <div>
-                            <p className="font-semibold text-slate-900 text-xs">{admin.name}</p>
-                            <p className="text-xs text-slate-500">{admin.totalItems} items</p>
+              <div className="p-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {[...new Set([...dashboardData.reports, ...dashboardData.expenses].map(item => item.admin?.id))]
+                    .map((adminId) => {
+                      const admin = dashboardData.reports.find(r => r.admin?.id === adminId)?.admin ||
+                        dashboardData.expenses.find(e => e.admin?.id === adminId)?.admin;
+                      const adminReports = dashboardData.reports.filter(r => r.admin?.id === adminId).length;
+                      const adminExpenses = dashboardData.expenses.filter(e => e.admin?.id === adminId).length;
+                      return {
+                        id: adminId,
+                        name: admin?.adminName || 'Unknown',
+                        totalItems: adminReports + adminExpenses
+                      };
+                    })
+                    .map((admin, index) => (
+                      <div key={index} className="p-3 border border-slate-200 rounded-lg hover:border-slate-300 hover:shadow-sm transition-all">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                              <Building2 className="w-4 h-4 text-purple-600" />
+                            </div>
+                            <div>
+                              <p className="font-semibold text-slate-900 text-xs">{admin.name}</p>
+                              <p className="text-xs text-slate-500">{admin.totalItems} items</p>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Key Metrics */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-xl border border-white/50 shadow-sm overflow-hidden">
-            <div className="p-4 border-b border-slate-100">
-              <h3 className="text-sm font-bold text-slate-900">Key Metrics</h3>
-            </div>
-            <div className="p-4">
-              <div className="space-y-2.5">
-                {dashboardData.keyMetrics.length > 0 ? (
-                  dashboardData.keyMetrics.map((metric) => (
-                    <div key={metric.id} className="flex items-center gap-2.5 p-2.5 bg-slate-50/50 rounded-lg hover:bg-slate-100/50 transition-all">
-                      <div className="w-7 h-7 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <DollarSign className="w-3.5 h-3.5 text-orange-600" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-slate-900 text-xs truncate">{metric.title}</p>
-                        <p className="text-xs text-slate-500">{metric.adminName}</p>
-                      </div>
-                      <div className="text-right flex-shrink-0">
-                        <p className="text-xs font-bold text-slate-900">${metric.amount.toFixed(2)}</p>
-                        <p className="text-xs text-slate-500">{new Date(metric.createdAt).toLocaleDateString()}</p>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-slate-500 text-center text-xs py-6">No metrics found</p>
-                )}
+            {/* Key Metrics — only visible with expense_management permission */}
+            {hasExpensePermission && (
+              <div className="bg-white/80 backdrop-blur-sm rounded-xl border border-white/50 shadow-sm overflow-hidden">
+                <div className="p-4 border-b border-slate-100">
+                  <h3 className="text-sm font-bold text-slate-900">Key Metrics</h3>
+                </div>
+                <div className="p-4">
+                  <div className="space-y-2.5">
+                    {dashboardData.keyMetrics.length > 0 ? (
+                      dashboardData.keyMetrics.map((metric) => (
+                        <div key={metric.id} className="flex items-center gap-2.5 p-2.5 bg-slate-50/50 rounded-lg hover:bg-slate-100/50 transition-all">
+                          <div className="w-7 h-7 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <DollarSign className="w-3.5 h-3.5 text-orange-600" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-slate-900 text-xs truncate">{metric.title}</p>
+                            <p className="text-xs text-slate-500">{metric.adminName}</p>
+                          </div>
+                          <div className="text-right flex-shrink-0">
+                            <p className="text-xs font-bold text-slate-900">${metric.amount.toFixed(2)}</p>
+                            <p className="text-xs text-slate-500">{new Date(metric.createdAt).toLocaleDateString()}</p>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-slate-500 text-center text-xs py-6">No metrics found</p>
+                    )}
+                  </div>
+                  <div className="mt-3 pt-3 border-t border-slate-100">
+                    <button
+                      onClick={() => window.location.href = '/admin/dashboard/expense'}
+                      className="w-full text-xs font-medium text-orange-500 py-2 hover:text-orange-600 transition-all"
+                    >
+                      View All Metrics →
+                    </button>
+                  </div>
+                </div>
               </div>
-              <div className="mt-3 pt-3 border-t border-slate-100">
-                <button
-                  onClick={() => window.location.href = '/admin/dashboard/expense'}
-                  className="w-full text-xs font-medium text-orange-500 py-2 hover:text-orange-600 transition-all"
-                >
-                  View All Metrics →
-                </button>
-              </div>
-            </div>
+            )}
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

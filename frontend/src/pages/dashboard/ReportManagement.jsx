@@ -10,6 +10,7 @@ import reportService from '../../services/reportService';
 import { useNavigate } from 'react-router-dom';
 import html2pdf from 'html2pdf.js';
 import { API_URL } from '../../api/api';
+import useAdminAuth from '../../context/AdminAuthContext';
 
 // Helper function to handle reportUrl
 function handleReportUrl(reportUrl) {
@@ -41,6 +42,9 @@ async function downloadFile(url, fileName) {
 }
 
 const ReportDashboard = () => {
+  const { hasPermission, permissions, isSuperAdmin } = useAdminAuth();
+  const hasReportPermission = hasPermission('report_management');
+
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -59,7 +63,6 @@ const ReportDashboard = () => {
   const [endDate, setEndDate] = useState('');
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedReport, setSelectedReport] = useState(null);
-  const [hasReportPermission, setHasReportPermission] = useState(false);
   const [stats, setStats] = useState({
     totalReports: 0,
     todayReports: 0,
@@ -83,15 +86,15 @@ const ReportDashboard = () => {
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
-  // Load data when filters/pagination change
+  // Load data when filters/pagination change or permissions change
   useEffect(() => {
     loadData();
-  }, [currentPage, itemsPerPage, debouncedSearch, dateFilter, startDate, endDate]);
+  }, [currentPage, itemsPerPage, debouncedSearch, dateFilter, startDate, endDate, permissions, isSuperAdmin]);
 
-  // Load stats on mount
+  // Load stats on mount and when permissions change
   useEffect(() => {
     loadStats();
-  }, []);
+  }, [permissions, isSuperAdmin]);
 
   // Reset to page 1 when filters change
   useEffect(() => {
@@ -121,7 +124,6 @@ const ReportDashboard = () => {
       setReports(Array.isArray(response.data) ? response.data : []);
       setTotalPages(response.pagination?.totalPages || 1);
       setTotalReports(response.pagination?.total || 0);
-      setHasReportPermission(response.hasReportPermission || false);
       setError(null);
     } catch (err) {
       setError(err.message || 'Failed to load reports');
@@ -204,7 +206,7 @@ const ReportDashboard = () => {
 
       if (report.content) {
         const content = typeof report.content === 'string' ? report.content : JSON.stringify(report.content, null, 2);
-    const htmlContent = `
+        const htmlContent = `
       <!DOCTYPE html>
       <html lang="en">
       <head>
