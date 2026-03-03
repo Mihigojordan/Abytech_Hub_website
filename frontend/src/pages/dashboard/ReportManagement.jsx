@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Plus, Edit, Trash2, Search, ChevronDown, Eye, ChevronLeft, ChevronRight,
+  Plus, Edit, Trash2, Search, Eye, ChevronLeft, ChevronRight,
   AlertTriangle, CheckCircle, XCircle, X, AlertCircle, RefreshCw,
   Grid3X3, List, Clock, Calendar, Table, Download, FileText,
-  TrendingUp, Users, Filter, SortAsc, SortDesc, Sparkles
+  TrendingUp, Users, Filter, Sparkles
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import reportService from '../../services/reportService';
@@ -42,13 +42,13 @@ async function downloadFile(url, fileName) {
 
 const ReportDashboard = () => {
   const [reports, setReports] = useState([]);
-  const [allReports, setAllReports] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortBy, setSortBy] = useState('createdAt');
-  const [sortOrder, setSortOrder] = useState('desc');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalReports, setTotalReports] = useState(0);
   const [itemsPerPage, setItemsPerPage] = useState(9);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [operationStatus, setOperationStatus] = useState(null);
@@ -59,6 +59,7 @@ const ReportDashboard = () => {
   const [endDate, setEndDate] = useState('');
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedReport, setSelectedReport] = useState(null);
+  const [hasReportPermission, setHasReportPermission] = useState(false);
   const [stats, setStats] = useState({
     totalReports: 0,
     todayReports: 0,
@@ -74,28 +75,57 @@ const ReportDashboard = () => {
   });
   const navigate = useNavigate();
 
+  // Debounce search term
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // Load data when filters/pagination change
   useEffect(() => {
     loadData();
+  }, [currentPage, itemsPerPage, debouncedSearch, dateFilter, startDate, endDate]);
+
+  // Load stats on mount
+  useEffect(() => {
     loadStats();
   }, []);
 
-  useEffect(() => {
-    handleFilterAndSort();
-  }, [searchTerm, sortBy, sortOrder, allReports, dateFilter, startDate, endDate]);
-
+  // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [viewMode, itemsPerPage]);
+  }, [debouncedSearch, dateFilter, startDate, endDate, itemsPerPage]);
 
   const loadData = async () => {
     try {
       setLoading(true);
-      const response = await reportService.getAllReports({ page: 1, limit: 1000 });
-      setAllReports(Array.isArray(response.data) ? response.data : []);
+
+      // Map date filter to backend format
+      let filter = '';
+      if (dateFilter === 'TODAY') filter = 'today';
+      else if (dateFilter === 'WEEK') filter = 'weekly';
+      else if (dateFilter === 'MONTH') filter = 'monthly';
+      else if (dateFilter === 'CUSTOM') filter = 'custom';
+
+      const response = await reportService.getAllReports({
+        page: currentPage,
+        limit: itemsPerPage,
+        search: debouncedSearch,
+        filter,
+        from: dateFilter === 'CUSTOM' ? startDate : '',
+        to: dateFilter === 'CUSTOM' ? endDate : '',
+      });
+
+      setReports(Array.isArray(response.data) ? response.data : []);
+      setTotalPages(response.pagination?.totalPages || 1);
+      setTotalReports(response.pagination?.total || 0);
+      setHasReportPermission(response.hasReportPermission || false);
       setError(null);
     } catch (err) {
       setError(err.message || 'Failed to load reports');
-      setAllReports([]);
+      setReports([]);
     } finally {
       setLoading(false);
     }
@@ -104,21 +134,19 @@ const ReportDashboard = () => {
   const loadStats = async () => {
     try {
       setLoadingStats({ total: true, today: true, week: true, month: true });
-      const [total, today, week, month] = await Promise.all([
-        reportService.getReportCount('').catch(() => 0),
-        reportService.getReportCount('today').catch(() => 0),
-        reportService.getReportCount('weekly').catch(() => 0),
-        reportService.getReportCount('monthly').catch(() => 0)
+      const [totalRes, todayRes, weekRes, monthRes] = await Promise.all([
+        reportService.getAllReports({ page: 1, limit: 1 }).catch(() => ({ pagination: { total: 0 } })),
+        reportService.getAllReports({ page: 1, limit: 1, filter: 'today' }).catch(() => ({ pagination: { total: 0 } })),
+        reportService.getAllReports({ page: 1, limit: 1, filter: 'weekly' }).catch(() => ({ pagination: { total: 0 } })),
+        reportService.getAllReports({ page: 1, limit: 1, filter: 'monthly' }).catch(() => ({ pagination: { total: 0 } })),
       ]);
 
-      const uniqueAdmins = new Set(allReports.map(r => r.admin?.adminName).filter(Boolean)).size;
-
       setStats({
-        totalReports: total,
-        todayReports: today,
-        weekReports: week,
-        monthReports: month,
-        uniqueAdmins: uniqueAdmins || Math.floor(total / 3)
+        totalReports: totalRes.pagination?.total || 0,
+        todayReports: todayRes.pagination?.total || 0,
+        weekReports: weekRes.pagination?.total || 0,
+        monthReports: monthRes.pagination?.total || 0,
+        uniqueAdmins: new Set((totalRes.data || []).map(r => r.admin?.adminName).filter(Boolean)).size || 0
       });
     } catch (err) {
       console.error('Failed to load stats:', err);
@@ -130,68 +158,6 @@ const ReportDashboard = () => {
   const showOperationStatus = (type, message, duration = 3000) => {
     setOperationStatus({ type, message });
     setTimeout(() => setOperationStatus(null), duration);
-  };
-
-  const handleFilterAndSort = () => {
-    let filtered = [...allReports];
-
-    // Date filter
-    if (dateFilter !== 'ALL') {
-      const now = new Date();
-      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
-      filtered = filtered.filter(report => {
-        const reportDate = new Date(report.createdAt);
-        const reportDateOnly = new Date(reportDate.getFullYear(), reportDate.getMonth(), reportDate.getDate());
-
-        switch (dateFilter) {
-          case 'TODAY':
-            return reportDateOnly.getTime() === today.getTime();
-          case 'WEEK':
-            const weekAgo = new Date(today);
-            weekAgo.setDate(weekAgo.getDate() - 7);
-            return reportDateOnly >= weekAgo;
-          case 'MONTH':
-            const monthAgo = new Date(today);
-            monthAgo.setMonth(monthAgo.getMonth() - 1);
-            return reportDateOnly >= monthAgo;
-          case 'CUSTOM':
-            if (startDate && endDate) {
-              const start = new Date(startDate);
-              const end = new Date(endDate);
-              return reportDateOnly >= start && reportDateOnly <= end;
-            }
-            return true;
-          default:
-            return true;
-        }
-      });
-    }
-
-    // Search filter
-    if (searchTerm.trim()) {
-      filtered = filtered.filter(
-        (report) =>
-          report?.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          report?.admin?.adminName?.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-    // Sort
-    filtered.sort((a, b) => {
-      const aValue = a[sortBy];
-      const bValue = b[sortBy];
-      if (sortBy === 'createdAt') {
-        const aDate = new Date(aValue);
-        const bDate = new Date(bValue);
-        return sortOrder === 'asc' ? aDate.getTime() - bDate.getTime() : bDate.getTime() - aDate.getTime();
-      }
-      const aStr = aValue ? aValue.toString().toLowerCase() : '';
-      const bStr = bValue ? bValue.toString().toLowerCase() : '';
-      return sortOrder === 'asc' ? aStr.localeCompare(bStr) : bStr.localeCompare(aStr);
-    });
-    setReports(filtered);
-    setCurrentPage(1);
   };
 
   const handleCreateReport = () => {
@@ -238,30 +204,83 @@ const ReportDashboard = () => {
 
       if (report.content) {
         const content = typeof report.content === 'string' ? report.content : JSON.stringify(report.content, null, 2);
-        const htmlContent = `
-          <!DOCTYPE html>
-          <html lang="en">
-          <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>${report.title}</title>
-            <style>
-              body { font-family: 'Segoe UI', Arial, sans-serif; margin: 40px; line-height: 1.6; color: #333; }
-              h1 { color: #1e40af; margin-bottom: 20px; }
-              pre { background: #f8f9fa; padding: 16px; border-radius: 8px; overflow-x: auto; }
-              .container { max-width: 800px; margin: 0 auto; }
-              * { page-break-inside: avoid; }
-              h1, h2, h3 { page-break-after: avoid; }
-            </style>
-          </head>
-          <body>
-            <div class="container">
-              <h1>${report.title}</h1>
-              <div>${content}</div>
-            </div>
-          </body>
-          </html>
-        `;
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>${report.title}</title>
+        <style>
+          body { font-family: Arial, sans-serif; margin: 20px; }
+          .swal-preview-container .ql-editor {
+            padding: 1rem;
+          }
+          .swal-preview-container .ql-editor h1 {
+            font-size: 2em;
+            font-weight: bold;
+            margin-top: 0.67em;
+            margin-bottom: 0.67em;
+          }
+          .swal-preview-container .ql-editor h2 {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-top: 0.83em;
+            margin-bottom: 0.83em;
+          }
+          .swal-preview-container .ql-editor h3 {
+            font-size: 1.17em;
+            font-weight: bold;
+            margin-top: 1em;
+            margin-bottom: 1em;
+          }
+          .swal-preview-container .ql-editor ul,
+          .swal-preview-container .ql-editor ol {
+            padding-left: 1.5em;
+            margin-bottom: 1em;
+          }
+          .swal-preview-container .ql-editor ul {
+            list-style-type: disc;
+          }
+          .swal-preview-container .ql-editor ol {
+            list-style-type: decimal;
+          }
+          .swal-preview-container .ql-editor li {
+            margin-bottom: 0.5em;
+          }
+          .swal-preview-container .ql-editor p {
+            margin-bottom: 1em;
+          }
+          .swal-preview-container .ql-editor strong {
+            font-weight: bold;
+          }
+          .swal-preview-container .ql-editor em {
+            font-style: italic;
+          }
+          .swal-preview-container .ql-editor blockquote {
+            border-left: 4px solid #ccc;
+            padding-left: 1em;
+            margin-left: 0;
+            font-style: italic;
+          }
+          .ql-container {
+            min-height: 400px;
+          }
+          .ql-editor {
+            min-height: 400px;
+          }
+          .text-left { text-align: left; }
+        </style>
+      </head>
+      <body>
+        <div class="swal-preview-container text-left">
+          <div class="ql-editor">
+            ${content}
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
 
         const options = {
           margin: 15,
@@ -324,10 +343,10 @@ const ReportDashboard = () => {
       });
   };
 
-  const totalPages = Math.ceil(reports.length / itemsPerPage);
+  // Server-side pagination - reports are already paginated
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const currentReports = reports.slice(startIndex, endIndex);
+  const endIndex = Math.min(startIndex + itemsPerPage, totalReports);
+  const currentReports = reports; // Already paginated from server
 
   const renderTableView = () => (
     <div className="bg-white  rounded-xl border border-gray-100 shadow-sm w-full  ">
@@ -335,23 +354,9 @@ const ReportDashboard = () => {
         <table className="w-full text-xs">
           <thead style={{ backgroundColor: 'rgba(81, 96, 146, 0.05)' }}>
             <tr>
-              <th className="text-left py-3 px-4 font-semibold cursor-pointer hover:bg-gray-50 transition-colors"
-                style={{ color: 'rgb(249, 115, 22)' }}
-                onClick={() => { setSortBy('title'); setSortOrder(sortBy === 'title' ? (sortOrder === 'asc' ? 'desc' : 'asc') : 'asc'); }}>
-                <div className="flex items-center space-x-1">
-                  <span>Title</span>
-                  <ChevronDown className={`w-3 h-3 transition-transform ${sortBy === 'title' ? (sortOrder === 'asc' ? 'rotate-180' : '') : 'opacity-40'}`} />
-                </div>
-              </th>
+              <th className="text-left py-3 px-4 font-semibold" style={{ color: 'rgb(249, 115, 22)' }}>Title</th>
               <th className="text-left py-3 px-4 font-semibold hidden md:table-cell" style={{ color: 'rgb(249, 115, 22)' }}>Created By</th>
-              <th className="text-left py-3 px-4 font-semibold cursor-pointer hover:bg-gray-50 transition-colors"
-                style={{ color: 'rgb(249, 115, 22)' }}
-                onClick={() => { setSortBy('createdAt'); setSortOrder(sortBy === 'createdAt' ? (sortOrder === 'asc' ? 'desc' : 'asc') : 'asc'); }}>
-                <div className="flex items-center space-x-1">
-                  <span>Created</span>
-                  <ChevronDown className={`w-3 h-3 transition-transform ${sortBy === 'createdAt' ? (sortOrder === 'asc' ? 'rotate-180' : '') : 'opacity-40'}`} />
-                </div>
-              </th>
+              <th className="text-left py-3 px-4 font-semibold" style={{ color: 'rgb(249, 115, 22)' }}>Created</th>
               <th className="text-right py-3 px-4 font-semibold" style={{ color: 'rgb(249, 115, 22)' }}>Actions</th>
             </tr>
           </thead>
@@ -534,7 +539,7 @@ const ReportDashboard = () => {
   );
 
   const renderPagination = () => {
-    if (reports.length === 0) return null;
+    if (totalReports === 0) return null;
 
     const getPageNumbers = () => {
       const pages = [];
@@ -556,7 +561,7 @@ const ReportDashboard = () => {
     return (
       <div className="flex items-center justify-between bg-white px-2 py-3 border-t border-gray-100 rounded-b-xl shadow-sm mt-4   border border-gray-100 shadow-sm  ">
         <div className="text-xs text-gray-600 flex items-center space-x-2">
-          <span>Showing <span className="font-semibold">{startIndex + 1}</span>-<span className="font-semibold">{Math.min(endIndex, reports.length)}</span> of <span className="font-semibold">{reports.length}</span></span>
+          <span>Showing <span className="font-semibold">{startIndex + 1}</span>-<span className="font-semibold">{endIndex}</span> of <span className="font-semibold">{totalReports}</span>{!hasReportPermission && <span className="text-orange-500 ml-1">(Your reports only)</span>}</span>
         </div>
         <div className="flex items-center space-x-2">
           <motion.button
@@ -844,26 +849,6 @@ const ReportDashboard = () => {
             <div className="flex flex-col sm:flex-row gap-3">
               <div className="relative flex-1">
                 <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                  {sortOrder === 'asc' ? <SortAsc className="w-4 h-4 text-gray-400" /> : <SortDesc className="w-4 h-4 text-gray-400" />}
-                </div>
-                <select
-                  value={`${sortBy}-${sortOrder}`}
-                  onChange={(e) => {
-                    const [field, order] = e.target.value.split('-');
-                    setSortBy(field);
-                    setSortOrder(order);
-                  }}
-                  className="w-full pl-10 pr-4 py-2.5 text-xs border border-gray-200 rounded-lg focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all appearance-none bg-white cursor-pointer"
-                  style={{ outline: 'none' }}
-                >
-                  <option value="title-asc">Title (A-Z)</option>
-                  <option value="title-desc">Title (Z-A)</option>
-                  <option value="createdAt-desc">Newest First</option>
-                  <option value="createdAt-asc">Oldest First</option>
-                </select>
-              </div>
-              <div className="relative flex-1">
-                <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
                   <Filter className="w-4 h-4 text-gray-400" />
                 </div>
                 <select
@@ -877,6 +862,22 @@ const ReportDashboard = () => {
                   <option value="WEEK">Last 7 Days</option>
                   <option value="MONTH">Last 30 Days</option>
                   <option value="CUSTOM">Custom Range</option>
+                </select>
+              </div>
+              <div className="relative flex-1">
+                <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                  <Clock className="w-4 h-4 text-gray-400" />
+                </div>
+                <select
+                  value={itemsPerPage}
+                  onChange={(e) => setItemsPerPage(parseInt(e.target.value))}
+                  className="w-full pl-10 pr-4 py-2.5 text-xs border border-gray-200 rounded-lg focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all appearance-none bg-white cursor-pointer"
+                  style={{ outline: 'none' }}
+                >
+                  <option value={9}>9 per page</option>
+                  <option value={15}>15 per page</option>
+                  <option value={30}>30 per page</option>
+                  <option value={50}>50 per page</option>
                 </select>
               </div>
             </div>
