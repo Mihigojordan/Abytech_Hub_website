@@ -55,7 +55,7 @@ import ResearchFormPage from "./pages/dashboard/ResearchFormPage";
 import ResearchViewPage from "./pages/dashboard/ResearchViewPage";
 import SalaryManagement from "./pages/dashboard/SalaryManagement";
 import useAdminAuth from "./context/AdminAuthContext";
-
+const InternsPortal = lazy(() => import("./pages/InternsPortal"));
 // Permission route wrapper — redirects to dashboard if no permission
 const PermissionRoute = ({ permission, children }) => {
   const { hasPermission, isLoading, isSuperAdmin } = useAdminAuth();
@@ -144,6 +144,8 @@ const router = createBrowserRouter([
 
       // internship application
       { path: "internship", element: <SuspenseWrapper><InternshipApplicationPage /></SuspenseWrapper> },
+      { path: "internship/application/portal", element: <SuspenseWrapper><InternsPortal /></SuspenseWrapper> },
+
 
       { path: "contact-us", element: <SuspenseWrapper><ContactUs /></SuspenseWrapper> },
     ],
