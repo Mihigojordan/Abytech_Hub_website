@@ -207,6 +207,11 @@ function NavBar() {
                     <span>Internship</span>
                   </NavLink>
                 </li>
+                <li>
+                  <NavLink to="/demo" onClick={closeDropdown} className={({ isActive }) => `nav-link flex items-center space-x-1 text-gray-700 hover:text-[#ff5a00] font-medium transition-colors ${isActive ? 'text-[#ff5a00]' : ''}`}>
+                    <span>Demo</span>
+                  </NavLink>
+                </li>
               </ul>
 
               <div className="flex items-center space-x-4">

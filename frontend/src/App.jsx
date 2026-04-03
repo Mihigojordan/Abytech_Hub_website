@@ -22,6 +22,7 @@ import WhoWeArePage from "./pages/about us/WhoWeArePage";
 const Services = lazy(() => import("./pages/services/Services"));
 const Training = lazy(() => import("./pages/Programs/Training"));
 const InternshipApplicationPage = lazy(() => import("./pages/InternshipApplicationPage"));
+const DemoPage = lazy(() => import("./components/Demo"));
 
 // Pages (Lazy)
 const HomePage = lazy(() => import("./pages/HomePage"));
@@ -148,6 +149,9 @@ const router = createBrowserRouter([
 
 
       { path: "contact-us", element: <SuspenseWrapper><ContactUs /></SuspenseWrapper> },
+
+      // demo
+      { path: "demo", element: <SuspenseWrapper><DemoPage /></SuspenseWrapper> },
     ],
   },
 
