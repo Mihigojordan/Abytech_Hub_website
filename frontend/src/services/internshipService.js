@@ -104,6 +104,24 @@ class InternshipService {
     }
   }
 
+  async getAdmittedInterns(params = {}) {
+    try {
+      const response = await api.get('/internships', {
+        params: {
+          page: params.page || 1,
+          limit: params.limit || 20,
+          search: params.search || '',
+          status: 'ACCEPTED',
+          ...(params.employmentStatus ? { employmentStatus: params.employmentStatus } : {}),
+        },
+      });
+      return response.data;
+    } catch (error) {
+      const msg = error.response?.data?.message || 'Failed to fetch admitted interns';
+      throw new Error(msg);
+    }
+  }
+
   // Update application
   async updateApplication(id, data) {
     try {
@@ -180,6 +198,20 @@ class InternshipService {
       throw new Error(msg);
     }
   }
+
+  async transitionToFullTimeEmployee(id, employeeType = 'FULL_TIME') {
+    try {
+      const response = await api.post(`/internships/${id}/convert-to-employee`, { employeeType });
+      return response.data;
+    } catch (error) {
+      const msg = error.response?.data?.message || 'Failed to convert intern to employee';
+      throw new Error(msg);
+    }
+  }
+
+  async convertToEmployee(id, employeeType = 'FULL_TIME') {
+    return this.transitionToFullTimeEmployee(id, employeeType);
+  }
 }
 
 const internshipService = new InternshipService();
@@ -191,6 +223,7 @@ export const {
   getShortlistedApplications,
   getApplicationStats,
   getApplicationById,
+  getAdmittedInterns,
   updateApplication,
   updateApplicationStatus,
   reviewApplication,
@@ -198,4 +231,6 @@ export const {
   markAsContacted,
   bulkUpdateStatus,
   deleteApplication,
+  transitionToFullTimeEmployee,
+  convertToEmployee,
 } = internshipService;

@@ -19,6 +19,14 @@ const STATUS_CONFIG = {
 };
 
 const MONTHS = ['', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const formatCurrency = (value) => {
+    const amount = Number(value);
+    return new Intl.NumberFormat('en-RW', {
+        style: 'currency',
+        currency: 'RWF',
+        minimumFractionDigits: 0,
+    }).format(Number.isFinite(amount) ? amount : 0);
+};
 
 // ── Confirmation Modal helper ──
 const ConfirmModal = ({ show, onClose, onConfirm, icon: Icon, iconBg, title, desc, children, btnText, btnClass }) => (
@@ -183,7 +191,6 @@ const SalaryManagement = () => {
         finally { setOpLoading(false); }
     };
 
-    const formatCurrency = (n) => new Intl.NumberFormat('en-RW', { style: 'currency', currency: 'RWF', minimumFractionDigits: 0 }).format(n || 0);
     const formatDate = (d) => d ? new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
 
     const openEdit = (s) => {

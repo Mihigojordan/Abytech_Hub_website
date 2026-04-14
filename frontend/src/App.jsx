@@ -48,6 +48,7 @@ import WeeklyGoalManagement from "./pages/dashboard/WeeklyGoalManagement";
 import WeeklyGoalFormPage from "./pages/dashboard/WeeklyGoalFormPage";
 import WeeklyGoalViewPage from "./pages/dashboard/WeeklyGoalViewPage";
 import InternshipManagement from "./pages/dashboard/InternshipManagement";
+import InternManagement from "./pages/dashboard/InternManagement";
 import InternshipViewPage from "./pages/dashboard/InternshipViewPage";
 import HostedWebsiteManagement from "./pages/dashboard/HostedWebsiteManagement";
 import DemoRequestManagement from "./pages/dashboard/DemoRequestManagement";
@@ -168,6 +169,7 @@ const router = createBrowserRouter([
           { index: true, element: <DashboardHome /> },
           { path: 'expense', element: <PermissionRoute permission="expense_management"><ExpenseDashboard /></PermissionRoute> },
           { path: 'employee', element: <PermissionRoute permission="employee_management"><EmployeeeDashboard /></PermissionRoute> },
+          { path: 'interns', element: <PermissionRoute permission="internship_management"><InternManagement /></PermissionRoute> },
           { path: 'report', element: <ReportDashboard /> },
           { path: 'report/create', element: <UpsertReportPage /> },
           { path: 'report/edit/:id', element: <UpsertReportPage /> },

@@ -17,7 +17,13 @@ import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { InternshipService } from './internship.service';
 import { AdminJwtAuthGuard } from 'src/guards/adminGuard.guard';
 import { RequestWithAdmin } from 'src/common/interfaces/admin.interface';
-import { InternshipStatus, InternshipType, InternshipPeriod } from '../../../generated/prisma';
+import {
+  EmployeeType,
+  InternshipStatus,
+  InternshipType,
+  InternshipPeriod,
+  InternshipEmploymentStatus,
+} from '../../../generated/prisma';
 import { InternshipFileFields, InternshipUploadConfig } from 'src/common/utils/file-upload.utils';
 
 @Controller('internships')
@@ -57,6 +63,7 @@ export class InternshipController {
     @Query('limit') limit = '10',
     @Query('search') search = '',
     @Query('status') status?: InternshipStatus,
+    @Query('employmentStatus') employmentStatus?: InternshipEmploymentStatus,
     @Query('internshipType') internshipType?: InternshipType,
     @Query('period') period?: InternshipPeriod,
     @Query('isShortlisted') isShortlisted?: string,
@@ -68,6 +75,7 @@ export class InternshipController {
       parseInt(limit),
       search,
       status,
+      employmentStatus,
       internshipType,
       period,
       isShortlisted === 'true' ? true : isShortlisted === 'false' ? false : undefined,
@@ -112,6 +120,17 @@ export class InternshipController {
     @Body('status') status: InternshipStatus,
   ) {
     return this.internshipService.updateStatus(id, status);
+  }
+
+  @Post(':id/convert-to-employee')
+  @UseGuards(AdminJwtAuthGuard)
+  async convertToEmployee(
+    @Param('id') id: string,
+    @Req() req: RequestWithAdmin,
+    @Body('employeeType') employeeType?: EmployeeType,
+  ) {
+    const adminId = req.admin?.id as string;
+    return this.internshipService.convertAcceptedInternToEmployee(id, adminId, employeeType);
   }
 
   // Review application

@@ -165,7 +165,7 @@ const InternshipManagement = () => {
     setAcceptLoading(true);
     try {
       await internshipService.updateApplicationStatus(application.id, 'ACCEPTED');
-      showOperationMessage('success', `${application.fullName} has been accepted! Admin account created and email sent.`);
+      showOperationMessage('success', `${application.fullName} has been accepted as an intern and moved to Intern Management.`);
       setAcceptConfirm(null);
       loadApplications();
       loadStats();
@@ -1055,7 +1055,7 @@ const InternshipManagement = () => {
                 </div>
                 <div>
                   <h3 className="text-xl font-bold text-gray-900 mb-2">Accept Intern?</h3>
-                  <p className="text-gray-600">This will create an admin account for the intern.</p>
+                  <p className="text-gray-600">This will admit the applicant as an intern. Employee conversion is a separate super-admin action.</p>
                 </div>
               </div>
 
@@ -1065,11 +1065,7 @@ const InternshipManagement = () => {
                 </p>
                 <div className="flex items-start gap-2 text-sm text-emerald-700">
                   <Shield className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                  <span>An admin account will be created with their email</span>
-                </div>
-                <div className="flex items-start gap-2 text-sm text-emerald-700">
-                  <Send className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                  <span>Login credentials will be sent to <strong>{acceptConfirm.email}</strong></span>
+                  <span>The applicant will remain in intern management until a super-admin converts them to an employee</span>
                 </div>
               </div>
 

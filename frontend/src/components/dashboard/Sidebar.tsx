@@ -129,6 +129,13 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onToggle, }) => {
         requiredPermission: 'employee_management',
       },
       {
+        id: "interns",
+        label: "Intern Management",
+        icon: GraduationCap,
+        path: `${basePath}/interns`,
+        requiredPermission: 'internship_management',
+      },
+      {
         id: "chat",
         label: "Chat Management",
         icon: MessageSquare,

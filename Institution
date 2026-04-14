@@ -1,0 +1,17 @@
+118:      ? 'Completed'
+158:        <table className="w-full text-[13px]">
+163:              <th className="text-left py-3.5 px-6 font-semibold text-orange-500 hidden lg:table-cell">Admitted</th>
+182:                  <span className={`inline-block whitespace-nowrap px-2.5 py-0.5 rounded-full text-xs font-medium border ${TYPE_CONFIG[intern.internshipType]?.color || 'bg-gray-100 text-gray-700 border-gray-200'}`}>
+186:                <td className="py-3.5 px-6 text-gray-600 hidden lg:table-cell">{formatDate(intern.internshipTimeline?.startDate || intern.internshipStartDate || intern.updatedAt)}</td>
+188:                  <span className="text-[13px] font-medium text-gray-700">{getRemainingTimeLabel(intern)}</span>
+212:              <p className="text-[13px] text-gray-500">{intern.email}</p>
+214:            <span className={`inline-block whitespace-nowrap px-2.5 py-0.5 rounded-full text-xs font-medium border ${TYPE_CONFIG[intern.internshipType]?.color || 'bg-gray-100 text-gray-700 border-gray-200'}`}>
+218:          <div className="space-y-2 text-[13px] text-gray-600 mb-4">
+257:              <p className="text-[13px] text-gray-600 mt-1">Manage accepted internship records and conversion history</p>
+263:                className="flex items-center gap-2 px-4 py-2.5 text-[13px] text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-50 shadow-sm disabled:opacity-50"
+296:            { label: 'Internship Records', value: internshipRecordCount, icon: Shield },
+306:                  <p className="text-[13px] text-gray-500">{card.label}</p>
+323:                className="w-full pl-12 pr-4 py-3 text-[13px] border border-gray-200 rounded-lg focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20"
+326:            <div className="text-[13px] text-gray-500 flex items-center gap-2">
+336:            <p className="text-[13px] text-gray-600 font-medium">Loading internship records...</p>
+342:            <p className="text-[13px] text-gray-600">Accepted applicants remain visible here throughout their internship lifecycle.</p>

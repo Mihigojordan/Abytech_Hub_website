@@ -2,6 +2,7 @@ import { Injectable, BadRequestException, UnauthorizedException, NotFoundExcepti
 import { PrismaService } from 'src/prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
+import { EmployeeType, UserRole } from '../../../generated/prisma';
 
 @Injectable()
 export class UserAuthService {
@@ -23,6 +24,10 @@ export class UserAuthService {
                     email: true,
                     avatar: true,
                     initial: true,
+                    phone: true,
+                    status: true,
+                    role: true,
+                    employeeType: true,
                     lastSeen: true,
                     createdAt: true,
                     updatedAt: true,
@@ -55,9 +60,17 @@ export class UserAuthService {
     }
 
     // Register a new user
-    async registerUser(data: { name: string; email: string; password: string; avatar?: string }) {
+    async registerUser(data: {
+        name: string;
+        email: string;
+        password: string;
+        avatar?: string;
+        phone?: string;
+        role?: UserRole;
+        employeeType?: EmployeeType;
+    }) {
         try {
-            const { name, email, password, avatar } = data;
+            const { name, email, password, avatar, phone, role, employeeType } = data;
 
             // Validate inputs
             if (!email || !name || !password) {
@@ -91,6 +104,9 @@ export class UserAuthService {
                     email,
                     password: hashedPassword,
                     avatar: avatar || null,
+                    phone: phone || null,
+                    role: role || 'USER',
+                    employeeType: role === 'EMPLOYEE' ? (employeeType || 'FULL_TIME') : null,
                     initial,
                 },
                 select: {
@@ -99,6 +115,10 @@ export class UserAuthService {
                     email: true,
                     avatar: true,
                     initial: true,
+                    phone: true,
+                    status: true,
+                    role: true,
+                    employeeType: true,
                     createdAt: true,
                 },
             });
@@ -162,6 +182,10 @@ export class UserAuthService {
                     email: user.email,
                     avatar: user.avatar,
                     initial: user.initial,
+                    phone: user.phone,
+                    status: user.status,
+                    role: user.role,
+                    employeeType: user.employeeType,
                 },
             };
         } catch (error) {
@@ -204,6 +228,10 @@ export class UserAuthService {
                     email: true,
                     avatar: true,
                     initial: true,
+                    phone: true,
+                    status: true,
+                    role: true,
+                    employeeType: true,
                     lastSeen: true,
                     updatedAt: true,
                 },
@@ -220,15 +248,23 @@ export class UserAuthService {
     }
 
     // Get all users
-    async getAllUsers() {
+    async getAllUsers(filters: { role?: UserRole; employeeType?: EmployeeType } = {}) {
         try {
             const users = await this.prisma.user.findMany({
+                where: {
+                    ...(filters.role ? { role: filters.role } : {}),
+                    ...(filters.employeeType ? { employeeType: filters.employeeType } : {}),
+                },
                 select: {
                     id: true,
                     name: true,
                     email: true,
                     avatar: true,
                     initial: true,
+                    phone: true,
+                    status: true,
+                    role: true,
+                    employeeType: true,
                     lastSeen: true,
                     createdAt: true,
                 },

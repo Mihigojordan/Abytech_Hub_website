@@ -119,6 +119,10 @@ model User {
   password  String    @db.VarChar(255)
   avatar    String?   @db.VarChar(500)
   initial   String?   @db.VarChar(5)
+  phone     String?   @db.VarChar(50)
+  status    UserStatus @default(ACTIVE)
+  role      UserRole   @default(USER)
+  employeeType EmployeeType?
   lastSeen  DateTime? @map("last_seen") @db.Timestamp(0)
   createdAt DateTime  @default(now()) @map("created_at") @db.Timestamp(0)
   updatedAt DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
@@ -133,6 +137,21 @@ model User {
 enum AdminStatus {
   ACTIVE
   INACTIVE
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum UserRole {
+  USER
+  EMPLOYEE
+}
+
+enum EmployeeType {
+  FULL_TIME
+  PART_TIME
 }
 
 
@@ -256,6 +275,7 @@ model InternshipApplication {
   period         InternshipPeriod?
   preferredStart DateTime?
   preferredEnd   DateTime?
+  internshipStartDate DateTime?
 
   // Motivation & skills
   coverLetter    String?   @db.Text
@@ -272,6 +292,7 @@ model InternshipApplication {
 
   // Status
   status         InternshipStatus @default(PENDING)
+  employmentStatus InternshipEmploymentStatus?
 
   // Internal review
   reviewedById   String?
@@ -294,6 +315,12 @@ enum InternshipStatus {
   ACCEPTED
   REJECTED
   WAITLISTED
+}
+
+enum InternshipEmploymentStatus {
+  INTERN
+  FULL_TIME_EMPLOYEE
+  PART_TIME_EMPLOYEE
 }
 
 enum InternshipType {
