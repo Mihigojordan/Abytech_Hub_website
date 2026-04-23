@@ -1,7 +1,7 @@
 import api from '../api/api';
 
 class SalaryService {
-    // Submit salary request
+    // Submit salary request. SuperAdmins can pass targetAdminId to record for another admin.
     async createSalary(data) {
         try {
             const response = await api.post('/salary', data);

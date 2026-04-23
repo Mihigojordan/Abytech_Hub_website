@@ -48,16 +48,32 @@ const ConfirmModal = ({ show, onClose, onConfirm, icon: Icon, iconBg, title, des
 );
 
 // ── Form Modal Component ──
-const FormModal = ({ show, isEdit, onClose, onSubmit, formData, setFormData, opLoading }) => {
+const FormModal = ({ show, isEdit, onClose, onSubmit, formData, setFormData, opLoading, isSuperAdmin, adminList }) => {
+    const isRecordingForOther = isSuperAdmin && formData.targetAdminId;
     return (
         <AnimatePresence>{show && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/40 backdrop-blur-md flex items-center justify-center z-50 p-4">
                 <motion.div initial={{ scale: 0.85, y: 30 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.85, y: 30 }} className="bg-white rounded-2xl w-full max-w-lg shadow-2xl">
                     <div className="flex items-center justify-between p-6 border-b border-gray-200">
-                        <h2 className="text-xl font-bold text-gray-900">{isEdit ? 'Edit Salary Request' : 'Request Salary'}</h2>
+                        <h2 className="text-xl font-bold text-gray-900">{isEdit ? 'Edit Salary Request' : isSuperAdmin ? 'Record Salary' : 'Request Salary'}</h2>
                         <motion.button whileHover={{ scale: 1.1, rotate: 90 }} whileTap={{ scale: 0.9 }} onClick={onClose} className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-xl"><X className="w-5 h-5" /></motion.button>
                     </div>
                     <div className="p-6 space-y-4">
+                        {isSuperAdmin && !isEdit && (
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-1">Employee *</label>
+                                <select
+                                    value={formData.targetAdminId || ''}
+                                    onChange={e => setFormData({ ...formData, targetAdminId: e.target.value })}
+                                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20"
+                                >
+                                    <option value="">— Select employee —</option>
+                                    {adminList.map(a => (
+                                        <option key={a.id} value={a.id}>{a.adminName} ({a.adminEmail})</option>
+                                    ))}
+                                </select>
+                            </div>
+                        )}
                         <div className="grid grid-cols-2 gap-4">
                             <div><label className="block text-sm font-semibold text-gray-700 mb-1">Month *</label>
                                 <select value={formData.month} onChange={e => setFormData({ ...formData, month: e.target.value })} className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20">
@@ -75,9 +91,9 @@ const FormModal = ({ show, isEdit, onClose, onSubmit, formData, setFormData, opL
                     </div>
                     <div className="p-6 border-t border-gray-200 flex justify-end gap-4">
                         <button onClick={onClose} className="px-6 py-3 text-sm font-medium text-gray-700 border border-gray-200 rounded-xl hover:bg-gray-50">Cancel</button>
-                        <button onClick={onSubmit} disabled={!formData.amount || opLoading} className="px-6 py-3 text-sm font-medium bg-orange-500 text-white rounded-xl hover:bg-orange-600 shadow-md disabled:opacity-50 flex items-center gap-2">
+                        <button onClick={onSubmit} disabled={!formData.amount || (isSuperAdmin && !isEdit && !formData.targetAdminId) || opLoading} className="px-6 py-3 text-sm font-medium bg-orange-500 text-white rounded-xl hover:bg-orange-600 shadow-md disabled:opacity-50 flex items-center gap-2">
                             {opLoading ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <DollarSign className="w-4 h-4" />}
-                            {isEdit ? 'Update' : 'Submit Request'}
+                            {isEdit ? 'Update' : isSuperAdmin ? 'Record Salary' : 'Submit Request'}
                         </button>
                     </div>
                 </motion.div>
@@ -87,7 +103,7 @@ const FormModal = ({ show, isEdit, onClose, onSubmit, formData, setFormData, opL
 };
 
 const SalaryManagement = () => {
-    const { user } = useAdminAuth();
+    const { user, isSuperAdmin } = useAdminAuth();
     const [salaries, setSalaries] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -99,6 +115,7 @@ const SalaryManagement = () => {
     const [stats, setStats] = useState({ total: 0, pending: 0, approved: 0, rejected: 0, paid: 0, totalPaidAmount: 0, totalPendingAmount: 0 });
     const [toast, setToast] = useState(null);
     const [opLoading, setOpLoading] = useState(false);
+    const [adminList, setAdminList] = useState([]);
 
     // Modals
     const [showCreateModal, setShowCreateModal] = useState(false);
@@ -112,9 +129,21 @@ const SalaryManagement = () => {
     const [rejectionReason, setRejectionReason] = useState('');
     const [approveBonus, setApproveBonus] = useState(0);
     const [approveDeduction, setApproveDeduction] = useState(0);
-    const [formData, setFormData] = useState({ amount: '', month: new Date().getMonth() + 1, year: new Date().getFullYear(), reason: '' });
+    const [formData, setFormData] = useState({ amount: '', month: new Date().getMonth() + 1, year: new Date().getFullYear(), reason: '', targetAdminId: '' });
 
     useEffect(() => { loadSalaries(); loadStats(); }, [currentPage, searchTerm, statusFilter]);
+
+    useEffect(() => {
+        if (isSuperAdmin) loadAdminList();
+    }, [isSuperAdmin]);
+
+    const loadAdminList = async () => {
+        try {
+            const { default: api } = await import('../../api/api');
+            const res = await api.get('/admin');
+            setAdminList(res.data || []);
+        } catch (e) { console.error('Failed to load admin list', e); }
+    };
 
     const loadSalaries = async () => {
         try {
@@ -136,10 +165,19 @@ const SalaryManagement = () => {
     const handleCreate = async () => {
         setOpLoading(true);
         try {
-            await salaryService.createSalary({ amount: parseFloat(formData.amount), month: parseInt(formData.month), year: parseInt(formData.year), reason: formData.reason });
-            showToast('success', 'Salary request submitted!');
+            const payload = {
+                amount: parseFloat(formData.amount),
+                month: parseInt(formData.month),
+                year: parseInt(formData.year),
+                reason: formData.reason,
+            };
+            if (isSuperAdmin && formData.targetAdminId) {
+                payload.targetAdminId = formData.targetAdminId;
+            }
+            await salaryService.createSalary(payload);
+            showToast('success', isSuperAdmin ? 'Salary recorded successfully!' : 'Salary request submitted!');
             setShowCreateModal(false);
-            setFormData({ amount: '', month: new Date().getMonth() + 1, year: new Date().getFullYear(), reason: '' });
+            setFormData({ amount: '', month: new Date().getMonth() + 1, year: new Date().getFullYear(), reason: '', targetAdminId: '' });
             loadSalaries(); loadStats();
         } catch (err) { showToast('error', err.message); }
         finally { setOpLoading(false); }
@@ -343,7 +381,7 @@ const SalaryManagement = () => {
                                 <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />Refresh
                             </motion.button>
                             <motion.button whileHover={{ scale: 1.05, y: -2 }} whileTap={{ scale: 0.95 }} onClick={() => setShowCreateModal(true)} className="flex items-center gap-2 px-4 py-2.5 text-sm bg-orange-500 text-white rounded-lg shadow-md hover:bg-orange-600">
-                                <Plus className="w-4 h-4" />Request Salary
+                                <Plus className="w-4 h-4" />{isSuperAdmin ? 'Record Salary' : 'Request Salary'}
                             </motion.button>
                             <div className="flex items-center bg-gray-50 p-1 rounded-lg border border-gray-100">
                                 {[{ mode: 'table', Icon: TableIcon }, { mode: 'grid', Icon: Grid3X3 }, { mode: 'list', Icon: List }].map(({ mode, Icon }) => (
@@ -415,8 +453,8 @@ const SalaryManagement = () => {
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-white rounded-xl shadow-sm border border-gray-100 p-16 text-center">
                         <DollarSign className="w-20 h-20 mx-auto mb-6 text-gray-300" />
                         <h3 className="text-xl font-semibold text-gray-900 mb-3">{searchTerm || statusFilter ? 'No matching requests' : 'No salary requests yet'}</h3>
-                        <p className="text-gray-600 mb-8">{searchTerm || statusFilter ? 'Try adjusting filters' : 'Submit your first salary request'}</p>
-                        {!searchTerm && !statusFilter && <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setShowCreateModal(true)} className="px-6 py-3 bg-orange-500 text-white rounded-xl font-medium shadow-md hover:bg-orange-600">Request Salary</motion.button>}
+                        <p className="text-gray-600 mb-8">{searchTerm || statusFilter ? 'Try adjusting filters' : isSuperAdmin ? 'Record the first salary entry' : 'Submit your first salary request'}</p>
+                        {!searchTerm && !statusFilter && <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setShowCreateModal(true)} className="px-6 py-3 bg-orange-500 text-white rounded-xl font-medium shadow-md hover:bg-orange-600">{isSuperAdmin ? 'Record Salary' : 'Request Salary'}</motion.button>}
                     </motion.div>
                 ) : (
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
@@ -466,8 +504,8 @@ const SalaryManagement = () => {
             )}</AnimatePresence>
 
             {/* Modals */}
-            <FormModal show={showCreateModal} isEdit={false} onClose={() => setShowCreateModal(false)} onSubmit={handleCreate} formData={formData} setFormData={setFormData} opLoading={opLoading} />
-            <FormModal show={showEditModal} isEdit={true} onClose={() => setShowEditModal(false)} onSubmit={handleUpdate} formData={formData} setFormData={setFormData} opLoading={opLoading} />
+            <FormModal show={showCreateModal} isEdit={false} onClose={() => { setShowCreateModal(false); setFormData({ amount: '', month: new Date().getMonth() + 1, year: new Date().getFullYear(), reason: '', targetAdminId: '' }); }} onSubmit={handleCreate} formData={formData} setFormData={setFormData} opLoading={opLoading} isSuperAdmin={isSuperAdmin} adminList={adminList} />
+            <FormModal show={showEditModal} isEdit={true} onClose={() => setShowEditModal(false)} onSubmit={handleUpdate} formData={formData} setFormData={setFormData} opLoading={opLoading} isSuperAdmin={isSuperAdmin} adminList={adminList} />
 
             {/* View Modal */}
             <AnimatePresence>{showViewModal && selected && (

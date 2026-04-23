@@ -679,7 +679,7 @@ model Salary {
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
 
-  @@unique([adminId, month, year])
+  
   @@map("Salary")
 }
 

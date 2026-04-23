@@ -34,12 +34,28 @@ export class SalaryService {
 
     // ─── Employee submits salary request ───────────────────
     // Note: Bonus and deduction are set to 0 on creation - only the boss can set them when approving
-    async create(data: any, adminId: string) {
+    // SuperAdmins can pass targetAdminId to record salary on behalf of another admin
+    async create(data: any, requesterId: string) {
         try {
-            const { amount, month, year, reason } = data;
+            const { amount, month, year, reason, targetAdminId } = data;
 
             if (!amount || !month || !year) {
                 throw new BadRequestException('Amount, month, and year are required');
+            }
+
+            let adminId = requesterId;
+
+            if (targetAdminId && targetAdminId !== requesterId) {
+                const requester = await this.prisma.admin.findUnique({
+                    where: { id: requesterId },
+                    select: { isSuperAdmin: true },
+                });
+                if (!requester?.isSuperAdmin) {
+                    throw new BadRequestException('Only SuperAdmins can record salary for other admins');
+                }
+                const target = await this.prisma.admin.findUnique({ where: { id: targetAdminId } });
+                if (!target) throw new BadRequestException('Target admin not found');
+                adminId = targetAdminId;
             }
 
             // Force bonus and deduction to 0 - only boss can set these when approving
@@ -64,19 +80,24 @@ export class SalaryService {
             // Notify all admins about new salary request
             try {
                 const adminIds = await this.getSalaryAdminIds();
-                const senderName = await this.getAdminName(adminId);
+                const senderName = await this.getAdminName(requesterId);
+
+                const targetName = adminId !== requesterId ? await this.getAdminName(adminId) : null;
+                const notifMessage = targetName
+                    ? `${senderName} recorded salary for ${targetName} for ${this.getMonthName(month)} ${year}`
+                    : `${senderName} has requested salary for ${this.getMonthName(month)} ${year}`;
 
                 await this.notificationService.createNotification({
                     recipients: adminIds.map(id => ({
                         id,
                         type: 'ADMIN' as const,
-                        read: id === adminId,
+                        read: id === requesterId,
                         link: `/admin/dashboard/finance/salaries`,
                     })),
-                    senderId: adminId,
+                    senderId: requesterId,
                     senderType: 'ADMIN',
                     title: 'New Salary Request',
-                    message: `${senderName} has requested salary for ${this.getMonthName(month)} ${year}`,
+                    message: notifMessage,
                 });
             } catch (e) {
                 console.error('Push notification error:', e.message);

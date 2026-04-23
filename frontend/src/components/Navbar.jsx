@@ -202,16 +202,7 @@ function NavBar() {
                   </button>
                 </li>
 
-                <li>
-                  <NavLink to="/internship" onClick={closeDropdown} className={({ isActive }) => `nav-link flex items-center space-x-1 text-gray-700 hover:text-[#ff5a00] font-medium transition-colors ${isActive ? 'text-[#ff5a00]' : ''}`}>
-                    <span>Internship</span>
-                  </NavLink>
-                </li>
-                <li>
-                  <NavLink to="/demo" onClick={closeDropdown} className={({ isActive }) => `nav-link flex items-center space-x-1 text-gray-700 hover:text-[#ff5a00] font-medium transition-colors ${isActive ? 'text-[#ff5a00]' : ''}`}>
-                    <span>Demo</span>
-                  </NavLink>
-                </li>
+              
               </ul>
 
               <div className="flex items-center space-x-4">
@@ -324,7 +315,7 @@ function NavBar() {
                   </ul>
                 </li>
 
-                <li><NavLink to="/internship" onClick={() => setMenuOpen(false)} className="block px-4 py-3 hover:text-[#ff5a00] font-medium">Internship</NavLink></li>
+               
               </ul>
             </div>
           </>

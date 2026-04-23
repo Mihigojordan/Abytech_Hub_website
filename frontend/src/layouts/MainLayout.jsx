@@ -45,7 +45,7 @@ const isPWA = usePWA();
   }, []);
   
   return (
-    <div className='min-h-dvh text-white flex justify-between items-stretch flex-col bg-white'>
+    <div className='min-h-dvh flex justify-between items-stretch flex-col bg-white dark:bg-[#0e0e0e] text-gray-900 dark:text-white transition-colors duration-300'>
 
       <Navbar />
       <Outlet />
