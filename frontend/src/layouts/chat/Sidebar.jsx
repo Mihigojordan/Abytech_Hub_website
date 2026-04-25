@@ -59,7 +59,8 @@ const Sidebar = ({ onConversationCreated, selectedChatId }) => {
                 padding: '24px 0',
                 height: '100%',
                 zIndex: 10
-            }} className="flex">
+                
+            }} className={` ${selectedChatId ? 'hidden' : 'flex'} md:flex`}>
                 
                 {/* Logo Area */}
                 <div style={{ marginBottom: 40 }}>

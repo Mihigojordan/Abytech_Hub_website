@@ -530,15 +530,9 @@ const ChatApp = () => {
             <Sidebar onConversationCreated={handleNewConversation} selectedChatId={selectedChatId} />
 
             <div 
-                style={{ 
-                    flexShrink: 0, 
-                    flexDirection: 'column', 
-                    borderRight: `1px solid ${border}`,
-                    width: window.innerWidth >= 768 ? '380px' : (selectedChatId ? '0' : '100%'),
-                    display: (window.innerWidth < 768 && selectedChatId) ? 'none' : 'flex',
-                    maxWidth: '100%'
-                }} 
-                className="md:w-[380px]">
+                style={{ borderRight: `1px solid ${border}` }} 
+                className={`shrink-0 flex-col max-w-[90%] md:flex md:w-[380px] ${selectedChatId ? 'hidden' : 'flex w-[90%]'}`}
+            >
                 <ChatList
                     conversations={conversations}
                     selectedChatId={selectedChatId}
