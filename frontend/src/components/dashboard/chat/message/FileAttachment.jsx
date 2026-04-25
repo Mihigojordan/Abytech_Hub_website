@@ -1,11 +1,15 @@
 import React from 'react';
-import { File, Download } from 'lucide-react';
+import { File, Download, FileText } from 'lucide-react';
 import { API_URL } from '../../../../api/api';
+import { useDashboardTheme } from '../../../../utils/dashboardTheme';
+import { ORG, TEAL, bb, bc, ba } from '../../../../utils/homeConstants';
+import { motion } from 'framer-motion';
 
 /**
  * File attachment component
  */
 const FileAttachment = ({ file, isSent, onClick }) => {
+    const { bg, bg2, bg3, textC, text2, text3, border } = useDashboardTheme();
 
     const handleDownload = async (e) => {
         e.stopPropagation();
@@ -33,32 +37,60 @@ const FileAttachment = ({ file, isSent, onClick }) => {
     };
 
     return (
-        <div
-            className={`${isSent ? 'bg-dashboard-50 border border-dashboard-100' : 'bg-dashboard-600'} rounded-lg px-4 py-3 flex items-center space-x-3 w-full max-w-[300px] min-w-0 cursor-pointer hover:opacity-90 transition-opacity`}
+        <motion.div
+            whileHover={{ scale: 0.98 }}
             onClick={onClick}
-            title={file.fileName}
+            style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 12,
+                padding: '12px 16px',
+                background: bg2,
+                border: `1px solid ${border}`,
+                borderRadius: 4,
+                width: '100%',
+                maxWidth: 320,
+                cursor: 'pointer'
+            }}
         >
-            <div className={`w-10 h-10 ${isSent ? 'bg-dashboard-100' : 'bg-dashboard-500'} rounded flex items-center justify-center flex-shrink-0`}>
-                <File className={`w-5 h-5 ${isSent ? 'text-dashboard-600' : 'text-white'}`} />
+            <div style={{ 
+                width: 40, 
+                height: 40, 
+                borderRadius: 4, 
+                background: bg3, 
+                border: `1px solid ${border}`, 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center',
+                flexShrink: 0
+            }}>
+                <FileText style={{ width: 20, height: 20, color: ORG }} />
             </div>
-            <div className="flex-1 min-w-0">
-                <p className={`text-sm font-medium ${isSent ? 'text-gray-800' : 'text-white'} truncate`}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+                <p style={{ ...ba(13, 500, { color: textC, margin: 0 }) }} className="truncate">
                     {file.fileName}
                 </p>
                 {file.fileSize && (
-                    <p className={`text-xs ${isSent ? 'text-gray-500' : 'text-dashboard-200'}`}>
+                    <p style={{ ...ba(11, 400, { color: text3, margin: 0 }) }}>
                         {file.fileSize}
                     </p>
                 )}
             </div>
-            <button
+            <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
                 onClick={handleDownload}
-                className={`p-2 rounded-lg transition-colors flex-shrink-0 ${isSent ? 'hover:bg-dashboard-100 text-dashboard-600' : 'hover:bg-dashboard-500 text-white'}`}
-                title="Download file"
+                style={{
+                    background: 'none',
+                    border: 'none',
+                    color: ORG,
+                    padding: 8,
+                    cursor: 'pointer'
+                }}
             >
-                <Download className="w-4 h-4" />
-            </button>
-        </div>
+                <Download style={{ width: 16, height: 16 }} />
+            </motion.button>
+        </motion.div>
     );
 };
 

@@ -1,14 +1,52 @@
 import { useState, useRef, useEffect } from "react";
+import { useDashboardTheme } from "../../../utils/dashboardTheme";
+import { ORG, TEAL, bb, bc, ba } from "../../../utils/homeConstants";
+import { motion, AnimatePresence } from "framer-motion";
+import { 
+  Calendar, Clock, MapPin, Link as LinkIcon, 
+  Users, Pin, Zap, Paperclip, Check, Trash2, 
+  Plus, X, ChevronRight, ChevronLeft, AlertCircle,
+  FileText, Image as ImageIcon, Video, File,
+  Search, ExternalLink, Globe, Layout, Laptop
+} from "lucide-react";
 
 const STATUS_OPTIONS = ["SCHEDULED", "ONGOING", "COMPLETED", "CANCELLED"];
 
 const STATUS_META = {
-  SCHEDULED: { bg: "bg-blue-50", text: "text-blue-700", border: "border-blue-200", dot: "bg-blue-500", activeBorder: "border-blue-400" },
-  ONGOING: { bg: "bg-amber-50", text: "text-amber-700", border: "border-amber-200", dot: "bg-amber-500", activeBorder: "border-amber-400" },
-  COMPLETED: { bg: "bg-green-50", text: "text-green-700", border: "border-green-200", dot: "bg-green-500", activeBorder: "border-green-400" },
-  CANCELLED: { bg: "bg-red-50", text: "text-red-700", border: "border-red-200", dot: "bg-red-500", activeBorder: "border-red-400" },
+  SCHEDULED: { color: "#3b82f6", label: "Scheduled" },
+  ONGOING: { color: "#f59e0b", label: "Ongoing" },
+  COMPLETED: { color: "#10b981", label: "Completed" },
+  CANCELLED: { color: "#ef4444", label: "Cancelled" },
 };
 
+const ACCESSIBILITY_OPTIONS = [
+  { value: "ONLINE", label: "Online", desc: "Virtual collaboration", icon: <Laptop size={18} /> },
+  { value: "OFFLINE", label: "In-Person", desc: "Physical attendance", icon: <MapPin size={18} /> },
+  { value: "HYBRID", label: "Hybrid", desc: "Combined access", icon: <Globe size={18} /> },
+];
+
+const FILE_ICONS = {
+  pdf: "📕", doc: "📘", docx: "📘", xls: "📗", xlsx: "📗",
+  ppt: "📊", pptx: "📊", png: "🖼️", jpg: "🖼️", jpeg: "🖼️",
+  gif: "🖼️", svg: "🖼️", mp4: "🎬", mp3: "🎵", zip: "🗜️",
+  rar: "🗜️", txt: "📃", csv: "📊", default: "📄",
+};
+
+const INITIAL_FORM = {
+  title: "",
+  description: "",
+  startTime: "",
+  endTime: "",
+  status: "SCHEDULED",
+  location: "",
+  meetingLink: "",
+  participants: [],
+  keyPoints: [],
+  actionItems: [],
+  attachments: [],
+};
+
+// ─── Utils ───────────────────────────────────────────────────────────────────
 function uid() {
   return Math.random().toString(36).slice(2, 10);
 }
@@ -18,7 +56,6 @@ function initials(name) {
   return name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
 }
 
-// Helper to format ISO date to datetime-local
 function formatDateTimeLocal(isoString) {
   if (!isoString) return '';
   try {
@@ -30,6 +67,7 @@ function formatDateTimeLocal(isoString) {
 
 // ─── Admin Search Dropdown ────────────────────────────────────────────────────
 function AdminSearchInput({ value, onChange, admins = [], placeholder = "Search admin or add custom..." }) {
+  const { bg, bg2, textC, text2, text3, border } = useDashboardTheme();
   const [query, setQuery] = useState(value?.name || "");
   const [open, setOpen] = useState(false);
   const [focused, setFocused] = useState(false);
@@ -75,215 +113,279 @@ function AdminSearchInput({ value, onChange, admins = [], placeholder = "Search 
   };
 
   return (
-    <div ref={ref} className="relative">
+    <div ref={ref} style={{ position: 'relative' }}>
       <div
-        className={`flex items-center gap-2 bg-white border rounded-xl px-3 py-2.5 transition-all ${
-          focused ? "border-orange-400 ring-2 ring-orange-100 shadow-sm" : "border-stone-200 hover:border-stone-300"
-        }`}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 12,
+          background: bg2,
+          border: `1px solid ${focused ? ORG : border}`,
+          borderRadius: 12,
+          padding: '10px 16px',
+          transition: 'all 0.3s ease',
+          boxShadow: focused ? `0 0 0 4px ${ORG}1a` : 'none'
+        }}
       >
-        <svg className="w-4 h-4 text-stone-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-        </svg>
+        <Search style={{ width: 16, height: 16, color: text3 }} />
         <input
-          className="flex-1 text-sm text-stone-800 outline-none bg-transparent placeholder-stone-300 font-medium"
+          style={{
+            flex: 1,
+            background: 'none',
+            border: 'none',
+            outline: 'none',
+            color: textC,
+            ...ba(14, 500),
+            padding: 0
+          }}
           placeholder={placeholder}
           value={query}
           onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
           onFocus={() => { setFocused(true); setOpen(true); }}
         />
         {value?.isCustom && (
-          <span className="text-[10px] bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded-full font-bold tracking-wide shrink-0">
-            CUSTOM
+          <span style={{ ...ba(10, 700, { background: `${ORG}1a`, color: ORG, padding: '2px 8px', borderRadius: 4, letterSpacing: '0.05em' }) }}>
+            EXTERNAL
           </span>
         )}
         {value && !value.isCustom && (
-          <span className="text-[10px] bg-blue-50 text-blue-500 px-1.5 py-0.5 rounded-full font-bold tracking-wide shrink-0">
+          <span style={{ ...ba(10, 700, { background: `${TEAL}1a`, color: TEAL, padding: '2px 8px', borderRadius: 4, letterSpacing: '0.05em' }) }}>
             ADMIN
           </span>
         )}
         {query && (
-          <button type="button" onClick={clear} className="text-stone-300 hover:text-stone-500 transition-colors shrink-0">
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+          <button type="button" onClick={clear} style={{ background: 'none', border: 'none', color: text3, cursor: 'pointer', display: 'flex' }}>
+            <X size={14} />
           </button>
         )}
       </div>
 
-      {open && (
-        <div className="absolute z-50 top-full mt-1.5 left-0 right-0 bg-white border border-stone-200 rounded-xl shadow-xl shadow-stone-200/80 overflow-hidden">
-          <div className="max-h-52 overflow-y-auto">
-            {filtered.length > 0 ? (
-              <>
-                <div className="px-3 py-1.5 text-[10px] font-bold text-stone-400 uppercase tracking-widest border-b border-stone-100 bg-stone-50">
-                  Admins
+      <AnimatePresence>
+        {open && (
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            style={{ 
+              position: 'absolute', 
+              zIndex: 50, 
+              top: '100%', 
+              marginTop: 8, 
+              left: 0, 
+              right: 0, 
+              background: bg, 
+              border: `1px solid ${border}`, 
+              borderRadius: 16, 
+              boxShadow: '0 10px 40px rgba(0,0,0,0.15)', 
+              overflow: 'hidden' 
+            }}
+          >
+            <div style={{ maxH: 250, overflowY: 'auto' }} className="custom-scrollbar">
+              {filtered.length > 0 ? (
+                <>
+                  <div style={{ padding: '12px 16px', background: bg2, borderBottom: `1px solid ${border}`, ...bc(10, 800, { color: text3, letterSpacing: '0.1em' }) }}>
+                    SYSTEM ADMINS
+                  </div>
+                  {filtered.map((admin) => (
+                    <button
+                      key={admin.id}
+                      type="button"
+                      onMouseDown={() => selectAdmin(admin)}
+                      style={{ 
+                        width: '100%', 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: 12, 
+                        padding: '12px 16px', 
+                        background: 'none', 
+                        border: 'none', 
+                        borderBottom: `1px solid ${border}`, 
+                        cursor: 'pointer', 
+                        textAlign: 'left',
+                        transition: 'background 0.2s'
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.background = bg2}
+                      onMouseLeave={(e) => e.currentTarget.style.background = 'none'}
+                    >
+                      <div style={{ 
+                        width: 36, 
+                        height: 36, 
+                        borderRadius: '50%', 
+                        background: `linear-gradient(135deg, ${ORG}, ${TEAL})`, 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center', 
+                        color: '#fff', 
+                        ...bc(12, 700) 
+                      }}>
+                        {initials(admin.adminName)}
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ ...bc(14, 700, { color: textC }) }} className="truncate">{admin.adminName}</div>
+                        <div style={{ ...ba(12, 400, { color: text3 }) }} className="truncate">{admin.adminEmail}</div>
+                      </div>
+                    </button>
+                  ))}
+                </>
+              ) : (
+                <div style={{ padding: '20px 16px', textAlign: 'center', color: text3, ...ba(13, 400) }}>
+                  No results for "{query}"
                 </div>
-                {filtered.map((admin) => (
-                  <button
-                    key={admin.id}
-                    type="button"
-                    onMouseDown={() => selectAdmin(admin)}
-                    className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-orange-50 transition-colors text-left"
-                  >
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-400 to-amber-500 flex items-center justify-center text-white text-xs font-bold shrink-0">
-                      {initials(admin.adminName)}
-                    </div>
-                    <div>
-                      <div className="text-sm font-semibold text-stone-800">{admin.adminName}</div>
-                      <div className="text-xs text-stone-400">{admin.adminEmail}</div>
-                    </div>
-                  </button>
-                ))}
-              </>
-            ) : (
-              <div className="px-4 py-3 text-sm text-stone-400 text-center">No admins match "{query}"</div>
-            )}
-          </div>
-          {query.trim() && (
-            <div className="border-t border-stone-100 bg-orange-50/40">
-              <button
-                type="button"
-                onMouseDown={addCustom}
-                className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-orange-50 transition-colors text-left"
-              >
-                <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-orange-500 shrink-0">
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
-                  </svg>
-                </div>
-                <div>
-                  <div className="text-sm font-semibold text-orange-600">Add "{query}" as external</div>
-                  <div className="text-xs text-stone-400">Not an admin account</div>
-                </div>
-              </button>
+              )}
             </div>
-          )}
-        </div>
-      )}
+            {query.trim() && (
+              <div style={{ background: `${ORG}08`, borderTop: `1px solid ${border}` }}>
+                <button
+                  type="button"
+                  onMouseDown={addCustom}
+                  style={{ 
+                    width: '100%', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: 12, 
+                    padding: '12px 16px', 
+                    background: 'none', 
+                    border: 'none', 
+                    cursor: 'pointer', 
+                    textAlign: 'left' 
+                  }}
+                >
+                  <div style={{ 
+                    width: 36, 
+                    height: 36, 
+                    borderRadius: '50%', 
+                    background: `${ORG}1a`, 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center', 
+                    color: ORG 
+                  }}>
+                    <Plus size={18} strokeWidth={2.5} />
+                  </div>
+                  <div>
+                    <div style={{ ...bc(13, 700, { color: ORG }) }}>Add "{query}" as external</div>
+                    <div style={{ ...ba(11, 400, { color: text3 }) }}>Not a system account</div>
+                  </div>
+                </button>
+              </div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
 
 // ─── Shared components ────────────────────────────────────────────────────────
 function EmptyState({ icon, text, sub }) {
+  const { text2, text3 } = useDashboardTheme();
   return (
-    <div className="flex flex-col items-center py-12 text-center">
-      <div className="text-5xl mb-3 opacity-60">{icon}</div>
-      <p className="text-sm font-semibold text-stone-500">{text}</p>
-      <p className="text-xs text-stone-400 mt-1">{sub}</p>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '48px 24px', textAlign: 'center' }}>
+      <div style={{ fontSize: 48, marginBottom: 16, opacity: 0.5 }}>{icon}</div>
+      <p style={{ ...bc(16, 700, { color: text2, margin: 0 }) }}>{text}</p>
+      <p style={{ ...ba(13, 400, { color: text3, margin: '8px 0 0' }) }}>{sub}</p>
     </div>
   );
 }
 
 function Toggle({ checked, onChange }) {
+  const { bg2, border } = useDashboardTheme();
   return (
     <div
       onClick={() => onChange(!checked)}
-      className={`w-10 h-5 rounded-full transition-all duration-200 flex items-center px-0.5 cursor-pointer ${checked ? "bg-green-500" : "bg-stone-200"}`}
+      style={{ 
+        width: 44, 
+        height: 22, 
+        borderRadius: 100, 
+        background: checked ? ORG : bg2, 
+        border: `1px solid ${checked ? ORG : border}`, 
+        padding: 2, 
+        cursor: 'pointer', 
+        transition: 'all 0.3s ease',
+        display: 'flex',
+        alignItems: 'center'
+      }}
     >
-      <div className={`w-4 h-4 bg-white rounded-full shadow-sm transition-all duration-200 ${checked ? "translate-x-5" : "translate-x-0"}`} />
+      <motion.div 
+        animate={{ x: checked ? 22 : 0 }}
+        transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+        style={{ width: 16, height: 16, background: '#fff', borderRadius: '50%', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }} 
+      />
     </div>
   );
 }
 
 function FieldLabel({ children }) {
+  const { text3 } = useDashboardTheme();
   return (
-    <label className="block text-[11px] font-bold text-stone-400 uppercase tracking-widest mb-1.5">
+    <label style={{ display: 'block', ...bc(11, 800, { color: text3, letterSpacing: '0.1em', marginBottom: 8 }) }}>
       {children}
     </label>
   );
 }
 
-function Input({ className = "", error, ...props }) {
+function Input({ className = "", error, style = {}, ...props }) {
+  const { bg2, textC, text3, border } = useDashboardTheme();
   return (
     <input
-      className={`w-full bg-stone-50 border rounded-xl px-4 py-2.5 text-sm text-stone-800 font-medium outline-none transition-all placeholder-stone-300
-        ${error ? "border-red-400 ring-2 ring-red-100" : "border-stone-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 hover:border-stone-300"}
-        ${className}`}
+      style={{
+        width: '100%',
+        background: bg2,
+        border: `1px solid ${error ? '#ef4444' : border}`,
+        borderRadius: 12,
+        padding: '10px 16px',
+        color: textC,
+        ...ba(14, 500),
+        outline: 'none',
+        transition: 'all 0.3s ease',
+        boxShadow: error ? '0 0 0 4px rgba(239, 68, 68, 0.1)' : 'none',
+        ...style
+      }}
+      className={className}
       {...props}
     />
   );
 }
 
-function SectionAddBtn({ onClick }) {
+function SectionAddBtn({ onClick, label = "Add" }) {
   return (
-    <button
+    <motion.button
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
       type="button"
       onClick={onClick}
-      className="flex items-center gap-1.5 bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-sm shadow-orange-200 hover:shadow-orange-300"
+      style={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        gap: 8, 
+        background: ORG, 
+        color: '#fff', 
+        ...bc(12, 700, { padding: '8px 16px', borderRadius: 10, letterSpacing: '0.05em' }), 
+        border: 'none', 
+        cursor: 'pointer', 
+        boxShadow: `0 4px 15px ${ORG}40`
+      }}
     >
-      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
-      </svg>
-      Add
-    </button>
+      <Plus size={14} strokeWidth={2.5} />
+      {label.toUpperCase()}
+    </motion.button>
   );
 }
 
 function RemoveBtn({ onClick }) {
+  const { text3 } = useDashboardTheme();
   return (
-    <button type="button" onClick={onClick} className="text-stone-300 hover:text-red-400 transition-colors p-1">
-      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-      </svg>
-    </button>
+    <motion.button 
+      whileHover={{ scale: 1.1, color: '#ef4444' }}
+      type="button" 
+      onClick={onClick} 
+      style={{ background: 'none', border: 'none', color: text3, cursor: 'pointer', padding: 4, display: 'flex' }}
+    >
+      <Trash2 size={16} />
+    </motion.button>
   );
 }
 
-const INITIAL_FORM = {
-  title: "",
-  description: "",
-  startTime: "",
-  endTime: "",
-  status: "SCHEDULED",
-  location: "",
-  meetingLink: "",
-  participants: [],
-  keyPoints: [],
-  actionItems: [],
-  attachments: [],
-};
-
-// UI-only, not submitted
-const ACCESSIBILITY_OPTIONS = [
-  {
-    value: "ONLINE",
-    label: "Online",
-    icon: (
-      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-      </svg>
-    ),
-    desc: "Virtual only",
-  },
-  {
-    value: "OFFLINE",
-    label: "Offline",
-    icon: (
-      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-      </svg>
-    ),
-    desc: "In-person only",
-  },
-  {
-    value: "HYBRID",
-    label: "Hybrid",
-    icon: (
-      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-      </svg>
-    ),
-    desc: "Both",
-  },
-];
-
-const FILE_ICONS = {
-  pdf: "📄", doc: "📝", docx: "📝", xls: "📊", xlsx: "📊",
-  ppt: "📊", pptx: "📊", png: "🖼️", jpg: "🖼️", jpeg: "🖼️",
-  gif: "🖼️", svg: "🖼️", mp4: "🎬", mp3: "🎵", zip: "🗜️",
-  rar: "🗜️", txt: "📃", csv: "📊", default: "📎",
-};
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function MeetingForm({
@@ -293,6 +395,7 @@ export default function MeetingForm({
   onCancel,
   isSubmitting = false
 }) {
+  const { bg, bg2, textC, text2, text3, border, isDark } = useDashboardTheme();
   const isEdit = !!meeting;
 
   // Initialize form state from meeting prop when editing
@@ -428,86 +531,135 @@ export default function MeetingForm({
   };
 
   const TABS = [
-    {
-      id: "details", label: "Details",
-      icon: <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>,
-    },
-    {
-      id: "participants", label: "Participants",
-      icon: <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>,
-    },
-    {
-      id: "keypoints", label: "Key Points",
-      icon: <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg>,
-    },
-    {
-      id: "actions", label: "Actions",
-      icon: <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>,
-    },
-    {
-      id: "attachments", label: "Attachments",
-      icon: <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>,
-    },
+    { id: "details", label: "Details", icon: <Layout size={16} /> },
+    { id: "participants", label: "Participants", icon: <Users size={16} /> },
+    { id: "keypoints", label: "Key Points", icon: <Pin size={16} /> },
+    { id: "actions", label: "Actions", icon: <Zap size={16} /> },
+    { id: "attachments", label: "Attachments", icon: <Paperclip size={16} /> },
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50/20 to-stone-50 flex items-start justify-center px-4 py-10 pb-24">
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-        .mf-wrap * { font-family: 'Plus Jakarta Sans', sans-serif; }
-        input[type=datetime-local]::-webkit-calendar-picker-indicator,
-        input[type=date]::-webkit-calendar-picker-indicator { opacity: 0.5; cursor: pointer; filter: invert(55%) sepia(90%) saturate(500%) hue-rotate(340deg); }
-        .tab-bar::-webkit-scrollbar { display: none; }
-      `}</style>
-
-      <div className="mf-wrap w-full ">
-
+    <div style={{ minHeight: '100vh', background: bg, paddingBottom: 100 }}>
+      <div className="max-w-5xl mx-auto px-4 py-8">
+        
         {/* ── Header ── */}
-        <div className="mb-7">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center shadow-sm shadow-orange-200">
-              <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
+        <div style={{ marginBottom: 40 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+            <div style={{ 
+              width: 40, 
+              height: 40, 
+              background: ORG, 
+              borderRadius: 12, 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              boxShadow: `0 8px 20px ${ORG}40` 
+            }}>
+              <Calendar className="text-white" size={20} strokeWidth={2.5} />
             </div>
-            <span className="text-xs font-bold tracking-widest text-orange-500 uppercase">Meeting Management</span>
+            <div>
+              <h1 style={{ ...bc(28, 800, { color: textC, margin: 0 }) }}>
+                {isEdit ? "EDIT MEETING" : "NEW MEETING"}
+              </h1>
+              <p style={{ ...ba(14, 500, { color: text3, margin: 0 }) }}>
+                {isEdit ? "Update session details and participants" : "Schedule a new collaboration session"}
+              </p>
+            </div>
           </div>
-          <h1 className="text-3xl font-extrabold text-stone-900 tracking-tight leading-tight">
-            {isEdit ? "Edit Meeting" : "Schedule a New Meeting"}
-          </h1>
-          <p className="text-sm text-stone-400 mt-1 font-medium">
-            {isEdit ? "Update the details of this meeting record" : "Fill in the form below to create a meeting"}
-          </p>
         </div>
 
-        {/* ── Status Bar ── */}
-        <div className="bg-white border border-stone-200 rounded-2xl px-5 py-4 mb-5 shadow-sm flex items-center gap-4 flex-wrap">
-          <span className="text-xs font-bold text-stone-400 uppercase tracking-widest">Status</span>
-          <div className="flex gap-2 flex-wrap">
-            {STATUS_OPTIONS.map((s) => {
-              const m = STATUS_META[s];
-              const active = form.status === s;
-              return (
-                <button
-                  key={s}
-                  type="button"
-                  onClick={() => set("status", s)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border-2 transition-all duration-150 ${
-                    active
-                      ? `${m.bg} ${m.text} ${m.activeBorder} shadow-sm`
-                      : "bg-white text-stone-400 border-stone-200 hover:border-stone-300 hover:bg-stone-50"
-                  }`}
-                >
-                  <span className={`w-2 h-2 rounded-full ${active ? m.dot : "bg-stone-300"} transition-all`} />
-                  {s.charAt(0) + s.slice(1).toLowerCase()}
-                </button>
-              );
-            })}
+        {/* ── Status & Actions Bar ── */}
+        <div style={{ 
+          background: bg2, 
+          border: `1px solid ${border}`, 
+          borderRadius: 20, 
+          padding: '16px 24px', 
+          marginBottom: 24, 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: 20
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <span style={{ ...bc(11, 800, { color: text3, letterSpacing: '0.1em' }) }}>STATUS</span>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              {STATUS_OPTIONS.map((s) => {
+                const m = STATUS_META[s];
+                const active = form.status === s;
+                return (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => set("status", s)}
+                    style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: 8, 
+                      padding: '6px 14px', 
+                      borderRadius: 100, 
+                      ...bc(11, 700), 
+                      border: `1px solid ${active ? m.color : border}`,
+                      background: active ? `${m.color}1a` : bg,
+                      color: active ? m.color : text3,
+                      cursor: 'pointer',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: m.color }} />
+                    {m.label.toUpperCase()}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          
+          <div style={{ display: 'flex', gap: 12 }}>
+            <button
+              type="button"
+              onClick={onCancel}
+              style={{ 
+                padding: '8px 20px', 
+                borderRadius: 10, 
+                ...bc(12, 700, { color: text2 }), 
+                background: bg, 
+                border: `1px solid ${border}`, 
+                cursor: 'pointer' 
+              }}
+            >
+              CANCEL
+            </button>
+            <button
+              type="submit"
+              onClick={handleSubmit}
+              disabled={isSubmitting}
+              style={{ 
+                padding: '8px 24px', 
+                borderRadius: 10, 
+                ...bc(12, 700, { color: '#fff' }), 
+                background: ORG, 
+                border: 'none', 
+                cursor: 'pointer',
+                boxShadow: `0 4px 15px ${ORG}40`,
+                opacity: isSubmitting ? 0.7 : 1
+              }}
+            >
+              {isSubmitting ? "SAVING..." : (isEdit ? "UPDATE MEETING" : "CREATE MEETING")}
+            </button>
           </div>
         </div>
 
         {/* ── Tabs ── */}
-        <div className="tab-bar flex gap-1 bg-white border border-stone-200 rounded-2xl p-1.5 mb-5 shadow-sm overflow-x-auto">
+        <div style={{ 
+          display: 'flex', 
+          gap: 4, 
+          background: bg2, 
+          border: `1px solid ${border}`, 
+          borderRadius: 16, 
+          padding: 6, 
+          marginBottom: 32,
+          overflowX: 'auto'
+        }} className="custom-scrollbar">
           {TABS.map((t) => {
             const active = tab === t.id;
             const count = tabCounts[t.id];
@@ -516,20 +668,34 @@ export default function MeetingForm({
                 key={t.id}
                 type="button"
                 onClick={() => setTab(t.id)}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all duration-150 flex-1 justify-center uppercase tracking-wide ${
-                  active
-                    ? "bg-orange-500 text-white shadow-md shadow-orange-200"
-                    : "text-stone-400 hover:bg-stone-50 hover:text-stone-600"
-                }`}
+                style={{ 
+                  flex: 1,
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center',
+                  gap: 10, 
+                  padding: '12px 16px', 
+                  borderRadius: 12, 
+                  ...bc(11, 700), 
+                  background: active ? bg : 'transparent',
+                  color: active ? ORG : text3,
+                  border: `1px solid ${active ? border : 'transparent'}`,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  whiteSpace: 'nowrap',
+                  boxShadow: active ? '0 4px 12px rgba(0,0,0,0.05)' : 'none'
+                }}
               >
                 {t.icon}
-                <span className="hidden sm:inline">{t.label}</span>
+                <span className="hidden md:inline">{t.label.toUpperCase()}</span>
                 {count > 0 && (
-                  <span
-                    className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center leading-4 ${
-                      active ? "bg-white/25 text-white" : "bg-orange-100 text-orange-600"
-                    }`}
-                  >
+                  <span style={{ 
+                    background: active ? ORG : `${text3}33`, 
+                    color: '#fff', 
+                    fontSize: 9, 
+                    padding: '2px 6px', 
+                    borderRadius: 6 
+                  }}>
                     {count}
                   </span>
                 )}
@@ -542,467 +708,688 @@ export default function MeetingForm({
 
           {/* ══════════════ DETAILS ══════════════ */}
           {tab === "details" && (
-            <div className="bg-white border border-stone-200 rounded-2xl p-7 shadow-sm space-y-5">
-
+            <motion.div 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              style={{ 
+                background: bg2, 
+                border: `1px solid ${border}`, 
+                borderRadius: 24, 
+                padding: '32px', 
+                boxShadow: '0 4px 20px rgba(0,0,0,0.02)' 
+              }}
+              className="space-y-6"
+            >
               {/* Title */}
               <div>
-                <FieldLabel>Title *</FieldLabel>
+                <FieldLabel>MEETING TITLE *</FieldLabel>
                 <Input
-                  placeholder="e.g. Q2 Planning Session"
+                  placeholder="e.g. Weekly Sync or Q3 Strategic Planning"
                   value={form.title}
                   onChange={(e) => set("title", e.target.value)}
                   error={errors.title}
+                  style={{ ...ba(16, 600) }}
                 />
                 {errors.title && (
-                  <p className="flex items-center gap-1.5 text-xs text-red-500 mt-1.5 font-semibold">
-                    <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
-                    {errors.title}
+                  <p style={{ ...ba(12, 500, { color: '#ef4444', marginTop: 8, display: 'flex', alignItems: 'center', gap: 6 }) }}>
+                    <AlertCircle size={14} /> {errors.title}
                   </p>
                 )}
               </div>
 
               {/* Description */}
               <div>
-                <FieldLabel>Description</FieldLabel>
+                <FieldLabel>DESCRIPTION</FieldLabel>
                 <textarea
-                  className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-sm text-stone-800 font-medium outline-none transition-all focus:border-orange-400 focus:ring-2 focus:ring-orange-100 hover:border-stone-300 placeholder-stone-300 resize-none"
-                  rows={3}
-                  placeholder="What is this meeting about?"
+                  style={{
+                    width: '100%',
+                    background: bg,
+                    border: `1px solid ${border}`,
+                    borderRadius: 12,
+                    padding: '12px 16px',
+                    color: textC,
+                    ...ba(14, 500),
+                    outline: 'none',
+                    minHeight: 100,
+                    resize: 'vertical',
+                    transition: 'border-color 0.2s'
+                  }}
+                  placeholder="Outline the meeting's core objective..."
                   value={form.description || ""}
                   onChange={(e) => set("description", e.target.value)}
                 />
               </div>
 
               {/* Times */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
-                  <FieldLabel>Start Time *</FieldLabel>
-                  <input
-                    type="datetime-local"
-                    className={`w-full bg-stone-50 border rounded-xl px-4 py-2.5 text-sm text-stone-800 font-medium outline-none transition-all ${
-                      errors.startTime ? "border-red-400 ring-2 ring-red-100" : "border-stone-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 hover:border-stone-300"
-                    }`}
-                    value={form.startTime}
-                    onChange={(e) => set("startTime", e.target.value)}
-                  />
+                  <FieldLabel>START TIME *</FieldLabel>
+                  <div style={{ position: 'relative' }}>
+                    <Clock size={16} style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', color: text3, pointerEvents: 'none' }} />
+                    <input
+                      type="datetime-local"
+                      style={{
+                        width: '100%',
+                        background: bg,
+                        border: `1px solid ${errors.startTime ? '#ef4444' : border}`,
+                        borderRadius: 12,
+                        padding: '10px 16px 10px 44px',
+                        color: textC,
+                        ...ba(14, 500),
+                        outline: 'none'
+                      }}
+                      value={form.startTime}
+                      onChange={(e) => set("startTime", e.target.value)}
+                    />
+                  </div>
                   {errors.startTime && (
-                    <p className="flex items-center gap-1.5 text-xs text-red-500 mt-1.5 font-semibold">
-                      <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
-                      {errors.startTime}
+                    <p style={{ ...ba(12, 500, { color: '#ef4444', marginTop: 8, display: 'flex', alignItems: 'center', gap: 6 }) }}>
+                      <AlertCircle size={14} /> {errors.startTime}
                     </p>
                   )}
                 </div>
                 <div>
-                  <FieldLabel>End Time</FieldLabel>
-                  <input
-                    type="datetime-local"
-                    className={`w-full bg-stone-50 border rounded-xl px-4 py-2.5 text-sm text-stone-800 font-medium outline-none transition-all ${
-                      errors.endTime ? "border-red-400 ring-2 ring-red-100" : "border-stone-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 hover:border-stone-300"
-                    }`}
-                    value={form.endTime || ""}
-                    onChange={(e) => set("endTime", e.target.value)}
-                  />
+                  <FieldLabel>END TIME</FieldLabel>
+                  <div style={{ position: 'relative' }}>
+                    <Clock size={16} style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', color: text3, pointerEvents: 'none' }} />
+                    <input
+                      type="datetime-local"
+                      style={{
+                        width: '100%',
+                        background: bg,
+                        border: `1px solid ${errors.endTime ? '#ef4444' : border}`,
+                        borderRadius: 12,
+                        padding: '10px 16px 10px 44px',
+                        color: textC,
+                        ...ba(14, 500),
+                        outline: 'none'
+                      }}
+                      value={form.endTime || ""}
+                      onChange={(e) => set("endTime", e.target.value)}
+                    />
+                  </div>
                   {errors.endTime && (
-                    <p className="flex items-center gap-1.5 text-xs text-red-500 mt-1.5 font-semibold">
-                      <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
-                      {errors.endTime}
+                    <p style={{ ...ba(12, 500, { color: '#ef4444', marginTop: 8, display: 'flex', alignItems: 'center', gap: 6 }) }}>
+                      <AlertCircle size={14} /> {errors.endTime}
                     </p>
                   )}
                 </div>
               </div>
 
-              <div className="border-t border-stone-100" />
+              <div style={{ height: 1, background: border, margin: '16px 0' }} />
 
-              {/* ── Accessibility (UI-only, not submitted) ── */}
+              {/* ── Accessibility ── */}
               <div>
-                <div className="flex items-center gap-2 mb-3">
-                  <FieldLabel>Accessibility</FieldLabel>
-                  <span className="text-[10px] bg-stone-100 text-stone-400 px-2 py-0.5 rounded-full font-bold uppercase tracking-wide -mt-1.5">UI only</span>
-                </div>
-                <div className="grid grid-cols-3 gap-2">
+                <FieldLabel>COLLABORATION MODE</FieldLabel>
+                <div className="grid grid-cols-3 gap-3">
                   {ACCESSIBILITY_OPTIONS.map((opt) => {
                     const active = accessibility === opt.value;
+                    const Icon = opt.value === 'ONLINE' ? Laptop : opt.value === 'OFFLINE' ? MapPin : Globe;
                     return (
                       <button
                         key={opt.value}
                         type="button"
                         onClick={() => setAccessibility(opt.value)}
-                        className={`flex flex-col items-center gap-2 py-3.5 px-2 rounded-xl border-2 text-xs font-bold transition-all duration-150 ${
-                          active
-                            ? "bg-orange-50 border-orange-400 text-orange-600 shadow-sm shadow-orange-100"
-                            : "bg-stone-50 border-stone-200 text-stone-400 hover:border-stone-300 hover:bg-white hover:text-stone-600"
-                        }`}
+                        style={{ 
+                          display: 'flex', 
+                          flexDirection: 'column', 
+                          alignItems: 'center', 
+                          gap: 12, 
+                          padding: '16px 12px', 
+                          borderRadius: 16, 
+                          border: `2px solid ${active ? ORG : border}`, 
+                          background: active ? `${ORG}08` : bg, 
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease'
+                        }}
                       >
-                        <span className={`${active ? "text-orange-500" : "text-stone-400"} transition-colors`}>
-                          {opt.icon}
-                        </span>
-                        <span>{opt.label}</span>
-                        <span className={`text-[10px] font-normal ${active ? "text-orange-400" : "text-stone-300"}`}>
-                          {opt.desc}
-                        </span>
+                        <Icon size={20} style={{ color: active ? ORG : text3 }} />
+                        <div style={{ textAlign: 'center' }}>
+                          <div style={{ ...bc(12, 700, { color: active ? ORG : text2 }) }}>{opt.label.toUpperCase()}</div>
+                          <div style={{ ...ba(10, 500, { color: text3 }) }}>{opt.desc}</div>
+                        </div>
                       </button>
                     );
                   })}
                 </div>
               </div>
 
-              {/* ── Conditional fields based on accessibility ── */}
+              {/* ── Conditional fields ── */}
               {(showLocation || showMeetingLink) && (
-                <div className={`grid grid-cols-1 gap-4 ${showLocation && showMeetingLink ? "sm:grid-cols-2" : ""}`}>
+                <div className={`grid grid-cols-1 gap-6 ${showLocation && showMeetingLink ? "sm:grid-cols-2" : ""}`}>
                   {showLocation && (
                     <div>
-                      <FieldLabel>
-                        Location {accessibility === "OFFLINE" ? "*" : ""}
-                      </FieldLabel>
-                      <div className="relative">
-                        <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-300 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                        <input
-                          className={`w-full bg-stone-50 border rounded-xl pl-10 pr-4 py-2.5 text-sm text-stone-800 font-medium outline-none transition-all placeholder-stone-300 ${
-                            errors.location ? "border-red-400 ring-2 ring-red-100" : "border-stone-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 hover:border-stone-300"
-                          }`}
-                          placeholder="Conference room, address..."
+                      <FieldLabel>PHYSICAL LOCATION {accessibility === "OFFLINE" ? "*" : ""}</FieldLabel>
+                      <div style={{ position: 'relative' }}>
+                        <MapPin size={16} style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', color: text3, pointerEvents: 'none' }} />
+                        <Input
+                          placeholder="e.g. Conference Room B"
                           value={form.location || ""}
                           onChange={(e) => set("location", e.target.value)}
+                          error={errors.location}
+                          style={{ paddingLeft: 44, background: bg }}
                         />
                       </div>
                       {errors.location && (
-                        <p className="flex items-center gap-1.5 text-xs text-red-500 mt-1.5 font-semibold">
-                          <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
-                          {errors.location}
+                        <p style={{ ...ba(12, 500, { color: '#ef4444', marginTop: 8, display: 'flex', alignItems: 'center', gap: 6 }) }}>
+                          <AlertCircle size={14} /> {errors.location}
                         </p>
                       )}
                     </div>
                   )}
                   {showMeetingLink && (
                     <div>
-                      <FieldLabel>
-                        Meeting Link {accessibility === "ONLINE" ? "*" : ""}
-                      </FieldLabel>
-                      <div className="relative">
-                        <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-300 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                        </svg>
-                        <input
-                          className={`w-full bg-stone-50 border rounded-xl pl-10 pr-4 py-2.5 text-sm text-stone-800 font-medium outline-none transition-all placeholder-stone-300 ${
-                            errors.meetingLink ? "border-red-400 ring-2 ring-red-100" : "border-stone-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 hover:border-stone-300"
-                          }`}
+                      <FieldLabel>VIRTUAL LINK {accessibility === "ONLINE" ? "*" : ""}</FieldLabel>
+                      <div style={{ position: 'relative' }}>
+                        <LinkIcon size={16} style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', color: text3, pointerEvents: 'none' }} />
+                        <Input
                           placeholder="https://meet.google.com/..."
                           value={form.meetingLink || ""}
                           onChange={(e) => set("meetingLink", e.target.value)}
+                          error={errors.meetingLink}
+                          style={{ paddingLeft: 44, background: bg }}
                         />
                       </div>
                       {errors.meetingLink && (
-                        <p className="flex items-center gap-1.5 text-xs text-red-500 mt-1.5 font-semibold">
-                          <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
-                          {errors.meetingLink}
+                        <p style={{ ...ba(12, 500, { color: '#ef4444', marginTop: 8, display: 'flex', alignItems: 'center', gap: 6 }) }}>
+                          <AlertCircle size={14} /> {errors.meetingLink}
                         </p>
                       )}
                     </div>
                   )}
                 </div>
               )}
-            </div>
+            </motion.div>
           )}
 
           {/* ══════════════ PARTICIPANTS ══════════════ */}
           {tab === "participants" && (
-            <div className="bg-white border border-stone-200 rounded-2xl p-7 shadow-sm">
-              <div className="flex items-start justify-between mb-6">
+            <motion.div 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              style={{ 
+                background: bg2, 
+                border: `1px solid ${border}`, 
+                borderRadius: 24, 
+                padding: '32px', 
+                boxShadow: '0 4px 20px rgba(0,0,0,0.02)' 
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24 }}>
                 <div>
-                  <h3 className="font-bold text-stone-800 text-base">Participants</h3>
-                  <p className="text-xs text-stone-400 mt-0.5 font-medium">
-                    Search admins or add external attendees
+                  <h3 style={{ ...bc(18, 800, { color: textC, margin: 0 }) }}>PARTICIPANTS</h3>
+                  <p style={{ ...ba(14, 500, { color: text3, margin: '4px 0 0' }) }}>
+                    Search system admins or add external collaborators
                   </p>
                 </div>
-                <SectionAddBtn onClick={addParticipant} />
+                <SectionAddBtn onClick={addParticipant} label="Add Person" />
               </div>
 
               {(form.participants || []).length === 0 ? (
-                <EmptyState icon="👥" text="No participants yet" sub="Click Add to include someone" />
+                <EmptyState icon={<Users size={48} />} text="No participants added yet" sub="Include people who will join this session" />
               ) : (
-                <div className="space-y-3">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                   {(form.participants || []).map((p, i) => (
-                    <div key={p.id} className="bg-stone-50 border border-stone-200 rounded-xl p-4">
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-2">
-                          <div className="w-6 h-6 rounded-full bg-orange-100 text-orange-500 text-xs font-bold flex items-center justify-center">
+                    <motion.div 
+                      key={p.id} 
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      style={{ 
+                        background: bg, 
+                        border: `1px solid ${border}`, 
+                        borderRadius: 16, 
+                        padding: '16px 20px',
+                        position: 'relative'
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                          <div style={{ 
+                            width: 24, 
+                            height: 24, 
+                            borderRadius: '50%', 
+                            background: `${ORG}1a`, 
+                            color: ORG, 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            justifyContent: 'center',
+                            ...bc(10, 800)
+                          }}>
                             {i + 1}
                           </div>
-                          <span className="text-[11px] font-bold text-stone-400 uppercase tracking-widest">Participant</span>
+                          <span style={{ ...bc(10, 800, { color: text3, letterSpacing: '0.05em' }) }}>PARTICIPANT</span>
                           {p.isCustom && (
-                            <span className="text-[10px] bg-amber-100 text-amber-600 px-1.5 py-0.5 rounded-full font-bold">External</span>
+                            <span style={{ ...ba(10, 700, { background: `${ORG}1a`, color: ORG, padding: '2px 8px', borderRadius: 4 }) }}>EXTERNAL</span>
                           )}
                           {p.adminId && (
-                            <span className="text-[10px] bg-blue-50 text-blue-500 px-1.5 py-0.5 rounded-full font-bold">Admin</span>
+                            <span style={{ ...ba(10, 700, { background: `${TEAL}1a`, color: TEAL, padding: '2px 8px', borderRadius: 4 }) }}>ADMIN</span>
                           )}
                         </div>
                         <RemoveBtn onClick={() => removeP(p.id)} />
                       </div>
 
-                      <div className="mb-3">
-                        <FieldLabel>Name / Admin</FieldLabel>
-                        <AdminSearchInput
-                          admins={admins}
-                          value={p.name ? { name: p.name, isCustom: p.isCustom, adminId: p.adminId } : null}
-                          onChange={(val) => {
-                            if (val) updateP(p.id, { adminId: val.adminId || "", name: val.name, email: val.email || p.email || "", isCustom: val.isCustom });
-                            else updateP(p.id, { adminId: "", name: "", email: "", isCustom: false });
-                          }}
-                        />
-                      </div>
-
-                      {p.name && (
-                        <div className="flex items-end gap-4">
-                          <div className="flex-1">
-                            <FieldLabel>Email</FieldLabel>
-                            <input
-                              className="w-full bg-white border border-stone-200 rounded-lg px-3 py-2 text-sm text-stone-800 font-medium outline-none focus:border-orange-400 focus:ring-1 focus:ring-orange-100 transition-all placeholder-stone-300"
-                              placeholder="email@example.com"
-                              value={p.email || ""}
-                              onChange={(e) => updateP(p.id, { email: e.target.value })}
-                            />
-                          </div>
-                          <label className="flex items-center gap-2 cursor-pointer pb-2">
-                            <Toggle checked={!!p.attended} onChange={(val) => updateP(p.id, { attended: val })} />
-                            <span className="text-xs font-semibold text-stone-500">Attended</span>
-                          </label>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                          <FieldLabel>NAME / SEARCH</FieldLabel>
+                          <AdminSearchInput
+                            admins={admins}
+                            value={p.name ? { name: p.name, isCustom: p.isCustom, adminId: p.adminId } : null}
+                            onChange={(val) => {
+                              if (val) updateP(p.id, { adminId: val.adminId || "", name: val.name, email: val.email || p.email || "", isCustom: val.isCustom });
+                              else updateP(p.id, { adminId: "", name: "", email: "", isCustom: false });
+                            }}
+                          />
                         </div>
-                      )}
-                    </div>
+
+                        {p.name && (
+                          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 16 }}>
+                            <div style={{ flex: 1 }}>
+                              <FieldLabel>EMAIL ADDRESS</FieldLabel>
+                              <Input
+                                placeholder="name@example.com"
+                                value={p.email || ""}
+                                onChange={(e) => updateP(p.id, { email: e.target.value })}
+                                style={{ background: bg2 }}
+                              />
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, paddingBottom: 4 }}>
+                              <span style={{ ...bc(9, 800, { color: text3 }) }}>ATTENDED</span>
+                              <Toggle checked={!!p.attended} onChange={(val) => updateP(p.id, { attended: val })} />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </motion.div>
                   ))}
                 </div>
               )}
-            </div>
+            </motion.div>
           )}
 
           {/* ══════════════ KEY POINTS ══════════════ */}
           {tab === "keypoints" && (
-            <div className="bg-white border border-stone-200 rounded-2xl p-7 shadow-sm">
-              <div className="flex items-start justify-between mb-6">
+            <motion.div 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              style={{ 
+                background: bg2, 
+                border: `1px solid ${border}`, 
+                borderRadius: 24, 
+                padding: '32px', 
+                boxShadow: '0 4px 20px rgba(0,0,0,0.02)' 
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24 }}>
                 <div>
-                  <h3 className="font-bold text-stone-800 text-base">Key Points</h3>
-                  <p className="text-xs text-stone-400 mt-0.5 font-medium">Important topics & discussion notes</p>
+                  <h3 style={{ ...bc(18, 800, { color: textC, margin: 0 }) }}>KEY POINTS</h3>
+                  <p style={{ ...ba(14, 500, { color: text3, margin: '4px 0 0' }) }}>Capture important discussion topics and decisions</p>
                 </div>
-                <SectionAddBtn onClick={addKP} />
+                <SectionAddBtn onClick={addKP} label="Add Point" />
               </div>
 
               {(form.keyPoints || []).length === 0 ? (
-                <EmptyState icon="📌" text="No key points recorded" sub="Add important topics from the meeting" />
+                <EmptyState icon={<Pin size={48} />} text="No key points recorded" sub="Document important takeaways from the session" />
               ) : (
-                <div className="space-y-3">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                   {(form.keyPoints || []).map((k, i) => (
-                    <div key={k.id} className="bg-stone-50 border border-stone-200 rounded-xl p-4">
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-2">
-                          <div className="w-6 h-6 rounded-full bg-orange-100 text-orange-500 text-xs font-bold flex items-center justify-center">{i + 1}</div>
-                          <span className="text-[11px] font-bold text-stone-400 uppercase tracking-widest">Key Point</span>
+                    <motion.div 
+                      key={k.id} 
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      style={{ 
+                        background: bg, 
+                        border: `1px solid ${border}`, 
+                        borderRadius: 16, 
+                        padding: '20px'
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                          <div style={{ 
+                            width: 24, 
+                            height: 24, 
+                            borderRadius: '50%', 
+                            background: `${ORG}1a`, 
+                            color: ORG, 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            justifyContent: 'center',
+                            ...bc(10, 800)
+                          }}>
+                            {i + 1}
+                          </div>
+                          <span style={{ ...bc(10, 800, { color: text3, letterSpacing: '0.05em' }) }}>KEY POINT</span>
                         </div>
                         <RemoveBtn onClick={() => removeKP(k.id)} />
                       </div>
-                      <div className="space-y-3">
+                        <div className="space-y-4">
                         <div>
-                          <FieldLabel>Title</FieldLabel>
-                          <input
-                            className="w-full bg-white border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-800 font-medium outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all placeholder-stone-300"
-                            placeholder="e.g. Database Performance Issue"
+                          <FieldLabel>TOPIC / TITLE</FieldLabel>
+                          <Input
+                            placeholder="Briefly state the point..."
                             value={k.title}
                             onChange={(e) => updateKP(k.id, "title", e.target.value)}
+                            style={{ background: bg2 }}
                           />
                         </div>
                         <div>
-                          <FieldLabel>Notes</FieldLabel>
+                          <FieldLabel>DETAILED NOTES</FieldLabel>
                           <textarea
-                            className="w-full bg-white border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-800 font-medium outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all resize-none placeholder-stone-300"
-                            rows={3}
-                            placeholder="Discussion notes and context..."
+                            style={{
+                              width: '100%',
+                              background: bg2,
+                              border: `1px solid ${border}`,
+                              borderRadius: 12,
+                              padding: '12px 16px',
+                              color: textC,
+                              ...ba(14, 500),
+                              outline: 'none',
+                              minHeight: 80,
+                              resize: 'vertical'
+                            }}
+                            placeholder="Elaborate on the discussion or decision..."
                             value={k.notes}
                             onChange={(e) => updateKP(k.id, "notes", e.target.value)}
                           />
                         </div>
                       </div>
-                    </div>
+                    </motion.div>
                   ))}
                 </div>
               )}
-            </div>
+            </motion.div>
           )}
 
           {/* ══════════════ ACTION ITEMS ══════════════ */}
           {tab === "actions" && (
-            <div className="bg-white border border-stone-200 rounded-2xl p-7 shadow-sm">
-              <div className="flex items-start justify-between mb-6">
+            <motion.div 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              style={{ 
+                background: bg2, 
+                border: `1px solid ${border}`, 
+                borderRadius: 24, 
+                padding: '32px', 
+                boxShadow: '0 4px 20px rgba(0,0,0,0.02)' 
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24 }}>
                 <div>
-                  <h3 className="font-bold text-stone-800 text-base">Action Items</h3>
-                  <p className="text-xs text-stone-400 mt-0.5 font-medium">Tasks assigned from this meeting</p>
+                  <h3 style={{ ...bc(18, 800, { color: textC, margin: 0 }) }}>ACTION ITEMS</h3>
+                  <p style={{ ...ba(14, 500, { color: text3, margin: '4px 0 0' }) }}>Assign specific tasks and set deadlines</p>
                 </div>
-                <SectionAddBtn onClick={addAI} />
+                <SectionAddBtn onClick={addAI} label="Add Task" />
               </div>
 
               {(form.actionItems || []).length === 0 ? (
-                <EmptyState icon="⚡" text="No action items" sub="Assign tasks that came out of this meeting" />
+                <EmptyState icon={<Zap size={48} />} text="No action items yet" sub="Assign responsibilities that arose during the session" />
               ) : (
-                <div className="space-y-3">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                   {(form.actionItems || []).map((a, i) => (
-                    <div
-                      key={a.id}
-                      className={`border rounded-xl p-4 transition-all ${
-                        a.completed ? "bg-green-50/60 border-green-200" : "bg-stone-50 border-stone-200"
-                      }`}
+                    <motion.div 
+                      key={a.id} 
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      style={{ 
+                        background: a.completed ? `${TEAL}08` : bg, 
+                        border: `1px solid ${a.completed ? TEAL : border}`, 
+                        borderRadius: 16, 
+                        padding: '20px'
+                      }}
                     >
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-2">
-                          <div className={`w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center ${a.completed ? "bg-green-100 text-green-600" : "bg-orange-100 text-orange-500"}`}>
-                            {a.completed ? "✓" : i + 1}
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                          <div style={{ 
+                            width: 24, 
+                            height: 24, 
+                            borderRadius: '50%', 
+                            background: a.completed ? `${TEAL}1a` : `${ORG}1a`, 
+                            color: a.completed ? TEAL : ORG, 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            justifyContent: 'center',
+                            ...bc(10, 800)
+                          }}>
+                            {a.completed ? <Check size={14} strokeWidth={3} /> : i + 1}
                           </div>
-                          <span className="text-[11px] font-bold text-stone-400 uppercase tracking-widest">Action Item</span>
-                          {a.completed && <span className="text-[10px] bg-green-100 text-green-600 px-1.5 py-0.5 rounded-full font-bold">Completed</span>}
+                          <span style={{ ...bc(10, 800, { color: text3, letterSpacing: '0.05em' }) }}>TASK ITEM</span>
+                          {a.completed && <span style={{ ...ba(10, 700, { background: `${TEAL}1a`, color: TEAL, padding: '2px 8px', borderRadius: 4 }) }}>COMPLETED</span>}
                         </div>
                         <RemoveBtn onClick={() => removeAI(a.id)} />
                       </div>
 
-                      <div className="mb-3">
-                        <FieldLabel>Task Description</FieldLabel>
-                        <input
-                          className={`w-full bg-white border border-stone-200 rounded-lg px-3 py-2.5 text-sm font-medium outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all placeholder-stone-300 ${a.completed ? "line-through text-stone-400" : "text-stone-800"}`}
-                          placeholder="e.g. Fix the API endpoint"
-                          value={a.task}
-                          onChange={(e) => updateAI(a.id, { task: e.target.value })}
-                        />
-                      </div>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+                      <div className="space-y-4">
                         <div>
-                          <FieldLabel>Assigned To</FieldLabel>
-                          <AdminSearchInput
-                            admins={admins}
-                            value={a.assignedTo}
-                            onChange={(val) => updateAI(a.id, { assignedTo: val, assignedToId: val?.adminId || "" })}
-                            placeholder="Search admin or name..."
+                          <FieldLabel>TASK DESCRIPTION</FieldLabel>
+                          <Input
+                            placeholder="What needs to be done?"
+                            value={a.task}
+                            onChange={(e) => updateAI(a.id, { task: e.target.value })}
+                            style={{ 
+                              background: bg2,
+                              textDecoration: a.completed ? 'line-through' : 'none',
+                              opacity: a.completed ? 0.6 : 1
+                            }}
                           />
                         </div>
-                        <div>
-                          <FieldLabel>Due Date</FieldLabel>
-                          <input
-                            type="date"
-                            className="w-full bg-white border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-800 font-medium outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all"
-                            value={a.dueDate}
-                            onChange={(e) => updateAI(a.id, { dueDate: e.target.value })}
-                          />
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div>
+                            <FieldLabel>ASSIGNED TO</FieldLabel>
+                            <AdminSearchInput
+                              admins={admins}
+                              value={a.assignedTo}
+                              onChange={(val) => updateAI(a.id, { assignedTo: val, assignedToId: val?.adminId || "" })}
+                              placeholder="Search owner..."
+                            />
+                          </div>
+                          <div>
+                            <FieldLabel>DUE DATE</FieldLabel>
+                            <div style={{ position: 'relative' }}>
+                              <Calendar size={16} style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', color: text3, pointerEvents: 'none' }} />
+                              <Input
+                                type="date"
+                                value={a.dueDate}
+                                onChange={(e) => updateAI(a.id, { dueDate: e.target.value })}
+                                style={{ paddingLeft: 44, background: bg2 }}
+                              />
+                            </div>
+                          </div>
+                        </div>
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12, paddingTop: 8 }}>
+                          <Toggle checked={!!a.completed} onChange={(val) => updateAI(a.id, { completed: val })} />
+                          <span style={{ ...ba(13, 600, { color: a.completed ? TEAL : text2 }) }}>
+                            {a.completed ? 'TASK IS DONE' : 'MARK AS COMPLETED'}
+                          </span>
                         </div>
                       </div>
-
-                      <label className="flex items-center gap-2 cursor-pointer w-fit">
-                        <Toggle checked={!!a.completed} onChange={(val) => updateAI(a.id, { completed: val })} />
-                        <span className="text-xs font-semibold text-stone-500">Mark as completed</span>
-                      </label>
-                    </div>
+                    </motion.div>
                   ))}
                 </div>
               )}
-            </div>
+            </motion.div>
           )}
 
           {/* ══════════════ ATTACHMENTS ══════════════ */}
           {tab === "attachments" && (
-            <div className="bg-white border border-stone-200 rounded-2xl p-7 shadow-sm">
-              <div className="flex items-start justify-between mb-6">
-                <div>
-                  <h3 className="font-bold text-stone-800 text-base">Attachments</h3>
-                  <p className="text-xs text-stone-400 mt-0.5 font-medium">Files, slides, or documents for this meeting</p>
-                </div>
+            <motion.div 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              style={{ 
+                background: bg2, 
+                border: `1px solid ${border}`, 
+                borderRadius: 24, 
+                padding: '32px', 
+                boxShadow: '0 4px 20px rgba(0,0,0,0.02)' 
+              }}
+            >
+              <div style={{ marginBottom: 24 }}>
+                <h3 style={{ ...bc(18, 800, { color: textC, margin: 0 }) }}>DOCUMENTATION</h3>
+                <p style={{ ...ba(14, 500, { color: text3, margin: '4px 0 0' }) }}>Upload meeting minutes, slides, or relevant files</p>
               </div>
 
-              {/* Drop zone */}
+              {/* Upload Zone */}
               <input ref={fileInputRef} type="file" multiple className="hidden" onChange={handleFileChange} />
-              <button
+              <motion.button
+                whileHover={{ borderColor: ORG, background: `${ORG}04` }}
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="w-full border-2 border-dashed border-stone-200 hover:border-orange-300 bg-stone-50 hover:bg-orange-50/50 rounded-xl p-8 flex flex-col items-center gap-3 transition-all group mb-5"
+                style={{ 
+                  width: '100%', 
+                  border: `2px dashed ${border}`, 
+                  borderRadius: 20, 
+                  padding: '40px 24px', 
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  alignItems: 'center', 
+                  gap: 16, 
+                  background: bg, 
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
               >
-                <div className="w-14 h-14 bg-orange-100 group-hover:bg-orange-200 rounded-2xl flex items-center justify-center transition-colors shadow-sm">
-                  <svg className="w-7 h-7 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                  </svg>
+                <div style={{ 
+                  width: 56, 
+                  height: 56, 
+                  borderRadius: 16, 
+                  background: `${ORG}1a`, 
+                  color: ORG, 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center' 
+                }}>
+                  <Plus size={32} />
                 </div>
-                <div className="text-center">
-                  <p className="text-sm font-bold text-stone-600 group-hover:text-orange-600 transition-colors">
-                    Click to upload files
-                  </p>
-                  <p className="text-xs text-stone-400 mt-0.5">PDF, Word, Excel, Images, and more</p>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ ...bc(16, 700, { color: textC }) }}>ADD ATTACHMENTS</div>
+                  <div style={{ ...ba(13, 400, { color: text3, marginTop: 4 }) }}>Drag files here or click to browse</div>
                 </div>
-              </button>
+              </motion.button>
 
-              {(form.attachments || []).length === 0 ? (
-                <EmptyState icon="📎" text="No files attached" sub="Upload files using the button above" />
-              ) : (
-                <div className="space-y-2">
-                  {(form.attachments || []).map((att) => {
-                    const icon = FILE_ICONS[att.fileType] || FILE_ICONS.default;
-                    return (
-                      <div key={att.id} className="flex items-center gap-3 bg-stone-50 border border-stone-200 hover:border-stone-300 rounded-xl px-4 py-3 transition-all group">
-                        <span className="text-2xl">{icon}</span>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-semibold text-stone-800 truncate">{att.fileName}</p>
-                          <p className="text-xs font-bold text-stone-400 uppercase tracking-wide">{att.fileType}</p>
-                        </div>
-                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          {att.fileUrl && (
-                            <a
-                              href={att.fileUrl}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="w-8 h-8 flex items-center justify-center rounded-lg bg-orange-50 text-orange-500 hover:bg-orange-100 transition-colors"
-                            >
-                              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                              </svg>
-                            </a>
-                          )}
-                          <button
-                            type="button"
-                            onClick={() => removeAtt(att.id)}
-                            className="w-8 h-8 flex items-center justify-center rounded-lg bg-red-50 text-red-400 hover:bg-red-100 transition-colors"
-                          >
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                          </button>
-                        </div>
+              {(form.attachments || []).length > 0 && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 24 }}>
+                  {(form.attachments || []).map((att) => (
+                    <motion.div 
+                      key={att.id} 
+                      style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: 16, 
+                        padding: '12px 16px', 
+                        background: bg, 
+                        border: `1px solid ${border}`, 
+                        borderRadius: 12 
+                      }}
+                    >
+                      <div style={{ color: ORG }}><FileText size={20} /></div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ ...bc(14, 700, { color: textC }) }} className="truncate">{att.fileName}</div>
+                        <div style={{ ...ba(11, 500, { color: text3 }) }}>{att.fileType.toUpperCase()} FILE</div>
                       </div>
-                    );
-                  })}
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        {att.fileUrl && (
+                          <a 
+                            href={att.fileUrl} 
+                            target="_blank" 
+                            rel="noreferrer"
+                            style={{ 
+                              width: 32, 
+                              height: 32, 
+                              borderRadius: 8, 
+                              background: bg2, 
+                              color: text3, 
+                              display: 'flex', 
+                              alignItems: 'center', 
+                              justifyContent: 'center',
+                              transition: 'all 0.2s'
+                            }}
+                            onMouseEnter={(e) => e.currentTarget.style.color = ORG}
+                            onMouseLeave={(e) => e.currentTarget.style.color = text3}
+                          >
+                            <ExternalLink size={16} />
+                          </a>
+                        )}
+                        <button 
+                          onClick={() => removeAtt(att.id)}
+                          style={{ 
+                            width: 32, 
+                            height: 32, 
+                            borderRadius: 8, 
+                            background: bg2, 
+                            color: text3, 
+                            border: 'none',
+                            cursor: 'pointer',
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            justifyContent: 'center',
+                            transition: 'all 0.2s'
+                          }}
+                          onMouseEnter={(e) => e.currentTarget.style.color = '#ef4444'}
+                          onMouseLeave={(e) => e.currentTarget.style.color = text3}
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </motion.div>
+                  ))}
                 </div>
               )}
-            </div>
+            </motion.div>
           )}
 
           {/* ── Submit Footer ── */}
-          <div className="flex items-center justify-between mt-6 bg-white border border-stone-200 rounded-2xl px-6 py-4 shadow-sm">
-            <div>
+          <div style={{ 
+            marginTop: 40, 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'space-between',
+            background: bg2,
+            border: `1px solid ${border}`,
+            borderRadius: 24,
+            padding: '24px 32px',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.02)'
+          }}>
+            <div style={{ flex: 1 }}>
               {Object.keys(errors).length > 0 && (
-                <p className="text-xs text-red-500 font-semibold flex items-center gap-1.5">
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
-                  Please fix the errors in Details tab
-                </p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: '#ef4444' }}>
+                  <AlertCircle size={18} />
+                  <span style={{ ...ba(13, 600) }}>Please review errors in the Details tab</span>
+                </div>
               )}
             </div>
-            <div className="flex gap-3">
+            <div style={{ display: 'flex', gap: 16 }}>
               <button
                 type="button"
                 onClick={onCancel}
-                disabled={isSubmitting}
-                className="px-6 py-2.5 rounded-xl border-2 border-stone-200 text-stone-600 text-sm font-bold hover:bg-stone-50 hover:border-stone-300 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{ 
+                  padding: '12px 32px', 
+                  borderRadius: 12, 
+                  ...bc(13, 700, { color: text2 }), 
+                  background: bg, 
+                  border: `1px solid ${border}`, 
+                  cursor: 'pointer',
+                  letterSpacing: '0.05em' 
+                }}
               >
-                Cancel
+                CANCEL
               </button>
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="px-8 py-2.5 rounded-xl bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white text-sm font-bold transition-all shadow-md shadow-orange-200 hover:shadow-lg hover:shadow-orange-200 hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
+                style={{ 
+                  padding: '12px 40px', 
+                  borderRadius: 12, 
+                  ...bc(13, 700, { color: '#fff' }), 
+                  background: ORG, 
+                  border: 'none', 
+                  cursor: 'pointer',
+                  boxShadow: `0 8px 25px ${ORG}40`,
+                  letterSpacing: '0.05em',
+                  opacity: isSubmitting ? 0.7 : 1
+                }}
               >
-                {isSubmitting ? "Saving..." : (isEdit ? "Save Changes" : "Create Meeting")}
+                {isSubmitting ? "SAVING..." : (isEdit ? "SAVE CHANGES" : "CREATE SESSION")}
               </button>
             </div>
           </div>
@@ -1011,3 +1398,4 @@ export default function MeetingForm({
     </div>
   );
 }
+

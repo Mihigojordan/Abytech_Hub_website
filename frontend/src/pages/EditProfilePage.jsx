@@ -8,14 +8,18 @@ import {
 import {
   User, Lock, Briefcase, Upload, Camera, Eye, EyeOff,
   Plus, Trash2, Save, Loader2, CheckCircle, AlertCircle,
-  MapPin
+  MapPin, ArrowLeft, X
 } from 'lucide-react';
 import adminAuthService from '../services/adminAuthService';
+import { useDashboardTheme } from '../utils/dashboardTheme';
+import { ORG, TEAL, bb, bc, ba } from '../utils/homeConstants';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function AdminProfileEdit() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { bg, bg2, bg3, textC, text2, text3, border, isDark } = useDashboardTheme();
 
   // ——————————————————————————————————————————————————————————————
   // TAB MANAGEMENT: Keep tab in URL (?tab=personal|password|...)
@@ -230,8 +234,12 @@ export default function AdminProfileEdit() {
   // ——————————————————————————————————————————————————————————————
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
-        <Loader2 className="w-10 h-10 animate-spin text-[rgb(81,96,146)]" />
+      <div style={{ minHeight: '100vh', background: bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <motion.div 
+          animate={{ rotate: 360 }} 
+          transition={{ repeat: Infinity, duration: 1 }} 
+          style={{ width: 40, height: 40, border: `3px solid ${border}`, borderTopColor: ORG, borderRadius: '50%' }} 
+        />
       </div>
     );
   }
@@ -240,210 +248,234 @@ export default function AdminProfileEdit() {
   // MAIN UI
   // ——————————————————————————————————————————————————————————————
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4">
-      <div className="mx-auto">
-        {/* Header */}
-        <div className="relative rounded-t-xl overflow-hidden h-56">
-          <div
-            className="absolute inset-0 bg-cover bg-center"
-            style={{
-              backgroundImage:
-                "url('https://images.unsplash.com/photo-1762422411505-c0cae1fb103c?ixlib=rb-4.1.0&auto=format&fit=crop&q=60&w=500')",
-            }}
+    <div style={{ minHeight: '100vh', background: bg, paddingBottom: 60 }}>
+      {/* Header Bar */}
+      <div style={{ background: `${bg2}80`, backdropFilter: 'blur(10px)', borderBottom: `1px solid ${border}`, position: 'sticky', top: 0, zIndex: 50 }}>
+        <div className="max-w-[1200px] mx-auto px-6 py-4 flex items-center justify-between">
+          <button
+            onClick={() => navigate(-1)}
+            style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', color: text3, cursor: 'pointer', ...bc(12, 700), transition: 'all 0.2s' }}
+            onMouseOver={(e) => e.currentTarget.style.color = ORG}
+            onMouseOut={(e) => e.currentTarget.style.color = text3}
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-[rgb(81,96,146)]/90 to-[rgb(81,96,146)]/70" />
+            <ArrowLeft size={18} /> GO BACK
+          </button>
+          <div style={{ ...bc(12, 800, { color: text3, letterSpacing: '0.1em' }) }}>
+            ACCOUNT / <span style={{ color: ORG }}>EDIT PROFILE</span>
           </div>
+        </div>
+      </div>
 
-          <div className="relative h-full flex items-end p-6">
-            <div className="flex items-start justify-between w-full">
-              <div className="flex items-end gap-4">
-                <div className="relative mb-[-32px]">
-                  {/* Profile image placeholder */}
+      <div className="max-w-[1200px] mx-auto px-4 mt-8">
+        {/* Profile Hero Card */}
+        <div style={{ background: bg2, border: `1px solid ${border}`, borderRadius: 24, padding: '32px', marginBottom: 24, position: 'relative', overflow: 'hidden' }}>
+          <div style={{ position: 'absolute', top: 0, right: 0, width: '40%', height: '100%', background: `linear-gradient(225deg, ${ORG}05 0%, transparent 70%)` }}></div>
+          <div className="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
+            <div className="flex items-end gap-6">
+              <div className="relative group">
+                <div style={{ width: 100, height: 100, borderRadius: 24, border: `3px solid ${ORG}`, overflow: 'hidden', background: bg, boxShadow: `0 12px 32px ${ORG}20` }}>
+                  <img
+                    src={personalInfo.profileImageUrl || 'https://via.placeholder.com/150'}
+                    alt="Profile"
+                    className="w-full h-full object-cover"
+                  />
                 </div>
-                <div className="text-white mb-3">
-                  <h1 className="text-2xl font-bold mb-0.5">Edit Profile - {personalInfo.adminName || '—'}</h1>
-                  <p className="text-white/90 text-sm mb-1.5">Update your profile information and settings</p>
-                  <div className="flex items-center gap-3 text-xs">
-                    <div className="flex items-center gap-1">
-                      <MapPin className="w-3.5 h-3.5" />
-                      <span>{personalInfo.location || '—'}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Briefcase className="w-3.5 h-3.5" />
-                      <span>{experiences[0]?.companyName || '—'}</span>
-                    </div>
+                <label
+                  htmlFor="profile-upload-hero"
+                  className="absolute -bottom-2 -right-2 w-10 h-10 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl flex items-center justify-center text-zinc-600 dark:text-zinc-400 cursor-pointer shadow-lg hover:text-[#ea580c] transition-colors"
+                  style={{ background: bg, border: `1px solid ${border}`, color: text2 }}
+                >
+                  <Camera size={20} />
+                </label>
+                <input id="profile-upload-hero" type="file" accept="image/*" onChange={handleProfileImageChange} className="hidden" />
+              </div>
+              
+              <div>
+                <h1 style={{ ...bb(42, { color: textC, margin: '0 0 4px', lineHeight: 1 }) }}>{personalInfo.adminName || 'NEW ADMIN'}</h1>
+                <div className="flex flex-wrap items-center gap-4">
+                  <div className="flex items-center gap-2" style={{ ...bc(12, 700, { color: text3 }) }}>
+                    <MapPin size={14} style={{ color: ORG }} /> {personalInfo.location || 'GLOBAL'}
+                  </div>
+                  <div className="w-1 h-1 rounded-full" style={{ background: border }}></div>
+                  <div className="flex items-center gap-2" style={{ ...bc(12, 700, { color: text3 }) }}>
+                    <Briefcase size={14} style={{ color: ORG }} /> {experiences[0]?.jobTitle || 'ADMINISTRATOR'}
                   </div>
                 </div>
               </div>
             </div>
+
+            <button
+              onClick={handleSubmit}
+              disabled={saving}
+              style={{ 
+                padding: '12px 32px', background: ORG, color: '#fff', border: 'none', borderRadius: 14, 
+                cursor: 'pointer', ...bc(13, 800), opacity: saving ? 0.5 : 1, transition: 'all 0.2s',
+                boxShadow: `0 8px 24px ${ORG}40`
+              }}
+              onMouseOver={(e) => !saving && (e.currentTarget.style.transform = 'translateY(-2px)')}
+              onMouseOut={(e) => !saving && (e.currentTarget.style.transform = 'translateY(0)')}
+            >
+              {saving ? 'SAVING...' : 'SAVE CHANGES'}
+            </button>
           </div>
         </div>
 
-        {/* Banners */}
-        {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 text-red-800 text-sm">
-            <AlertCircle className="w-4 h-4" />
-            {error}
-          </div>
-        )}
+        {/* Alerts */}
+        <AnimatePresence>
+          {error && (
+            <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+              className="mb-6 p-4 rounded-2xl flex items-center gap-3" style={{ background: '#ef444415', border: '1px solid #ef444433', color: '#ef4444', ...bc(12, 700) }}>
+              <AlertCircle size={18} /> {error.toUpperCase()}
+            </motion.div>
+          )}
+          {success && (
+            <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+              className="mb-6 p-4 rounded-2xl flex items-center gap-3" style={{ background: '#10b98115', border: '1px solid #10b98133', color: '#10b981', ...bc(12, 700) }}>
+              <CheckCircle size={18} /> {activeTab === 'password' ? 'PASSWORD UPDATED' : 'PROFILE SYNCED SUCCESSFULLY'}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-        {success && (
-          <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2 text-green-800 text-sm">
-            <CheckCircle className="w-4 h-4" />
-            {activeTab === 'password' ? 'Password changed successfully!' : 'Profile updated successfully!'}
-          </div>
-        )}
-
-        {/* Tabs */}
-        <div className="bg-white rounded-t-lg shadow-sm border-b">
-          <div className="flex gap-1 px-4">
-            {[
-              { key: 'personal', icon: User, label: 'Personal Details' },
-              { key: 'password', icon: Lock, label: 'Change Password' },
-              { key: 'experience', icon: Briefcase, label: 'Experience' },
-              { key: 'files', icon: Upload, label: 'Upload Files' },
-            ].map(tab => (
+        {/* Tab Navigation */}
+        <div style={{ display: 'flex', gap: 6, padding: '6px', background: bg2, border: `1px solid ${border}`, borderRadius: 18, marginBottom: 24, overflowX: 'auto' }} className="no-scrollbar">
+          {[
+            { key: 'personal', icon: User, label: 'PERSONAL' },
+            { key: 'password', icon: Lock, label: 'SECURITY' },
+            { key: 'experience', icon: Briefcase, label: 'EXPERIENCE' },
+            { key: 'files', icon: Upload, label: 'RESOURCES' },
+          ].map(tab => {
+            const isActive = activeTab === tab.key;
+            return (
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
-                className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${
-                  activeTab === tab.key
-                    ? 'text-[rgb(81,96,146)] border-b-2 border-[rgb(81,96,146)]'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
+                style={{ 
+                  flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, padding: '12px 20px', borderRadius: 14,
+                  background: isActive ? bg : 'transparent', color: isActive ? ORG : text3, border: `1px solid ${isActive ? border : 'transparent'}`,
+                  cursor: 'pointer', transition: 'all 0.2s', ...bc(12, 800), whiteSpace: 'nowrap'
+                }}
               >
-                <tab.icon className="w-4 h-4" />
-                {tab.label}
+                <tab.icon size={16} /> {tab.label}
               </button>
-            ))}
-          </div>
+            );
+          })}
         </div>
 
-        {/* Content */}
-        <div className="bg-white rounded-b-lg shadow-sm p-4">
+        {/* Main Content Card */}
+        <div style={{ background: bg2, border: `1px solid ${border}`, borderRadius: 24, padding: '32px' }}>
           {/* Personal Tab */}
           {activeTab === 'personal' && (
-            <div className="space-y-4">
-              {/* Profile Picture */}
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-2">Profile Picture</label>
-                <div className="flex items-center gap-4">
-                  <div className="relative">
-                    <img
-                      src={personalInfo.profileImageUrl || 'https://via.placeholder.com/150'}
-                      alt="Profile"
-                      className="w-20 h-20 rounded-full object-cover border-4 border-gray-100"
-                    />
-                    <label
-                      htmlFor="profile-upload"
-                      className="absolute bottom-0 right-0 bg-[rgb(81,96,146)] text-white p-1.5 rounded-full hover:bg-[rgb(71,86,136)] cursor-pointer"
-                    >
-                      <Camera className="w-3.5 h-3.5" />
-                    </label>
-                    <input
-                      id="profile-upload"
-                      type="file"
-                      accept="image/*"
-                      onChange={handleProfileImageChange}
-                      className="hidden"
-                    />
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500">JPG, PNG or GIF. Max size 2MB</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Basic Info + Joined Date */}
-              <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-8">
+              {/* Basic Info */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {[
-                  { label: 'Full Name *', key: 'adminName', type: 'text' },
-                  { label: 'Email *', key: 'adminEmail', type: 'email' },
-                  { label: 'Phone', key: 'phone', type: 'tel' },
-                  { label: 'Location', key: 'location', type: 'text' },
-                  { label: 'Joined Date', key: 'joinedDate', type: 'date' },
-                  { label: 'Identity Card Number', key: 'idNumber', type: 'number' },
+                  { label: 'FULL NAME *', key: 'adminName', type: 'text' },
+                  { label: 'EMAIL ADDRESS *', key: 'adminEmail', type: 'email' },
+                  { label: 'CONTACT PHONE', key: 'phone', type: 'tel' },
+                  { label: 'CURRENT LOCATION', key: 'location', type: 'text' },
+                  { label: 'JOINED DATE', key: 'joinedDate', type: 'date' },
+                  { label: 'IDENTITY NUMBER', key: 'idNumber', type: 'text' },
                 ].map(field => (
                   <div key={field.key}>
-                    <label className="block text-xs font-medium text-gray-700 mb-1.5">{field.label}</label>
+                    <label style={{ ...bc(11, 700, { color: text3, marginBottom: 8, display: 'block' }) }}>{field.label}</label>
                     <input
                       type={field.type}
                       value={personalInfo[field.key]}
                       onChange={e => setPersonalInfo({ ...personalInfo, [field.key]: e.target.value })}
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[rgb(81,96,146)] focus:border-transparent"
+                      style={{ 
+                        width: '100%', padding: '12px 16px', background: bg, border: `1px solid ${border}`, 
+                        borderRadius: 12, color: textC, ...ba(14, 500), outline: 'none', transition: 'all 0.2s'
+                      }}
+                      onFocus={(e) => e.target.style.borderColor = ORG}
+                      onBlur={(e) => e.target.style.borderColor = border}
                     />
                   </div>
                 ))}
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1.5">Bio</label>
+                <label style={{ ...bc(11, 700, { color: text3, marginBottom: 8, display: 'block' }) }}>BIOGRAPHICAL SUMMARY</label>
                 <textarea
                   value={personalInfo.bio}
                   onChange={e => setPersonalInfo({ ...personalInfo, bio: e.target.value })}
-                  rows="4"
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[rgb(81,96,146)] focus:border-transparent"
+                  rows={4}
+                  style={{ 
+                    width: '100%', padding: '16px', background: bg, border: `1px solid ${border}`, 
+                    borderRadius: 16, color: textC, ...ba(14, 500), outline: 'none', resize: 'vertical'
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = ORG}
+                  onBlur={(e) => e.target.style.borderColor = border}
                 />
               </div>
 
               {/* Skills */}
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-2">Skills</label>
-                <div className="flex flex-wrap gap-1.5 mb-2">
+                <label style={{ ...bc(11, 700, { color: text3, marginBottom: 12, display: 'block' }) }}>PROFESSIONAL SKILLS</label>
+                <div className="flex flex-wrap gap-2 mb-4">
                   {skills.map((skill, i) => (
-                    <span key={i} className="px-2.5 py-1 bg-[rgb(81,96,146)]/10 text-[rgb(81,96,146)] rounded-lg text-xs font-medium flex items-center gap-1.5">
-                      {skill}
-                      <button onClick={() => removeSkill(skill)} className="text-[rgb(81,96,146)] hover:text-red-600">
-                        <Trash2 className="w-3 h-3" />
+                    <motion.span 
+                      initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+                      key={i} 
+                      style={{ 
+                        padding: '6px 14px', background: `${ORG}10`, color: ORG, borderRadius: 10, 
+                        ...bc(11, 800), display: 'flex', alignItems: 'center', gap: 8, border: `1px solid ${ORG}20`
+                      }}
+                    >
+                      {skill.toUpperCase()}
+                      <button onClick={() => removeSkill(skill)} style={{ background: 'none', border: 'none', color: ORG, cursor: 'pointer', padding: 0, display: 'flex' }}>
+                        <X size={14} />
                       </button>
-                    </span>
+                    </motion.span>
                   ))}
                 </div>
-                <div className="flex gap-2">
+                <div style={{ display: 'flex', gap: 10 }}>
                   <input
                     type="text"
                     value={newSkill}
                     onChange={e => setNewSkill(e.target.value)}
                     onKeyPress={e => e.key === 'Enter' && addSkill()}
-                    placeholder="Add a skill"
-                    className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[rgb(81,96,146)] focus:border-transparent"
+                    placeholder="ENTER SKILL..."
+                    style={{ 
+                      flex: 1, padding: '12px 16px', background: bg, border: `1px solid ${border}`, 
+                      borderRadius: 12, color: textC, ...bc(12, 700), outline: 'none'
+                    }}
                   />
-                  <button onClick={addSkill} className="px-3 py-2 bg-[rgb(81,96,146)] text-white rounded-lg hover:bg-[rgb(71,86,136)]">
-                    <Plus className="w-4 h-4" />
+                  <button onClick={addSkill} style={{ padding: '0 20px', background: ORG, color: '#fff', border: 'none', borderRadius: 12, cursor: 'pointer' }}>
+                    <Plus size={20} />
                   </button>
                 </div>
               </div>
 
               {/* Portfolio */}
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-2">Portfolio Links</label>
-                <div className="space-y-2">
+                <label style={{ ...bc(11, 700, { color: text3, marginBottom: 12, display: 'block' }) }}>DIGITAL PORTFOLIO LINKS</label>
+                <div className="space-y-3">
                   {portfolio.map(item => (
-                    <div key={item.id} className="flex gap-2">
+                    <div key={item.id} style={{ display: 'flex', gap: 10 }}>
                       <input
                         type="text"
                         value={item.platform}
                         onChange={e => updatePortfolio(item.id, 'platform', e.target.value)}
-                        placeholder="Platform (e.g., GitHub)"
-                        className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[rgb(81,96,146)] focus:border-transparent"
+                        placeholder="PLATFORM"
+                        style={{ flex: 1, padding: '12px 16px', background: bg, border: `1px solid ${border}`, borderRadius: 12, color: textC, ...bc(12, 700), outline: 'none' }}
                       />
                       <input
                         type="url"
                         value={item.url}
                         onChange={e => updatePortfolio(item.id, 'url', e.target.value)}
-                        placeholder="URL"
-                        className="flex-[2] px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[rgb(81,96,146)] focus:border-transparent"
+                        placeholder="RESOURCE URL"
+                        style={{ flex: 2, padding: '12px 16px', background: bg, border: `1px solid ${border}`, borderRadius: 12, color: textC, ...ba(14, 500), outline: 'none' }}
                       />
                       <button
                         onClick={() => removePortfolio(item.id)}
-                        className="px-2 py-2 text-red-600 hover:bg-red-50 rounded-lg"
+                        style={{ padding: '0 12px', color: '#ef4444', background: '#ef444410', border: '1px solid #ef444420', borderRadius: 12, cursor: 'pointer' }}
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 size={18} />
                       </button>
                     </div>
                   ))}
-                  <button onClick={addPortfolio} className="flex items-center gap-1.5 px-3 py-2 text-[rgb(81,96,146)] hover:bg-[rgb(81,96,146)]/10 rounded-lg text-xs font-medium">
-                    <Plus className="w-3.5 h-3.5" /> Add Portfolio Link
+                  <button onClick={addPortfolio} style={{ background: 'none', border: 'none', color: ORG, ...bc(11, 800), cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, padding: '8px 0' }}>
+                    <Plus size={16} /> ADD PORTFOLIO RESOURCE
                   </button>
                 </div>
               </div>
@@ -452,121 +484,137 @@ export default function AdminProfileEdit() {
 
           {/* Password Tab */}
           {activeTab === 'password' && (
-            <div className="space-y-4 grid grid-cols-1 lg:grid-cols-2 gap-3">
-              <div className="bg-amber-50 lg:col-span-2 border border-amber-200 rounded-lg p-3">
-                <p className="text-xs text-amber-800">
-                  <strong>Password Requirements:</strong> At least 8 characters, including uppercase, lowercase, number, and special character.
+            <div className="space-y-6">
+              <div style={{ padding: '16px 20px', background: `${ORG}05`, border: `1px solid ${ORG}20`, borderRadius: 16 }}>
+                <p style={{ ...bc(11, 700, { color: ORG, margin: 0, letterSpacing: '0.05em' }) }}>
+                  SECURITY REQUIREMENT: MINIMUM 8 CHARACTERS WITH COMPLEXITY (ALPHA-NUMERIC + SPECIAL).
                 </p>
               </div>
-              {[
-                { label: 'Current Password *', key: 'currentPassword', show: showPassword, setShow: setShowPassword },
-                { label: 'New Password *', key: 'newPassword', show: showNewPassword, setShow: setShowNewPassword },
-                { label: 'Confirm New Password *', key: 'confirmPassword', show: showConfirmPassword, setShow: setShowConfirmPassword },
-              ].map(field => (
-                <div key={field.key}>
-                  <label className="block text-xs font-medium text-gray-700 mb-1.5">{field.label}</label>
-                  <div className="relative">
-                    <input
-                      type={field.show ? 'text' : 'password'}
-                      value={passwordData[field.key]}
-                      onChange={e => setPasswordData({ ...passwordData, [field.key]: e.target.value })}
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[rgb(81,96,146)] focus:border-transparent pr-10"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => field.setShow(!field.show)}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                    >
-                      {field.show ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {[
+                  { label: 'CURRENT AUTHENTICATION *', key: 'currentPassword', show: showPassword, setShow: setShowPassword },
+                  { label: 'NEW AUTHENTICATION *', key: 'newPassword', show: showNewPassword, setShow: setShowNewPassword },
+                  { label: 'CONFIRM NEW AUTH *', key: 'confirmPassword', show: showConfirmPassword, setShow: setShowConfirmPassword },
+                ].map(field => (
+                  <div key={field.key}>
+                    <label style={{ ...bc(11, 700, { color: text3, marginBottom: 8, display: 'block' }) }}>{field.label}</label>
+                    <div style={{ position: 'relative' }}>
+                      <input
+                        type={field.show ? 'text' : 'password'}
+                        value={passwordData[field.key]}
+                        onChange={e => setPasswordData({ ...passwordData, [field.key]: e.target.value })}
+                        style={{ width: '100%', padding: '12px 40px 12px 16px', background: bg, border: `1px solid ${border}`, borderRadius: 12, color: textC, outline: 'none' }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => field.setShow(!field.show)}
+                        style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: text3, cursor: 'pointer' }}
+                      >
+                        {field.show ? <EyeOff size={18} /> : <Eye size={18} />}
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           )}
 
           {/* Experience Tab */}
           {activeTab === 'experience' && (
-            <div className="space-y-3 grid grid-cols-1 gap-3 xl:grid-cols-2">
-              {experiences.map((exp, i) => (
-                <div key={exp.id} className="border border-gray-200 rounded-lg p-4 relative">
-                  <button
-                    onClick={() => removeExperience(exp.id)}
-                    className="absolute top-3 right-3 text-red-600 hover:bg-red-50 p-1.5 rounded-lg"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                  <h3 className="text-sm font-semibold text-gray-900 mb-3">Experience {i + 1}</h3>
-                  <div className="grid grid-cols-2 gap-3">
-                    {['jobTitle', 'companyName'].map(f => (
-                      <div key={f}>
-                        <label className="block text-xs font-medium text-gray-700 mb-1.5">
-                          {f === 'jobTitle' ? 'Job Title *' : 'Company Name *'}
-                        </label>
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                {experiences.map((exp, i) => (
+                  <div key={exp.id} style={{ padding: '24px', background: bg, border: `1px solid ${border}`, borderRadius: 20, position: 'relative' }}>
+                    <button
+                      onClick={() => removeExperience(exp.id)}
+                      style={{ position: 'absolute', top: 20, right: 20, color: '#ef4444', background: '#ef444410', border: 'none', padding: 8, borderRadius: 10, cursor: 'pointer' }}
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                    <h3 style={{ ...bc(14, 800, { color: textC, marginBottom: 20 }) }}>EXPERIENCE #{i + 1}</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label style={{ ...bc(10, 700, { color: text3, marginBottom: 6, display: 'block' }) }}>JOB TITLE *</label>
                         <input
                           type="text"
-                          value={exp[f]}
-                          onChange={e => updateExperience(exp.id, f, e.target.value)}
-                          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[rgb(81,96,146)] focus:border-transparent"
+                          value={exp.jobTitle}
+                          onChange={e => updateExperience(exp.id, 'jobTitle', e.target.value)}
+                          style={{ width: '100%', padding: '10px 14px', background: bg2, border: `1px solid ${border}`, borderRadius: 10, color: textC, ...ba(13, 500), outline: 'none' }}
                         />
                       </div>
-                    ))}
-                    <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1.5">From *</label>
-                      <input
-                        type="month"
-                        value={exp.from}
-                        onChange={e => updateExperience(exp.id, 'from', e.target.value)}
-                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[rgb(81,96,146)] focus:border-transparent"
-                      />
+                      <div>
+                        <label style={{ ...bc(10, 700, { color: text3, marginBottom: 6, display: 'block' }) }}>COMPANY *</label>
+                        <input
+                          type="text"
+                          value={exp.companyName}
+                          onChange={e => updateExperience(exp.id, 'companyName', e.target.value)}
+                          style={{ width: '100%', padding: '10px 14px', background: bg2, border: `1px solid ${border}`, borderRadius: 10, color: textC, ...ba(13, 500), outline: 'none' }}
+                        />
+                      </div>
+                      <div>
+                        <label style={{ ...bc(10, 700, { color: text3, marginBottom: 6, display: 'block' }) }}>FROM *</label>
+                        <input
+                          type="month"
+                          value={exp.from}
+                          onChange={e => updateExperience(exp.id, 'from', e.target.value)}
+                          style={{ width: '100%', padding: '10px 14px', background: bg2, border: `1px solid ${border}`, borderRadius: 10, color: textC, ...bc(11, 700), outline: 'none' }}
+                        />
+                      </div>
+                      <div>
+                        <label style={{ ...bc(10, 700, { color: text3, marginBottom: 6, display: 'block' }) }}>TO (OR PRESENT)</label>
+                        <input
+                          type="text"
+                          value={exp.to}
+                          onChange={e => updateExperience(exp.id, 'to', e.target.value)}
+                          placeholder="Present"
+                          style={{ width: '100%', padding: '10px 14px', background: bg2, border: `1px solid ${border}`, borderRadius: 10, color: textC, ...bc(11, 700), outline: 'none' }}
+                        />
+                      </div>
                     </div>
-                    <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1.5">To</label>
-                      <input
-                        type="text"
-                        value={exp.to}
-                        onChange={e => updateExperience(exp.id, 'to', e.target.value)}
-                        placeholder="Present"
-                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[rgb(81,96,146)] focus:border-transparent"
+                    <div className="mt-4">
+                      <label style={{ ...bc(10, 700, { color: text3, marginBottom: 6, display: 'block' }) }}>CORE RESPONSIBILITIES</label>
+                      <textarea
+                        value={exp.jobDescription}
+                        onChange={e => updateExperience(exp.id, 'jobDescription', e.target.value)}
+                        rows={3}
+                        style={{ width: '100%', padding: '12px', background: bg2, border: `1px solid ${border}`, borderRadius: 12, color: textC, ...ba(13, 500), outline: 'none', resize: 'none' }}
                       />
                     </div>
                   </div>
-                  <div className="mt-3">
-                    <label className="block text-xs font-medium text-gray-700 mb-1.5">Job Description</label>
-                    <textarea
-                      value={exp.jobDescription}
-                      onChange={e => updateExperience(exp.id, 'jobDescription', e.target.value)}
-                      rows="3"
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[rgb(81,96,146)] focus:border-transparent"
-                    />
-                  </div>
-                </div>
-              ))}
-              <button onClick={addExperience} className="flex items-center gap-1.5 px-3 py-2 text-[rgb(81,96,146)] hover:bg-[rgb(81,96,146)]/10 rounded-lg text-xs font-medium">
-                <Plus className="w-3.5 h-3.5" /> Add Experience
+                ))}
+              </div>
+              <button onClick={addExperience} style={{ background: 'none', border: `1px dashed ${ORG}40`, color: ORG, padding: '16px', borderRadius: 16, width: '100%', ...bc(12, 800), cursor: 'pointer', transition: 'all 0.2s' }}
+                onMouseOver={(e) => e.currentTarget.style.background = `${ORG}05`}
+                onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
+              >
+                + ADD PROFESSIONAL EXPERIENCE
               </button>
             </div>
           )}
 
           {/* Files Tab */}
           {activeTab === 'files' && (
-            <div className="space-y-3 grid grid-cols-1 gap-3 xl:grid-cols-2">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {[
-                { type: 'cv', name: 'CV / Resume' },
-                { type: 'passport', name: 'Passport' },
-                { type: 'identityCard', name: 'Identity Card' },
+                { type: 'cv', name: 'RESUME / CV', desc: 'LATEST PROFESSIONAL RESUME' },
+                { type: 'passport', name: 'PASSPORT', desc: 'INTERNATIONAL TRAVEL DOC' },
+                { type: 'identityCard', name: 'ID CARD', desc: 'NATIONAL IDENTIFICATION' },
               ].map(doc => (
-                <div key={doc.type} className="border border-gray-200 rounded-lg p-4">
-                  <div className="flex items-start justify-between mb-3">
-                    <div>
-                      <h3 className="text-sm font-semibold text-gray-900">{doc.name}</h3>
-                      <p className="text-xs text-gray-500 mt-0.5">Upload your {doc.name.toLowerCase()}</p>
+                <div key={doc.type} style={{ background: bg, border: `1px solid ${border}`, borderRadius: 20, padding: '24px', display: 'flex', flexDirection: 'column', gap: 20 }}>
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <h3 style={{ ...bc(14, 800, { color: textC, margin: 0 }) }}>{doc.name}</h3>
+                      {documents[doc.type] && (
+                        <CheckCircle size={16} style={{ color: '#10b981' }} />
+                      )}
                     </div>
-                    {documents[doc.type] && !(documents[doc.type] instanceof File) && (
-                      <span className="px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs font-medium">Uploaded</span>
-                    )}
+                    <p style={{ ...bc(10, 700, { color: text3, margin: 0 }) }}>{doc.desc}</p>
                   </div>
-                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-[rgb(81,96,146)] transition-colors">
+
+                  <div style={{ border: `1px dashed ${border}`, borderRadius: 16, padding: '32px 16px', textAlign: 'center', background: `${bg2}40`, cursor: 'pointer', transition: 'all 0.2s' }}
+                    onMouseOver={(e) => e.currentTarget.style.borderColor = ORG}
+                    onMouseOut={(e) => e.currentTarget.style.borderColor = border}
+                  >
                     <input
                       type="file"
                       id={doc.type}
@@ -574,19 +622,19 @@ export default function AdminProfileEdit() {
                       className="hidden"
                       accept=".pdf,.jpg,.jpeg,.png"
                     />
-                    <label htmlFor={doc.type} className="cursor-pointer flex flex-col items-center">
-                      <Upload className="w-10 h-10 text-gray-400 mb-2" />
+                    <label htmlFor={doc.type} style={{ cursor: 'pointer' }}>
+                      <Upload size={32} style={{ color: text3, marginBottom: 12 }} />
                       {documents[doc.type] ? (
                         <div>
-                          <p className="text-xs font-medium text-gray-900 mb-0.5">
-                            {documents[doc.type] instanceof File ? documents[doc.type].name : 'Already uploaded'}
+                          <p style={{ ...bc(11, 800, { color: textC, margin: '0 0 4px' }) }}>
+                            {documents[doc.type] instanceof File ? documents[doc.type].name.toUpperCase() : 'DOCUMENT ARCHIVED'}
                           </p>
-                          <p className="text-xs text-gray-500">Click to change</p>
+                          <p style={{ ...bc(10, 700, { color: ORG }) }}>CLICK TO UPDATE</p>
                         </div>
                       ) : (
                         <div>
-                          <p className="text-xs font-medium text-gray-900 mb-0.5">Click to upload</p>
-                          <p className="text-xs text-gray-500">PDF, JPG or PNG (Max 5MB)</p>
+                          <p style={{ ...bc(11, 800, { color: textC, margin: '0 0 4px' }) }}>UPLOAD RESOURCE</p>
+                          <p style={{ ...bc(10, 700, { color: text3 }) }}>PDF / JPG / PNG (5MB)</p>
                         </div>
                       )}
                     </label>
@@ -596,25 +644,33 @@ export default function AdminProfileEdit() {
             </div>
           )}
 
-          {/* Save / Cancel */}
-          <div className="flex items-center gap-2 pt-4 border-t mt-4">
+          {/* Footer Actions */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 40, paddingTop: 32, borderTop: `1px solid ${border}` }}>
             <button
               onClick={handleSubmit}
               disabled={saving}
-              className="flex items-center gap-2 px-5 py-2 text-sm bg-[rgb(81,96,146)] text-white rounded-lg hover:bg-[rgb(71,86,136)] disabled:opacity-50 transition-colors font-medium"
+              style={{ 
+                padding: '12px 32px', background: ORG, color: '#fff', border: 'none', borderRadius: 12, 
+                cursor: 'pointer', ...bc(12, 800), opacity: saving ? 0.5 : 1, transition: 'all 0.2s',
+                boxShadow: `0 8px 24px ${ORG}40`
+              }}
             >
-              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-              {saving ? 'Saving...' : 'Save Changes'}
+              {saving ? 'PROCESSING...' : 'SAVE PROFILE'}
             </button>
             <button
               onClick={() => navigate(-1)}
-              className="px-5 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors font-medium"
+              style={{ padding: '12px 32px', background: 'transparent', color: text3, border: `1px solid ${border}`, borderRadius: 12, cursor: 'pointer', ...bc(12, 800) }}
             >
-              Cancel
+              CANCEL
             </button>
           </div>
         </div>
       </div>
+
+      <style>{`
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      `}</style>
     </div>
   );
 }

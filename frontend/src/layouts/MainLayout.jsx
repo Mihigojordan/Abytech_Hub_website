@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from 'react'
-import Navbar from '../components/Navbar'
+
 import { Outlet, useNavigate } from 'react-router-dom'
-import FooterContent from '../components/footer'
+
+import Nav from '../components/home/Nav';
+import Footer from '../components/home/Footer';
+import { GLOBAL_CSS } from '../utils/homeConstants';
 function usePWA() {
   const [isPWA, setIsPWA] = useState(false);
 
@@ -45,11 +48,11 @@ const isPWA = usePWA();
   }, []);
   
   return (
-    <div className='min-h-dvh flex justify-between items-stretch flex-col bg-white dark:bg-[#0e0e0e] text-gray-900 dark:text-white transition-colors duration-300'>
-
-      <Navbar />
+    <div className='flex justify-between items-stretch flex-col bg-white dark:bg-[#0e0e0e] text-gray-900 dark:text-white transition-colors duration-300'>
+<style dangerouslySetInnerHTML={{ __html: GLOBAL_CSS}}></style>
+      <Nav />
       <Outlet />
-      <FooterContent />
+      <Footer />
 
 
     </div>

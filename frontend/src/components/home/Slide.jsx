@@ -1,167 +1,80 @@
-import React from 'react'
+import React from "react";
 
-function Slide() {
-  const features = [
-    {
-      company: "ANALYTICS",
-      icon: "📊",
-      title: "Real-time data insights driving business decisions",
-      description: "Transform raw data into actionable insights with our advanced analytics platform. Monitor KPIs, track performance metrics.",
-    },
-    {
-      company: "SECURITY",
-      icon: "🔒",
-      title: "Enterprise-grade security protecting your assets",
-      description: "Multi-layer security infrastructure with end-to-end encryption, threat detection, and compliance management to keep your business safe 24/7.",
-    },
-    {
-      company: "AUTOMATION",
-      icon: "⚡",
-      title: "Intelligent automation streamlining workflows",
-      description: "Automate repetitive tasks and optimize operations with AI-powered workflows. Save time, reduce errors, and boost team productivity.",
-    },
-    {
-      company: "CLOUD",
-      icon: "☁️",
-      title: "Scalable cloud infrastructure for growth",
-      description: "Deploy, scale, and manage applications effortlessly with our robust cloud infrastructure. Pay only for what you use and scale instantly.",
-    },
-    {
-      company: "SUPPORT",
-      icon: "💬",
-      title: "24/7 expert support keeping you running",
-      description: "Round-the-clock technical support from certified experts. Get help whenever you need it with our dedicated support team.",
-    },
-    {
-      company: "INTEGRATION",
-      icon: "🔗",
-      title: "Seamless integration with your tools",
-      description: "Connect all your favorite tools and platforms in one place. Our API-first approach makes integration simple and powerful.",
-    }
-  ];
+const services = [
+  { n:"01", tag:"Available Now", title:"Analytics",    desc:"Real-time data insights driving business decisions. Transform raw data into actionable insights with our advanced analytics platform." },
+  { n:"02", tag:"Available Now", title:"Security",     desc:"Enterprise-grade security with multi-layer infrastructure, end-to-end encryption, and threat detection to keep your business safe 24/7." },
+  { n:"03", tag:"Available Now", title:"Automation",   desc:"Intelligent automation streamlining workflows. Automate repetitive tasks with AI-powered operations and save time at every layer." },
+  { n:"04", tag:"Available Now", title:"Cloud",        desc:"Scalable cloud infrastructure for growth. Deploy, scale, and manage applications effortlessly. Pay only for what you use." },
+  { n:"05", tag:"Available Now", title:"Support",      desc:"24/7 expert support keeping you running. Round-the-clock help from certified technical experts whenever you need it." },
+  { n:"06", tag:"Available Now", title:"Integration",  desc:"Seamless API-first integration with all your favourite tools and platforms in one unified and powerful place." },
+];
 
-  // Duplicate features for seamless loop
-  const topRowFeatures = [...features, ...features];
-  const bottomRowFeatures = [...features, ...features];
-
+export default function Services() {
   return (
-    <div className="w-full bg-gradient-to-b from-slate-50 to-white py-10 overflow-hidden">
-      <style>
-        {`
-          @keyframes slideLeft {
-            from {
-              transform: translateX(0);
-            }
-            to {
-              transform: translateX(-50%);
-            }
-          }
-          
-          @keyframes slideRight {
-            from {
-              transform: translateX(-50%);
-            }
-            to {
-              transform: translateX(0);
-            }
-          }
-          
-          .animate-slide-left {
-            animation: slideLeft 50s linear infinite;
-          }
-          
-          .animate-slide-right {
-            animation: slideRight 50s linear infinite;
-          }
-        `}
-      </style>
+    <section style={{ background: "#071418", position: "relative", overflow: "hidden" }}>
+      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "100px 80px" }}>
 
-      <div className="max-w-7xl mx-auto px-4 mb-10">
-        <h2 className="text-5xl font-bold text-center text-slate-800 mb-4">
-          Everything you need to succeed
+        <div style={{
+          fontFamily: "'Barlow Condensed',sans-serif", fontSize: 11, fontWeight: 700,
+          letterSpacing: 5, textTransform: "uppercase", color: "#e8621a",
+          display: "flex", alignItems: "center", gap: 12, marginBottom: 16,
+        }}>
+          <span style={{ width: 28, height: 2, background: "#e8621a", display: "block" }}/>
+          What We Do
+        </div>
+        <h2 style={{
+          fontFamily: "'Bebas Neue',sans-serif", fontSize: "clamp(48px,6vw,76px)",
+          lineHeight: .88, letterSpacing: 2, color: "#fff", margin: 0,
+        }}>
+          OUR<br/><span style={{ color: "#e8621a" }}>SERVICES</span><br/>
+          <span style={{ color: "rgba(255,255,255,.25)" }}>FOR YOU</span>
         </h2>
-        <p className="text-gray-600 text-center max-w-2xl mx-auto">
-          Powerful features designed to help your business thrive in the digital age
-        </p>
-      </div>
 
-      {/* Top Row - Sliding Left - Shows 2 cards */}
-      <div className="mb-8">
-        <div className="flex animate-slide-left">
-          {topRowFeatures.map((feature, index) => (
-            <div
-              key={`top-${index}`}
-              className="flex-shrink-0 w-[600px] mx-4"
-            >
-              <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl p-10 h-80 flex flex-col justify-between shadow-xl hover:shadow-2xl transition-shadow">
-                <div>
-                  <div className="flex items-center justify-between mb-6">
-                    <div className="text-[#ff5a00] text-sm font-semibold tracking-widest">
-                      {feature.company}
-                    </div>
-                 
-                  </div>
-                  <h3 className="text-white text-3xl font-bold mb-4 leading-tight">
-                    {feature.title}
-                  </h3>
-                  <p className="text-gray-400 text-base leading-relaxed">
-                    {feature.description}
-                  </p>
-                </div>
-                
-                <div className="flex items-center gap-3 mt-6">
-                  <button className="bg-[#ff5a00] hover:bg-[#ff5a00] text-white px-6 py-2 rounded-full text-sm font-semibold transition-colors">
-                    Learn More
-                  </button>
-                  <div className="text-gray-500 text-sm">
-                    Available now
-                  </div>
-                </div>
-              </div>
-            </div>
+        <div style={{
+          display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 2, marginTop: 56,
+        }}>
+          {services.map((s, i) => (
+            <SvcCard key={i} {...s} />
           ))}
         </div>
       </div>
-
-      {/* Bottom Row - Sliding Right - Shows 2 cards */}
-      <div>
-        <div className="flex animate-slide-right">
-          {bottomRowFeatures.map((feature, index) => (
-            <div
-              key={`bottom-${index}`}
-              className="flex-shrink-0 w-[600px] mx-4"
-            >
-              <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl p-10 h-80 flex flex-col justify-between shadow-xl hover:shadow-2xl transition-shadow">
-                <div>
-                  <div className="flex items-center justify-between mb-6">
-                    <div className="text-[#ff5a00] text-sm font-semibold tracking-widest">
-                      {feature.company}
-                    </div>
-                 
-                  </div>
-                  <h3 className="text-white text-3xl font-bold mb-4 leading-tight">
-                    {feature.title}
-                  </h3>
-                  <p className="text-gray-400 text-base leading-relaxed">
-                    {feature.description}
-                  </p>
-                </div>
-                
-                <div className="flex items-center gap-3 mt-6">
-                  <button className="bg-[#ff5a00] hover:bg-slate-800 text-white px-6 py-2 rounded-full text-sm font-semibold transition-colors">
-                    Learn More
-                  </button>
-                  <div className="text-gray-500 text-sm">
-                    Available now
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  )
+    </section>
+  );
 }
 
-export default Slide
+function SvcCard({ n, tag, title, desc }) {
+  const [hover, setHover] = React.useState(false);
+  return (
+    <div
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      style={{
+        background: hover ? "#0f2636" : "#0d3040",
+        border: `1px solid ${hover ? "#e8621a" : "rgba(255,255,255,.07)"}`,
+        padding: "40px 32px", position: "relative", overflow: "hidden",
+        transition: "background .25s,border-color .25s", cursor: "default",
+      }}
+    >
+      {/* top bar */}
+      <div style={{
+        position: "absolute", top: 0, left: 0, right: 0, height: 3,
+        background: "#e8621a", transform: hover ? "scaleX(1)" : "scaleX(0)",
+        transformOrigin: "left", transition: "transform .3s",
+      }}/>
+      <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 40, color: "rgba(255,255,255,.25)", lineHeight: 1, marginBottom: 16 }}>{n}</div>
+      <div style={{
+        display: "inline-block", background: "rgba(232,98,26,.1)", border: "1px solid rgba(232,98,26,.25)",
+        borderRadius: 3, padding: "3px 10px",
+        fontFamily: "'Barlow Condensed',sans-serif", fontSize: 9, fontWeight: 700,
+        letterSpacing: 2, textTransform: "uppercase", color: "#e8621a", marginBottom: 12,
+      }}>{tag}</div>
+      <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 26, letterSpacing: 2, color: "#fff", marginBottom: 10 }}>{title}</div>
+      <p style={{ fontSize: 13, fontWeight: 300, color: "rgba(255,255,255,.55)", lineHeight: 1.75 }}>{desc}</p>
+      <a href="/services" style={{
+        display: "flex", alignItems: "center", gap: 6, marginTop: 20,
+        fontFamily: "'Barlow Condensed',sans-serif", fontSize: 12, fontWeight: 700,
+        letterSpacing: 2, textTransform: "uppercase", color: "#e8621a", textDecoration: "none",
+      }}>Learn More →</a>
+    </div>
+  );
+}

@@ -35,6 +35,8 @@ import weeklyGoalService from '../../services/weeklyGoalService';
 import html2pdf from 'html2pdf.js';
 import Swal from 'sweetalert2';
 import useAdminAuth from '../../context/AdminAuthContext';
+import { useDashboardTheme } from '../../utils/dashboardTheme';
+import { ORG, TEAL, bb, bc, ba } from '../../utils/homeConstants';
 
 const DashboardHome = ({ role }) => {
   const { hasPermission, permissions, isSuperAdmin } = useAdminAuth();
@@ -45,6 +47,8 @@ const DashboardHome = ({ role }) => {
   const hasResearchPermission = hasPermission('research_management');
   const hasSalaryPermission = hasPermission('salary_management');
   const hasWeeklyPermission = hasPermission('weekly_management');
+
+  const { isDark, bg, bg2, bg3, textC, text2, text3, border } = useDashboardTheme();
 
   const [dashboardData, setDashboardData] = useState({
     reports: [],
@@ -289,9 +293,6 @@ const DashboardHome = ({ role }) => {
       value: dashboardData.stats.totalReports,
       change: '+12%',
       icon: FileText,
-      gradient: 'from-blue-500 to-[#ff5a00]',
-      bg: 'bg-blue-50',
-      iconColor: 'text-[#ff5a00]',
       trend: 'up',
       visible: true,
     },
@@ -300,9 +301,6 @@ const DashboardHome = ({ role }) => {
       value: dashboardData.stats.totalExpenses,
       change: '+8%',
       icon: BarChart3,
-      gradient: 'from-purple-500 to-purple-600',
-      bg: 'bg-purple-50',
-      iconColor: 'text-purple-600',
       trend: 'up',
       visible: hasExpensePermission,
     },
@@ -311,9 +309,6 @@ const DashboardHome = ({ role }) => {
       value: `$${dashboardData.stats.totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
       change: '+15%',
       icon: DollarSign,
-      gradient: 'from-emerald-500 to-emerald-600',
-      bg: 'bg-emerald-50',
-      iconColor: 'text-emerald-600',
       trend: 'up',
       visible: hasExpensePermission,
     },
@@ -322,9 +317,6 @@ const DashboardHome = ({ role }) => {
       value: moduleStats.meetings.total,
       subtitle: `${moduleStats.meetings.scheduled} scheduled`,
       icon: Briefcase,
-      gradient: 'from-indigo-500 to-indigo-600',
-      bg: 'bg-indigo-50',
-      iconColor: 'text-indigo-600',
       trend: 'up',
       change: `${moduleStats.meetings.completed} done`,
       visible: hasMeetingPermission,
@@ -334,9 +326,6 @@ const DashboardHome = ({ role }) => {
       value: moduleStats.internships.total,
       subtitle: `${moduleStats.internships.pending} pending`,
       icon: GraduationCap,
-      gradient: 'from-pink-500 to-pink-600',
-      bg: 'bg-pink-50',
-      iconColor: 'text-pink-600',
       trend: 'up',
       change: `${moduleStats.internships.accepted} accepted`,
       visible: hasInternshipPermission,
@@ -345,9 +334,6 @@ const DashboardHome = ({ role }) => {
       label: 'Research',
       value: moduleStats.research.total,
       icon: FlaskConical,
-      gradient: 'from-cyan-500 to-cyan-600',
-      bg: 'bg-cyan-50',
-      iconColor: 'text-cyan-600',
       trend: 'up',
       change: `${moduleStats.research.inProgress} in progress`,
       visible: hasResearchPermission,
@@ -357,9 +343,6 @@ const DashboardHome = ({ role }) => {
       value: moduleStats.salary.total,
       subtitle: `${moduleStats.salary.pending} pending`,
       icon: Wallet,
-      gradient: 'from-amber-500 to-amber-600',
-      bg: 'bg-amber-50',
-      iconColor: 'text-amber-600',
       trend: 'up',
       change: `${moduleStats.salary.paid} paid`,
       visible: hasSalaryPermission,
@@ -369,9 +352,6 @@ const DashboardHome = ({ role }) => {
       value: moduleStats.weeklyGoals.total,
       subtitle: `${moduleStats.weeklyGoals.inProgress} in progress`,
       icon: Target,
-      gradient: 'from-teal-500 to-teal-600',
-      bg: 'bg-teal-50',
-      iconColor: 'text-teal-600',
       trend: 'up',
       change: `${moduleStats.weeklyGoals.completed} completed`,
       visible: hasWeeklyPermission,
@@ -381,9 +361,6 @@ const DashboardHome = ({ role }) => {
       value: dashboardData.stats.recentActivity,
       change: '+5%',
       icon: Activity,
-      gradient: 'from-orange-500 to-orange-600',
-      bg: 'bg-orange-50',
-      iconColor: 'text-orange-600',
       trend: 'up',
       visible: true,
     }
@@ -397,34 +374,43 @@ const DashboardHome = ({ role }) => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100 flex items-center justify-center">
-        <div className="flex flex-col items-center space-y-3">
-          <RefreshCw className="w-8 h-8 animate-spin text-orange-500" />
-          <span className="text-sm font-medium text-orange-500">Loading dashboard...</span>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: bg }}>
+        <div className="flex flex-col items-center gap-3">
+          <div style={{ width: 32, height: 32, border: `3px solid ${border}`, borderTopColor: ORG, borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+          <span style={{ ...ba(13, 500, { color: ORG }) }}>Loading dashboard…</span>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/30">
-      {/* Modern Header with Glassmorphism */}
-      <div className="sticky top-0 z-50 backdrop-blur-md bg-white/70 border-b border-white/20 shadow-sm">
+    <div className="min-h-screen" style={{ background: bg }}>
+      {/* Header */}
+      <div className="sticky top-0 z-50" style={{ background: bg2, borderBottom: `1px solid ${border}` }}>
         <div className="px-4 py-3">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-lg font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">Dashboard Overview</h1>
-              <p className="text-xs text-slate-600 mt-0.5">Welcome back! Here's your overview.</p>
+              <h1 style={{ ...bc(16, 700, { color: textC, letterSpacing: 1 }) }}>Dashboard Overview</h1>
+              <p style={{ ...ba(12, 400, { color: text3, marginTop: 2 }) }}>Welcome back! Here's your overview.</p>
             </div>
             <div className="flex items-center gap-1.5">
-              <button className="p-2 text-slate-500 hover:text-slate-700 hover:bg-white/50 rounded-lg transition-all">
+              <button
+                className="p-2 rounded-lg transition-all"
+                style={{ color: text2 }}
+              >
                 <Search className="w-4 h-4" />
               </button>
-              <button className="p-2 text-slate-500 hover:text-slate-700 hover:bg-white/50 rounded-lg transition-all relative">
+              <button
+                className="p-2 rounded-lg transition-all relative"
+                style={{ color: text2 }}
+              >
                 <Bell className="w-4 h-4" />
-                <span className="absolute top-1 right-1 w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></span>
+                <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full" style={{ background: '#e84040' }}></span>
               </button>
-              <button className="p-2 text-slate-500 hover:text-slate-700 hover:bg-white/50 rounded-lg transition-all">
+              <button
+                className="p-2 rounded-lg transition-all"
+                style={{ color: text2 }}
+              >
                 <Settings className="w-4 h-4" />
               </button>
             </div>
@@ -433,18 +419,27 @@ const DashboardHome = ({ role }) => {
       </div>
 
       <div className="p-4 space-y-4">
-        {/* Modern Filter Section */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-sm border border-white/50 p-4">
+        {/* Filter Section */}
+        <div
+          className="rounded-lg p-4"
+          style={{ background: bg2, border: `1px solid ${border}`, borderRadius: 4 }}
+        >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
             <div className="relative">
-              <Search className="absolute left-3 top-2.5 text-slate-400" size={16} />
+              <Search className="absolute left-3 top-2.5" size={16} style={{ color: text3 }} />
               <input
                 type="text"
                 placeholder="Search reports..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:border-transparent transition-all bg-white/50"
-                style={{ focusRingColor: 'rgb(81, 96, 146)' }}
+                className="w-full pl-9 pr-3 py-2 text-sm transition-all"
+                style={{
+                  ...ba(13, 400, { color: textC }),
+                  background: bg3,
+                  border: `1px solid ${border}`,
+                  borderRadius: 4,
+                  outline: 'none',
+                }}
               />
             </div>
             <div className="flex flex-wrap gap-2">
@@ -467,10 +462,12 @@ const DashboardHome = ({ role }) => {
                       setShowCustomFilter(true);
                     }
                   }}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${filterType === btn.value
-                    ? 'bg-orange-500 text-white shadow-md'
-                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                    }`}
+                  className="px-3 py-1.5 transition-all"
+                  style={
+                    filterType === btn.value
+                      ? { ...bc(11, 700, { color: '#fff', letterSpacing: 1 }), background: ORG, borderRadius: 4, border: 'none' }
+                      : { ...bc(11, 600, { color: text2, letterSpacing: 1 }), background: bg3, border: `1px solid ${border}`, borderRadius: 4 }
+                  }
                 >
                   {btn.label}
                 </button>
@@ -478,24 +475,51 @@ const DashboardHome = ({ role }) => {
             </div>
           </div>
           {showCustomFilter && (
-            <div className="mt-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
+            <div
+              className="mt-3 p-3 rounded-lg"
+              style={{ background: bg3, border: `1px solid ${border}`, borderRadius: 4 }}
+            >
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1.5">Start Date</label>
+                  <label
+                    className="block mb-1.5"
+                    style={{ ...bc(10, 700, { color: text2, letterSpacing: 2, textTransform: 'uppercase' }) }}
+                  >
+                    Start Date
+                  </label>
                   <input
                     type="date"
                     value={customStartDate}
                     onChange={(e) => setCustomStartDate(e.target.value)}
-                    className="w-full px-2.5 py-1.5 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:border-transparent"
+                    className="w-full px-2.5 py-1.5 text-sm"
+                    style={{
+                      ...ba(13, 400, { color: textC }),
+                      background: bg2,
+                      border: `1px solid ${border}`,
+                      borderRadius: 4,
+                      outline: 'none',
+                    }}
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1.5">End Date</label>
+                  <label
+                    className="block mb-1.5"
+                    style={{ ...bc(10, 700, { color: text2, letterSpacing: 2, textTransform: 'uppercase' }) }}
+                  >
+                    End Date
+                  </label>
                   <input
                     type="date"
                     value={customEndDate}
                     onChange={(e) => setCustomEndDate(e.target.value)}
-                    className="w-full px-2.5 py-1.5 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:border-transparent"
+                    className="w-full px-2.5 py-1.5 text-sm"
+                    style={{
+                      ...ba(13, 400, { color: textC }),
+                      background: bg2,
+                      border: `1px solid ${border}`,
+                      borderRadius: 4,
+                      outline: 'none',
+                    }}
                   />
                 </div>
               </div>
@@ -518,7 +542,8 @@ const DashboardHome = ({ role }) => {
                     }
                     setFilterType('custom');
                   }}
-                  className="px-3 py-1.5 bg-orange-500 text-white rounded-lg text-xs font-medium hover:bg-orange-600 transition-all"
+                  className="px-3 py-1.5 transition-all"
+                  style={{ ...bc(11, 700, { color: '#fff', letterSpacing: 1 }), background: ORG, borderRadius: 4, border: 'none' }}
                 >
                   Apply Filter
                 </button>
@@ -529,7 +554,8 @@ const DashboardHome = ({ role }) => {
                     setCustomStartDate('');
                     setCustomEndDate('');
                   }}
-                  className="px-3 py-1.5 bg-slate-200 text-slate-700 rounded-lg text-xs font-medium hover:bg-slate-300 transition-all"
+                  className="px-3 py-1.5 transition-all"
+                  style={{ ...bc(11, 600, { color: text2, letterSpacing: 1 }), background: 'transparent', border: `1px solid ${border}`, borderRadius: 4 }}
                 >
                   Clear
                 </button>
@@ -538,23 +564,35 @@ const DashboardHome = ({ role }) => {
           )}
         </div>
 
-        {/* Modern Stats Cards — dynamic grid */}
+        {/* Stats Cards — dynamic grid */}
         <div className={`grid grid-cols-1 md:grid-cols-2 ${statsCards.length > 4 ? 'lg:grid-cols-4 xl:grid-cols-5' : 'lg:grid-cols-4'} gap-4`}>
           {statsCards.map((stat, index) => (
             <div
               key={index}
-              className="group relative overflow-hidden bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-white/50 shadow-sm hover:shadow-md transition-all duration-300"
+              className="relative overflow-hidden p-4 transition-all duration-300"
+              style={{ background: bg2, border: `1px solid ${border}`, borderRadius: 4 }}
             >
               <div className="flex items-center justify-between">
                 <div className="flex-1">
-                  <p className="text-xs text-slate-600 font-medium mb-1">{stat.label}</p>
-                  <p className="text-xl font-bold text-slate-900">{stat.value}</p>
+                  <p style={{ ...bc(10, 700, { letterSpacing: 3, textTransform: 'uppercase', color: text2, marginBottom: 6 }) }}>
+                    {stat.label}
+                  </p>
+                  <p style={{ ...bb(32, { color: ORG, lineHeight: 1 }) }}>{stat.value}</p>
                   <div className="flex items-center mt-1.5">
-                    <span className="text-xs font-semibold text-slate-500">{stat.change}</span>
+                    <span style={{ ...bc(10, 600, { color: stat.trend === 'up' ? '#4ade80' : '#e84040', letterSpacing: 1 }) }}>
+                      {stat.change}
+                    </span>
                   </div>
                 </div>
-                <div className={`w-11 h-11 ${stat.bg} rounded-xl flex items-center justify-center shadow-sm`}>
-                  <stat.icon className={`w-5 h-5 ${stat.iconColor}`} />
+                <div
+                  className="w-11 h-11 flex items-center justify-center flex-shrink-0"
+                  style={{
+                    background: 'rgba(232,98,26,.1)',
+                    border: '1px solid rgba(232,98,26,.2)',
+                    borderRadius: 4,
+                  }}
+                >
+                  <stat.icon className="w-5 h-5" style={{ color: ORG }} />
                 </div>
               </div>
             </div>
@@ -564,11 +602,19 @@ const DashboardHome = ({ role }) => {
         {/* Main Content Grid */}
         <div className={`grid grid-cols-1 ${hasExpensePermission ? 'lg:grid-cols-2' : ''} gap-4`}>
           {/* Recent Reports — always visible */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-xl border border-white/50 shadow-sm overflow-hidden">
-            <div className="p-4 border-b border-slate-100">
+          <div
+            className="overflow-hidden"
+            style={{ background: bg2, border: `1px solid ${border}`, borderRadius: 4 }}
+          >
+            <div className="p-4" style={{ borderBottom: `1px solid ${border}` }}>
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-bold text-slate-900">Recent Reports</h3>
-                <button className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-all">
+                <div className="flex items-center gap-2">
+                  <div style={{ width: 3, height: 16, background: ORG, borderRadius: 2 }} />
+                  <h3 style={{ ...bc(11, 700, { letterSpacing: 3, textTransform: 'uppercase', color: text2 }) }}>
+                    Recent Reports
+                  </h3>
+                </div>
+                <button className="p-1.5 rounded-lg transition-all" style={{ color: text3 }}>
                   <Filter className="w-3.5 h-3.5" />
                 </button>
               </div>
@@ -577,43 +623,59 @@ const DashboardHome = ({ role }) => {
               <div className="space-y-2.5">
                 {dashboardData.reports.length > 0 ? (
                   dashboardData.reports.map((report) => (
-                    <div key={report.id} className="flex items-center justify-between p-3 bg-slate-50/50 rounded-lg hover:bg-slate-100/50 transition-all group">
+                    <div
+                      key={report.id}
+                      className="flex items-center justify-between p-3 transition-all group"
+                      style={{ background: bg3, borderRadius: 4 }}
+                    >
                       <div className="flex items-center gap-2.5 flex-1 min-w-0">
-                        <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                          <FileText className="w-4 h-4 text-orange-500" />
+                        <div
+                          className="w-8 h-8 flex items-center justify-center flex-shrink-0"
+                          style={{
+                            background: 'rgba(232,98,26,.1)',
+                            border: '1px solid rgba(232,98,26,.2)',
+                            borderRadius: 4,
+                          }}
+                        >
+                          <FileText className="w-4 h-4" style={{ color: ORG }} />
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className="font-semibold text-slate-900 text-xs truncate">{report.title}</p>
-                          <p className="text-xs text-slate-500">{report.admin?.adminName || 'Unknown'}</p>
+                          <p style={{ ...ba(12, 600, { color: textC }) }} className="truncate">{report.title}</p>
+                          <p style={{ ...ba(11, 400, { color: text3 }) }}>{report.admin?.adminName || 'Unknown'}</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-1.5 flex-shrink-0">
                         <button
                           onClick={() => handlePreviewReport(report)}
-                          className="p-1.5 text-orange-500 hover:bg-orange-100 rounded-lg transition-all"
+                          className="p-1.5 rounded-lg transition-all"
+                          style={{ color: ORG }}
                           title="Preview Report"
                         >
                           <Eye className="w-3.5 h-3.5" />
                         </button>
                         <button
                           onClick={() => handleDownloadReport(report)}
-                          className="p-1.5 text-emerald-600 hover:bg-emerald-100 rounded-lg transition-all"
+                          className="p-1.5 rounded-lg transition-all"
+                          style={{ color: '#4ade80' }}
                           title="Download Report"
                         >
                           <Download className="w-3.5 h-3.5" />
                         </button>
-                        <p className="text-xs text-slate-500 ml-1">{new Date(report.createdAt).toLocaleDateString()}</p>
+                        <p style={{ ...ba(11, 400, { color: text3, marginLeft: 4 }) }}>
+                          {new Date(report.createdAt).toLocaleDateString()}
+                        </p>
                       </div>
                     </div>
                   ))
                 ) : (
-                  <p className="text-slate-500 text-center text-xs py-6">No reports found</p>
+                  <p className="text-center py-6" style={{ ...ba(12, 400, { color: text3 }) }}>No reports found</p>
                 )}
               </div>
-              <div className="mt-3 pt-3 border-t border-slate-100">
+              <div className="mt-3 pt-3" style={{ borderTop: `1px solid ${border}` }}>
                 <button
                   onClick={() => window.location.href = '/admin/dashboard/report'}
-                  className="w-full text-xs font-medium text-orange-500 py-2 hover:text-orange-600 transition-all"
+                  className="w-full py-2 transition-all"
+                  style={{ ...ba(12, 600, { color: ORG }), background: 'transparent', border: 'none' }}
                 >
                   View All Reports →
                 </button>
@@ -623,13 +685,24 @@ const DashboardHome = ({ role }) => {
 
           {/* Recent Expenses — only visible with expense_management permission */}
           {hasExpensePermission && (
-            <div className="bg-white/80 backdrop-blur-sm rounded-xl border border-white/50 shadow-sm overflow-hidden">
-              <div className="p-4 border-b border-slate-100">
+            <div
+              className="overflow-hidden"
+              style={{ background: bg2, border: `1px solid ${border}`, borderRadius: 4 }}
+            >
+              <div className="p-4" style={{ borderBottom: `1px solid ${border}` }}>
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-bold text-slate-900">Recent Expenses</h3>
-                  <div className="flex items-center gap-1 bg-yellow-50 px-2 py-1 rounded-lg">
-                    <DollarSign className="w-3.5 h-3.5 text-yellow-600" />
-                    <span className="text-xs font-semibold text-yellow-700">
+                  <div className="flex items-center gap-2">
+                    <div style={{ width: 3, height: 16, background: ORG, borderRadius: 2 }} />
+                    <h3 style={{ ...bc(11, 700, { letterSpacing: 3, textTransform: 'uppercase', color: text2 }) }}>
+                      Recent Expenses
+                    </h3>
+                  </div>
+                  <div
+                    className="flex items-center gap-1 px-2 py-1"
+                    style={{ background: 'rgba(232,98,26,.1)', border: '1px solid rgba(232,98,26,.2)', borderRadius: 4 }}
+                  >
+                    <DollarSign className="w-3.5 h-3.5" style={{ color: ORG }} />
+                    <span style={{ ...bc(11, 700, { color: ORG }) }}>
                       ${dashboardData.expenses.reduce((sum, exp) => sum + exp.amount, 0).toFixed(2)}
                     </span>
                   </div>
@@ -639,21 +712,32 @@ const DashboardHome = ({ role }) => {
                 <div className="space-y-2.5">
                   {dashboardData.expenses.length > 0 ? (
                     dashboardData.expenses.map((expense) => (
-                      <div key={expense.id} className="p-3 bg-slate-50/50 rounded-lg hover:bg-slate-100/50 transition-all">
+                      <div
+                        key={expense.id}
+                        className="p-3 transition-all"
+                        style={{ background: bg3, borderRadius: 4 }}
+                      >
                         <div className="flex items-start justify-between mb-1.5">
                           <div className="flex items-center gap-2.5 flex-1 min-w-0">
-                            <div className="w-7 h-7 bg-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                              <DollarSign className="w-3.5 h-3.5 text-emerald-600" />
+                            <div
+                              className="w-7 h-7 flex items-center justify-center flex-shrink-0"
+                              style={{
+                                background: 'rgba(232,98,26,.1)',
+                                border: '1px solid rgba(232,98,26,.2)',
+                                borderRadius: 4,
+                              }}
+                            >
+                              <DollarSign className="w-3.5 h-3.5" style={{ color: ORG }} />
                             </div>
                             <div className="min-w-0 flex-1">
-                              <p className="font-semibold text-slate-900 text-xs truncate">{expense.title}</p>
-                              <p className="text-xs text-slate-500 truncate">{expense.description || 'N/A'}</p>
-                              <p className="text-xs text-slate-400">{expense.admin?.adminName || 'Unknown'}</p>
+                              <p style={{ ...ba(12, 600, { color: textC }) }} className="truncate">{expense.title}</p>
+                              <p style={{ ...ba(11, 400, { color: text3 }) }} className="truncate">{expense.description || 'N/A'}</p>
+                              <p style={{ ...ba(11, 400, { color: text3 }) }}>{expense.admin?.adminName || 'Unknown'}</p>
                             </div>
                           </div>
                           <div className="flex flex-col items-end flex-shrink-0 ml-2">
-                            <span className="text-xs font-bold text-slate-900">${expense.amount.toFixed(2)}</span>
-                            <span className="text-xs text-slate-500">
+                            <span style={{ ...ba(12, 700, { color: textC }) }}>${expense.amount.toFixed(2)}</span>
+                            <span style={{ ...ba(11, 400, { color: text3 }) }}>
                               {new Date(expense.createdAt).toLocaleDateString()}
                             </span>
                           </div>
@@ -661,13 +745,14 @@ const DashboardHome = ({ role }) => {
                       </div>
                     ))
                   ) : (
-                    <p className="text-slate-500 text-center text-xs py-6">No expenses found</p>
+                    <p className="text-center py-6" style={{ ...ba(12, 400, { color: text3 }) }}>No expenses found</p>
                   )}
                 </div>
-                <div className="mt-3 pt-3 border-t border-slate-100">
+                <div className="mt-3 pt-3" style={{ borderTop: `1px solid ${border}` }}>
                   <button
                     onClick={() => window.location.href = '/admin/dashboard/expense'}
-                    className="w-full text-xs font-medium text-orange-500 py-2 hover:text-orange-600 transition-all"
+                    className="w-full py-2 transition-all"
+                    style={{ ...ba(12, 600, { color: ORG }), background: 'transparent', border: 'none' }}
                   >
                     View All Expenses →
                   </button>
@@ -681,13 +766,21 @@ const DashboardHome = ({ role }) => {
         {(hasReportPermission || hasExpensePermission) && (
           <div className={`grid grid-cols-1 ${hasExpensePermission ? 'lg:grid-cols-3' : ''} gap-4`}>
             {/* Admin Overview — visible if has report or expense permission */}
-            <div className={`${hasExpensePermission ? 'lg:col-span-2' : ''} bg-white/80 backdrop-blur-sm rounded-xl border border-white/50 shadow-sm overflow-hidden`}>
-              <div className="p-4 border-b border-slate-100">
+            <div
+              className={`${hasExpensePermission ? 'lg:col-span-2' : ''} overflow-hidden`}
+              style={{ background: bg2, border: `1px solid ${border}`, borderRadius: 4 }}
+            >
+              <div className="p-4" style={{ borderBottom: `1px solid ${border}` }}>
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-bold text-slate-900">Admin Overview</h3>
+                  <div className="flex items-center gap-2">
+                    <div style={{ width: 3, height: 16, background: ORG, borderRadius: 2 }} />
+                    <h3 style={{ ...bc(11, 700, { letterSpacing: 3, textTransform: 'uppercase', color: text2 }) }}>
+                      Admin Overview
+                    </h3>
+                  </div>
                   <button
                     onClick={() => window.location.href = '/admin/dashboard/users'}
-                    className="text-xs font-medium text-orange-500 hover:text-orange-600"
+                    style={{ ...ba(12, 600, { color: ORG }), background: 'transparent', border: 'none' }}
                   >
                     View Details
                   </button>
@@ -708,15 +801,26 @@ const DashboardHome = ({ role }) => {
                       };
                     })
                     .map((admin, index) => (
-                      <div key={index} className="p-3 border border-slate-200 rounded-lg hover:border-slate-300 hover:shadow-sm transition-all">
+                      <div
+                        key={index}
+                        className="p-3 transition-all"
+                        style={{ border: `1px solid ${border}`, borderRadius: 4 }}
+                      >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2.5">
-                            <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-                              <Building2 className="w-4 h-4 text-purple-600" />
+                            <div
+                              className="w-8 h-8 flex items-center justify-center"
+                              style={{
+                                background: 'rgba(232,98,26,.1)',
+                                border: '1px solid rgba(232,98,26,.2)',
+                                borderRadius: 4,
+                              }}
+                            >
+                              <Building2 className="w-4 h-4" style={{ color: ORG }} />
                             </div>
                             <div>
-                              <p className="font-semibold text-slate-900 text-xs">{admin.name}</p>
-                              <p className="text-xs text-slate-500">{admin.totalItems} items</p>
+                              <p style={{ ...ba(12, 600, { color: textC }) }}>{admin.name}</p>
+                              <p style={{ ...ba(11, 400, { color: text3 }) }}>{admin.totalItems} items</p>
                             </div>
                           </div>
                         </div>
@@ -728,36 +832,56 @@ const DashboardHome = ({ role }) => {
 
             {/* Key Metrics — only visible with expense_management permission */}
             {hasExpensePermission && (
-              <div className="bg-white/80 backdrop-blur-sm rounded-xl border border-white/50 shadow-sm overflow-hidden">
-                <div className="p-4 border-b border-slate-100">
-                  <h3 className="text-sm font-bold text-slate-900">Key Metrics</h3>
+              <div
+                className="overflow-hidden"
+                style={{ background: bg2, border: `1px solid ${border}`, borderRadius: 4 }}
+              >
+                <div className="p-4" style={{ borderBottom: `1px solid ${border}` }}>
+                  <div className="flex items-center gap-2">
+                    <div style={{ width: 3, height: 16, background: ORG, borderRadius: 2 }} />
+                    <h3 style={{ ...bc(11, 700, { letterSpacing: 3, textTransform: 'uppercase', color: text2 }) }}>
+                      Key Metrics
+                    </h3>
+                  </div>
                 </div>
                 <div className="p-4">
                   <div className="space-y-2.5">
                     {dashboardData.keyMetrics.length > 0 ? (
                       dashboardData.keyMetrics.map((metric) => (
-                        <div key={metric.id} className="flex items-center gap-2.5 p-2.5 bg-slate-50/50 rounded-lg hover:bg-slate-100/50 transition-all">
-                          <div className="w-7 h-7 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                            <DollarSign className="w-3.5 h-3.5 text-orange-600" />
+                        <div
+                          key={metric.id}
+                          className="flex items-center gap-2.5 p-2.5 transition-all"
+                          style={{ background: bg3, borderRadius: 4 }}
+                        >
+                          <div
+                            className="w-7 h-7 flex items-center justify-center flex-shrink-0"
+                            style={{
+                              background: 'rgba(232,98,26,.1)',
+                              border: '1px solid rgba(232,98,26,.2)',
+                              borderRadius: 4,
+                            }}
+                          >
+                            <DollarSign className="w-3.5 h-3.5" style={{ color: ORG }} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="font-semibold text-slate-900 text-xs truncate">{metric.title}</p>
-                            <p className="text-xs text-slate-500">{metric.adminName}</p>
+                            <p style={{ ...ba(12, 600, { color: textC }) }} className="truncate">{metric.title}</p>
+                            <p style={{ ...ba(11, 400, { color: text3 }) }}>{metric.adminName}</p>
                           </div>
                           <div className="text-right flex-shrink-0">
-                            <p className="text-xs font-bold text-slate-900">${metric.amount.toFixed(2)}</p>
-                            <p className="text-xs text-slate-500">{new Date(metric.createdAt).toLocaleDateString()}</p>
+                            <p style={{ ...ba(12, 700, { color: textC }) }}>${metric.amount.toFixed(2)}</p>
+                            <p style={{ ...ba(11, 400, { color: text3 }) }}>{new Date(metric.createdAt).toLocaleDateString()}</p>
                           </div>
                         </div>
                       ))
                     ) : (
-                      <p className="text-slate-500 text-center text-xs py-6">No metrics found</p>
+                      <p className="text-center py-6" style={{ ...ba(12, 400, { color: text3 }) }}>No metrics found</p>
                     )}
                   </div>
-                  <div className="mt-3 pt-3 border-t border-slate-100">
+                  <div className="mt-3 pt-3" style={{ borderTop: `1px solid ${border}` }}>
                     <button
                       onClick={() => window.location.href = '/admin/dashboard/expense'}
-                      className="w-full text-xs font-medium text-orange-500 py-2 hover:text-orange-600 transition-all"
+                      className="w-full py-2 transition-all"
+                      style={{ ...ba(12, 600, { color: ORG }), background: 'transparent', border: 'none' }}
                     >
                       View All Metrics →
                     </button>

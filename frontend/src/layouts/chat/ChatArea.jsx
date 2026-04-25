@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { MessageSquare, ArrowDown } from 'lucide-react';
+import { MessageSquare, ArrowDown, Sparkles } from 'lucide-react';
 import ChatHeader from '../../components/dashboard/chat/chat-area/ChatHeader';
 import MessagesContainer from '../../components/dashboard/chat/chat-area/MessagesContainer';
 import MessageInput from '../../components/dashboard/chat/chat-area/MessageInput';
@@ -8,6 +8,9 @@ import EditReplyBar from '../../components/dashboard/chat/ui/EditReplyBar';
 import FilePreview from '../../components/dashboard/chat/ui/FilePreview';
 import AddMemberModal from '../../components/dashboard/chat/ui/AddMemberModal';
 import ReadByModal from '../../components/dashboard/chat/ui/ReadByModal';
+import { useDashboardTheme } from '../../utils/dashboardTheme';
+import { ORG, TEAL, bb, bc, ba } from '../../utils/homeConstants';
+import { motion } from 'framer-motion';
 
 /**
  * ChatArea layout component - right panel (main chat interface)
@@ -53,20 +56,18 @@ const ChatArea = ({
     isSending = false,
     onBack
 }) => {
+    const { bg, bg2, bg3, textC, text2, text3, border, isDark } = useDashboardTheme();
     const [showAddMemberModal, setShowAddMemberModal] = useState(false);
     const [readByModal, setReadByModal] = useState({ isOpen: false, message: null });
 
     const handleMembersAdded = (newMembers) => {
-        // Notify parent to refresh conversation data
         if (onConversationUpdated) {
             onConversationUpdated(selectedConversation?.id);
         }
     };
 
-    // Wrapper for message actions to handle 'readby' locally
     const handleMessageAction = (action, messageId) => {
         if (action === 'readby') {
-            // Find the message and show ReadByModal
             const message = messages.find(m => String(m.id) === String(messageId));
             if (message) {
                 setReadByModal({ isOpen: true, message });
@@ -74,33 +75,52 @@ const ChatArea = ({
             }
             return;
         }
-        // Pass other actions to parent
         onMessageAction(action, messageId);
     };
 
     if (!selectedConversation) {
         return (
-            <div className="flex-1 flex items-center justify-center bg-gray-50 h-full">
-                <div className="text-center px-8">
-                    <div className="w-24 h-24 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                        <MessageSquare className="w-12 h-12 text-indigo-600" />
+            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: bg, height: '100%' }}>
+                <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    style={{ textAlign: 'center', maxWidth: 400, padding: 40 }}
+                >
+                    <div style={{ 
+                        width: 100, 
+                        height: 100, 
+                        background: bg2, 
+                        border: `1px solid ${border}`, 
+                        borderRadius: 12, 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center', 
+                        margin: '0 auto 32px',
+                        boxShadow: '0 20px 40px rgba(0,0,0,0.2)'
+                    }}>
+                        <Sparkles style={{ width: 40, height: 40, color: ORG }} />
                     </div>
-                    <h2 className="text-3xl font-bold text-gray-800 mb-3">
-                        AbytechHub Chat
+                    <h2 style={{ ...bb(32, { color: textC, margin: '0 0 16px' }) }}>
+                        Abytech Hub <span style={{ color: ORG }}>Secure</span> Chat
                     </h2>
-                    <p className="text-gray-600 text-lg mb-2">
-                        Select a conversation to start chatting
+                    <p style={{ ...ba(16, 400, { color: text2, lineHeight: 1.6, margin: '0 0 24px' }) }}>
+                        Connect instantly with your team. Select a conversation from the list to start messaging.
                     </p>
-                    <p className="text-gray-500 text-sm">
-                        Choose from your conversations on the left
-                    </p>
-                </div>
+                    <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
+                        <div style={{ padding: '8px 16px', background: bg3, border: `1px solid ${border}`, borderRadius: 4, ...bc(11, 700, { color: text3, textTransform: 'uppercase' }) }}>
+                            Encrypted
+                        </div>
+                        <div style={{ padding: '8px 16px', background: bg3, border: `1px solid ${border}`, borderRadius: 4, ...bc(11, 700, { color: text3, textTransform: 'uppercase' }) }}>
+                            Real-time
+                        </div>
+                    </div>
+                </motion.div>
             </div>
         );
     }
 
     return (
-        <div className="flex-1 flex flex-col bg-white relative h-full min-h-0">
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: bg, position: 'relative', height: '100%', overflow: 'hidden' }}>
             {/* Chat Header */}
             <ChatHeader
                 conversation={selectedConversation}
@@ -128,25 +148,24 @@ const ChatArea = ({
                 conversation={selectedConversation}
                 setMessageRef={setMessageRef}
                 isTyping={isTyping}
-                // Pass scroll props to container
                 showScrollButton={showScrollButton}
                 scrollToBottom={scrollToBottom}
                 unreadCount={unreadCount}
             />
 
-            {/* Edit/Reply Preview Bar */}
-            <EditReplyBar
-                editingMessage={editingMessage}
-                replyingTo={replyingTo}
-                onCancel={onCancelEditReply}
-            />
-
-            {/* File Previews */}
-            <FilePreview
-                files={uploadedFiles}
-                onRemove={onRemoveFile}
-                onClearAll={onClearFiles}
-            />
+            {/* Overlay components (Floating) */}
+            <div style={{ position: 'absolute', bottom: selectionMode ? 0 : 85, left: 0, right: 0, zIndex: 20 }}>
+                <EditReplyBar
+                    editingMessage={editingMessage}
+                    replyingTo={replyingTo}
+                    onCancel={onCancelEditReply}
+                />
+                <FilePreview
+                    files={uploadedFiles}
+                    onRemove={onRemoveFile}
+                    onClearAll={onClearFiles}
+                />
+            </div>
 
             {/* Selection Mode Bar */}
             {selectionMode ? (

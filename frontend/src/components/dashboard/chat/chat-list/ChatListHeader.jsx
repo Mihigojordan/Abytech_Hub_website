@@ -1,21 +1,35 @@
 import React from 'react';
 import { Search } from 'lucide-react';
+import { useDashboardTheme } from '../../../../utils/dashboardTheme';
+import { ORG, TEAL, bb, bc, ba } from '../../../../utils/homeConstants';
 
 /**
  * Chat list header component - search bar and "Chats" title
  */
 const ChatListHeader = ({ searchQuery, onSearchChange }) => {
+    const { bg, bg2, bg3, textC, text2, text3, border } = useDashboardTheme();
+
     return (
-        <div className="p-4 bg-white border-b border-gray-200">
-            <h1 className="text-xl font-semibold text-gray-800 mb-4">Chats</h1>
-            <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+        <div style={{ padding: '24px 20px', background: bg2, borderBottom: `1px solid ${border}` }}>
+            <h1 style={{ ...bb(24, { color: textC, margin: '0 0 20px' }) }}>Messages</h1>
+            <div style={{ position: 'relative' }}>
+                <Search style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', width: 14, height: 14, color: text3 }} />
                 <input
                     type="text"
-                    placeholder="Search messages or users"
+                    placeholder="Search people, groups..."
                     value={searchQuery}
                     onChange={(e) => onSearchChange(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 bg-gray-100 rounded-lg text-sm text-gray-600 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-dashboard-500"
+                    style={{
+                        width: '100%',
+                        padding: '10px 16px 10px 38px',
+                        background: bg3,
+                        border: `1px solid ${border}`,
+                        borderRadius: 4,
+                        color: textC,
+                        ...ba(13, 400),
+                        outline: 'none',
+                        transition: 'border-color 0.2s'
+                    }}
                 />
             </div>
         </div>

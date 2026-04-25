@@ -2,53 +2,77 @@ import React from 'react';
 import { groupMessagesByDate } from '../../../../utils/chat/dateUtils';
 import MessageGroup from '../message/MessageGroup';
 import LoadMoreTrigger from '../ui/LoadMoreTrigger';
-import { ArrowDown, MessageSquare } from 'lucide-react';
+import { ArrowDown, MessageSquare, Sparkles } from 'lucide-react';
+import { useDashboardTheme } from '../../../../utils/dashboardTheme';
+import { ORG, TEAL, bb, bc, ba } from '../../../../utils/homeConstants';
+import { motion, AnimatePresence } from 'framer-motion';
 
 /**
  * Skeleton loader for a single message
  */
-const MessageSkeleton = ({ isSent }) => (
-    <div className={`flex ${isSent ? 'justify-end' : 'justify-start'} mb-4`}>
-        {!isSent && (
-            <div className="w-8 h-8 rounded-full bg-gray-200 animate-pulse mr-2 flex-shrink-0" />
-        )}
-        <div className={`max-w-[70%] ${isSent ? 'items-end' : 'items-start'}`}>
-            <div className={`rounded-2xl p-3 ${isSent ? 'bg-dashboard-100' : 'bg-gray-100'}`}>
-                <div className="h-4 bg-gray-300 rounded animate-pulse w-32 mb-2" />
-                <div className="h-4 bg-gray-300 rounded animate-pulse w-48" />
+const MessageSkeleton = ({ isSent }) => {
+    const { bg2, bg3, border } = useDashboardTheme();
+    return (
+        <div style={{ display: 'flex', justifyContent: isSent ? 'flex-end' : 'flex-start', marginBottom: 24, padding: '0 20px' }}>
+            {!isSent && (
+                <div style={{ width: 32, height: 32, borderRadius: 4, background: bg3, border: `1px solid ${border}`, marginRight: 12, flexShrink: 0 }} className="animate-pulse" />
+            )}
+            <div style={{ maxWidth: '70%', display: 'flex', flexDirection: 'column', alignItems: isSent ? 'flex-end' : 'flex-start' }}>
+                <div style={{ 
+                    padding: '12px 16px', 
+                    borderRadius: 4, 
+                    background: isSent ? 'rgba(232,98,26,.1)' : bg2,
+                    border: `1px solid ${isSent ? 'rgba(232,98,26,.2)' : border}`,
+                    width: 'fit-content'
+                }} className="animate-pulse">
+                    <div style={{ height: 10, background: bg3, borderRadius: 2, width: 80, marginBottom: 8 }} />
+                    <div style={{ height: 10, background: bg3, borderRadius: 2, width: 140 }} />
+                </div>
+                <div style={{ height: 8, background: bg3, borderRadius: 2, width: 40, marginTop: 8 }} className="animate-pulse" />
             </div>
-            <div className="h-3 bg-gray-200 rounded animate-pulse w-16 mt-1" />
         </div>
-    </div>
-);
+    );
+};
 
 /**
  * Loading skeleton for initial message load
  */
 const MessagesLoadingSkeleton = () => (
-    <div className="space-y-4 p-4">
+    <div style={{ padding: '24px 0' }}>
         <MessageSkeleton isSent={false} />
         <MessageSkeleton isSent={true} />
         <MessageSkeleton isSent={false} />
         <MessageSkeleton isSent={true} />
-        <MessageSkeleton isSent={false} />
     </div>
 );
 
 /**
  * Empty state when no messages
  */
-const EmptyMessagesState = () => (
-    <div className="flex-1 flex flex-col items-center justify-center text-center px-8 py-16 h-full">
-        <div className="w-16 h-16 bg-dashboard-100 rounded-full flex items-center justify-center mb-4">
-            <MessageSquare className="w-8 h-8 text-dashboard-600" />
+const EmptyMessagesState = () => {
+    const { text2, text3, bg2, border } = useDashboardTheme();
+    return (
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', itemsCenter: 'center', justifyContent: 'center', textAlign: 'center', padding: '64px 32px' }}>
+            <div style={{ 
+                width: 64, 
+                height: 64, 
+                background: bg2, 
+                border: `1px solid ${border}`, 
+                borderRadius: 12, 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center', 
+                margin: '0 auto 24px' 
+            }}>
+                <MessageSquare style={{ width: 28, height: 28, color: ORG }} />
+            </div>
+            <h3 style={{ ...bc(18, 700, { color: ORG, margin: '0 0 12px' }) }}>No Messages Yet</h3>
+            <p style={{ ...ba(14, 400, { color: text2, margin: 0, maxWidth: 280, lineHeight: 1.5 }) }}>
+                Break the ice! Start the conversation by sending a message below.
+            </p>
         </div>
-        <h3 className="text-lg font-semibold text-gray-800 mb-2">No messages yet</h3>
-        <p className="text-gray-500 text-sm max-w-xs">
-            Start the conversation by sending a message below.
-        </p>
-    </div>
-);
+    );
+};
 
 /**
  * Messages container component - scrollable messages area
@@ -76,23 +100,25 @@ const MessagesContainer = ({
     scrollToBottom,
     unreadCount
 }) => {
+    const { bg, bg2, bg3, textC, text2, text3, border } = useDashboardTheme();
     const groupedMessages = groupMessagesByDate(messages);
     const hasMessages = messages && messages.length > 0;
 
     return (
-        <div className="flex-1 relative min-h-0">
-            <div ref={containerRef} className="h-full overflow-y-auto px-6 py-4">
-                {/* Loading skeleton for initial load */}
+        <div style={{ flex: 1, position: 'relative', minHeight: 0, overflow: 'hidden' }}>
+            <div 
+                ref={containerRef} 
+                style={{ height: '100%', overflowY: 'auto', padding: '24px 0' }} 
+                className="custom-scrollbar"
+            >
                 {isLoadingInitial && !hasMessages && (
                     <MessagesLoadingSkeleton />
                 )}
 
-                {/* Empty state when no messages and not loading */}
                 {!isLoadingInitial && !hasMessages && !isTyping && (
                     <EmptyMessagesState />
                 )}
 
-                {/* Load more trigger - only show when there are messages */}
                 {hasMessages && (
                     <LoadMoreTrigger
                         hasMore={hasMore}
@@ -101,7 +127,6 @@ const MessagesContainer = ({
                     />
                 )}
 
-                {/* Message groups */}
                 {groupedMessages.map((group, groupIndex) => (
                     <MessageGroup
                         key={groupIndex}
@@ -119,36 +144,80 @@ const MessagesContainer = ({
                     />
                 ))}
 
-                {/* Typing Indicator Bubble */}
                 {isTyping && (
-                    <div className="flex items-center space-x-2 mb-4 ml-4">
-                        <div className="flex space-x-1 bg-gray-200 p-2 rounded-2xl rounded-tl-none items-center h-8">
-                            <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
-                            <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
-                            <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce"></div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24, padding: '0 32px' }}>
+                        <div style={{ 
+                            display: 'flex', 
+                            gap: 4, 
+                            background: bg2, 
+                            border: `1px solid ${border}`, 
+                            padding: '8px 12px', 
+                            borderRadius: '4px 4px 4px 0' 
+                        }}>
+                            <motion.div animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1.2, delay: 0 }} style={{ width: 6, height: 6, background: ORG, borderRadius: '50%' }} />
+                            <motion.div animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1.2, delay: 0.2 }} style={{ width: 6, height: 6, background: ORG, borderRadius: '50%' }} />
+                            <motion.div animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1.2, delay: 0.4 }} style={{ width: 6, height: 6, background: ORG, borderRadius: '50%' }} />
                         </div>
-                        <span className="text-xs text-gray-400">User is typing...</span>
+                        <span style={{ ...ba(11, 400, { color: text3 }) }}>Thinking...</span>
                     </div>
                 )}
 
-                {/* End of messages marker */}
                 <div ref={messagesEndRef} />
             </div>
 
-            {/* Scroll to Bottom Button - Fixed at bottom right of container */}
-            {showScrollButton && (
-                <button
-                    onClick={scrollToBottom}
-                    className="absolute bottom-6 right-6 p-3 bg-dashboard-600 hover:bg-dashboard-700 text-white rounded-full shadow-lg transition-all duration-200 hover:scale-110 z-10"
-                >
-                    <ArrowDown className="w-5 h-5" />
-                    {unreadCount > 0 && (
-                        <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full animate-bounce">
-                            {unreadCount}
-                        </span>
-                    )}
-                </button>
-            )}
+            <AnimatePresence>
+                {showScrollButton && (
+                    <motion.button
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.8 }}
+                        onClick={scrollToBottom}
+                        style={{
+                            position: 'absolute',
+                            bottom: 24,
+                            right: 32,
+                            width: 44,
+                            height: 44,
+                            background: ORG,
+                            color: '#fff',
+                            border: 'none',
+                            borderRadius: 4,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            boxShadow: '0 10px 20px rgba(232,98,26,0.3)',
+                            cursor: 'pointer',
+                            zIndex: 30
+                        }}
+                    >
+                        <ArrowDown style={{ width: 20, height: 20 }} />
+                        {unreadCount > 0 && (
+                            <motion.span 
+                                animate={{ scale: [1, 1.2, 1] }}
+                                transition={{ repeat: Infinity, duration: 1 }}
+                                style={{ 
+                                    position: 'absolute', 
+                                    top: -8, 
+                                    right: -8, 
+                                    background: '#ef4444', 
+                                    color: '#fff', 
+                                    fontSize: 10, 
+                                    fontWeight: 'bold', 
+                                    width: 20, 
+                                    height: 20, 
+                                    display: 'flex', 
+                                    alignItems: 'center', 
+                                    justifyContent: 'center', 
+                                    borderRadius: '50%',
+                                    border: `2px solid ${bg}`
+                                }}
+                            >
+                                {unreadCount}
+                            </motion.span>
+                        )}
+                    </motion.button>
+                )}
+            </AnimatePresence>
         </div>
     );
 };

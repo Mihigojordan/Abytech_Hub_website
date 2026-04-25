@@ -1,15 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { X, ChevronLeft, ChevronRight, Download, Calendar, File, Image as ImageIcon } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Download, Calendar, FileText, Image as ImageIcon } from 'lucide-react';
 import { formatFullDate } from '../../../../utils/chat/dateUtils';
 import { API_URL } from '../../../../api/api';
 import { handleDisplayImgUrl } from '../../../../utils/chat/messageUtils';
+import { useDashboardTheme } from '../../../../utils/dashboardTheme';
+import { ORG, TEAL, bb, bc, ba } from '../../../../utils/homeConstants';
+import { motion, AnimatePresence } from 'framer-motion';
 
 /**
- * Skeleton loading for images (same style as ImageAttachment)
+ * Skeleton loading for images
  */
 const ImageSkeleton = () => (
-    <div className="rounded-lg w-full min-w-[500px] max-w-[500px] h-[40vh] md:h-[50vh] bg-gray-300 animate-pulse flex items-center justify-center">
-        <ImageIcon className="w-12 h-12 text-gray-400" />
+    <div style={{ width: '100%', maxWidth: 600, height: 400, background: 'rgba(255,255,255,0.05)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }} className="animate-pulse">
+        <ImageIcon style={{ width: 48, height: 48, color: 'rgba(255,255,255,0.2)' }} />
     </div>
 );
 
@@ -26,8 +29,8 @@ const MediaViewer = ({
     onDownload
 }) => {
     const [isImageLoaded, setIsImageLoaded] = useState(false);
+    const { bg, bg2, border, textC, text3 } = useDashboardTheme();
 
-    // Reset loading state when navigating to a different image
     useEffect(() => {
         setIsImageLoaded(false);
     }, [currentIndex]);
@@ -39,104 +42,211 @@ const MediaViewer = ({
     const canNavigateNext = currentIndex < media.length - 1;
 
     return (
-        <div className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center">
-            {/* Close button */}
-            <button
-                onClick={onClose}
-                className="absolute top-4 right-4 p-2 bg-white/10 hover:bg-white/20 rounded-full transition-all z-10"
-            >
-                <X className="w-6 h-6 text-white" />
-            </button>
-
-            {/* Navigation buttons */}
-            <button
-                onClick={() => onNavigate(-1)}
-                disabled={!canNavigatePrev}
-                className={`absolute left-4 p-3 bg-white/10 hover:bg-white/20 rounded-full transition-all z-10 ${!canNavigatePrev ? 'opacity-30 cursor-not-allowed' : ''
-                    }`}
-            >
-                <ChevronLeft className="w-6 h-6 text-white" />
-            </button>
-
-            <button
-                onClick={() => onNavigate(1)}
-                disabled={!canNavigateNext}
-                className={`absolute right-4 p-3 bg-white/10 hover:bg-white/20 rounded-full transition-all z-10 ${!canNavigateNext ? 'opacity-30 cursor-not-allowed' : ''
-                    }`}
-            >
-                <ChevronRight className="w-6 h-6 text-white" />
-            </button>
-
-            {/* Media content */}
-            <div className="max-w-5xl w-full h-full flex flex-col items-center justify-center p-4 md:p-20 overflow-hidden">
-
-                {currentMedia?.type === 'image' ? (
-                    <div className="relative">
-                        {/* Skeleton shown while image loads */}
-                        {!isImageLoaded && <ImageSkeleton />}
-                        <img
-                            src={handleDisplayImgUrl(currentMedia.url.imageUrl)}
-                            alt="Media"
-                            className={`max-w-full max-h-[60vh] md:max-h-[70vh] object-contain rounded-lg shadow-2xl transition-opacity duration-300 ${isImageLoaded ? 'opacity-100' : 'opacity-0 absolute inset-0'}`}
-                            onLoad={() => setIsImageLoaded(true)}
-                        />
-                    </div>
-                ) : (
-                    <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 md:p-12 max-w-md w-full mx-4">
-                        <div className="flex flex-col items-center text-center overflow-hidden">
-                            <div className="w-16 h-16 md:w-24 md:h-24 bg-dashboard-500 rounded-full flex items-center justify-center mb-4 md:mb-6 flex-shrink-0">
-                                <File className="w-8 h-8 md:w-12 md:h-12 text-white" />
+        <AnimatePresence>
+            {isOpen && (
+                <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    style={{ 
+                        position: 'fixed', 
+                        inset: 0, 
+                        zIndex: 999, 
+                        background: 'rgba(7,20,24,0.98)', 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center',
+                        backdropFilter: 'blur(12px)'
+                    }}
+                >
+                    {/* Header */}
+                    <div style={{ 
+                        position: 'absolute', 
+                        top: 0, 
+                        left: 0, 
+                        right: 0, 
+                        padding: '20px 32px', 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'space-between',
+                        background: 'linear-gradient(to bottom, rgba(0,0,0,0.5), transparent)'
+                    }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                            <div style={{ padding: 8, background: 'rgba(232,98,26,0.2)', borderRadius: '50%' }}>
+                                <ImageIcon style={{ width: 20, height: 20, color: ORG }} />
                             </div>
-                            <h3 className="text-xl md:text-2xl font-bold text-white mb-2 md:mb-3 truncate w-full" title={currentMedia?.name}>
-                                {currentMedia?.name}
-                            </h3>
-                            <p className="text-base md:text-lg text-gray-300 mb-6 md:mb-8">
-                                {currentMedia?.size}
-                            </p>
-                            <button
+                            <div>
+                                <p style={{ ...ba(14, 600, { color: '#fff', margin: 0 }) }}>
+                                    {currentMedia?.name || 'Media Viewer'}
+                                </p>
+                                <p style={{ ...ba(11, 400, { color: 'rgba(255,255,255,0.6)', margin: 0 }) }}>
+                                    {timestamp && formatFullDate(timestamp)}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                            <motion.button
+                                whileHover={{ scale: 1.1, background: 'rgba(255,255,255,0.1)' }}
+                                whileTap={{ scale: 0.9 }}
                                 onClick={() => onDownload(currentMedia)}
-                                className="flex items-center gap-2 px-6 py-3 bg-dashboard-600 hover:bg-dashboard-700 text-white rounded-lg font-medium transition-colors"
+                                style={{
+                                    padding: 10,
+                                    borderRadius: '50%',
+                                    background: 'none',
+                                    border: 'none',
+                                    cursor: 'pointer',
+                                    color: '#fff'
+                                }}
                             >
-                                <Download className="w-5 h-5" />
-                                Download File
-                            </button>
+                                <Download style={{ width: 20, height: 20 }} />
+                            </motion.button>
+                            <motion.button
+                                whileHover={{ scale: 1.1, background: 'rgba(255,255,255,0.1)' }}
+                                whileTap={{ scale: 0.9 }}
+                                onClick={onClose}
+                                style={{
+                                    padding: 10,
+                                    borderRadius: '50%',
+                                    background: 'none',
+                                    border: 'none',
+                                    cursor: 'pointer',
+                                    color: '#fff'
+                                }}
+                            >
+                                <X style={{ width: 24, height: 24 }} />
+                            </motion.button>
                         </div>
                     </div>
-                )}
 
-                {/* Info bar */}
-                <div className="mt-6 bg-white/10 backdrop-blur-sm rounded-lg px-4 md:px-6 py-3 md:py-4 flex flex-col md:flex-row items-center justify-between gap-4 max-w-2xl w-full mx-4">
-                    <div className="flex items-center gap-3 text-white">
-                        <Calendar className="w-5 h-5" />
-                        <span className="text-sm font-medium">
-                            {timestamp && formatFullDate(timestamp)}
-                        </span>
-                    </div>
-                    <div className="flex items-center gap-4">
-                        <span className="text-white text-sm font-medium">
-                            {currentIndex + 1} / {media.length}
-                        </span>
-                        {currentMedia?.type === 'image' && (
-                            <button
-                                onClick={() => onDownload(currentMedia)}
-                                className="flex items-center gap-2 px-4 py-2 bg-dashboard-600 hover:bg-dashboard-700 text-white rounded-lg font-medium transition-colors text-sm"
+                    {/* Navigation */}
+                    <button
+                        onClick={() => onNavigate(-1)}
+                        disabled={!canNavigatePrev}
+                        style={{
+                            position: 'absolute',
+                            left: 32,
+                            padding: 16,
+                            background: 'rgba(255,255,255,0.05)',
+                            borderRadius: '50%',
+                            border: 'none',
+                            color: '#fff',
+                            cursor: canNavigatePrev ? 'pointer' : 'default',
+                            opacity: canNavigatePrev ? 1 : 0.2,
+                            transition: 'all 0.3s'
+                        }}
+                    >
+                        <ChevronLeft style={{ width: 32, height: 32 }} />
+                    </button>
+
+                    <button
+                        onClick={() => onNavigate(1)}
+                        disabled={!canNavigateNext}
+                        style={{
+                            position: 'absolute',
+                            right: 32,
+                            padding: 16,
+                            background: 'rgba(255,255,255,0.05)',
+                            borderRadius: '50%',
+                            border: 'none',
+                            color: '#fff',
+                            cursor: canNavigateNext ? 'pointer' : 'default',
+                            opacity: canNavigateNext ? 1 : 0.2,
+                            transition: 'all 0.3s'
+                        }}
+                    >
+                        <ChevronRight style={{ width: 32, height: 32 }} />
+                    </button>
+
+                    {/* Content */}
+                    <div style={{ maxWidth: '80%', maxHeight: '80%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        <AnimatePresence mode="wait">
+                            <motion.div
+                                key={currentIndex}
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.9 }}
+                                transition={{ type: 'spring', damping: 25, stiffness: 300 }}
                             >
-                                <Download className="w-4 h-4" />
-                                Download
-                            </button>
-                        )}
+                                {currentMedia?.type === 'image' ? (
+                                    <div style={{ position: 'relative' }}>
+                                        {!isImageLoaded && <ImageSkeleton />}
+                                        <img
+                                            src={handleDisplayImgUrl(currentMedia.url.imageUrl)}
+                                            alt="Media"
+                                            style={{ 
+                                                maxWidth: '100%', 
+                                                maxHeight: '75vh', 
+                                                objectFit: 'contain', 
+                                                borderRadius: 8, 
+                                                boxShadow: '0 20px 40px rgba(0,0,0,0.5)',
+                                                display: isImageLoaded ? 'block' : 'none'
+                                            }}
+                                            onLoad={() => setIsImageLoaded(true)}
+                                        />
+                                    </div>
+                                ) : (
+                                    <div style={{ 
+                                        background: 'rgba(255,255,255,0.05)', 
+                                        padding: 60, 
+                                        borderRadius: 24, 
+                                        border: '1px solid rgba(255,255,255,0.1)',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        alignItems: 'center',
+                                        textAlign: 'center'
+                                    }}>
+                                        <div style={{ width: 80, height: 80, background: ORG, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 24 }}>
+                                            <FileText style={{ width: 40, height: 40, color: '#fff' }} />
+                                        </div>
+                                        <h3 style={{ ...bb(32, { color: '#fff', margin: '0 0 8px 0' }) }}>
+                                            {currentMedia?.name}
+                                        </h3>
+                                        <p style={{ ...ba(16, 400, { color: 'rgba(255,255,255,0.5)', marginBottom: 32 }) }}>
+                                            {currentMedia?.size}
+                                        </p>
+                                        <motion.button
+                                            whileHover={{ scale: 1.05 }}
+                                            whileTap={{ scale: 0.95 }}
+                                            onClick={() => onDownload(currentMedia)}
+                                            style={{
+                                                padding: '12px 32px',
+                                                background: ORG,
+                                                color: '#fff',
+                                                border: 'none',
+                                                borderRadius: 8,
+                                                cursor: 'pointer',
+                                                ...ba(14, 700, { textTransform: 'uppercase' })
+                                            }}
+                                        >
+                                            Download File
+                                        </motion.button>
+                                    </div>
+                                )}
+                            </motion.div>
+                        </AnimatePresence>
                     </div>
-                </div>
 
-                {/* Navigation message */}
-                {(currentIndex === 0 || currentIndex === media.length - 1) && media.length > 1 && (
-                    <div className="mt-4 text-gray-400 text-sm">
-                        {currentIndex === 0 && 'This is the first item'}
-                        {currentIndex === media.length - 1 && 'This is the last item'}
+                    {/* Footer / Pagination */}
+                    <div style={{ 
+                        position: 'absolute', 
+                        bottom: 0, 
+                        left: 0, 
+                        right: 0, 
+                        padding: 32, 
+                        display: 'flex', 
+                        justifyContent: 'center',
+                        background: 'linear-gradient(to top, rgba(0,0,0,0.5), transparent)'
+                    }}>
+                        <div style={{ padding: '8px 24px', background: 'rgba(255,255,255,0.1)', borderRadius: 20, backdropFilter: 'blur(4px)' }}>
+                            <span style={{ ...ba(14, 600, { color: '#fff' }) }}>
+                                {currentIndex + 1} <span style={{ opacity: 0.5 }}>/</span> {media.length}
+                            </span>
+                        </div>
                     </div>
-                )}
-            </div>
-        </div>
+                </motion.div>
+            )}
+        </AnimatePresence>
     );
 };
 

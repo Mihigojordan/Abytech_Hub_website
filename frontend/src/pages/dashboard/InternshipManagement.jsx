@@ -10,36 +10,67 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import internshipService from '../../services/internshipService';
-
-const PRIMARY_COLOR = 'rgb(249, 115, 22)';
-const PRIMARY_LIGHT = 'rgba(81, 96, 146, 0.1)';
+import { useDashboardTheme } from '../../utils/dashboardTheme';
+import { ORG, TEAL, bb, bc, ba } from '../../utils/homeConstants';
 
 const STATUS_CONFIG = {
-  PENDING: { label: 'Pending', color: 'bg-amber-100 text-amber-800 border-amber-200' },
-  REVIEWING: { label: 'Reviewing', color: 'bg-blue-100 text-blue-800 border-blue-200' },
-  ACCEPTED: { label: 'Accepted', color: 'bg-emerald-100 text-emerald-800 border-emerald-200' },
-  REJECTED: { label: 'Rejected', color: 'bg-red-100 text-red-800 border-red-200' },
-  WAITLISTED: { label: 'Waitlisted', color: 'bg-purple-100 text-purple-800 border-purple-200' },
+  PENDING:   { label: 'Pending',    color: null },
+  REVIEWING: { label: 'Reviewing',  color: null },
+  ACCEPTED:  { label: 'Accepted',   color: null },
+  REJECTED:  { label: 'Rejected',   color: null },
+  WAITLISTED:{ label: 'Waitlisted', color: null },
 };
 
 const TYPE_CONFIG = {
-  SOFTWARE_DEVELOPMENT: { label: 'Software Development', color: 'bg-blue-100 text-blue-800 border-blue-200' },
-  UI_UX: { label: 'UI/UX Design', color: 'bg-pink-100 text-pink-800 border-pink-200' },
-  DATA: { label: 'Data', color: 'bg-indigo-100 text-indigo-800 border-indigo-200' },
-  MARKETING: { label: 'Marketing', color: 'bg-orange-100 text-orange-800 border-orange-200' },
-  IT_SUPPORT: { label: 'IT Support', color: 'bg-teal-100 text-teal-800 border-teal-200' },
-  OTHER: { label: 'Other', color: 'bg-gray-100 text-gray-800 border-gray-200' },
+  SOFTWARE_DEVELOPMENT: { label: 'Software Development' },
+  UI_UX:                { label: 'UI/UX Design' },
+  DATA:                 { label: 'Data' },
+  MARKETING:            { label: 'Marketing' },
+  IT_SUPPORT:           { label: 'IT Support' },
+  OTHER:                { label: 'Other' },
 };
 
 const PERIOD_CONFIG = {
-  ONE_MONTH: '1 Month',
+  ONE_MONTH:    '1 Month',
   THREE_MONTHS: '3 Months',
-  SIX_MONTHS: '6 Months',
-  ONE_YEAR: '1 Year',
+  SIX_MONTHS:   '6 Months',
+  ONE_YEAR:     '1 Year',
+};
+
+/* ── helpers ─────────────────────────────────────── */
+const statusBadgeStyle = (status) => {
+  switch (status) {
+    case 'ACCEPTED':
+      return { background: 'rgba(74,222,128,.15)', color: '#4ade80', border: '1px solid rgba(74,222,128,.3)', borderRadius: 4, padding: '2px 10px', fontSize: 11, fontWeight: 600 };
+    case 'REVIEWING':
+    case 'PENDING':
+      return { background: `rgba(232,98,26,.15)`, color: ORG, border: `1px solid rgba(232,98,26,.3)`, borderRadius: 4, padding: '2px 10px', fontSize: 11, fontWeight: 600 };
+    case 'REJECTED':
+      return { background: 'rgba(232,64,64,.15)', color: '#e84040', border: '1px solid rgba(232,64,64,.3)', borderRadius: 4, padding: '2px 10px', fontSize: 11, fontWeight: 600 };
+    case 'WAITLISTED':
+      return { background: 'rgba(168,85,247,.15)', color: '#a855f7', border: '1px solid rgba(168,85,247,.3)', borderRadius: 4, padding: '2px 10px', fontSize: 11, fontWeight: 600 };
+    default:
+      return { background: 'rgba(200,200,200,.15)', color: '#999', border: '1px solid rgba(200,200,200,.3)', borderRadius: 4, padding: '2px 10px', fontSize: 11, fontWeight: 600 };
+  }
+};
+
+const typeBadgeStyle = (type) => {
+  const colors = {
+    SOFTWARE_DEVELOPMENT: { bg: 'rgba(59,130,246,.15)', color: '#60a5fa' },
+    UI_UX:                { bg: 'rgba(236,72,153,.15)',  color: '#f472b6' },
+    DATA:                 { bg: 'rgba(99,102,241,.15)',  color: '#818cf8' },
+    MARKETING:            { bg: `rgba(232,98,26,.15)`,   color: ORG },
+    IT_SUPPORT:           { bg: 'rgba(20,184,166,.15)',  color: '#2dd4bf' },
+    OTHER:                { bg: 'rgba(156,163,175,.15)', color: '#9ca3af' },
+  };
+  const c = colors[type] || colors.OTHER;
+  return { background: c.bg, color: c.color, border: `1px solid ${c.color}33`, borderRadius: 4, padding: '2px 10px', fontSize: 11, fontWeight: 600 };
 };
 
 const InternshipManagement = () => {
   const navigate = useNavigate();
+  const { isDark, bg, bg2, bg3, textC, text2, text3, border } = useDashboardTheme();
+
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -232,130 +263,113 @@ const InternshipManagement = () => {
   const activeFiltersCount = [statusFilter, typeFilter].filter(Boolean).length;
 
   const statCards = [
-    { label: 'Total', value: stats.total, icon: User, color: PRIMARY_COLOR, bgColor: 'rgba(249,115,22,0.1)', gradient: 'from-orange-500 to-amber-600' },
-    { label: 'Pending', value: stats.pending, icon: Clock, color: 'rgb(234,179,8)', bgColor: 'rgba(234,179,8,0.1)', gradient: 'from-yellow-500 to-amber-600' },
-    { label: 'Reviewing', value: stats.reviewing, icon: Eye, color: 'rgb(59,130,246)', bgColor: 'rgba(59,130,246,0.1)', gradient: 'from-blue-500 to-indigo-600' },
-    { label: 'Accepted', value: stats.accepted, icon: CheckCircle, color: 'rgb(34,197,94)', bgColor: 'rgba(34,197,94,0.1)', gradient: 'from-green-500 to-emerald-600' },
-    { label: 'Rejected', value: stats.rejected, icon: XCircle, color: 'rgb(239,68,68)', bgColor: 'rgba(239,68,68,0.1)', gradient: 'from-red-500 to-rose-600' },
-    { label: 'Waitlisted', value: stats.waitlisted, icon: AlertCircle, color: 'rgb(168,85,247)', bgColor: 'rgba(168,85,247,0.1)', gradient: 'from-purple-500 to-violet-600' },
-    { label: 'Shortlisted', value: stats.shortlisted, icon: Star, color: 'rgb(245,158,11)', bgColor: 'rgba(245,158,11,0.1)', gradient: 'from-amber-500 to-orange-600' },
+    { label: 'Total',      value: stats.total,      icon: User,         iconColor: ORG,               iconBg: 'rgba(232,98,26,.1)' },
+    { label: 'Pending',    value: stats.pending,     icon: Clock,        iconColor: 'rgb(234,179,8)',   iconBg: 'rgba(234,179,8,.1)' },
+    { label: 'Reviewing',  value: stats.reviewing,   icon: Eye,          iconColor: 'rgb(59,130,246)',  iconBg: 'rgba(59,130,246,.1)' },
+    { label: 'Accepted',   value: stats.accepted,    icon: CheckCircle,  iconColor: '#4ade80',          iconBg: 'rgba(74,222,128,.1)' },
+    { label: 'Rejected',   value: stats.rejected,    icon: XCircle,      iconColor: '#e84040',          iconBg: 'rgba(232,64,64,.1)' },
+    { label: 'Waitlisted', value: stats.waitlisted,  icon: AlertCircle,  iconColor: 'rgb(168,85,247)',  iconBg: 'rgba(168,85,247,.1)' },
+    { label: 'Shortlisted',value: stats.shortlisted, icon: Star,         iconColor: 'rgb(245,158,11)',  iconBg: 'rgba(245,158,11,.1)' },
   ];
+
+  /* ── action button style helper ─────────────────── */
+  const actionBtn = { background: bg3, border: '1px solid ' + border, borderRadius: 4, padding: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: text2, cursor: 'pointer' };
 
   // ────────────────────────────────────────────────
   // View Renderers
   // ────────────────────────────────────────────────
 
   const renderTableView = () => (
-    <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+    <div style={{ background: bg2, border: '1px solid ' + border, borderRadius: 4, overflow: 'hidden' }}>
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
-          <thead style={{ backgroundColor: 'rgba(81, 96, 146, 0.05)' }}>
+          <thead style={{ background: bg3 }}>
             <tr>
-              <th className="text-left py-4 px-6 font-semibold text-orange-500">Applicant</th>
-              <th className="text-left py-4 px-6 font-semibold text-orange-500 hidden md:table-cell">Type</th>
-              <th className="text-left py-4 px-6 font-semibold text-orange-500">Period</th>
-              <th className="text-left py-4 px-6 font-semibold text-orange-500">Status</th>
-              <th className="text-left py-4 px-6 font-semibold text-orange-500 hidden lg:table-cell">Score</th>
-              <th className="text-left py-4 px-6 font-semibold text-orange-500">Applied</th>
-              <th className="text-right py-4 px-6 font-semibold text-orange-500">Actions</th>
+              {['Applicant', 'Type', 'Period', 'Status', 'Score', 'Applied', 'Actions'].map((h, i) => (
+                <th
+                  key={h}
+                  className={`text-left py-4 px-6 ${i === 1 ? 'hidden md:table-cell' : ''} ${i === 4 ? 'hidden lg:table-cell' : ''} ${i === 6 ? 'text-right' : ''}`}
+                  style={{ ...bc(10, 700, { letterSpacing: 3, textTransform: 'uppercase', color: text2 }) }}
+                >
+                  {h}
+                </th>
+              ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody>
             {applications.map((app, index) => (
               <motion.tr
                 key={app.id}
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.04 }}
-                className="hover:bg-gray-50 transition-colors"
+                style={{ background: bg2, borderBottom: '1px solid ' + border }}
+                onMouseEnter={e => e.currentTarget.style.background = bg3}
+                onMouseLeave={e => e.currentTarget.style.background = bg2}
               >
                 <td className="py-4 px-6">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-orange-500 text-white font-medium flex items-center justify-center flex-shrink-0">
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 font-medium"
+                      style={{ background: 'rgba(232,98,26,.1)', border: '1px solid rgba(232,98,26,.2)', color: ORG }}>
                       {app.fullName?.charAt(0) || '?'}
                     </div>
                     <div>
-                      <div className="font-medium text-gray-900 flex items-center gap-2">
+                      <div className="flex items-center gap-2" style={{ color: textC, fontWeight: 600 }}>
                         {app.fullName}
-                        {app.isShortlisted && <Star className="w-4 h-4 text-amber-500 fill-amber-500" />}
+                        {app.isShortlisted && <Star className="w-4 h-4" style={{ color: 'rgb(245,158,11)', fill: 'rgb(245,158,11)' }} />}
                       </div>
-                      <div className="text-xs text-gray-500">{app.email}</div>
+                      <div style={{ ...ba(12, 400, { color: text2 }) }}>{app.email}</div>
                     </div>
                   </div>
                 </td>
                 <td className="py-4 px-6 hidden md:table-cell">
-                  <span className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-medium border ${TYPE_CONFIG[app.internshipType]?.color || 'bg-gray-100 text-gray-700 border-gray-200'}`}>
+                  <span style={typeBadgeStyle(app.internshipType)}>
                     {TYPE_CONFIG[app.internshipType]?.label || app.internshipType}
                   </span>
                 </td>
-                <td className="py-4 px-6 text-gray-600">{PERIOD_CONFIG[app.period] || app.period || '—'}</td>
+                <td className="py-4 px-6" style={{ color: text2 }}>{PERIOD_CONFIG[app.period] || app.period || '—'}</td>
                 <td className="py-4 px-6">
-                  <span className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-medium border ${STATUS_CONFIG[app.status]?.color}`}>
-                    {STATUS_CONFIG[app.status]?.label}
-                  </span>
+                  <span style={statusBadgeStyle(app.status)}>{STATUS_CONFIG[app.status]?.label || app.status}</span>
                 </td>
-                <td className="py-4 px-6 hidden lg:table-cell">
-                  {app.score ? <span className="font-medium">{app.score}/10</span> : '—'}
+                <td className="py-4 px-6 hidden lg:table-cell" style={{ color: textC, fontWeight: 500 }}>
+                  {app.score ? `${app.score}/10` : '—'}
                 </td>
-                <td className="py-4 px-6 text-gray-600 text-sm">{formatDate(app.createdAt)}</td>
+                <td className="py-4 px-6" style={{ color: text2, fontSize: 13 }}>{formatDate(app.createdAt)}</td>
                 <td className="py-4 px-6">
-                  <div className="flex items-center justify-end space-x-1">
-                    <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.95 }}
+                  <div className="flex items-center justify-end gap-1">
+                    <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}
                       onClick={() => handleToggleShortlist(app.id)}
-                      className={`p-1.5 rounded-md transition-colors ${app.isShortlisted ? 'text-amber-500 bg-amber-50' : 'text-gray-400 hover:text-amber-500 hover:bg-amber-50'}`}
-                      title={app.isShortlisted ? "Remove from Shortlist" : "Shortlist"}
-                    >
-                      {app.isShortlisted ? <Star className="w-4 h-4 fill-current" /> : <StarOff className="w-4 h-4" />}
+                      style={{ ...actionBtn, color: app.isShortlisted ? 'rgb(245,158,11)' : text2 }}
+                      title={app.isShortlisted ? 'Remove from Shortlist' : 'Shortlist'}>
+                      {app.isShortlisted ? <Star className="w-4 h-4" style={{ fill: 'currentColor' }} /> : <StarOff className="w-4 h-4" />}
                     </motion.button>
-                    <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.95 }}
+                    <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}
                       onClick={() => navigate(`/admin/dashboard/internships/view/${app.id}`)}
-                      className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-md"
-                      title="View Details"
-                    >
+                      style={actionBtn} title="View Details">
                       <Eye className="w-4 h-4" />
                     </motion.button>
-                    <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.95 }}
+                    <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}
                       onClick={() => { setSelectedApplication(app); setReviewData({ score: app.score || 0, reviewNotes: app.reviewNotes || '', status: app.status }); setShowReviewModal(true); }}
-                      className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-md"
-                      title="Review / Edit"
-                    >
+                      style={actionBtn} title="Review / Edit">
                       <Edit className="w-4 h-4" />
                     </motion.button>
                     {app.status !== 'ACCEPTED' && (
-                      <motion.button
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.95 }}
+                      <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}
                         onClick={() => setAcceptConfirm(app)}
-                        className="p-1.5 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-md"
-                        title="Accept Intern"
-                      >
+                        style={{ ...actionBtn, color: '#4ade80' }} title="Accept Intern">
                         <UserCheck className="w-4 h-4" />
                       </motion.button>
                     )}
                     {app.status !== 'REJECTED' && (
-                      <motion.button
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.95 }}
+                      <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}
                         onClick={() => setRejectConfirm(app)}
-                        className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-md"
-                        title="Reject Application"
-                      >
+                        style={{ ...actionBtn, color: '#e84040' }} title="Reject Application">
                         <UserX className="w-4 h-4" />
                       </motion.button>
                     )}
-                    <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.95 }}
+                    <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}
                       onClick={() => setDeleteConfirm(app)}
-                      className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-md"
-                      title="Delete"
-                    >
+                      style={{ ...actionBtn, color: '#e84040' }} title="Delete">
                       <Trash2 className="w-4 h-4" />
                     </motion.button>
                   </div>
@@ -377,109 +391,86 @@ const InternshipManagement = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: index * 0.05 }}
           whileHover={{ y: -4 }}
-          className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-all relative overflow-hidden group"
+          style={{ background: bg2, border: '1px solid ' + border, borderRadius: 4, padding: 20, position: 'relative', overflow: 'hidden', cursor: 'default' }}
         >
-          <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-blue-50 to-purple-50 rounded-bl-full opacity-40 group-hover:opacity-70 transition-opacity" />
-
           <div className="relative">
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-3 flex-1">
-                <div className="w-12 h-12 rounded-full bg-orange-500 text-white font-medium flex items-center justify-center flex-shrink-0">
+                <div className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 font-medium text-lg"
+                  style={{ background: 'rgba(232,98,26,.1)', border: '1px solid rgba(232,98,26,.2)', color: ORG }}>
                   {app.fullName?.charAt(0) || '?'}
                 </div>
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <h3 className="font-semibold text-gray-900 truncate">{app.fullName}</h3>
-                    {app.isShortlisted && <Star className="w-4 h-4 text-amber-500 fill-amber-500 flex-shrink-0" />}
+                    <h3 className="truncate font-semibold" style={{ color: textC }}>{app.fullName}</h3>
+                    {app.isShortlisted && <Star className="w-4 h-4 flex-shrink-0" style={{ color: 'rgb(245,158,11)', fill: 'rgb(245,158,11)' }} />}
                   </div>
-                  <p className="text-xs text-gray-500 truncate">{app.email}</p>
+                  <p className="truncate" style={{ ...ba(12, 400, { color: text2 }) }}>{app.email}</p>
                 </div>
               </div>
-              <div className="flex items-center gap-1">
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => handleToggleShortlist(app.id)}
-                  className={`p-1.5 rounded-md ${app.isShortlisted ? 'text-amber-500 bg-amber-50' : 'text-gray-400 hover:text-amber-500 hover:bg-amber-50'}`}
-                >
-                  {app.isShortlisted ? <Star className="w-4 h-4 fill-current" /> : <StarOff className="w-4 h-4" />}
-                </motion.button>
-              </div>
+              <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}
+                onClick={() => handleToggleShortlist(app.id)}
+                style={{ ...actionBtn, color: app.isShortlisted ? 'rgb(245,158,11)' : text2 }}>
+                {app.isShortlisted ? <Star className="w-4 h-4" style={{ fill: 'currentColor' }} /> : <StarOff className="w-4 h-4" />}
+              </motion.button>
             </div>
 
             <div className="flex flex-wrap gap-2 mb-4">
-              <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium border ${TYPE_CONFIG[app.internshipType]?.color || 'bg-gray-100 text-gray-700 border-gray-200'}`}>
+              <span style={typeBadgeStyle(app.internshipType)}>
                 {TYPE_CONFIG[app.internshipType]?.label || app.internshipType}
               </span>
-              <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium border ${STATUS_CONFIG[app.status]?.color}`}>
-                {STATUS_CONFIG[app.status]?.label}
+              <span style={statusBadgeStyle(app.status)}>
+                {STATUS_CONFIG[app.status]?.label || app.status}
               </span>
             </div>
 
-            <div className="space-y-2 text-sm text-gray-600 mb-4">
+            <div className="space-y-2 mb-4" style={{ ...ba(13, 400, { color: text2 }) }}>
               {app.institution && (
                 <div className="flex items-center gap-2">
-                  <GraduationCap className="w-4 h-4" />
+                  <GraduationCap className="w-4 h-4" style={{ color: ORG }} />
                   <span className="truncate">{app.institution}</span>
                 </div>
               )}
               <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4" />
+                <Calendar className="w-4 h-4" style={{ color: ORG }} />
                 <span>{PERIOD_CONFIG[app.period] || app.period || '—'}</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="font-medium">Score:</span>
-                <span>{app.score ? `${app.score}/10` : '—'}</span>
+                <span style={{ color: text2 }}>Score:</span>
+                <span style={{ color: textC, fontWeight: 600 }}>{app.score ? `${app.score}/10` : '—'}</span>
               </div>
             </div>
 
-            <div className="flex items-center justify-between pt-3 border-t border-gray-100 text-xs text-gray-500">
-              <span>{formatDate(app.createdAt)}</span>
+            <div className="flex items-center justify-between pt-3" style={{ borderTop: '1px solid ' + border }}>
+              <span style={{ ...ba(12, 400, { color: text3 }) }}>{formatDate(app.createdAt)}</span>
               <div className="flex items-center gap-1">
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.95 }}
+                <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}
                   onClick={() => navigate(`/admin/dashboard/internships/view/${app.id}`)}
-                  className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-md"
-                >
+                  style={actionBtn} title="View">
                   <Eye className="w-4 h-4" />
                 </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.95 }}
+                <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}
                   onClick={() => { setSelectedApplication(app); setReviewData({ score: app.score || 0, reviewNotes: app.reviewNotes || '', status: app.status }); setShowReviewModal(true); }}
-                  className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-md"
-                >
+                  style={actionBtn} title="Review/Edit">
                   <Edit className="w-4 h-4" />
                 </motion.button>
                 {app.status !== 'ACCEPTED' && (
-                  <motion.button
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.95 }}
+                  <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}
                     onClick={() => setAcceptConfirm(app)}
-                    className="p-1.5 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-md"
-                    title="Accept Intern"
-                  >
+                    style={{ ...actionBtn, color: '#4ade80' }} title="Accept Intern">
                     <UserCheck className="w-4 h-4" />
                   </motion.button>
                 )}
                 {app.status !== 'REJECTED' && (
-                  <motion.button
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.95 }}
+                  <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}
                     onClick={() => setRejectConfirm(app)}
-                    className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-md"
-                    title="Reject Application"
-                  >
+                    style={{ ...actionBtn, color: '#e84040' }} title="Reject Application">
                     <UserX className="w-4 h-4" />
                   </motion.button>
                 )}
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.95 }}
+                <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}
                   onClick={() => setDeleteConfirm(app)}
-                  className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-md"
-                >
+                  style={{ ...actionBtn, color: '#e84040' }} title="Delete">
                   <Trash2 className="w-4 h-4" />
                 </motion.button>
               </div>
@@ -491,34 +482,31 @@ const InternshipManagement = () => {
   );
 
   const renderListView = () => (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 divide-y divide-gray-100">
+    <div style={{ background: bg2, border: '1px solid ' + border, borderRadius: 4, overflow: 'hidden' }}>
       {applications.map((app, index) => (
         <motion.div
           key={app.id}
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: index * 0.04 }}
-          className="p-5 hover:bg-gray-50 transition-colors"
+          style={{ padding: 20, borderBottom: '1px solid ' + border, background: bg2 }}
+          onMouseEnter={e => e.currentTarget.style.background = bg3}
+          onMouseLeave={e => e.currentTarget.style.background = bg2}
         >
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-4 flex-1 min-w-0">
-              <div className="w-12 h-12 rounded-full bg-orange-500 text-white font-medium flex items-center justify-center flex-shrink-0">
+              <div className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 font-medium text-lg"
+                style={{ background: 'rgba(232,98,26,.1)', border: '1px solid rgba(232,98,26,.2)', color: ORG }}>
                 {app.fullName?.charAt(0) || '?'}
               </div>
-
               <div className="flex-1 min-w-0">
                 <div className="flex items-center flex-wrap gap-3 mb-1.5">
-                  <h3 className="font-semibold text-gray-900 truncate">{app.fullName}</h3>
-                  {app.isShortlisted && <Star className="w-4 h-4 text-amber-500 fill-amber-500" />}
-                  <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium border ${STATUS_CONFIG[app.status]?.color}`}>
-                    {STATUS_CONFIG[app.status]?.label}
-                  </span>
-                  <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium border ${TYPE_CONFIG[app.internshipType]?.color || 'bg-gray-100 text-gray-700 border-gray-200'}`}>
-                    {TYPE_CONFIG[app.internshipType]?.label || app.internshipType}
-                  </span>
+                  <h3 className="font-semibold truncate" style={{ color: textC }}>{app.fullName}</h3>
+                  {app.isShortlisted && <Star className="w-4 h-4" style={{ color: 'rgb(245,158,11)', fill: 'rgb(245,158,11)' }} />}
+                  <span style={statusBadgeStyle(app.status)}>{STATUS_CONFIG[app.status]?.label || app.status}</span>
+                  <span style={typeBadgeStyle(app.internshipType)}>{TYPE_CONFIG[app.internshipType]?.label || app.internshipType}</span>
                 </div>
-
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-600">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1" style={{ ...ba(12, 400, { color: text2 }) }}>
                   <div className="flex items-center gap-1.5">
                     <Mail className="w-3.5 h-3.5" />
                     <span className="truncate">{app.email}</span>
@@ -536,55 +524,34 @@ const InternshipManagement = () => {
                 </div>
               </div>
             </div>
-
             <div className="flex items-center gap-1 flex-shrink-0">
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
+              <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}
                 onClick={() => navigate(`/admin/dashboard/internships/view/${app.id}`)}
-                className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-md"
-                title="View"
-              >
+                style={actionBtn} title="View">
                 <Eye className="w-4 h-4" />
               </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
+              <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}
                 onClick={() => { setSelectedApplication(app); setReviewData({ score: app.score || 0, reviewNotes: app.reviewNotes || '', status: app.status }); setShowReviewModal(true); }}
-                className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-md"
-                title="Review/Edit"
-              >
+                style={actionBtn} title="Review/Edit">
                 <Edit className="w-4 h-4" />
               </motion.button>
               {app.status !== 'ACCEPTED' && (
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.95 }}
+                <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}
                   onClick={() => setAcceptConfirm(app)}
-                  className="p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-md"
-                  title="Accept Intern"
-                >
+                  style={{ ...actionBtn, color: '#4ade80' }} title="Accept Intern">
                   <UserCheck className="w-4 h-4" />
                 </motion.button>
               )}
               {app.status !== 'REJECTED' && (
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.95 }}
+                <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}
                   onClick={() => setRejectConfirm(app)}
-                  className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-md"
-                  title="Reject Application"
-                >
+                  style={{ ...actionBtn, color: '#e84040' }} title="Reject Application">
                   <UserX className="w-4 h-4" />
                 </motion.button>
               )}
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
+              <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}
                 onClick={() => setDeleteConfirm(app)}
-                className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-md"
-                title="Delete"
-              >
+                style={{ ...actionBtn, color: '#e84040' }} title="Delete">
                 <Trash2 className="w-4 h-4" />
               </motion.button>
             </div>
@@ -594,26 +561,25 @@ const InternshipManagement = () => {
     </div>
   );
 
+  /* ── shared input style ──────────────────────────── */
+  const inputStyle = { background: bg3, border: '1px solid ' + border, color: textC, borderRadius: 4, outline: 'none', padding: '10px 16px 10px 44px', width: '100%', fontSize: 14 };
+  const selectStyle = { background: bg3, border: '1px solid ' + border, color: textC, borderRadius: 4, padding: '10px 16px 10px 44px', fontSize: 14, appearance: 'none', cursor: 'pointer', width: '100%' };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/30">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b border-gray-200 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-100/40 to-purple-100/40 rounded-full blur-3xl -mr-32 -mt-32" />
-        <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-indigo-100/40 to-blue-100/40 rounded-full blur-3xl -ml-24 -mb-24" />
-        <div className="mx-auto px-4 sm:px-6 py-6 relative">
+    <div className="min-h-screen" style={{ background: bg }}>
+
+      {/* ── Page Header ─────────────────────────────── */}
+      <div style={{ background: bg2, borderBottom: '1px solid ' + border }}>
+        <div className="mx-auto px-4 sm:px-6 py-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <div className="flex items-center space-x-3 mb-2">
-                <motion.div
-                  initial={{ rotate: 0 }}
-                  animate={{ rotate: [0, 10, -10, 0] }}
-                  transition={{ duration: 2, repeat: Infinity, repeatDelay: 5 }}
-                >
-                  <Sparkles className="w-6 h-6" style={{ color: PRIMARY_COLOR }} />
-                </motion.div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-orange-500">Internship Applications</h1>
+              <div className="flex items-center gap-3 mb-2">
+                <div style={{ background: 'rgba(232,98,26,.1)', border: '1px solid rgba(232,98,26,.2)', borderRadius: 4, padding: 8 }}>
+                  <GraduationCap className="w-5 h-5" style={{ color: ORG }} />
+                </div>
+                <h1 style={{ ...bb(32, { color: ORG }) }}>Internship Applications</h1>
               </div>
-              <p className="text-sm text-gray-600">Review and manage incoming internship applications</p>
+              <p style={{ ...ba(13, 400, { color: text2 }) }}>Review and manage incoming internship applications</p>
             </div>
 
             <div className="flex items-center gap-3 flex-wrap">
@@ -621,7 +587,7 @@ const InternshipManagement = () => {
                 whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={handleExportCSV}
-                className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-50 shadow-sm hover:shadow transition-all"
+                style={{ background: bg3, border: '1px solid ' + border, borderRadius: 4, color: textC, padding: '8px 16px', fontSize: 13, display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}
               >
                 <Download className="w-4 h-4" />
                 Export CSV
@@ -632,40 +598,39 @@ const InternshipManagement = () => {
                 whileTap={{ scale: 0.95 }}
                 onClick={loadApplications}
                 disabled={loading}
-                className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-50 shadow-sm hover:shadow transition-all disabled:opacity-50"
+                style={{ background: bg3, border: '1px solid ' + border, borderRadius: 4, color: textC, padding: '8px 16px', fontSize: 13, display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', opacity: loading ? 0.5 : 1 }}
               >
                 <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
                 Refresh
               </motion.button>
 
-              <div className="flex items-center bg-gray-50 p-1 rounded-lg border border-gray-100">
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setViewMode('table')}
-                  className={`p-2.5 rounded transition-all ${viewMode === 'table' ? 'bg-orange-500 text-white shadow-sm' : 'text-gray-600 hover:bg-white'}`}
-                  title="Table View"
-                >
-                  <TableIcon className="w-5 h-5" />
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setViewMode('grid')}
-                  className={`p-2.5 rounded transition-all ${viewMode === 'grid' ? 'bg-orange-500 text-white shadow-sm' : 'text-gray-600 hover:bg-white'}`}
-                  title="Grid View"
-                >
-                  <Grid3X3 className="w-5 h-5" />
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setViewMode('list')}
-                  className={`p-2.5 rounded transition-all ${viewMode === 'list' ? 'bg-orange-500 text-white shadow-sm' : 'text-gray-600 hover:bg-white'}`}
-                  title="List View"
-                >
-                  <List className="w-5 h-5" />
-                </motion.button>
+              {/* View toggle */}
+              <div className="flex items-center" style={{ background: bg3, border: '1px solid ' + border, borderRadius: 4, padding: 4, gap: 2 }}>
+                {[
+                  { mode: 'table', Icon: TableIcon, label: 'Table View' },
+                  { mode: 'grid',  Icon: Grid3X3,   label: 'Grid View' },
+                  { mode: 'list',  Icon: List,       label: 'List View' },
+                ].map(({ mode, Icon, label }) => (
+                  <motion.button
+                    key={mode}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setViewMode(mode)}
+                    style={{
+                      padding: '6px 10px',
+                      borderRadius: 4,
+                      border: 'none',
+                      cursor: 'pointer',
+                      background: viewMode === mode ? ORG : 'transparent',
+                      color: viewMode === mode ? '#fff' : text2,
+                      display: 'flex',
+                      alignItems: 'center',
+                    }}
+                    title={label}
+                  >
+                    <Icon className="w-5 h-5" />
+                  </motion.button>
+                ))}
               </div>
             </div>
           </div>
@@ -673,7 +638,8 @@ const InternshipManagement = () => {
       </div>
 
       <div className="mx-auto px-4 sm:px-6 py-8 space-y-8">
-        {/* Stats Cards — 4-col primary row + 3-col secondary row */}
+
+        {/* ── Stat Cards ──────────────────────────────── */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {statCards.slice(0, 4).map((stat, i) => (
             <motion.div
@@ -682,24 +648,17 @@ const InternshipManagement = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.08 }}
               whileHover={{ y: -4, scale: 1.02 }}
-              className="relative p-4 rounded-xl shadow-sm border border-gray-100 bg-white overflow-hidden group cursor-pointer"
+              style={{ background: bg2, border: '1px solid ' + border, borderRadius: 4, padding: 16, cursor: 'pointer', position: 'relative', overflow: 'hidden' }}
             >
-              <div className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-300`} />
-              <div className="relative flex items-center space-x-3">
-                <motion.div
-                  whileHover={{ rotate: 360, scale: 1.1 }}
-                  transition={{ duration: 0.5 }}
-                  className="p-2.5 rounded-lg shadow-sm flex-shrink-0"
-                  style={{ backgroundColor: stat.bgColor }}
-                >
-                  <stat.icon className="w-4 h-4" style={{ color: stat.color }} />
-                </motion.div>
-                <div className="flex-1">
-                  <p className="text-xs font-medium text-gray-600 mb-0.5">{stat.label}</p>
-                  <p className="text-lg font-bold text-gray-900">{stat.value ?? '-'}</p>
+              <div className="flex items-center gap-3">
+                <div style={{ background: stat.iconBg, border: `1px solid ${stat.iconColor}33`, borderRadius: 4, padding: 10, flexShrink: 0 }}>
+                  <stat.icon className="w-4 h-4" style={{ color: stat.iconColor }} />
+                </div>
+                <div>
+                  <p style={{ ...bc(10, 700, { letterSpacing: 3, textTransform: 'uppercase', color: text2, marginBottom: 2 }) }}>{stat.label}</p>
+                  <p style={{ ...bb(28, { color: ORG, lineHeight: 1 }) }}>{stat.value ?? '-'}</p>
                 </div>
               </div>
-              <div className="absolute top-0 right-0 w-14 h-14 opacity-10 rounded-bl-full" style={{ background: stat.color }} />
             </motion.div>
           ))}
         </div>
@@ -711,48 +670,47 @@ const InternshipManagement = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: (i + 4) * 0.08 }}
               whileHover={{ y: -4, scale: 1.02 }}
-              className="relative p-4 rounded-xl shadow-sm border border-gray-100 bg-white overflow-hidden group cursor-pointer"
+              style={{ background: bg2, border: '1px solid ' + border, borderRadius: 4, padding: 16, cursor: 'pointer', position: 'relative', overflow: 'hidden' }}
             >
-              <div className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-300`} />
-              <div className="relative flex items-center space-x-3">
-                <motion.div
-                  whileHover={{ rotate: 360, scale: 1.1 }}
-                  transition={{ duration: 0.5 }}
-                  className="p-2.5 rounded-lg shadow-sm flex-shrink-0"
-                  style={{ backgroundColor: stat.bgColor }}
-                >
-                  <stat.icon className="w-4 h-4" style={{ color: stat.color }} />
-                </motion.div>
-                <div className="flex-1">
-                  <p className="text-xs font-medium text-gray-600 mb-0.5">{stat.label}</p>
-                  <p className="text-lg font-bold text-gray-900">{stat.value ?? '-'}</p>
+              <div className="flex items-center gap-3">
+                <div style={{ background: stat.iconBg, border: `1px solid ${stat.iconColor}33`, borderRadius: 4, padding: 10, flexShrink: 0 }}>
+                  <stat.icon className="w-4 h-4" style={{ color: stat.iconColor }} />
+                </div>
+                <div>
+                  <p style={{ ...bc(10, 700, { letterSpacing: 3, textTransform: 'uppercase', color: text2, marginBottom: 2 }) }}>{stat.label}</p>
+                  <p style={{ ...bb(28, { color: ORG, lineHeight: 1 }) }}>{stat.value ?? '-'}</p>
                 </div>
               </div>
-              <div className="absolute top-0 right-0 w-14 h-14 opacity-10 rounded-bl-full" style={{ background: stat.color }} />
             </motion.div>
           ))}
         </div>
 
-        {/* Filters & Search */}
+        {/* ── Filters & Search ────────────────────────── */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-xl shadow-sm border border-gray-100 p-5"
+          style={{ background: bg2, border: '1px solid ' + border, borderRadius: 4, padding: 20 }}
         >
+          {/* Section header */}
+          <div className="flex items-center gap-3 mb-4">
+            <div style={{ width: 3, height: 18, background: ORG, borderRadius: 2, flexShrink: 0 }} />
+            <span style={{ ...bc(11, 700, { letterSpacing: 3, textTransform: 'uppercase', color: text2 }) }}>Search & Filters</span>
+          </div>
+
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="relative flex-1 max-w-lg">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5" style={{ color: text2 }} />
               <input
                 type="text"
                 placeholder="Search by name, email, institution..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 text-sm border border-gray-200 rounded-lg focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
+                style={inputStyle}
               />
               {searchTerm && (
                 <button
                   onClick={() => setSearchTerm('')}
-                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: text2, cursor: 'pointer', display: 'flex' }}
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -760,14 +718,14 @@ const InternshipManagement = () => {
             </div>
 
             <div className="flex items-center gap-3 flex-wrap">
-              <div className="relative min-w-[180px]">
-                <div className="absolute left-4 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                  <Filter className="w-5 h-5 text-gray-400" />
+              <div className="relative" style={{ minWidth: 180 }}>
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                  <Filter className="w-5 h-5" style={{ color: text2 }} />
                 </div>
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="w-full pl-11 pr-4 py-3 text-sm border border-gray-200 rounded-lg focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 appearance-none bg-white cursor-pointer"
+                  style={selectStyle}
                 >
                   <option value="">All Statuses</option>
                   {Object.entries(STATUS_CONFIG).map(([key, { label }]) => (
@@ -776,14 +734,14 @@ const InternshipManagement = () => {
                 </select>
               </div>
 
-              <div className="relative min-w-[180px]">
-                <div className="absolute left-4 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                  <Filter className="w-5 h-5 text-gray-400" />
+              <div className="relative" style={{ minWidth: 180 }}>
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                  <Filter className="w-5 h-5" style={{ color: text2 }} />
                 </div>
                 <select
                   value={typeFilter}
                   onChange={(e) => setTypeFilter(e.target.value)}
-                  className="w-full pl-11 pr-4 py-3 text-sm border border-gray-200 rounded-lg focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 appearance-none bg-white cursor-pointer"
+                  style={selectStyle}
                 >
                   <option value="">All Types</option>
                   {Object.entries(TYPE_CONFIG).map(([key, { label }]) => (
@@ -797,7 +755,7 @@ const InternshipManagement = () => {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={clearFilters}
-                  className="px-5 py-3 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-200 rounded-lg hover:bg-gray-200 transition-colors"
+                  style={{ background: bg3, border: '1px solid ' + border, borderRadius: 4, color: text2, padding: '10px 20px', fontSize: 13, cursor: 'pointer' }}
                 >
                   Clear Filters
                 </motion.button>
@@ -806,14 +764,14 @@ const InternshipManagement = () => {
           </div>
         </motion.div>
 
-        {/* Error Message */}
+        {/* ── Error Message ───────────────────────────── */}
         <AnimatePresence>
           {error && (
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="bg-gradient-to-r from-red-50 to-rose-50 border border-red-200 rounded-xl p-4 text-red-700 text-sm flex items-center gap-3 shadow-sm"
+              style={{ background: 'rgba(232,64,64,.1)', border: '1px solid rgba(232,64,64,.3)', borderRadius: 4, padding: '12px 16px', color: '#e84040', fontSize: 13, display: 'flex', alignItems: 'center', gap: 10 }}
             >
               <AlertCircle className="w-5 h-5 flex-shrink-0" />
               <span>{error}</span>
@@ -821,28 +779,27 @@ const InternshipManagement = () => {
           )}
         </AnimatePresence>
 
-        {/* Main Content */}
+        {/* ── Main Content ────────────────────────────── */}
         {loading ? (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12 text-center">
+          <div style={{ background: bg2, border: '1px solid ' + border, borderRadius: 4, padding: 48, textAlign: 'center' }}>
             <motion.div
               animate={{ rotate: 360 }}
-              transition={{ duration: 1.2, repeat: Infinity, ease: "linear" }}
-              className="w-12 h-12 border-4 border-t-transparent rounded-full mx-auto mb-4"
-              style={{ borderColor: PRIMARY_COLOR, borderTopColor: 'transparent' }}
+              transition={{ duration: 1.2, repeat: Infinity, ease: 'linear' }}
+              style={{ width: 48, height: 48, borderRadius: '50%', border: '4px solid ' + border, borderTopColor: ORG, margin: '0 auto 16px' }}
             />
-            <p className="text-gray-600 font-medium">Loading internship applications...</p>
+            <p style={{ color: text2, fontWeight: 500 }}>Loading internship applications...</p>
           </div>
         ) : applications.length === 0 ? (
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-xl shadow-sm border border-gray-100 p-16 text-center"
+            style={{ background: bg2, border: '1px solid ' + border, borderRadius: 4, padding: 64, textAlign: 'center' }}
           >
-            <GraduationCap className="w-20 h-20 mx-auto mb-6 text-gray-300" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-3">
+            <GraduationCap className="w-20 h-20 mx-auto mb-6" style={{ color: text3 }} />
+            <h3 style={{ ...bb(28, { color: textC, marginBottom: 12 }) }}>
               {searchTerm || statusFilter || typeFilter ? 'No matching applications' : 'No internship applications yet'}
             </h3>
-            <p className="text-gray-600 mb-8 max-w-md mx-auto">
+            <p style={{ ...ba(14, 400, { color: text2, maxWidth: 400, margin: '0 auto 32px' }) }}>
               {searchTerm || statusFilter || typeFilter
                 ? 'Try adjusting your search or filters'
                 : 'New applications will appear here once candidates apply'}
@@ -851,29 +808,21 @@ const InternshipManagement = () => {
         ) : (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
             {viewMode === 'table' && renderTableView()}
-            {viewMode === 'grid' && renderGridView()}
-            {viewMode === 'list' && renderListView()}
+            {viewMode === 'grid'  && renderGridView()}
+            {viewMode === 'list'  && renderListView()}
 
-            {/* Pagination */}
+            {/* ── Pagination ───────────────────────── */}
             {totalPages > 1 && (
               <div className="flex justify-center mt-10">
-                <div className="flex items-center gap-2 bg-white px-3 py-3 rounded-xl border border-gray-200 shadow-sm">
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => setCurrentPage(1)}
-                    disabled={currentPage === 1}
-                    className="px-4 py-2 text-sm text-gray-600 bg-white border border-gray-200 rounded disabled:opacity-50"
-                  >
+                <div className="flex items-center gap-2" style={{ background: bg2, border: '1px solid ' + border, borderRadius: 4, padding: '8px 12px' }}>
+                  <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                    onClick={() => setCurrentPage(1)} disabled={currentPage === 1}
+                    style={{ background: bg3, border: '1px solid ' + border, borderRadius: 4, color: text2, padding: '6px 14px', fontSize: 13, cursor: 'pointer', opacity: currentPage === 1 ? 0.4 : 1 }}>
                     First
                   </motion.button>
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                    disabled={currentPage === 1}
-                    className="px-4 py-2 text-sm text-gray-600 bg-white border border-gray-200 rounded disabled:opacity-50"
-                  >
+                  <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}
+                    style={{ background: bg3, border: '1px solid ' + border, borderRadius: 4, color: text2, padding: '6px 10px', fontSize: 13, cursor: 'pointer', opacity: currentPage === 1 ? 0.4 : 1, display: 'flex' }}>
                     <ChevronLeft className="w-4 h-4" />
                   </motion.button>
 
@@ -887,32 +836,30 @@ const InternshipManagement = () => {
                         whileHover={{ scale: 1.08 }}
                         whileTap={{ scale: 0.95 }}
                         onClick={() => setCurrentPage(page)}
-                        className={`px-4 py-2 text-sm rounded-md ${currentPage === page
-                          ? 'bg-orange-500 text-white font-medium shadow-sm'
-                          : 'text-gray-600 hover:bg-gray-50 border border-gray-200'
-                          }`}
+                        style={{
+                          background: currentPage === page ? ORG : bg3,
+                          border: '1px solid ' + (currentPage === page ? ORG : border),
+                          borderRadius: 4,
+                          color: currentPage === page ? '#fff' : text2,
+                          padding: '6px 12px',
+                          fontSize: 13,
+                          fontWeight: currentPage === page ? 600 : 400,
+                          cursor: 'pointer',
+                        }}
                       >
                         {page}
                       </motion.button>
                     );
                   })}
 
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                    disabled={currentPage === totalPages}
-                    className="px-4 py-2 text-sm text-gray-600 bg-white border border-gray-200 rounded disabled:opacity-50"
-                  >
+                  <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}
+                    style={{ background: bg3, border: '1px solid ' + border, borderRadius: 4, color: text2, padding: '6px 10px', fontSize: 13, cursor: 'pointer', opacity: currentPage === totalPages ? 0.4 : 1, display: 'flex' }}>
                     <ChevronRight className="w-4 h-4" />
                   </motion.button>
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => setCurrentPage(totalPages)}
-                    disabled={currentPage === totalPages}
-                    className="px-4 py-2 text-sm text-gray-600 bg-white border border-gray-200 rounded disabled:opacity-50"
-                  >
+                  <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                    onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages}
+                    style={{ background: bg3, border: '1px solid ' + border, borderRadius: 4, color: text2, padding: '6px 14px', fontSize: 13, cursor: 'pointer', opacity: currentPage === totalPages ? 0.4 : 1 }}>
                     Last
                   </motion.button>
                 </div>
@@ -922,7 +869,7 @@ const InternshipManagement = () => {
         )}
       </div>
 
-      {/* Toast Notification */}
+      {/* ── Toast Notification ──────────────────────── */}
       <AnimatePresence>
         {operationStatus && (
           <motion.div
@@ -931,22 +878,19 @@ const InternshipManagement = () => {
             exit={{ opacity: 0, y: -60, scale: 0.9 }}
             className="fixed top-6 right-6 z-50"
           >
-            <div
-              className={`flex items-center gap-3 px-6 py-4 rounded-xl shadow-2xl text-sm border ${operationStatus.type === 'success'
-                ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-300 text-green-800'
-                : 'bg-gradient-to-r from-red-50 to-rose-50 border-red-300 text-red-800'
-                }`}
-            >
-              {operationStatus.type === 'success' ? (
-                <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
-              ) : (
-                <XCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
-              )}
-              <span className="font-medium">{operationStatus.message}</span>
-              <button
-                onClick={() => setOperationStatus(null)}
-                className="ml-2 p-1 hover:bg-white/40 rounded-full transition-colors"
-              >
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 12, padding: '14px 20px', borderRadius: 4,
+              background: operationStatus.type === 'success' ? 'rgba(74,222,128,.15)' : 'rgba(232,64,64,.15)',
+              border: `1px solid ${operationStatus.type === 'success' ? 'rgba(74,222,128,.4)' : 'rgba(232,64,64,.4)'}`,
+              color: operationStatus.type === 'success' ? '#4ade80' : '#e84040',
+              fontSize: 13, fontWeight: 500,
+            }}>
+              {operationStatus.type === 'success'
+                ? <CheckCircle className="w-5 h-5 flex-shrink-0" />
+                : <XCircle className="w-5 h-5 flex-shrink-0" />}
+              <span>{operationStatus.message}</span>
+              <button onClick={() => setOperationStatus(null)}
+                style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', marginLeft: 8, display: 'flex' }}>
                 <X className="w-4 h-4" />
               </button>
             </div>
@@ -954,78 +898,74 @@ const InternshipManagement = () => {
         )}
       </AnimatePresence>
 
-      {/* Loading Overlay */}
+      {/* ── Loading Overlay ─────────────────────────── */}
       <AnimatePresence>
         {operationLoading && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50"
+            className="fixed inset-0 flex items-center justify-center z-50"
+            style={{ background: 'rgba(0,0,0,.75)' }}
           >
             <motion.div
               initial={{ scale: 0.85, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              className="bg-white rounded-2xl p-10 shadow-2xl flex flex-col items-center gap-5"
+              style={{ background: bg2, border: '1px solid ' + border, borderRadius: 4, padding: 40, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20 }}
             >
               <motion.div
                 animate={{ rotate: 360 }}
-                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                className="w-14 h-14 border-4 border-t-transparent rounded-full"
-                style={{ borderColor: PRIMARY_COLOR, borderTopColor: 'transparent' }}
+                transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                style={{ width: 56, height: 56, borderRadius: '50%', border: '4px solid ' + border, borderTopColor: ORG }}
               />
-              <span className="text-gray-700 font-medium text-lg">Processing...</span>
+              <span style={{ color: textC, fontWeight: 500, fontSize: 16 }}>Processing...</span>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Delete Confirmation Modal */}
+      {/* ── Delete Confirmation Modal ────────────────── */}
       <AnimatePresence>
         {deleteConfirm && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/40 backdrop-blur-md flex items-center justify-center z-50 p-4"
+            className="fixed inset-0 flex items-center justify-center z-50 p-4"
+            style={{ background: 'rgba(0,0,0,.75)' }}
           >
             <motion.div
               initial={{ scale: 0.85, y: 30 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.85, y: 30 }}
-              className="bg-white rounded-2xl p-7 w-full max-w-md shadow-2xl"
+              style={{ background: bg2, border: '1px solid ' + border, borderRadius: 4, padding: 28, width: '100%', maxWidth: 440 }}
             >
               <div className="flex items-start gap-5 mb-6">
-                <div className="w-14 h-14 bg-gradient-to-br from-red-100 to-rose-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                  <AlertTriangle className="w-7 h-7 text-red-600" />
+                <div style={{ width: 56, height: 56, background: 'rgba(232,64,64,.1)', border: '1px solid rgba(232,64,64,.3)', borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <AlertTriangle className="w-7 h-7" style={{ color: '#e84040' }} />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">Delete Application?</h3>
-                  <p className="text-gray-600">This action cannot be undone.</p>
+                  <h3 style={{ ...bb(24, { color: textC, marginBottom: 6 }) }}>Delete Application?</h3>
+                  <p style={{ color: text2, fontSize: 13 }}>This action cannot be undone.</p>
                 </div>
               </div>
 
-              <div className="bg-gray-50 rounded-xl p-4 mb-6">
-                <p className="text-gray-700">
-                  Are you sure you want to delete <span className="font-bold text-gray-900">{deleteConfirm.fullName}'s application</span>?
+              <div style={{ background: bg3, border: '1px solid ' + border, borderRadius: 4, padding: 16, marginBottom: 24 }}>
+                <p style={{ color: text2, fontSize: 13 }}>
+                  Are you sure you want to delete{' '}
+                  <span style={{ color: textC, fontWeight: 700 }}>{deleteConfirm.fullName}'s application</span>?
                 </p>
               </div>
 
-              <div className="flex justify-end gap-4">
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+              <div className="flex justify-end gap-3">
+                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                   onClick={() => setDeleteConfirm(null)}
-                  className="px-7 py-3 text-sm font-medium text-gray-700 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
-                >
+                  style={{ background: bg3, border: '1px solid ' + border, borderRadius: 4, color: textC, padding: '10px 24px', fontSize: 13, cursor: 'pointer' }}>
                   Cancel
                 </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                   onClick={() => handleDelete(deleteConfirm)}
-                  className="px-7 py-3 text-sm font-medium bg-gradient-to-r from-red-600 to-rose-600 text-white rounded-xl hover:from-red-700 hover:to-rose-700 shadow-md transition-all"
-                >
+                  style={{ background: '#e84040', border: 'none', borderRadius: 4, color: '#fff', padding: '10px 24px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
                   Delete Application
                 </motion.button>
               </div>
@@ -1034,49 +974,47 @@ const InternshipManagement = () => {
         )}
       </AnimatePresence>
 
-      {/* Accept Confirmation Modal */}
+      {/* ── Accept Confirmation Modal ────────────────── */}
       <AnimatePresence>
         {acceptConfirm && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/40 backdrop-blur-md flex items-center justify-center z-50 p-4"
+            className="fixed inset-0 flex items-center justify-center z-50 p-4"
+            style={{ background: 'rgba(0,0,0,.75)' }}
           >
             <motion.div
               initial={{ scale: 0.85, y: 30 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.85, y: 30 }}
-              className="bg-white rounded-2xl p-7 w-full max-w-md shadow-2xl"
+              style={{ background: bg2, border: '1px solid ' + border, borderRadius: 4, padding: 28, width: '100%', maxWidth: 440 }}
             >
               <div className="flex items-start gap-5 mb-6">
-                <div className="w-14 h-14 bg-gradient-to-br from-emerald-100 to-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                  <UserCheck className="w-7 h-7 text-emerald-600" />
+                <div style={{ width: 56, height: 56, background: 'rgba(74,222,128,.1)', border: '1px solid rgba(74,222,128,.3)', borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <UserCheck className="w-7 h-7" style={{ color: '#4ade80' }} />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">Accept Intern?</h3>
-                  <p className="text-gray-600">This will admit the applicant as an intern. Employee conversion is a separate super-admin action.</p>
+                  <h3 style={{ ...bb(24, { color: textC, marginBottom: 6 }) }}>Accept Intern?</h3>
+                  <p style={{ color: text2, fontSize: 13 }}>This will admit the applicant as an intern. Employee conversion is a separate super-admin action.</p>
                 </div>
               </div>
 
-              <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 mb-6 space-y-3">
-                <p className="text-gray-700">
-                  You are about to accept <span className="font-bold text-gray-900">{acceptConfirm.fullName}</span> as an intern.
+              <div style={{ background: 'rgba(74,222,128,.08)', border: '1px solid rgba(74,222,128,.25)', borderRadius: 4, padding: 16, marginBottom: 24 }}>
+                <p style={{ color: text2, fontSize: 13, marginBottom: 10 }}>
+                  You are about to accept{' '}
+                  <span style={{ color: textC, fontWeight: 700 }}>{acceptConfirm.fullName}</span> as an intern.
                 </p>
-                <div className="flex items-start gap-2 text-sm text-emerald-700">
+                <div className="flex items-start gap-2" style={{ color: '#4ade80', fontSize: 12 }}>
                   <Shield className="w-4 h-4 mt-0.5 flex-shrink-0" />
                   <span>The applicant will remain in intern management until a super-admin converts them to an employee</span>
                 </div>
               </div>
 
-              <div className="flex justify-end gap-4">
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => setAcceptConfirm(null)}
-                  disabled={acceptLoading}
-                  className="px-7 py-3 text-sm font-medium text-gray-700 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
+              <div className="flex justify-end gap-3">
+                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                  onClick={() => setAcceptConfirm(null)} disabled={acceptLoading}
+                  style={{ background: bg3, border: '1px solid ' + border, borderRadius: 4, color: textC, padding: '10px 24px', fontSize: 13, cursor: 'pointer', opacity: acceptLoading ? 0.5 : 1 }}>
                   Cancel
                 </motion.button>
                 <motion.button
@@ -1084,8 +1022,7 @@ const InternshipManagement = () => {
                   whileTap={{ scale: acceptLoading ? 1 : 0.98 }}
                   onClick={() => handleAcceptIntern(acceptConfirm)}
                   disabled={acceptLoading}
-                  className="px-7 py-3 text-sm font-medium bg-gradient-to-r from-emerald-600 to-green-600 text-white rounded-xl hover:from-emerald-700 hover:to-green-700 shadow-md transition-all flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
-                >
+                  style={{ background: ORG, border: 'none', borderRadius: 4, color: '#fff', padding: '10px 24px', fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, opacity: acceptLoading ? 0.7 : 1 }}>
                   {acceptLoading ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
@@ -1104,45 +1041,43 @@ const InternshipManagement = () => {
         )}
       </AnimatePresence>
 
-      {/* Reject Confirmation Modal */}
+      {/* ── Reject Confirmation Modal ────────────────── */}
       <AnimatePresence>
         {rejectConfirm && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/40 backdrop-blur-md flex items-center justify-center z-50 p-4"
+            className="fixed inset-0 flex items-center justify-center z-50 p-4"
+            style={{ background: 'rgba(0,0,0,.75)' }}
           >
             <motion.div
               initial={{ scale: 0.85, y: 30 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.85, y: 30 }}
-              className="bg-white rounded-2xl p-7 w-full max-w-md shadow-2xl"
+              style={{ background: bg2, border: '1px solid ' + border, borderRadius: 4, padding: 28, width: '100%', maxWidth: 440 }}
             >
               <div className="flex items-start gap-5 mb-6">
-                <div className="w-14 h-14 bg-gradient-to-br from-red-100 to-rose-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                  <UserX className="w-7 h-7 text-red-600" />
+                <div style={{ width: 56, height: 56, background: 'rgba(232,64,64,.1)', border: '1px solid rgba(232,64,64,.3)', borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <UserX className="w-7 h-7" style={{ color: '#e84040' }} />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">Reject Application?</h3>
-                  <p className="text-gray-600">This will mark the application as rejected.</p>
+                  <h3 style={{ ...bb(24, { color: textC, marginBottom: 6 }) }}>Reject Application?</h3>
+                  <p style={{ color: text2, fontSize: 13 }}>This will mark the application as rejected.</p>
                 </div>
               </div>
 
-              <div className="bg-gray-50 rounded-xl p-4 mb-6">
-                <p className="text-gray-700">
-                  Are you sure you want to reject <span className="font-bold text-gray-900">{rejectConfirm.fullName}'s</span> internship application?
+              <div style={{ background: bg3, border: '1px solid ' + border, borderRadius: 4, padding: 16, marginBottom: 24 }}>
+                <p style={{ color: text2, fontSize: 13 }}>
+                  Are you sure you want to reject{' '}
+                  <span style={{ color: textC, fontWeight: 700 }}>{rejectConfirm.fullName}'s</span> internship application?
                 </p>
               </div>
 
-              <div className="flex justify-end gap-4">
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => setRejectConfirm(null)}
-                  disabled={rejectLoading}
-                  className="px-7 py-3 text-sm font-medium text-gray-700 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
+              <div className="flex justify-end gap-3">
+                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                  onClick={() => setRejectConfirm(null)} disabled={rejectLoading}
+                  style={{ background: bg3, border: '1px solid ' + border, borderRadius: 4, color: textC, padding: '10px 24px', fontSize: 13, cursor: 'pointer', opacity: rejectLoading ? 0.5 : 1 }}>
                   Cancel
                 </motion.button>
                 <motion.button
@@ -1150,8 +1085,7 @@ const InternshipManagement = () => {
                   whileTap={{ scale: rejectLoading ? 1 : 0.98 }}
                   onClick={() => handleRejectIntern(rejectConfirm)}
                   disabled={rejectLoading}
-                  className="px-7 py-3 text-sm font-medium bg-gradient-to-r from-red-600 to-rose-600 text-white rounded-xl hover:from-red-700 hover:to-rose-700 shadow-md transition-all flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
-                >
+                  style={{ background: '#e84040', border: 'none', borderRadius: 4, color: '#fff', padding: '10px 24px', fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, opacity: rejectLoading ? 0.7 : 1 }}>
                   {rejectLoading ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
@@ -1170,98 +1104,86 @@ const InternshipManagement = () => {
         )}
       </AnimatePresence>
 
-      {/* View Application Modal */}
+      {/* ── View Application Modal ───────────────────── */}
       <AnimatePresence>
         {showViewModal && selectedApplication && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/40 backdrop-blur-md flex items-center justify-center z-50 p-4"
+            className="fixed inset-0 flex items-center justify-center z-50 p-4"
+            style={{ background: 'rgba(0,0,0,.75)' }}
           >
             <motion.div
               initial={{ scale: 0.88, y: 30 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.88, y: 30 }}
-              className="bg-white rounded-2xl w-full max-w-3xl max-h-[92vh] overflow-hidden shadow-2xl flex flex-col"
+              style={{ background: bg2, border: '1px solid ' + border, borderRadius: 4, width: '100%', maxWidth: 768, maxHeight: '92vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
             >
-              <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              {/* Modal Header */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 24px', borderBottom: '1px solid ' + border }}>
                 <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-xl bg-[rgb(81,96,146)] text-white font-bold flex items-center justify-center text-xl flex-shrink-0">
+                  <div style={{ width: 56, height: 56, borderRadius: 4, background: 'rgba(232,98,26,.1)', border: '1px solid rgba(232,98,26,.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: ORG, fontSize: 20, fontWeight: 700, flexShrink: 0 }}>
                     {selectedApplication.fullName?.charAt(0) || '?'}
                   </div>
                   <div>
-                    <h2 className="text-2xl font-bold text-gray-900">{selectedApplication.fullName}</h2>
-                    <p className="text-sm text-gray-500 mt-1">Internship Application Details</p>
+                    <h2 style={{ ...bb(28, { color: textC }) }}>{selectedApplication.fullName}</h2>
+                    <p style={{ ...ba(12, 400, { color: text2, marginTop: 2 }) }}>Internship Application Details</p>
                   </div>
                 </div>
                 <motion.button
                   whileHover={{ scale: 1.1, rotate: 90 }}
                   whileTap={{ scale: 0.9 }}
                   onClick={() => setShowViewModal(false)}
-                  className="p-3 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-xl"
-                >
+                  style={{ background: bg3, border: '1px solid ' + border, borderRadius: 4, color: text2, padding: 10, cursor: 'pointer', display: 'flex' }}>
                   <X className="w-6 h-6" />
                 </motion.button>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-6 space-y-8">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  <div className="bg-gray-50 p-5 rounded-xl">
-                    <p className="text-gray-500 mb-1 text-sm">Status</p>
-                    <span className={`inline-block px-4 py-1.5 rounded-full text-sm font-medium border ${STATUS_CONFIG[selectedApplication.status]?.color}`}>
-                      {STATUS_CONFIG[selectedApplication.status]?.label}
-                    </span>
-                    {selectedApplication.isShortlisted && (
-                      <span className="inline-block ml-2 px-4 py-1.5 rounded-full text-sm font-medium bg-amber-100 text-amber-800 border border-amber-200">
-                        Shortlisted
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="bg-gray-50 p-5 rounded-xl">
-                    <p className="text-gray-500 mb-1 text-sm">Type</p>
-                    <span className={`inline-block px-4 py-1.5 rounded-full text-sm font-medium border ${TYPE_CONFIG[selectedApplication.internshipType]?.color || 'bg-gray-100 text-gray-700 border-gray-200'}`}>
-                      {TYPE_CONFIG[selectedApplication.internshipType]?.label || selectedApplication.internshipType}
-                    </span>
-                  </div>
-
-                  <div className="bg-gray-50 p-5 rounded-xl">
-                    <p className="text-gray-500 mb-1 text-sm">Period</p>
-                    <p className="font-medium text-gray-900">{PERIOD_CONFIG[selectedApplication.period] || selectedApplication.period || '—'}</p>
-                  </div>
+              {/* Modal Body */}
+              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {[
+                    { label: 'Status', content: (
+                      <div className="flex flex-wrap gap-2">
+                        <span style={statusBadgeStyle(selectedApplication.status)}>{STATUS_CONFIG[selectedApplication.status]?.label || selectedApplication.status}</span>
+                        {selectedApplication.isShortlisted && (
+                          <span style={{ background: 'rgba(245,158,11,.15)', color: 'rgb(245,158,11)', border: '1px solid rgba(245,158,11,.3)', borderRadius: 4, padding: '2px 10px', fontSize: 11, fontWeight: 600 }}>Shortlisted</span>
+                        )}
+                      </div>
+                    )},
+                    { label: 'Type', content: (
+                      <span style={typeBadgeStyle(selectedApplication.internshipType)}>{TYPE_CONFIG[selectedApplication.internshipType]?.label || selectedApplication.internshipType}</span>
+                    )},
+                    { label: 'Period', content: (
+                      <span style={{ color: textC, fontWeight: 500 }}>{PERIOD_CONFIG[selectedApplication.period] || selectedApplication.period || '—'}</span>
+                    )},
+                  ].map(({ label, content }) => (
+                    <div key={label} style={{ background: bg3, border: '1px solid ' + border, borderRadius: 4, padding: 16 }}>
+                      <p style={{ ...bc(10, 700, { letterSpacing: 2, textTransform: 'uppercase', color: text2, marginBottom: 8 }) }}>{label}</p>
+                      {content}
+                    </div>
+                  ))}
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="bg-gray-50 p-5 rounded-xl">
-                    <p className="text-gray-500 mb-1 text-sm">Email</p>
-                    <p className="font-medium text-gray-900 break-all">{selectedApplication.email}</p>
-                  </div>
-
-                  {selectedApplication.phone && (
-                    <div className="bg-gray-50 p-5 rounded-xl">
-                      <p className="text-gray-500 mb-1 text-sm">Phone</p>
-                      <p className="font-medium text-gray-900">{selectedApplication.phone}</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {[
+                    { label: 'Email', value: selectedApplication.email, show: true },
+                    { label: 'Phone', value: selectedApplication.phone, show: !!selectedApplication.phone },
+                    { label: 'Institution', value: selectedApplication.institution, show: !!selectedApplication.institution },
+                    { label: 'Applied On', value: formatDate(selectedApplication.createdAt), show: true },
+                  ].filter(f => f.show).map(({ label, value }) => (
+                    <div key={label} style={{ background: bg3, border: '1px solid ' + border, borderRadius: 4, padding: 16 }}>
+                      <p style={{ ...bc(10, 700, { letterSpacing: 2, textTransform: 'uppercase', color: text2, marginBottom: 6 }) }}>{label}</p>
+                      <p style={{ color: textC, fontWeight: 500, wordBreak: 'break-all' }}>{value}</p>
                     </div>
-                  )}
-
-                  {selectedApplication.institution && (
-                    <div className="bg-gray-50 p-5 rounded-xl">
-                      <p className="text-gray-500 mb-1 text-sm">Institution</p>
-                      <p className="font-medium text-gray-900">{selectedApplication.institution}</p>
-                    </div>
-                  )}
-
-                  <div className="bg-gray-50 p-5 rounded-xl">
-                    <p className="text-gray-500 mb-1 text-sm">Applied On</p>
-                    <p className="font-medium text-gray-900">{formatDate(selectedApplication.createdAt)}</p>
-                  </div>
+                  ))}
                 </div>
 
                 {selectedApplication.coverLetter && (
                   <div>
-                    <p className="text-gray-500 mb-2 text-sm font-medium">Cover Letter</p>
-                    <div className="bg-gray-50 p-5 rounded-xl text-gray-700 whitespace-pre-wrap leading-relaxed">
+                    <p style={{ ...bc(10, 700, { letterSpacing: 2, textTransform: 'uppercase', color: text2, marginBottom: 8 }) }}>Cover Letter</p>
+                    <div style={{ background: bg3, border: '1px solid ' + border, borderRadius: 4, padding: 16, color: text2, whiteSpace: 'pre-wrap', lineHeight: 1.6, fontSize: 13 }}>
                       {selectedApplication.coverLetter}
                     </div>
                   </div>
@@ -1269,33 +1191,32 @@ const InternshipManagement = () => {
 
                 {selectedApplication.reviewNotes && (
                   <div>
-                    <p className="text-gray-500 mb-2 text-sm font-medium">Review Notes</p>
-                    <div className="bg-gray-50 p-5 rounded-xl text-gray-700 whitespace-pre-wrap leading-relaxed">
+                    <p style={{ ...bc(10, 700, { letterSpacing: 2, textTransform: 'uppercase', color: text2, marginBottom: 8 }) }}>Review Notes</p>
+                    <div style={{ background: bg3, border: '1px solid ' + border, borderRadius: 4, padding: 16, color: text2, whiteSpace: 'pre-wrap', lineHeight: 1.6, fontSize: 13 }}>
                       {selectedApplication.reviewNotes}
                     </div>
                   </div>
                 )}
 
-                <div className="flex flex-wrap gap-4">
+                <div className="flex flex-wrap gap-3">
                   {selectedApplication.cvUrl && (
                     <a
                       href={selectedApplication.cvUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 px-5 py-3 bg-blue-50 text-blue-700 rounded-xl hover:bg-blue-100 transition-colors font-medium"
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 20px', background: 'rgba(59,130,246,.1)', border: '1px solid rgba(59,130,246,.3)', borderRadius: 4, color: '#60a5fa', fontWeight: 500, fontSize: 13, textDecoration: 'none' }}
                     >
                       <FileText className="w-5 h-5" />
                       View CV
                       <ExternalLink className="w-4 h-4" />
                     </a>
                   )}
-
                   {selectedApplication.portfolioUrl && (
                     <a
                       href={selectedApplication.portfolioUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 px-5 py-3 bg-purple-50 text-purple-700 rounded-xl hover:bg-purple-100 transition-colors font-medium"
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 20px', background: 'rgba(168,85,247,.1)', border: '1px solid rgba(168,85,247,.3)', borderRadius: 4, color: '#a855f7', fontWeight: 500, fontSize: 13, textDecoration: 'none' }}
                     >
                       <Briefcase className="w-5 h-5" />
                       Portfolio
@@ -1305,56 +1226,39 @@ const InternshipManagement = () => {
                 </div>
               </div>
 
-              <div className="p-6 border-t border-gray-200 flex flex-wrap justify-between gap-4">
+              {/* Modal Footer */}
+              <div style={{ padding: '16px 24px', borderTop: '1px solid ' + border, display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', gap: 12 }}>
                 <div className="flex gap-3">
                   {selectedApplication.status !== 'ACCEPTED' && (
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => {
-                        setShowViewModal(false);
-                        setAcceptConfirm(selectedApplication);
-                      }}
-                      className="px-6 py-3 text-base font-medium bg-gradient-to-r from-emerald-600 to-green-600 text-white rounded-xl hover:from-emerald-700 hover:to-green-700 shadow-md transition-all flex items-center gap-2"
-                    >
+                    <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                      onClick={() => { setShowViewModal(false); setAcceptConfirm(selectedApplication); }}
+                      style={{ background: ORG, border: 'none', borderRadius: 4, color: '#fff', padding: '10px 20px', fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
                       <UserCheck className="w-5 h-5" />
                       Accept
                     </motion.button>
                   )}
                   {selectedApplication.status !== 'REJECTED' && (
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => {
-                        setShowViewModal(false);
-                        setRejectConfirm(selectedApplication);
-                      }}
-                      className="px-6 py-3 text-base font-medium bg-gradient-to-r from-red-600 to-rose-600 text-white rounded-xl hover:from-red-700 hover:to-rose-700 shadow-md transition-all flex items-center gap-2"
-                    >
+                    <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                      onClick={() => { setShowViewModal(false); setRejectConfirm(selectedApplication); }}
+                      style={{ background: '#e84040', border: 'none', borderRadius: 4, color: '#fff', padding: '10px 20px', fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
                       <UserX className="w-5 h-5" />
                       Reject
                     </motion.button>
                   )}
                 </div>
                 <div className="flex gap-3">
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
+                  <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                     onClick={() => setShowViewModal(false)}
-                    className="px-8 py-3 text-base font-medium text-gray-700 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
-                  >
+                    style={{ background: bg3, border: '1px solid ' + border, borderRadius: 4, color: textC, padding: '10px 28px', fontSize: 13, cursor: 'pointer' }}>
                     Close
                   </motion.button>
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
+                  <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                     onClick={() => {
                       setShowViewModal(false);
                       setReviewData({ score: selectedApplication.score || 0, reviewNotes: selectedApplication.reviewNotes || '', status: selectedApplication.status });
                       setShowReviewModal(true);
                     }}
-                    className="px-8 py-3 text-base font-medium bg-[rgb(81,96,146)] text-white rounded-xl hover:bg-[rgb(60,75,120)] shadow-md transition-all"
-                  >
+                    style={{ background: ORG, border: 'none', borderRadius: 4, color: '#fff', padding: '10px 28px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
                     Review / Edit
                   </motion.button>
                 </div>
@@ -1364,52 +1268,56 @@ const InternshipManagement = () => {
         )}
       </AnimatePresence>
 
-      {/* Review Modal */}
+      {/* ── Review Modal ─────────────────────────────── */}
       <AnimatePresence>
         {showReviewModal && selectedApplication && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/40 backdrop-blur-md flex items-center justify-center z-50 p-4"
+            className="fixed inset-0 flex items-center justify-center z-50 p-4"
+            style={{ background: 'rgba(0,0,0,.75)' }}
           >
             <motion.div
               initial={{ scale: 0.88, y: 30 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.88, y: 30 }}
-              className="bg-white rounded-2xl w-full max-w-lg shadow-2xl"
+              style={{ background: bg2, border: '1px solid ' + border, borderRadius: 4, width: '100%', maxWidth: 520 }}
             >
-              <div className="flex items-center justify-between p-6 border-b border-gray-200">
-                <h2 className="text-2xl font-bold text-gray-900">Review Application</h2>
+              {/* Review Modal Header */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 24px', borderBottom: '1px solid ' + border }}>
+                <div className="flex items-center gap-3">
+                  <div style={{ width: 3, height: 20, background: ORG, borderRadius: 2 }} />
+                  <h2 style={{ ...bb(28, { color: textC }) }}>Review Application</h2>
+                </div>
                 <motion.button
                   whileHover={{ scale: 1.1, rotate: 90 }}
                   whileTap={{ scale: 0.9 }}
                   onClick={() => setShowReviewModal(false)}
-                  className="p-3 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-xl"
-                >
+                  style={{ background: bg3, border: '1px solid ' + border, borderRadius: 4, color: text2, padding: 10, cursor: 'pointer', display: 'flex' }}>
                   <X className="w-6 h-6" />
                 </motion.button>
               </div>
 
-              <div className="p-6 space-y-6">
+              <div style={{ padding: 24 }} className="space-y-5">
                 <div>
-                  <label className="block text-base font-semibold text-gray-700 mb-2">Score (0–10)</label>
+                  <label style={{ ...bc(10, 700, { letterSpacing: 2, textTransform: 'uppercase', color: text2, display: 'block', marginBottom: 8 }) }}>Score (0–10)</label>
                   <input
                     type="number"
                     min="0"
                     max="10"
                     value={reviewData.score}
                     onChange={(e) => setReviewData({ ...reviewData, score: Number(e.target.value) || 0 })}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-[rgb(81,96,146)] focus:ring-2 focus:ring-[rgb(81,96,146)]/20 transition-all text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    style={{ background: bg3, border: '1px solid ' + border, color: textC, borderRadius: 4, outline: 'none', padding: '10px 16px', width: '100%', fontSize: 14 }}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-base font-semibold text-gray-700 mb-2">Status</label>
+                  <label style={{ ...bc(10, 700, { letterSpacing: 2, textTransform: 'uppercase', color: text2, display: 'block', marginBottom: 8 }) }}>Status</label>
                   <select
                     value={reviewData.status}
                     onChange={(e) => setReviewData({ ...reviewData, status: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-[rgb(81,96,146)] focus:ring-2 focus:ring-[rgb(81,96,146)]/20 appearance-none bg-white text-base"
+                    style={{ background: bg3, border: '1px solid ' + border, color: textC, borderRadius: 4, padding: '10px 16px', fontSize: 14, width: '100%', appearance: 'none' }}
                   >
                     {Object.entries(STATUS_CONFIG).map(([key, { label }]) => (
                       <option key={key} value={key}>{label}</option>
@@ -1418,28 +1326,26 @@ const InternshipManagement = () => {
                 </div>
 
                 <div>
-                  <label className="block text-base font-semibold text-gray-700 mb-2">Review Notes</label>
+                  <label style={{ ...bc(10, 700, { letterSpacing: 2, textTransform: 'uppercase', color: text2, display: 'block', marginBottom: 8 }) }}>Review Notes</label>
                   <textarea
                     value={reviewData.reviewNotes}
                     onChange={(e) => setReviewData({ ...reviewData, reviewNotes: e.target.value })}
                     rows={5}
                     placeholder="Detailed feedback, strengths, areas for improvement..."
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-[rgb(81,96,146)] focus:ring-2 focus:ring-[rgb(81,96,146)]/20 transition-all resize-none text-base"
+                    style={{ background: bg3, border: '1px solid ' + border, color: textC, borderRadius: 4, outline: 'none', padding: '10px 16px', width: '100%', fontSize: 14, resize: 'none' }}
                   />
                 </div>
 
-                <div className="flex justify-end gap-4 pt-6">
+                <div className="flex justify-end gap-3 pt-2">
                   <button
                     type="button"
                     onClick={() => setShowReviewModal(false)}
-                    className="px-8 py-3 text-base font-medium text-gray-700 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
-                  >
+                    style={{ background: bg3, border: '1px solid ' + border, borderRadius: 4, color: textC, padding: '10px 28px', fontSize: 13, cursor: 'pointer' }}>
                     Cancel
                   </button>
                   <button
                     onClick={handleReviewSubmit}
-                    className="px-8 py-3 text-base font-medium bg-[rgb(81,96,146)] text-white rounded-xl hover:bg-[rgb(60,75,120)] shadow-md transition-all"
-                  >
+                    style={{ background: ORG, border: 'none', borderRadius: 4, color: '#fff', padding: '10px 28px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
                     Submit Review
                   </button>
                 </div>

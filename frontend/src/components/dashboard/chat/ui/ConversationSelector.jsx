@@ -1,6 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import { Search, Check } from 'lucide-react';
 import Avatar from './Avatar';
+import { useDashboardTheme } from '../../../../utils/dashboardTheme';
+import { ORG, TEAL, bb, bc, ba } from '../../../../utils/homeConstants';
+import { motion, AnimatePresence } from 'framer-motion';
 
 /**
  * Conversation Selector Component
@@ -14,6 +17,7 @@ const ConversationSelector = ({
     className = ''
 }) => {
     const [searchQuery, setSearchQuery] = useState('');
+    const { bg, bg2, bg3, textC, text2, text3, border } = useDashboardTheme();
 
     // Filter out current conversation and apply search
     const filteredConversations = useMemo(() => {
@@ -54,32 +58,47 @@ const ConversationSelector = ({
     };
 
     return (
-        <div className={`flex flex-col ${className}`}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             {/* Search */}
-            <div className="relative mb-3">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <div style={{ position: 'relative' }}>
+                <Search style={{ 
+                    position: 'absolute', 
+                    left: 12, 
+                    top: '50%', 
+                    transform: 'translateY(-50%)', 
+                    width: 16, 
+                    height: 16, 
+                    color: text3 
+                }} />
                 <input
                     type="text"
                     placeholder="Search conversations..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-dashboard-500"
+                    style={{
+                        width: '100%',
+                        padding: '10px 16px 10px 40px',
+                        background: bg2,
+                        border: `1px solid ${border}`,
+                        borderRadius: 8,
+                        ...ba(14, 400, { color: textC, outline: 'none' })
+                    }}
                 />
             </div>
 
             {/* Select All / Deselect All */}
             {filteredConversations.length > 0 && (
-                <div className="flex gap-2 mb-2">
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     <button
                         onClick={handleSelectAll}
-                        className="text-xs text-dashboard-600 hover:text-dashboard-700 font-medium"
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', ...ba(11, 700, { color: ORG, textTransform: 'uppercase' }) }}
                     >
                         Select All
                     </button>
-                    <span className="text-gray-300">|</span>
+                    <div style={{ width: 1, height: 12, background: border }} />
                     <button
                         onClick={handleDeselectAll}
-                        className="text-xs text-gray-600 hover:text-gray-700 font-medium"
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', ...ba(11, 700, { color: text3, textTransform: 'uppercase' }) }}
                     >
                         Deselect All
                     </button>
@@ -87,32 +106,52 @@ const ConversationSelector = ({
             )}
 
             {/* Conversation List */}
-            <div className="max-h-64 overflow-y-auto space-y-1">
+            <div style={{ maxHeight: 280, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {filteredConversations.length === 0 ? (
-                    <div className="text-center py-8 text-gray-400">
-                        {searchQuery ? 'No conversations found' : 'No other conversations available'}
+                    <div style={{ textAlign: 'center', padding: '32px 0' }}>
+                        <p style={{ ...ba(13, 400, { color: text3, margin: 0 }) }}>
+                            {searchQuery ? 'No conversations found' : 'No other conversations available'}
+                        </p>
                     </div>
                 ) : (
                     filteredConversations.map((conv) => {
                         const isSelected = selectedConversationIds.includes(conv.id);
 
                         return (
-                            <button
+                            <motion.button
                                 key={conv.id}
+                                whileHover={{ scale: 1.01, background: bg2 }}
+                                whileTap={{ scale: 0.99 }}
                                 onClick={() => handleToggle(conv.id)}
-                                className={`w-full flex items-center gap-3 p-3 rounded-lg transition-colors ${isSelected
-                                        ? 'bg-dashboard-50 border-2 border-dashboard-500'
-                                        : 'bg-white border-2 border-transparent hover:bg-gray-50'
-                                    }`}
+                                style={{
+                                    width: '100%',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 12,
+                                    padding: 12,
+                                    background: isSelected ? 'rgba(232,98,26,0.05)' : bg2,
+                                    border: `1px solid ${isSelected ? ORG : border}`,
+                                    borderRadius: 8,
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s',
+                                    textAlign: 'left'
+                                }}
                             >
                                 {/* Checkbox */}
                                 <div
-                                    className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 ${isSelected
-                                            ? 'bg-dashboard-600 border-dashboard-600'
-                                            : 'border-gray-300'
-                                        }`}
+                                    style={{
+                                        width: 20,
+                                        height: 20,
+                                        borderRadius: 4,
+                                        border: `2px solid ${isSelected ? ORG : text3}`,
+                                        background: isSelected ? ORG : 'none',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        flexShrink: 0
+                                    }}
                                 >
-                                    {isSelected && <Check className="w-3 h-3 text-white" />}
+                                    {isSelected && <Check style={{ width: 14, height: 14, color: '#fff' }} />}
                                 </div>
 
                                 {/* Avatar */}
@@ -121,21 +160,20 @@ const ConversationSelector = ({
                                     initial={conv.initial}
                                     name={conv.name}
                                     size="sm"
-                                    className="flex-shrink-0"
                                 />
 
                                 {/* Conversation Info */}
-                                <div className="flex-1 text-left min-w-0">
-                                    <p className="font-medium text-sm text-gray-900 truncate">
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                    <p style={{ ...ba(14, 600, { color: textC, margin: 0 }) }} className="truncate">
                                         {conv.name}
                                     </p>
                                     {conv.participants && conv.participants.length > 0 && (
-                                        <p className="text-xs text-gray-500 truncate">
+                                        <p style={{ ...ba(11, 400, { color: text3, margin: 0 }) }} className="truncate">
                                             {conv.participants.map(p => p.name).join(', ')}
                                         </p>
                                     )}
                                 </div>
-                            </button>
+                            </motion.button>
                         );
                     })
                 )}

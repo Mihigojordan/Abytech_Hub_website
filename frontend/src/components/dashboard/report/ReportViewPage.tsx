@@ -1,32 +1,20 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
-  FileText,
-  Calendar,
-  ArrowLeft,
-  AlertTriangle,
-  Search,
-  ChevronLeft,
-  ChevronRight,
-  X,
-  CheckCircle,
-  XCircle,
-  AlertCircle,
-  Trash2,
-  Filter,
-  Edit,
-  Download,
-  Send,
-  MessageCircle,
-  Clock,
+  FileText, Calendar, ArrowLeft, AlertTriangle, Search,
+  ChevronLeft, ChevronRight, X, CheckCircle, XCircle,
+  AlertCircle, Trash2, Filter, Edit, Download, Send,
+  MessageCircle, Clock, ExternalLink, Layout, Globe, RefreshCw
 } from "lucide-react";
 import "react-quill-new/dist/quill.snow.css";
-import ReactQuill from "react-quill-new";
 import reportService from "../../../services/reportService";
 import useAdminAuth from "../../../context/AdminAuthContext";
 import { API_URL } from '../../../api/api';
 import { useSocketEvent } from "../../../context/SocketContext";
 import CalendarFilter from "./CalendarFilter";
+import { useDashboardTheme } from "../../../utils/dashboardTheme";
+import { ORG, TEAL, bb, bc, ba, initials } from "../../../utils/homeConstants";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface Report {
   id: string;
@@ -40,7 +28,7 @@ interface Report {
     name?: string;
     email?: string;
   };
-  replies?: ReplyReport[]; // <-- Added from model
+  replies?: ReplyReport[];
 }
 
 interface ReplyReport {
@@ -51,17 +39,18 @@ interface ReplyReport {
   reportId: string;
   admin?: {
     name?: string;
+    adminName?: string;
   };
 }
 
-type FilterType = "all" | "today" | "yesterday" | "week" | "month";
+type FilterType = "all" | "today" | "yesterday" | "week" | "month" | "custom";
 interface OperationStatus {
   type: "success" | "error" | "info";
   message: string;
 }
 
 // Helper function to handle reportUrl
-function handleReportUrl(reportUrl) {
+function handleReportUrl(reportUrl: string) {
   if (!reportUrl) return null;
   const trimmedUrl = reportUrl.trim();
   if (trimmedUrl.includes('://')) return trimmedUrl;
@@ -70,7 +59,7 @@ function handleReportUrl(reportUrl) {
   return baseUrl + path;
 }
 
-async function downloadFile(url, fileName) {
+async function downloadFile(url: string, fileName: string) {
   try {
     const response = await fetch(url);
     if (!response.ok) throw new Error('Failed to fetch file');
@@ -93,6 +82,7 @@ const ReportViewPage = () => {
   const { id: reportId } = useParams<{ id?: string }>();
   const { user } = useAdminAuth();
   const navigate = useNavigate();
+  const { bg, bg2, textC, text2, text3, border, isDark } = useDashboardTheme();
 
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -100,7 +90,7 @@ const ReportViewPage = () => {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [filterType, setFilterType] = useState<FilterType>("all");
   const [sidebarCurrentPage, setSidebarCurrentPage] = useState<number>(1);
-  const [sidebarItemsPerPage] = useState<number>(6);
+  const [sidebarItemsPerPage] = useState<number>(8);
   const [operationStatus, setOperationStatus] = useState<OperationStatus | null>(null);
   const [operationLoading, setOperationLoading] = useState<boolean>(false);
   const [deleteConfirm, setDeleteConfirm] = useState<Report | null>(null);
@@ -127,17 +117,14 @@ const ReportViewPage = () => {
   // Add handler for date range selection
   const handleDateRangeSelect = (startDate: Date | null, endDate: Date | null) => {
     if (startDate && endDate) {
-      // Convert to ISO format for your API
       const params = {
         filter: 'custom',
         from: startDate.toISOString().split('T')[0],
         to: endDate.toISOString().split('T')[0]
       };
-      // Call your fetchSidebarReports with custom date range
       fetchSidebarReports(params);
       setFilterType('custom')
     } else {
-      // Clear custom filter
       setFilterType('all');
     }
   };
@@ -164,7 +151,6 @@ const ReportViewPage = () => {
       if (selectedReport?.id === newReply.reportId && newReply.adminId !== user?.id) {
         showOperationStatus("info", `${newReply.admin?.name || 'Someone'} replied`);
       }
-      // Still update UI
       if (selectedReport?.id === newReply.reportId) {
         setSelectedReport(prev => prev ? {
           ...prev,
@@ -255,7 +241,7 @@ const ReportViewPage = () => {
           navigate(root_url);
         }
       }
-      showOperationStatus("success", `Report "${report.title}" has been deleted successfully!`);
+      showOperationStatus("success", `Report deleted successfully!`);
     } catch (err: any) {
       showOperationStatus("error", err.message || "Failed to delete report");
     } finally {
@@ -284,10 +270,7 @@ const ReportViewPage = () => {
     try {
       setReplying(true);
       const newReply = await reportService.replyToReport(selectedReport.id, replyContent, user?.id);
-
-      // Replace replies with new array including the new one
       setSelectedReport(prev => prev ? { ...prev, replies: [...(prev.replies || []), newReply] } : null);
-
       setReplyContent("");
       showOperationStatus("success", "Reply sent successfully!");
     } catch (err: any) {
@@ -297,20 +280,11 @@ const ReportViewPage = () => {
     }
   };
 
-  const formatDate = (dateString: string) => {
+  const formatDateTime = (dateString: string) => {
     if (!dateString) return "Not set";
     return new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  };
-
-  const formatDateTime = (dateString: string) => {
-    if (!dateString) return "Not set";
-    return new Date(dateString).toLocaleString("en-US", {
-      year: "numeric",
-      month: "long",
+      month: "short",
       day: "numeric",
       hour: "2-digit",
       minute: "2-digit",
@@ -318,21 +292,13 @@ const ReportViewPage = () => {
   };
 
   const getRelativeTime = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInMs = now.getTime() - date.getTime();
-    const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
-    const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
-    if (diffInHours < 1) return "Just now";
-    if (diffInHours < 24) return `${diffInHours}h ago`;
-    if (diffInDays === 1) return "Yesterday";
-    if (diffInDays < 7) return `${diffInDays}d ago`;
-    return formatDate(dateString);
-  };
-
-  const handleReportSelect = (report: Report) => {
-    setSelectedReport(report);
-    navigate(`${url}${report.id}`);
+    const diff = new Date().getTime() - new Date(dateString).getTime();
+    const h = Math.floor(diff / (1000 * 60 * 60));
+    if (h < 1) return "Just now";
+    if (h < 24) return `${h}h ago`;
+    const d = Math.floor(h / 24);
+    if (d < 7) return `${d}d ago`;
+    return new Date(dateString).toLocaleDateString("en-US", { month: "short", day: "numeric" });
   };
 
   const stripHtml = (html: string): string => {
@@ -353,488 +319,385 @@ const ReportViewPage = () => {
     }
   };
 
-  if (loading) {
+  if (loading && currentSidebarReports.length === 0) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="inline-flex items-center space-x-2">
-          <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-          <span className="text-gray-700 font-medium">Loading reports...</span>
-        </div>
+      <div style={{ height: '100vh', background: bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1 }} style={{ width: 40, height: 40, border: `3px solid ${border}`, borderTopColor: ORG, borderRadius: '50%' }} />
       </div>
     );
   }
 
-  if (error && currentSidebarReports.length === 0) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <AlertTriangle className="w-8 h-8 text-red-600" />
-          </div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Error Loading Reports</h2>
-          <p className="text-gray-600 mb-4">{error}</p>
-          <button
-            onClick={() => navigate(root_url)}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-slate-800 transition-colors"
-          >
-            Back to Reports
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  if (!selectedReport) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <FileText className="w-8 h-8 text-gray-400" />
-          </div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">No Reports Found</h2>
-          <p className="text-gray-600 mb-4">There are no reports available.</p>
-          <button
-            onClick={() => navigate(root_url)}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-slate-800 transition-colors"
-          >
-            Back to Reports
-          </button>
-        </div>
-      </div>
-    );
-  }
+  if (!selectedReport && !loading) return null;
 
   return (
-    <div className="mx-auto p-4 md:p-6 bg-gradient-to-br from-gray-50 via-blue-50/30 to-gray-50 min-h-screen">
-      <div className="bg-white/80 backdrop-blur-sm border-b shadow-sm">
-        <div className="mx-auto px-4 sm:px-6 py-4">
+    <div style={{ minHeight: '100vh', background: bg, paddingBottom: 40 }}>
+      {/* Header Bar */}
+      <div style={{ background: `${bg2}80`, backdropFilter: 'blur(10px)', borderBottom: `1px solid ${border}`, position: 'sticky', top: 0, zIndex: 50 }}>
+        <div className="max-w-[1600px] mx-auto px-6 py-4 flex items-center justify-between">
           <button
             onClick={() => navigate(root_url)}
-            className="flex items-center text-gray-600 hover:text-[#ff5a00] transition-all duration-200 hover:gap-2 gap-1 font-medium"
+            style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', color: text3, cursor: 'pointer', ...bc(12, 700), transition: 'all 0.2s' }}
+            onMouseOver={(e) => e.currentTarget.style.color = ORG}
+            onMouseOut={(e) => e.currentTarget.style.color = text3}
           >
-            <ArrowLeft className="w-5 h-5" />
-            Back to Reports
+            <ArrowLeft size={18} /> BACK TO REPORTS
           </button>
+          <div style={{ ...bc(12, 800, { color: text3, letterSpacing: '0.1em' }) }}>
+            REPORTS / <span style={{ color: ORG }}>SESSION VIEW</span>
+          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6 mt-6">
-        {/* Reports List Sidebar */}
-        <div className="lg:col-span-4 xl:col-span-3">
-          <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
-            <div className="p-4 md:p-5 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200">
-              <div className="flex flex-col space-y-4">
-                <h2 className="text-lg md:text-xl font-bold text-gray-900 flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-[#ff5a00]" />
-                  Reports
-                </h2>
-                <div className="relative">
+      <div className="max-w-[1600px] mx-auto px-4 mt-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          
+          {/* SIDEBAR: Reports Archive */}
+          <div className="lg:col-span-4 xl:col-span-3">
+            <div style={{ background: bg2, border: `1px solid ${border}`, borderRadius: 24, overflow: 'hidden', height: 'fit-content' }}>
+              <div style={{ padding: '20px', borderBottom: `1px solid ${border}`, background: `linear-gradient(to bottom right, ${ORG}05, transparent)` }}>
+                <div className="flex items-center gap-3 mb-6">
+                  <FileText size={20} style={{ color: ORG }} />
+                  <h2 style={{ ...bc(18, 800, { color: textC, margin: 0 }) }}>ARCHIVE</h2>
+                </div>
+                
+                <div style={{ position: 'relative', marginBottom: 16 }}>
+                  <Search size={16} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: text3 }} />
                   <input
                     type="text"
-                    placeholder="Search reports..."
+                    placeholder="Search..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white shadow-sm"
+                    style={{ width: '100%', padding: '12px 16px 12px 40px', background: bg, border: `1px solid ${border}`, borderRadius: 12, color: textC, ...ba(13, 500), outline: 'none' }}
                   />
-                  <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
                 </div>
-                <div className="flex items-center space-x-1">
-                  <Filter className="w-4 h-4 text-gray-500" />
-                  <div className="flex flex-wrap gap-2">
-                    {(["all", "today", "yesterday", "week", "month"] as FilterType[]).map((filter) => (
-                      <button
-                        key={filter}
-                        onClick={() => setFilterType(filter)}
-                        className={`px-3 py-1.5 text-xs font-semibold rounded-full transition-all duration-200 ${filterType === filter
-                          ? "bg-gradient-to-r from-blue-500 to-[#ff5a00] text-white shadow-md"
-                          : "bg-white text-gray-700 hover:bg-gray-100 border border-gray-200 hover:border-blue-300"
-                          }`}
-                      >
-                        {filter.charAt(0).toUpperCase() + filter.slice(1)}
-                      </button>
-                    ))}
+
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  {(["all", "today", "yesterday", "week", "month"] as FilterType[]).map((f) => (
                     <button
-                      onClick={() => setShowCalendar(!showCalendar)}
-                      className={`px-3 py-1.5 text-xs font-semibold rounded-full transition-all duration-200 ${filterType === 'custom'
-                        ? "bg-gradient-to-r from-blue-500 to-[#ff5a00] text-white shadow-md"
-                        : "bg-white text-gray-700 hover:bg-gray-100 border border-gray-200 hover:border-blue-300"} `}
+                      key={f}
+                      onClick={() => setFilterType(f)}
+                      style={{ 
+                        padding: '6px 12px', borderRadius: 100, border: `1px solid ${filterType === f ? ORG : border}`,
+                        background: filterType === f ? ORG : bg, color: filterType === f ? '#fff' : text2,
+                        ...bc(10, 800), cursor: 'pointer', transition: 'all 0.2s'
+                      }}
                     >
-                      Custom Date
+                      {f.toUpperCase()}
                     </button>
-
-                  </div>
+                  ))}
+                  <button
+                    onClick={() => setShowCalendar(true)}
+                    style={{ 
+                      padding: '6px 12px', borderRadius: 100, border: `1px solid ${filterType === 'custom' ? ORG : border}`,
+                      background: filterType === 'custom' ? ORG : bg, color: filterType === 'custom' ? '#fff' : text2,
+                      ...bc(10, 800), cursor: 'pointer'
+                    }}
+                  >
+                    CALENDAR
+                  </button>
                 </div>
               </div>
-              <p className="text-sm font-medium text-[#ff5a00] mt-2 bg-blue-50 px-3 py-1 rounded-full inline-block">{totalSidebarReports} reports</p>
-            </div>
-            <div className="divide-y divide-gray-100 max-h-[calc(100vh-400px)] overflow-y-auto">
-              {currentSidebarReports.map((report) => (
-                <div
-                  key={report.id}
-                  className={`p-4 cursor-pointer transition-all duration-200 ${selectedReport.id === report.id ? "bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500 shadow-sm" : "hover:bg-gray-50 hover:shadow-sm"
-                    }`}
-                  onClick={() => handleReportSelect(report)}
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-sm font-semibold text-gray-900 truncate">{report.title}</h3>
-                      <p className="text-xs text-gray-600 mt-1 line-clamp-2">
-                        {report.reportUrl
-                          ? `File: ${report.title}`
-                          : truncateText(
-                            typeof report.content === "string" ? report.content : JSON.stringify(report.content || ''),
-                            80
-                          )}
+
+              <div style={{ maxHeight: 'calc(100vh - 400px)', overflowY: 'auto' }} className="custom-scrollbar">
+                {currentSidebarReports.map((report) => {
+                  const isActive = selectedReport?.id === report.id;
+                  return (
+                    <motion.div
+                      key={report.id}
+                      onClick={() => { setSelectedReport(report); navigate(`${url}${report.id}`); }}
+                      whileHover={{ x: 4 }}
+                      style={{ 
+                        padding: '16px 20px', cursor: 'pointer', borderBottom: `1px solid ${border}`,
+                        background: isActive ? `${ORG}05` : 'transparent',
+                        borderLeft: `4px solid ${isActive ? ORG : 'transparent'}`,
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      <h4 style={{ ...bc(14, 700, { color: isActive ? ORG : textC, margin: '0 0 4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }) }}>{report.title}</h4>
+                      <p style={{ ...ba(12, 500, { color: text3, margin: '0 0 10px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }) }}>
+                        {report.reportUrl ? `Resource Attached` : stripHtml(typeof report.content === 'string' ? report.content : '')}
                       </p>
-                      <p className="text-xs text-gray-500 mt-2">{getRelativeTime(report.createdAt)}</p>
-                    </div>
-                    <ChevronRight className="w-4 h-4 text-gray-400 mt-1 ml-2 flex-shrink-0" />
-                  </div>
-                </div>
-              ))}
-            </div>
-            {sidebarTotalPages > 1 && (
-              <div className="p-4 border-t border-gray-200 bg-gray-50 flex justify-center space-x-2">
-                <button
-                  onClick={() => handleSidebarPageChange(sidebarCurrentPage - 1)}
-                  disabled={sidebarCurrentPage === 1}
-                  className="p-2 text-gray-500 hover:text-[#ff5a00] disabled:opacity-50 transition-colors rounded-lg hover:bg-blue-50"
-                >
-                  <ChevronLeft className="w-5 h-5" />
-                </button>
-                <span className="py-2 px-4 text-sm font-medium text-gray-700">
-                  Page {sidebarCurrentPage} of {sidebarTotalPages}
-                </span>
-                <button
-                  onClick={() => handleSidebarPageChange(sidebarCurrentPage + 1)}
-                  disabled={sidebarCurrentPage === sidebarTotalPages}
-                  className="p-2 text-gray-500 hover:text-[#ff5a00] disabled:opacity-50 transition-colors rounded-lg hover:bg-blue-50"
-                >
-                  <ChevronRight className="w-5 h-5" />
-                </button>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <span style={{ ...bc(10, 800, { color: text3 }) }}>{getRelativeTime(report.createdAt)}</span>
+                        <ChevronRight size={14} style={{ color: isActive ? ORG : border }} />
+                      </div>
+                    </motion.div>
+                  );
+                })}
               </div>
-            )}
-          </div>
-        </div>
 
-        {/* Main Report Detail View */}
-        <div className="lg:col-span-8 xl:col-span-9 space-y-4 md:space-y-6">
-          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-4 md:p-6 hover:shadow-xl transition-shadow">
-            <div className="flex items-start justify-between">
-              <div className="flex items-center space-x-4">
-                <div className="w-14 h-14 md:w-16 md:h-16 bg-gradient-to-br from-blue-500 via-[#ff5a00] to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg">
-                  <FileText className="w-8 h-8 text-white" />
+              {sidebarTotalPages > 1 && (
+                <div style={{ padding: '16px', borderTop: `1px solid ${border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
+                  <button onClick={() => handleSidebarPageChange(sidebarCurrentPage - 1)} disabled={sidebarCurrentPage === 1} style={{ padding: 8, borderRadius: 8, background: bg, border: `1px solid ${border}`, color: text3, cursor: 'pointer', opacity: sidebarCurrentPage === 1 ? 0.3 : 1 }}><ChevronLeft size={16} /></button>
+                  <span style={{ ...bc(11, 800, { color: text2 }) }}>{sidebarCurrentPage} / {sidebarTotalPages}</span>
+                  <button onClick={() => handleSidebarPageChange(sidebarCurrentPage + 1)} disabled={sidebarCurrentPage === sidebarTotalPages} style={{ padding: 8, borderRadius: 8, background: bg, border: `1px solid ${border}`, color: text3, cursor: 'pointer', opacity: sidebarCurrentPage === sidebarTotalPages ? 0.3 : 1 }}><ChevronRight size={16} /></button>
                 </div>
-                <div>
-                  <h1 className="text-xl md:text-2xl font-bold text-gray-900">{selectedReport.title}</h1>
-                  <div className="flex items-center space-x-4 mt-2">
-                    <span className="text-sm text-gray-500">
-                      Created {formatDateTime(selectedReport.createdAt)}
-                    </span>
-                    {selectedReport.admin?.name && (
-                      <span className="text-sm text-gray-500">
-                        by {selectedReport.admin.name}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-              <div className="flex flex-wrap gap-2 md:gap-3 items-center">
-                <button
-                  onClick={() => navigate('/admin/dashboard/report/edit/' + selectedReport.id)}
-                  disabled={operationLoading}
-                  className="flex items-center space-x-2 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white px-3 md:px-4 py-2 rounded-lg font-semibold transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <Edit className="w-4 h-4" />
-                  <span>Edit</span>
-                </button>
-                {user?.id === selectedReport.adminId && (
-                  <button
-                    onClick={() => setDeleteConfirm(selectedReport)}
-                    disabled={operationLoading}
-                    className="flex items-center space-x-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-3 md:px-4 py-2 rounded-lg font-semibold transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                    <span>Delete</span>
-                  </button>
-                )}
-                {selectedReport.reportUrl && (
-                  <button
-                    onClick={() => handleDownloadReport(selectedReport)}
-                    disabled={operationLoading}
-                    className="flex items-center space-x-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-3 md:px-4 py-2 rounded-lg font-semibold transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <Download className="w-4 h-4" />
-                    <span>Download</span>
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-4 md:p-6">
-            <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-              <FileText className="w-5 h-5 text-[#ff5a00]" />
-              Report Content
-            </h3>
-            <div className="swal-preview-container">
-              {selectedReport.reportUrl ? (
-                <div className="text-left">
-                  <p className="text-gray-700 mb-4">
-                    This report is a file. You can download it using the button above or view it below.
-                  </p>
-                  <a
-                    href={`${handleReportUrl(selectedReport.reportUrl)}?inline=true`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-[#ff5a00] hover:underline"
-                  >
-                    View file in new tab
-                  </a>
-                </div>
-              ) : selectedReport.content ? (
-                <div
-                  className="ql-editor text-left text-gray-800"
-                  dangerouslySetInnerHTML={{
-                    __html: typeof selectedReport.content === "string"
-                      ? selectedReport.content
-                      : JSON.stringify(selectedReport.content)
-                  }}
-                />
-              ) : (
-                <p className="text-gray-600">No content or file available for this report.</p>
               )}
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-4 md:p-6">
-            <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-[#ff5a00]" />
-              Report Information
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-              <div className="flex items-center p-3 bg-blue-50 rounded-lg">
-                <Calendar className="w-5 h-5 text-[#ff5a00] mr-3" />
-                <div>
-                  <p className="text-xs font-semibold text-gray-600">Created</p>
-                  <p className="text-sm font-medium text-gray-900">{formatDateTime(selectedReport.createdAt)}</p>
-                </div>
-              </div>
-              <div className="flex items-center p-3 bg-indigo-50 rounded-lg">
-                <FileText className="w-5 h-5 text-indigo-600 mr-3" />
-                <div>
-                  <p className="text-xs font-semibold text-gray-600">Report ID</p>
-                  <p className="text-sm font-medium text-gray-900 font-mono">{selectedReport.id.slice(0, 8)}...</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* === REPLIES SECTION === */}
-          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-4 md:p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <MessageCircle className="w-5 h-5 text-[#ff5a00]" />
-              <h3 className="text-lg md:text-xl font-bold text-gray-900">
-                Replies ({selectedReport.replies?.length || 0})
-              </h3>
-            </div>
-
-            {/* Reply Input */}
-            <div className="mb-6">
-              <textarea
-                value={replyContent}
-                onChange={(e) => setReplyContent(e.target.value)}
-                placeholder="Write your reply..."
-                className="bg-gray-50 w-full border-2 p-3 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
-                rows={4}
-
-              ></textarea>
-              <div className="mt-3 flex justify-end">
-                <button
-                  onClick={handleSendReply}
-                  disabled={replying || !replyContent.trim()}
-                  className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-semibold shadow-md hover:shadow-lg"
+          {/* MAIN CONTENT Area */}
+          <div className="lg:col-span-8 xl:col-span-9">
+            <AnimatePresence mode="wait">
+              {selectedReport && (
+                <motion.div
+                  key={selectedReport.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="space-y-6"
                 >
-                  {replying ? (
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  ) : (
-                    <Send className="w-4 h-4" />
-                  )}
-                  Send Reply
-                </button>
-              </div>
-            </div>
-
-            {/* Replies List */}
-            <div className="space-y-4">
-              {selectedReport.replies && selectedReport.replies.length > 0 ? (
-                selectedReport.replies.map((reply) => (
-                  <div key={reply.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow bg-gradient-to-r from-gray-50 to-white">
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-md">
-                          {reply.admin?.name?.[0]?.toUpperCase() || 'A'}
+                  {/* Hero Card */}
+                  <div style={{ background: bg2, border: `1px solid ${border}`, borderRadius: 24, padding: '20px 24px', position: 'relative', overflow: 'hidden' }}>
+                    <div style={{ position: 'absolute', top: 0, right: 0, width: '40%', height: '100%', background: `linear-gradient(225deg, ${ORG}05 0%, transparent 70%)` }}></div>
+                    <div className="relative z-10">
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
+                        <div style={{ width: 48, height: 48, borderRadius: 16, background: ORG, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 8px 20px ${ORG}40` }}>
+                          <FileText size={24} />
                         </div>
                         <div>
-                          <p className="text-sm font-medium text-gray-900">{reply.admin?.adminName || 'Admin'}</p>
-                          <p className="text-xs text-gray-500 flex items-center gap-1">
-                            <Clock className="w-3 h-3" />
-                            {getRelativeTime(reply.createdAt)}
-                          </p>
+                          <p style={{ ...bc(10, 800, { color: text3, letterSpacing: '0.1em', margin: 0 }) }}>REPORT LOG</p>
+                          <p style={{ ...ba(14, 600, { color: text2, margin: 0 }) }}>{selectedReport.admin?.name || 'Authorized Admin'}</p>
+                        </div>
+                      </div>
+
+                      <h1 style={{ ...bc(40, 800, { color: textC, margin: '0 0 16px', lineHeight: 1.1 }) }}>{selectedReport.title}</h1>
+                      
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24, marginTop: 32, alignItems: 'center' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: text3, ...bc(11, 800) }}>
+                          <Calendar size={14} style={{ color: ORG }} /> {formatDateTime(selectedReport.createdAt)}
+                        </div>
+                        <div style={{ width: 1, height: 16, background: border }}></div>
+                        <div className="flex gap-3">
+                          <button
+                            onClick={() => navigate('/admin/dashboard/report/edit/' + selectedReport.id)}
+                            style={{ padding: '8px 16px', borderRadius: 10, background: bg, border: `1px solid ${border}`, color: text2, cursor: 'pointer', ...bc(11, 800), display: 'flex', alignItems: 'center', gap: 8 }}
+                          >
+                            <Edit size={14} /> EDIT
+                          </button>
+                          {user?.id === selectedReport.adminId && (
+                            <button
+                              onClick={() => setDeleteConfirm(selectedReport)}
+                              style={{ padding: '8px 16px', borderRadius: 10, background: '#ef444415', border: '1px solid #ef444433', color: '#ef4444', cursor: 'pointer', ...bc(11, 800), display: 'flex', alignItems: 'center', gap: 8 }}
+                            >
+                              <Trash2 size={14} /> DELETE
+                            </button>
+                          )}
+                          {selectedReport.reportUrl && (
+                            <button
+                              onClick={() => handleDownloadReport(selectedReport)}
+                              style={{ padding: '8px 16px', borderRadius: 10, background: `${TEAL}15`, border: `1px solid ${TEAL}33`, color: TEAL, cursor: 'pointer', ...bc(11, 800), display: 'flex', alignItems: 'center', gap: 8 }}
+                            >
+                              <Download size={14} /> EXPORT
+                            </button>
+                          )}
                         </div>
                       </div>
                     </div>
-                    <div
-                      className=" max-h-[50px] text-sm text-gray-700 prose prose-sm max-w-none"
-                      dangerouslySetInnerHTML={{ __html: reply.content }}
-                    />
                   </div>
-                ))
-              ) : (
-                <p className="text-center text-gray-500 py-6">No replies yet. Be the first to reply!</p>
+
+                  {/* Report Body */}
+                  <div style={{ background: bg2, border: `1px solid ${border}`, borderRadius: 24, padding: '20px 24px' }}>
+                    <div className="flex items-center gap-3 mb-8">
+                      <Layout size={20} style={{ color: ORG }} />
+                      <h3 style={{ ...bc(18, 800, { color: textC, margin: 0 }) }}>LOG CONTENT</h3>
+                    </div>
+
+                    <div className="swal-preview-container">
+                      {selectedReport.reportUrl ? (
+                        <div style={{ background: bg, padding: '24px', borderRadius: 24, border: `1px dashed ${border}`, textAlign: 'center' }}>
+                          <div style={{ width: 64, height: 64, borderRadius: 20, background: `${TEAL}10`, color: TEAL, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
+                            <Globe size={32} />
+                          </div>
+                          <p style={{ ...ba(15, 600, { color: text2, marginBottom: 24 }) }}>This report contains an external document resource.</p>
+                          <a
+                            href={`${handleReportUrl(selectedReport.reportUrl)}?inline=true`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ display: 'inline-flex', alignItems: 'center', gap: 10, padding: '12px 24px', borderRadius: 12, background: TEAL, color: '#fff', textDecoration: 'none', ...bc(12, 800), boxShadow: `0 8px 20px ${TEAL}30` }}
+                          >
+                            <ExternalLink size={16} /> VIEW RESOURCE IN NEW TAB
+                          </a>
+                        </div>
+                      ) : selectedReport.content ? (
+                        <div
+                          className="ql-editor"
+                          style={{ color: textC, lineHeight: 1.8, fontSize: 16 }}
+                          dangerouslySetInnerHTML={{
+                            __html: typeof selectedReport.content === "string"
+                              ? selectedReport.content
+                              : JSON.stringify(selectedReport.content)
+                          }}
+                        />
+                      ) : (
+                        <div style={{ textAlign: 'center', padding: 48, color: text3 }}>
+                          <AlertTriangle size={32} style={{ marginBottom: 12, opacity: 0.3 }} />
+                          <p style={{ ...ba(14, 500) }}>No detailed content logs available for this session.</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* REPLIES Section */}
+                  <div style={{ background: bg2, border: `1px solid ${border}`, borderRadius: 24, padding: '20px 24px' }}>
+                    <div className="flex items-center justify-between mb-8">
+                      <div className="flex items-center gap-3">
+                        <MessageCircle size={20} style={{ color: ORG }} />
+                        <h3 style={{ ...bc(18, 800, { color: textC, margin: 0 }) }}>COMMUNICATIONS</h3>
+                        <span style={{ background: `${ORG}15`, color: ORG, padding: '2px 10px', borderRadius: 8, ...bc(11, 800) }}>
+                          {selectedReport.replies?.length || 0}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div style={{ marginBottom: 40 }}>
+                      <textarea
+                        value={replyContent}
+                        onChange={(e) => setReplyContent(e.target.value)}
+                        placeholder="Log your reflection or feedback..."
+                        style={{ width: '100%', padding: '16px 20px', background: bg, borderRadius: 16, border: `1px solid ${border}`, color: textC, ...ba(14, 500), outline: 'none', minHeight: 100, resize: 'vertical' }}
+                      />
+                      <div className="mt-4 flex justify-end">
+                        <motion.button
+                          whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                          onClick={handleSendReply}
+                          disabled={replying || !replyContent.trim()}
+                          style={{ 
+                            display: 'flex', alignItems: 'center', gap: 10, padding: '12px 32px', 
+                            background: ORG, color: '#fff', border: 'none', borderRadius: 14, 
+                            cursor: 'pointer', ...bc(13, 800), opacity: (replying || !replyContent.trim()) ? 0.5 : 1,
+                            boxShadow: `0 8px 24px ${ORG}40`
+                          }}
+                        >
+                          {replying ? <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1 }}><RefreshCw size={16} /></motion.div> : <Send size={16} />}
+                          SEND REFLECTION
+                        </motion.button>
+                      </div>
+                    </div>
+
+                    <div className="space-y-6">
+                      {selectedReport.replies && selectedReport.replies.length > 0 ? (
+                        selectedReport.replies.map((reply) => (
+                          <motion.div
+                            key={reply.id}
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            style={{ 
+                              display: 'flex', gap: 14, padding: '14px 18px', borderRadius: 20, background: bg, border: `1px solid ${border}` 
+                            }}
+                          >
+                            <div style={{ 
+                              width: 44, height: 44, borderRadius: 14, background: `${ORG}15`, color: ORG,
+                              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                              ...bc(16, 800)
+                            }}>
+                              {initials(reply.admin?.adminName || reply.admin?.name)}
+                            </div>
+                            <div style={{ flex: 1 }}>
+                              <div className="flex items-center justify-between mb-2">
+                                <h4 style={{ ...bc(14, 800, { color: textC, margin: 0 }) }}>{reply.admin?.adminName || 'TEAM MEMBER'}</h4>
+                                <span style={{ ...bc(10, 800, { color: text3 }) }}>{getRelativeTime(reply.createdAt).toUpperCase()}</span>
+                              </div>
+                              <p style={{ ...ba(14, 500, { color: text2, margin: 0, lineHeight: 1.6, whiteSpace: 'pre-line' }) }}>{reply.content}</p>
+                            </div>
+                          </motion.div>
+                        ))
+                      ) : (
+                        <div style={{ textAlign: 'center', padding: '40px 0', border: `1px dashed ${border}`, borderRadius: 24 }}>
+                          <p style={{ ...ba(14, 500, { color: text3, margin: 0 }) }}>No communication logs for this session.</p>
+                        </div>
+                      )}
+                      <div ref={repliesEndRef} />
+                    </div>
+                  </div>
+                </motion.div>
               )}
-            </div>
+            </AnimatePresence>
           </div>
         </div>
       </div>
 
-      {/* === TOASTS & MODALS (unchanged) === */}
-      {operationStatus && (
-        <div className="fixed top-4 right-4 z-50 transform transition-all duration-300 ease-in-out">
-          <div
-            className={`flex items-center space-x-3 px-4 py-3 rounded-lg shadow-lg border ${operationStatus.type === "success"
-              ? "bg-green-50 border-green-200 text-green-800"
-              : operationStatus.type === "error"
-                ? "bg-red-50 border-red-200 text-red-800"
-                : "bg-blue-50 border-blue-200 text-blue-800"
-              }`}
-          >
-            {operationStatus.type === "success" && <CheckCircle className="w-5 h-5 text-green-600" />}
-            {operationStatus.type === "error" && <XCircle className="w-5 h-5 text-red-600" />}
-            {operationStatus.type === "info" && <AlertCircle className="w-5 h-5 text-[#ff5a00]" />}
-            <span className="font-medium">{operationStatus.message}</span>
-            <button onClick={() => setOperationStatus(null)} className="ml-2 hover:opacity-70">
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-      )}
-
-      {operationLoading && (
-        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-40">
-          <div className="bg-white rounded-lg p-6 shadow-xl">
-            <div className="flex items-center space-x-3">
-              <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-              <span className="text-gray-700 font-medium">Processing...</span>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {deleteConfirm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <div className="flex items-center space-x-3 mb-4">
-              <div className="w-10 h-10 rounded-full flex items-center justify-center bg-red-100">
-                <Trash2 className="w-6 h-6 text-red-600" />
+      {/* Global MODALS */}
+      <AnimatePresence>
+        {deleteConfirm && (
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 20 }}>
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              style={{ background: bg, border: `1px solid ${border}`, borderRadius: 32, padding: 40, maxWidth: 460, width: '100%', boxShadow: '0 40px 80px rgba(0,0,0,0.3)' }}
+            >
+              <div style={{ width: 64, height: 64, borderRadius: 20, background: '#ef444415', color: '#ef4444', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 24 }}>
+                <Trash2 size={32} />
               </div>
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900">Delete Report</h3>
-                <p className="text-sm text-gray-500">This action cannot be undone</p>
-              </div>
-            </div>
-            <div className="mb-6">
-              <p className="text-gray-700">
-                Are you sure you want to delete{" "}
-                <span className="font-semibold">"{deleteConfirm.title}"</span>? This will
-                permanently remove the report from the system.
+              <h3 style={{ ...bc(24, 800, { color: textC, marginBottom: 16 }) }}>Terminate Log?</h3>
+              <p style={{ ...ba(16, 500, { color: text2, marginBottom: 32, lineHeight: 1.6 }) }}>
+                Are you certain you want to remove <span style={{ fontWeight: 800, color: textC }}>"{deleteConfirm.title}"</span>? This action will permanently purge the data from the archive.
               </p>
-            </div>
-            <div className="flex flex-col sm:flex-row items-center justify-end space-y-2 sm:space-y-0 sm:space-x-3">
-              <button
-                onClick={() => setDeleteConfirm(null)}
-                className="w-full sm:w-auto px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => handleDeleteReport(deleteConfirm)}
-                disabled={operationLoading}
-                className="w-full sm:w-auto px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Delete Report
-              </button>
-            </div>
+              <div className="flex gap-4">
+                <button
+                  onClick={() => setDeleteConfirm(null)}
+                  style={{ flex: 1, padding: '16px', borderRadius: 14, background: bg2, color: textC, border: `1px solid ${border}`, cursor: 'pointer', ...bc(13, 800) }}
+                >
+                  DISCARD
+                </button>
+                <button
+                  onClick={() => handleDeleteReport(deleteConfirm)}
+                  style={{ flex: 1, padding: '16px', borderRadius: 14, background: '#ef4444', color: '#fff', border: 'none', cursor: 'pointer', ...bc(13, 800), boxShadow: '0 10px 25px rgba(239,68,68,0.3)' }}
+                >
+                  PURGE DATA
+                </button>
+              </div>
+            </motion.div>
           </div>
-        </div>
-      )}
-      {showCalendar && (
-        <div className="fixed top-0 left-0 w-screen h-screen flex justify-center items-center flex-col bg-black/50">
-          <X className="text-white w-16 h-16" onClick={() => setShowCalendar(false)}></X>
-          <CalendarFilter
-            onDateRangeSelect={handleDateRangeSelect}
-            onClose={() => setShowCalendar(false)}
-          />
-        </div>
-      )}
+        )}
 
-      <style jsx>{`
-        .swal-preview-container .ql-editor {
-          padding: 1rem;
-        }
-        .swal-preview-container .ql-editor h1 {
-          font-size: 2em;
-          font-weight: bold;
-          margin-top: 0.67em;
-          margin-bottom: 0.67em;
-        }
-        .swal-preview-container .ql-editor h2 {
-          font-size: 1.5em;
-          font-weight: bold;
-          margin-top: 0.83em;
-          margin-bottom: 0.83em;
-        }
-        .swal-preview-container .ql-editor h3 {
-          font-size: 1.17em;
-          font-weight: bold;
-          margin-top: 1em;
-          margin-bottom: 1em;
-        }
-        .swal-preview-container .ql-editor ul,
-        .swal-preview-container .ql-editor ol {
-          padding-left: 1.5em;
-          margin-bottom: 1em;
-        }
-        .swal-preview-container .ql-editor ul {
-          list-style-type: disc;
-        }
-        .swal-preview-container .ql-editor ol {
-          list-style-type: decimal;
-        }
-        .swal-preview-container .ql-editor li {
-          margin-bottom: 0.5em;
-        }
-        .swal-preview-container .ql-editor p {
-          margin-bottom: 1em;
-        }
-        .swal-preview-container .ql-editor strong {
-          font-weight: bold;
-        }
-        .swal-preview-container .ql-editor em {
-          font-style: italic;
-        }
-        .swal-preview-container .ql-editor blockquote {
-          border-left: 4px solid #ccc;
-          padding-left: 1em;
-          margin-left: 0;
-          font-style: italic;
-        }
-        .ql-container {
-          min-height: 150px;
-        }
-        .ql-editor {
-          min-height: 150px;
-        }
+        {showCalendar && (
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(10px)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 20 }}>
+            <motion.button 
+              whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
+              onClick={() => setShowCalendar(false)} 
+              style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', marginBottom: 24 }}
+            >
+              <X size={48} />
+            </motion.button>
+            <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }}>
+              <CalendarFilter
+                onDateRangeSelect={handleDateRangeSelect}
+                onClose={() => setShowCalendar(false)}
+              />
+            </motion.div>
+          </div>
+        )}
+
+        {operationStatus && (
+          <motion.div
+            initial={{ opacity: 0, y: 20, x: '-50%' }}
+            animate={{ opacity: 1, y: 0, x: '-50%' }}
+            exit={{ opacity: 0, y: 20, x: '-50%' }}
+            style={{ 
+              position: 'fixed', bottom: 40, left: '50%', zIndex: 100,
+              display: 'flex', alignItems: 'center', gap: 12, padding: '16px 24px', borderRadius: 16,
+              background: operationStatus.type === 'success' ? '#10b981' : operationStatus.type === 'error' ? '#ef4444' : ORG,
+              color: '#fff', ...bc(13, 800), boxShadow: '0 20px 40px rgba(0,0,0,0.2)'
+            }}
+          >
+            {operationStatus.type === 'success' ? <CheckCircle size={20} /> : <AlertCircle size={20} />}
+            {operationStatus.message.toUpperCase()}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <style>{`
+        .ql-editor ul { list-style-type: disc !important; padding-left: 1.5em !important; }
+        .ql-editor ol { list-style-type: decimal !important; padding-left: 1.5em !important; }
+        .ql-editor p { margin-bottom: 1.2em; }
+        .ql-editor strong { font-weight: 800; color: ${textC}; }
+        .ql-editor em { font-style: italic; }
+        .ql-editor blockquote { border-left: 4px solid ${ORG}; padding-left: 1.5em; margin-left: 0; font-style: italic; opacity: 0.8; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: ${border}; border-radius: 10px; }
       `}</style>
     </div>
   );

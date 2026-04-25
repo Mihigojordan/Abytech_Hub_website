@@ -6,22 +6,42 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import demoRequestService from '../../services/demoRequestService';
+import { useDashboardTheme } from '../../utils/dashboardTheme';
+import { ORG, TEAL, bb, bc, ba } from '../../utils/homeConstants';
+
+const getStatusStyle = (status) => {
+  if (status === 'COMPLETED') return { bg: 'rgba(74,222,128,.15)',  color: '#4ade80',  label: 'Completed' };
+  if (status === 'PENDING')   return { bg: 'rgba(232,98,26,.15)',   color: ORG,        label: 'Pending' };
+  if (status === 'CONTACTED') return { bg: 'rgba(26,92,120,.15)',   color: TEAL,       label: 'Contacted' };
+  if (status === 'SCHEDULED') return { bg: 'rgba(26,92,120,.15)',   color: TEAL,       label: 'Scheduled' };
+  if (status === 'CANCELLED') return { bg: 'rgba(232,64,64,.15)',   color: '#e84040',  label: 'Cancelled' };
+  return { bg: 'rgba(128,128,128,.15)', color: '#888', label: status };
+};
+
+const getDemoTypeStyle = (type) => {
+  if (type === 'PRODUCT') return { bg: 'rgba(26,92,120,.15)',  color: TEAL, label: 'Product Demo' };
+  if (type === 'FEATURE') return { bg: 'rgba(26,92,120,.15)',  color: TEAL, label: 'Feature Demo' };
+  if (type === 'CUSTOM')  return { bg: 'rgba(232,98,26,.15)',  color: ORG,  label: 'Custom Demo' };
+  return { bg: 'rgba(128,128,128,.15)', color: '#888', label: type };
+};
 
 const STATUS_CONFIG = {
-  PENDING: { label: 'Pending', color: 'bg-yellow-100 text-yellow-800' },
-  CONTACTED: { label: 'Contacted', color: 'bg-blue-100 text-blue-800' },
-  SCHEDULED: { label: 'Scheduled', color: 'bg-purple-100 text-purple-800' },
-  COMPLETED: { label: 'Completed', color: 'bg-green-100 text-green-800' },
-  CANCELLED: { label: 'Cancelled', color: 'bg-red-100 text-red-800' },
+  PENDING:   { label: 'Pending' },
+  CONTACTED: { label: 'Contacted' },
+  SCHEDULED: { label: 'Scheduled' },
+  COMPLETED: { label: 'Completed' },
+  CANCELLED: { label: 'Cancelled' },
 };
 
 const TYPE_CONFIG = {
-  PRODUCT: { label: 'Product Demo', color: 'bg-blue-100 text-blue-800' },
-  FEATURE: { label: 'Feature Demo', color: 'bg-purple-100 text-purple-800' },
-  CUSTOM: { label: 'Custom Demo', color: 'bg-orange-100 text-orange-800' },
+  PRODUCT: { label: 'Product Demo' },
+  FEATURE: { label: 'Feature Demo' },
+  CUSTOM:  { label: 'Custom Demo' },
 };
 
 const DemoRequestManagement = () => {
+  const { isDark, bg, bg2, bg3, textC, text2, text3, border } = useDashboardTheme();
+
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -36,12 +56,7 @@ const DemoRequestManagement = () => {
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [scheduleData, setScheduleData] = useState({ scheduledAt: '', meetingLink: '' });
   const [stats, setStats] = useState({
-    total: 0,
-    pending: 0,
-    contacted: 0,
-    scheduled: 0,
-    completed: 0,
-    cancelled: 0,
+    total: 0, pending: 0, contacted: 0, scheduled: 0, completed: 0, cancelled: 0,
   });
   const [operationStatus, setOperationStatus] = useState(null);
 
@@ -54,11 +69,7 @@ const DemoRequestManagement = () => {
     try {
       setLoading(true);
       const response = await demoRequestService.getAllDemoRequests({
-        page: currentPage,
-        limit: itemsPerPage,
-        search: searchTerm,
-        status: statusFilter,
-        demoType: typeFilter,
+        page: currentPage, limit: itemsPerPage, search: searchTerm, status: statusFilter, demoType: typeFilter,
       });
       setRequests(response.data || []);
       setTotalPages(response.pagination?.totalPages || 1);
@@ -153,32 +164,50 @@ const DemoRequestManagement = () => {
     return new Date(dateStr).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' });
   };
 
+  const inputStyle = {
+    width: '100%', padding: '8px 12px', fontSize: 13,
+    background: bg3, border: '1px solid ' + border, borderRadius: 4,
+    color: textC, outline: 'none', boxSizing: 'border-box',
+  };
+
+  const statList = [
+    { label: 'Total',     value: stats.total,     colorKey: 'info' },
+    { label: 'Pending',   value: stats.pending,   colorKey: 'warn' },
+    { label: 'Contacted', value: stats.contacted, colorKey: 'info' },
+    { label: 'Scheduled', value: stats.scheduled, colorKey: 'info' },
+    { label: 'Completed', value: stats.completed, colorKey: 'success' },
+    { label: 'Cancelled', value: stats.cancelled, colorKey: 'danger' },
+  ];
+
+  const statColors = {
+    info:    { bg: 'rgba(26,92,120,.15)',  color: TEAL },
+    warn:    { bg: 'rgba(232,98,26,.15)',  color: ORG },
+    success: { bg: 'rgba(74,222,128,.15)', color: '#4ade80' },
+    danger:  { bg: 'rgba(232,64,64,.15)',  color: '#e84040' },
+  };
+
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="min-h-screen" style={{ background: bg, padding: 24 }}>
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Demo Requests</h1>
-        <p className="text-gray-600">Manage demo requests and scheduling</p>
+        <h1 style={{ ...bb(36, { color: ORG, lineHeight: 1, margin: 0 }) }}>Demo Requests</h1>
+        <p style={{ ...ba(13, 400, { color: text2, marginTop: 4 }) }}>Manage demo requests and scheduling</p>
       </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
-        {[
-          { label: 'Total', value: stats.total, color: 'bg-purple-500' },
-          { label: 'Pending', value: stats.pending, color: 'bg-yellow-500' },
-          { label: 'Contacted', value: stats.contacted, color: 'bg-blue-500' },
-          { label: 'Scheduled', value: stats.scheduled, color: 'bg-purple-500' },
-          { label: 'Completed', value: stats.completed, color: 'bg-green-500' },
-          { label: 'Cancelled', value: stats.cancelled, color: 'bg-red-500' },
-        ].map(({ label, value, color }) => (
-          <div key={label} className="bg-white rounded-xl p-4 shadow-sm">
-            <div className={`w-10 h-10 ${color} rounded-lg flex items-center justify-center mb-2`}>
-              <Video className="w-5 h-5 text-white" />
+        {statList.map(({ label, value, colorKey }) => {
+          const cs = statColors[colorKey];
+          return (
+            <div key={label} style={{ background: bg2, border: '1px solid ' + border, borderRadius: 4, padding: 16 }}>
+              <div style={{ width: 40, height: 40, background: cs.bg, borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 8, color: cs.color }}>
+                <Video className="w-5 h-5" />
+              </div>
+              <p style={bb(40, { color: ORG, lineHeight: 1, margin: 0 })}>{value}</p>
+              <p style={bc(10, 700, { letterSpacing: 3, textTransform: 'uppercase', color: text2, margin: 0 })}>{label}</p>
             </div>
-            <p className="text-2xl font-bold text-gray-900">{value}</p>
-            <p className="text-sm text-gray-600">{label}</p>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Operation Status */}
@@ -188,33 +217,40 @@ const DemoRequestManagement = () => {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className={`mb-4 p-4 rounded-lg flex items-center gap-2 ${
-              operationStatus.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-            }`}
+            className="mb-4 flex items-center gap-2 p-4"
+            style={{
+              borderRadius: 4, fontSize: 13, fontWeight: 600, border: '1px solid',
+              ...(operationStatus.type === 'success'
+                ? { background: 'rgba(74,222,128,.15)', borderColor: '#4ade80', color: '#4ade80' }
+                : { background: 'rgba(232,64,64,.15)',  borderColor: '#e84040', color: '#e84040' }),
+            }}
           >
-            {operationStatus.type === 'success' ? <CheckCircle className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
+            {operationStatus.type === 'success'
+              ? <CheckCircle className="w-5 h-5" />
+              : <AlertCircle className="w-5 h-5" />
+            }
             {operationStatus.message}
           </motion.div>
         )}
       </AnimatePresence>
 
       {/* Filters */}
-      <div className="bg-white rounded-xl p-4 shadow-sm mb-6">
+      <div style={{ background: bg2, border: '1px solid ' + border, borderRadius: 4, padding: 16, marginBottom: 24 }}>
         <div className="flex flex-col md:flex-row gap-4">
           <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5" style={{ color: text2 }} />
             <input
               type="text"
               placeholder="Search by name, email, company..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500"
+              style={{ ...inputStyle, paddingLeft: 40 }}
             />
           </div>
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500"
+            style={{ padding: '8px 12px', fontSize: 13, background: bg3, border: '1px solid ' + border, borderRadius: 4, color: textC, outline: 'none' }}
           >
             <option value="">All Status</option>
             {Object.entries(STATUS_CONFIG).map(([key, { label }]) => (
@@ -224,124 +260,144 @@ const DemoRequestManagement = () => {
           <select
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value)}
-            className="px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500"
+            style={{ padding: '8px 12px', fontSize: 13, background: bg3, border: '1px solid ' + border, borderRadius: 4, color: textC, outline: 'none' }}
           >
             <option value="">All Types</option>
             {Object.entries(TYPE_CONFIG).map(([key, { label }]) => (
               <option key={key} value={key}>{label}</option>
             ))}
           </select>
-          <button onClick={loadRequests} className="p-2 border border-gray-200 rounded-lg hover:bg-gray-50">
-            <RefreshCw className="w-5 h-5 text-gray-600" />
+          <button
+            onClick={loadRequests}
+            style={{ padding: '8px 12px', background: bg3, border: '1px solid ' + border, borderRadius: 4, color: textC, cursor: 'pointer' }}
+          >
+            <RefreshCw className="w-5 h-5" />
           </button>
         </div>
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+      <div style={{ background: bg2, border: '1px solid ' + border, borderRadius: 4, overflow: 'hidden' }}>
         {loading ? (
-          <div className="p-8 text-center">
-            <RefreshCw className="w-8 h-8 animate-spin mx-auto text-blue-600" />
-            <p className="mt-2 text-gray-600">Loading requests...</p>
+          <div style={{ padding: 32, textAlign: 'center' }}>
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+              style={{ width: 32, height: 32, borderRadius: '50%', border: `3px solid ${bg3}`, borderTopColor: ORG, margin: '0 auto 12px' }}
+            />
+            <p style={{ ...ba(13, 400, { color: text2 }) }}>Loading requests...</p>
           </div>
         ) : error ? (
-          <div className="p-8 text-center text-red-600">
+          <div style={{ padding: 32, textAlign: 'center', color: '#e84040' }}>
             <AlertCircle className="w-8 h-8 mx-auto mb-2" />
-            {error}
+            <p style={{ fontSize: 13 }}>{error}</p>
           </div>
         ) : requests.length === 0 ? (
-          <div className="p-8 text-center text-gray-500">No demo requests found</div>
+          <div style={{ padding: 32, textAlign: 'center' }}>
+            <p style={{ ...ba(13, 400, { color: text2 }) }}>No demo requests found</p>
+          </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50">
+            <table className="w-full" style={{ fontSize: 13 }}>
+              <thead style={{ background: bg3 }}>
                 <tr>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Contact</th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Company</th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Type</th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Product</th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Status</th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Scheduled</th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Requested</th>
-                  <th className="px-4 py-3 text-right text-sm font-medium text-gray-600">Actions</th>
+                  {['Contact', 'Company', 'Type', 'Product', 'Status', 'Scheduled', 'Requested', 'Actions'].map((h, i) => (
+                    <th
+                      key={h}
+                      style={bc(10, 700, { letterSpacing: 3, textTransform: 'uppercase', color: text2, textAlign: i === 7 ? 'right' : 'left', padding: '12px 16px' })}
+                    >
+                      {h}
+                    </th>
+                  ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
-                {requests.map((request) => (
-                  <tr key={request.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                          <User className="w-5 h-5 text-blue-600" />
+              <tbody>
+                {requests.map((request) => {
+                  const typeStyle = getDemoTypeStyle(request.demoType);
+                  return (
+                    <tr
+                      key={request.id}
+                      style={{ background: bg2, borderBottom: '1px solid ' + border, transition: 'background .15s' }}
+                      onMouseEnter={e => e.currentTarget.style.background = bg3}
+                      onMouseLeave={e => e.currentTarget.style.background = bg2}
+                    >
+                      <td style={{ padding: '12px 16px' }}>
+                        <div className="flex items-center gap-3">
+                          <div style={{ width: 36, height: 36, background: 'rgba(232,98,26,.1)', border: '1px solid rgba(232,98,26,.2)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: ORG, flexShrink: 0 }}>
+                            <User className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <div style={{ ...ba(13, 600, { color: textC }) }}>{request.fullName}</div>
+                            <div style={{ ...ba(11, 400, { color: text2 }) }}>{request.email}</div>
+                          </div>
                         </div>
-                        <div>
-                          <div className="font-medium text-gray-900">{request.fullName}</div>
-                          <div className="text-sm text-gray-500">{request.email}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-600">{request.companyName || '-'}</td>
-                    <td className="px-4 py-3">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${TYPE_CONFIG[request.demoType]?.color}`}>
-                        {TYPE_CONFIG[request.demoType]?.label}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-600">{request.product || '-'}</td>
-                    <td className="px-4 py-3">
-                      <select
-                        value={request.status}
-                        onChange={(e) => handleStatusChange(request.id, e.target.value)}
-                        className={`px-2 py-1 rounded-full text-xs font-medium border-0 ${STATUS_CONFIG[request.status]?.color}`}
-                      >
-                        {Object.entries(STATUS_CONFIG).map(([key, { label }]) => (
-                          <option key={key} value={key}>{label}</option>
-                        ))}
-                      </select>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-600">
-                      {request.scheduledAt ? formatDateTime(request.scheduledAt) : '-'}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-600">{formatDate(request.createdAt)}</td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center justify-end gap-2">
-                        <button
-                          onClick={() => { setSelectedRequest(request); setShowViewModal(true); }}
-                          className="p-1 text-gray-400 hover:text-blue-600"
+                      </td>
+                      <td style={{ padding: '12px 16px', ...ba(13, 400, { color: text2 }) }}>{request.companyName || '-'}</td>
+                      <td style={{ padding: '12px 16px' }}>
+                        <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 600, background: typeStyle.bg, color: typeStyle.color }}>
+                          {typeStyle.label}
+                        </span>
+                      </td>
+                      <td style={{ padding: '12px 16px', ...ba(13, 400, { color: text2 }) }}>{request.product || '-'}</td>
+                      <td style={{ padding: '12px 16px' }}>
+                        <select
+                          value={request.status}
+                          onChange={(e) => handleStatusChange(request.id, e.target.value)}
+                          style={{ padding: '4px 10px', borderRadius: 20, fontSize: 11, fontWeight: 600, border: 'none', cursor: 'pointer', outline: 'none', ...(() => { const s = getStatusStyle(request.status); return { background: s.bg, color: s.color }; })() }}
                         >
-                          <Eye className="w-4 h-4" />
-                        </button>
-                        {request.status !== 'COMPLETED' && request.status !== 'CANCELLED' && (
+                          {Object.entries(STATUS_CONFIG).map(([key, { label }]) => (
+                            <option key={key} value={key}>{label}</option>
+                          ))}
+                        </select>
+                      </td>
+                      <td style={{ padding: '12px 16px', ...ba(13, 400, { color: text2 }) }}>
+                        {request.scheduledAt ? formatDateTime(request.scheduledAt) : '-'}
+                      </td>
+                      <td style={{ padding: '12px 16px', ...ba(13, 400, { color: text2 }) }}>{formatDate(request.createdAt)}</td>
+                      <td style={{ padding: '12px 16px' }}>
+                        <div className="flex items-center justify-end gap-1">
                           <button
-                            onClick={() => {
-                              setSelectedRequest(request);
-                              setScheduleData({
-                                scheduledAt: request.scheduledAt ? new Date(request.scheduledAt).toISOString().slice(0, 16) : '',
-                                meetingLink: request.meetingLink || '',
-                              });
-                              setShowScheduleModal(true);
-                            }}
-                            className="p-1 text-gray-400 hover:text-purple-600"
-                            title="Schedule"
+                            onClick={() => { setSelectedRequest(request); setShowViewModal(true); }}
+                            style={{ background: bg3, border: '1px solid ' + border, borderRadius: 4, padding: '5px 7px', color: TEAL, cursor: 'pointer' }}
                           >
-                            <Calendar className="w-4 h-4" />
+                            <Eye className="w-4 h-4" />
                           </button>
-                        )}
-                        {request.status === 'SCHEDULED' && (
+                          {request.status !== 'COMPLETED' && request.status !== 'CANCELLED' && (
+                            <button
+                              onClick={() => {
+                                setSelectedRequest(request);
+                                setScheduleData({
+                                  scheduledAt: request.scheduledAt ? new Date(request.scheduledAt).toISOString().slice(0, 16) : '',
+                                  meetingLink: request.meetingLink || '',
+                                });
+                                setShowScheduleModal(true);
+                              }}
+                              style={{ background: bg3, border: '1px solid ' + border, borderRadius: 4, padding: '5px 7px', color: text2, cursor: 'pointer' }}
+                              title="Schedule"
+                            >
+                              <Calendar className="w-4 h-4" />
+                            </button>
+                          )}
+                          {request.status === 'SCHEDULED' && (
+                            <button
+                              onClick={() => handleComplete(request.id)}
+                              style={{ background: bg3, border: '1px solid ' + border, borderRadius: 4, padding: '5px 7px', color: '#4ade80', cursor: 'pointer' }}
+                              title="Mark Complete"
+                            >
+                              <CheckCircle className="w-4 h-4" />
+                            </button>
+                          )}
                           <button
-                            onClick={() => handleComplete(request.id)}
-                            className="p-1 text-gray-400 hover:text-green-600"
-                            title="Mark Complete"
+                            onClick={() => handleDelete(request.id)}
+                            style={{ background: bg3, border: '1px solid ' + border, borderRadius: 4, padding: '5px 7px', color: '#e84040', cursor: 'pointer' }}
                           >
-                            <CheckCircle className="w-4 h-4" />
+                            <Trash2 className="w-4 h-4" />
                           </button>
-                        )}
-                        <button onClick={() => handleDelete(request.id)} className="p-1 text-gray-400 hover:text-red-600">
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -349,19 +405,21 @@ const DemoRequestManagement = () => {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100">
+          <div className="flex items-center justify-between px-4 py-3" style={{ borderTop: '1px solid ' + border }}>
             <button
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={currentPage === 1}
-              className="flex items-center gap-1 px-3 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded disabled:opacity-50"
+              className="flex items-center gap-1"
+              style={{ padding: '5px 12px', fontSize: 13, background: bg3, border: '1px solid ' + border, borderRadius: 4, color: text2, cursor: currentPage === 1 ? 'not-allowed' : 'pointer', opacity: currentPage === 1 ? 0.4 : 1 }}
             >
               <ChevronLeft className="w-4 h-4" /> Previous
             </button>
-            <span className="text-sm text-gray-600">Page {currentPage} of {totalPages}</span>
+            <span style={{ ...ba(13, 400, { color: text2 }) }}>Page {currentPage} of {totalPages}</span>
             <button
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
-              className="flex items-center gap-1 px-3 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded disabled:opacity-50"
+              className="flex items-center gap-1"
+              style={{ padding: '5px 12px', fontSize: 13, background: bg3, border: '1px solid ' + border, borderRadius: 4, color: text2, cursor: currentPage === totalPages ? 'not-allowed' : 'pointer', opacity: currentPage === totalPages ? 0.4 : 1 }}
             >
               Next <ChevronRight className="w-4 h-4" />
             </button>
@@ -376,89 +434,102 @@ const DemoRequestManagement = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+            className="fixed inset-0 flex items-center justify-center z-50 p-4"
+            style={{ background: 'rgba(0,0,0,.75)' }}
             onClick={() => setShowViewModal(false)}
           >
             <motion.div
               initial={{ scale: 0.95 }}
               animate={{ scale: 1 }}
               exit={{ scale: 0.95 }}
-              className="bg-white rounded-xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
+              style={{ background: bg2, border: '1px solid ' + border, borderRadius: 4, width: '100%', maxWidth: 520, maxHeight: '90vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex items-center justify-between p-4 border-b">
-                <h2 className="text-lg font-semibold">Demo Request Details</h2>
-                <button onClick={() => setShowViewModal(false)} className="p-1 hover:bg-gray-100 rounded">
+              {/* Modal Header */}
+              <div className="flex items-center justify-between p-4" style={{ background: bg3, borderBottom: '1px solid ' + border }}>
+                <h2 style={{ ...ba(15, 700, { color: textC, margin: 0 }) }}>Demo Request Details</h2>
+                <button
+                  onClick={() => setShowViewModal(false)}
+                  style={{ background: bg2, border: '1px solid ' + border, borderRadius: 4, padding: 6, color: text2, cursor: 'pointer' }}
+                >
                   <X className="w-5 h-5" />
                 </button>
               </div>
-              <div className="p-4 space-y-4">
+              <div className="p-4 space-y-4 overflow-y-auto">
                 <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
-                    <User className="w-8 h-8 text-blue-600" />
+                  <div style={{ width: 56, height: 56, background: 'rgba(232,98,26,.1)', border: '1px solid rgba(232,98,26,.2)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: ORG, flexShrink: 0 }}>
+                    <User className="w-7 h-7" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold text-gray-900">{selectedRequest.fullName}</h3>
-                    <span className={`inline-block mt-1 px-2 py-1 rounded-full text-xs font-medium ${STATUS_CONFIG[selectedRequest.status]?.color}`}>
-                      {STATUS_CONFIG[selectedRequest.status]?.label}
-                    </span>
+                    <h3 style={{ ...ba(18, 700, { color: textC, margin: 0 }) }}>{selectedRequest.fullName}</h3>
+                    {(() => { const s = getStatusStyle(selectedRequest.status); return (
+                      <span style={{ display: 'inline-block', marginTop: 6, padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 600, background: s.bg, color: s.color }}>
+                        {s.label}
+                      </span>
+                    ); })()}
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="flex items-center gap-2">
-                    <Mail className="w-4 h-4 text-gray-400" />
-                    <span className="text-gray-700">{selectedRequest.email}</span>
+                    <Mail className="w-4 h-4" style={{ color: text2 }} />
+                    <span style={{ ...ba(13, 400, { color: textC }) }}>{selectedRequest.email}</span>
                   </div>
                   {selectedRequest.phone && (
                     <div className="flex items-center gap-2">
-                      <Phone className="w-4 h-4 text-gray-400" />
-                      <span className="text-gray-700">{selectedRequest.phone}</span>
+                      <Phone className="w-4 h-4" style={{ color: text2 }} />
+                      <span style={{ ...ba(13, 400, { color: textC }) }}>{selectedRequest.phone}</span>
                     </div>
                   )}
                   {selectedRequest.companyName && (
                     <div className="flex items-center gap-2">
-                      <Building className="w-4 h-4 text-gray-400" />
-                      <span className="text-gray-700">{selectedRequest.companyName}</span>
+                      <Building className="w-4 h-4" style={{ color: text2 }} />
+                      <span style={{ ...ba(13, 400, { color: textC }) }}>{selectedRequest.companyName}</span>
                     </div>
                   )}
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 pt-4 border-t">
+                <div className="grid grid-cols-2 gap-4 pt-4" style={{ borderTop: '1px solid ' + border }}>
                   <div>
-                    <label className="text-sm font-medium text-gray-500">Demo Type</label>
-                    <p className="text-gray-700">{TYPE_CONFIG[selectedRequest.demoType]?.label}</p>
+                    <label style={bc(10, 700, { letterSpacing: 2, textTransform: 'uppercase', color: text2, display: 'block', marginBottom: 4 })}>Demo Type</label>
+                    <p style={{ ...ba(13, 400, { color: textC }) }}>{TYPE_CONFIG[selectedRequest.demoType]?.label}</p>
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-gray-500">Product</label>
-                    <p className="text-gray-700">{selectedRequest.product || '-'}</p>
+                    <label style={bc(10, 700, { letterSpacing: 2, textTransform: 'uppercase', color: text2, display: 'block', marginBottom: 4 })}>Product</label>
+                    <p style={{ ...ba(13, 400, { color: textC }) }}>{selectedRequest.product || '-'}</p>
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-gray-500">Preferred Date</label>
-                    <p className="text-gray-700">{formatDate(selectedRequest.preferredDate)}</p>
+                    <label style={bc(10, 700, { letterSpacing: 2, textTransform: 'uppercase', color: text2, display: 'block', marginBottom: 4 })}>Preferred Date</label>
+                    <p style={{ ...ba(13, 400, { color: textC }) }}>{formatDate(selectedRequest.preferredDate)}</p>
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-gray-500">Preferred Time</label>
-                    <p className="text-gray-700">{selectedRequest.preferredTime || '-'}</p>
+                    <label style={bc(10, 700, { letterSpacing: 2, textTransform: 'uppercase', color: text2, display: 'block', marginBottom: 4 })}>Preferred Time</label>
+                    <p style={{ ...ba(13, 400, { color: textC }) }}>{selectedRequest.preferredTime || '-'}</p>
                   </div>
                 </div>
 
                 {selectedRequest.message && (
-                  <div className="pt-4 border-t">
-                    <label className="text-sm font-medium text-gray-500">Message</label>
-                    <p className="text-gray-700 mt-1">{selectedRequest.message}</p>
+                  <div className="pt-4" style={{ borderTop: '1px solid ' + border }}>
+                    <label style={bc(10, 700, { letterSpacing: 2, textTransform: 'uppercase', color: text2, display: 'block', marginBottom: 4 })}>Message</label>
+                    <p style={{ ...ba(13, 400, { color: textC }) }}>{selectedRequest.message}</p>
                   </div>
                 )}
 
                 {selectedRequest.scheduledAt && (
-                  <div className="pt-4 border-t">
-                    <label className="text-sm font-medium text-gray-500">Scheduled Demo</label>
-                    <p className="text-gray-700 flex items-center gap-2 mt-1">
+                  <div className="pt-4" style={{ borderTop: '1px solid ' + border }}>
+                    <label style={bc(10, 700, { letterSpacing: 2, textTransform: 'uppercase', color: text2, display: 'block', marginBottom: 4 })}>Scheduled Demo</label>
+                    <p className="flex items-center gap-2" style={{ ...ba(13, 400, { color: textC }) }}>
                       <Calendar className="w-4 h-4" />
                       {formatDateTime(selectedRequest.scheduledAt)}
                     </p>
                     {selectedRequest.meetingLink && (
-                      <a href={selectedRequest.meetingLink} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline flex items-center gap-1 mt-1">
+                      <a
+                        href={selectedRequest.meetingLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1 mt-1"
+                        style={{ color: TEAL, fontSize: 13 }}
+                      >
                         <Video className="w-4 h-4" /> Join Meeting
                       </a>
                     )}
@@ -466,9 +537,9 @@ const DemoRequestManagement = () => {
                 )}
 
                 {selectedRequest.assignedTo && (
-                  <div className="pt-4 border-t">
-                    <label className="text-sm font-medium text-gray-500">Assigned To</label>
-                    <p className="text-gray-700">{selectedRequest.assignedTo.adminName}</p>
+                  <div className="pt-4" style={{ borderTop: '1px solid ' + border }}>
+                    <label style={bc(10, 700, { letterSpacing: 2, textTransform: 'uppercase', color: text2, display: 'block', marginBottom: 4 })}>Assigned To</label>
+                    <p style={{ ...ba(13, 400, { color: textC }) }}>{selectedRequest.assignedTo.adminName}</p>
                   </div>
                 )}
               </div>
@@ -484,54 +555,59 @@ const DemoRequestManagement = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+            className="fixed inset-0 flex items-center justify-center z-50 p-4"
+            style={{ background: 'rgba(0,0,0,.75)' }}
             onClick={() => setShowScheduleModal(false)}
           >
             <motion.div
               initial={{ scale: 0.95 }}
               animate={{ scale: 1 }}
               exit={{ scale: 0.95 }}
-              className="bg-white rounded-xl w-full max-w-md"
+              style={{ background: bg2, border: '1px solid ' + border, borderRadius: 4, width: '100%', maxWidth: 440 }}
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex items-center justify-between p-4 border-b">
-                <h2 className="text-lg font-semibold">Schedule Demo</h2>
-                <button onClick={() => setShowScheduleModal(false)} className="p-1 hover:bg-gray-100 rounded">
+              {/* Modal Header */}
+              <div className="flex items-center justify-between p-4" style={{ background: bg3, borderBottom: '1px solid ' + border }}>
+                <h2 style={{ ...ba(15, 700, { color: textC, margin: 0 }) }}>Schedule Demo</h2>
+                <button
+                  onClick={() => setShowScheduleModal(false)}
+                  style={{ background: bg2, border: '1px solid ' + border, borderRadius: 4, padding: 6, color: text2, cursor: 'pointer' }}
+                >
                   <X className="w-5 h-5" />
                 </button>
               </div>
               <div className="p-4 space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Date & Time *</label>
+                  <label style={bc(10, 700, { letterSpacing: 2, textTransform: 'uppercase', color: text2, display: 'block', marginBottom: 6 })}>Date & Time *</label>
                   <input
                     type="datetime-local"
                     required
                     value={scheduleData.scheduledAt}
                     onChange={(e) => setScheduleData({ ...scheduleData, scheduledAt: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    style={inputStyle}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Meeting Link</label>
+                  <label style={bc(10, 700, { letterSpacing: 2, textTransform: 'uppercase', color: text2, display: 'block', marginBottom: 6 })}>Meeting Link</label>
                   <input
                     type="url"
                     value={scheduleData.meetingLink}
                     onChange={(e) => setScheduleData({ ...scheduleData, meetingLink: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    style={inputStyle}
                     placeholder="https://meet.google.com/..."
                   />
                 </div>
-                <div className="flex justify-end gap-2 pt-4">
+                <div className="flex justify-end gap-2 pt-4" style={{ borderTop: '1px solid ' + border }}>
                   <button
                     onClick={() => setShowScheduleModal(false)}
-                    className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+                    style={{ padding: '8px 16px', fontSize: 13, fontWeight: 600, background: bg3, border: '1px solid ' + border, borderRadius: 4, color: textC, cursor: 'pointer' }}
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleSchedule}
                     disabled={!scheduleData.scheduledAt}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                    style={{ padding: '8px 16px', fontSize: 13, fontWeight: 700, background: ORG, color: '#fff', border: 'none', borderRadius: 4, cursor: !scheduleData.scheduledAt ? 'not-allowed' : 'pointer', opacity: !scheduleData.scheduledAt ? 0.5 : 1 }}
                   >
                     Schedule Demo
                   </button>

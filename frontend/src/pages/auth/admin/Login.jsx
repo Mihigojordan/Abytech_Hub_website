@@ -1,18 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import AOS from 'aos';
-import 'aos/dist/aos.css';
-import { Eye, EyeOff, Shield, Lock } from 'lucide-react';
+import { Eye, EyeOff, Lock } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import useAdminAuth from '../../../context/AdminAuthContext';
 import Logo from '../../../assets/tran.png';
+import { useDashboardTheme } from '../../../utils/dashboardTheme';
+import { ORG, TEAL, bc, ba } from '../../../utils/homeConstants';
+
+const GOOGLE_SVG = (
+  <svg width={18} height={18} viewBox="0 0 24 24" fill="none">
+    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-1.02.68-2.33 1.08-3.71 1.08-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+  </svg>
+);
 
 const AdminLogin = () => {
   const { login, loginWithGoogle, isLoading: authLoading, isAuthenticated } = useAdminAuth();
+  const { bg, bg3, textC, text2, text3, border } = useDashboardTheme();
 
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-  });
+  const [formData, setFormData] = useState({ email: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState({});
@@ -22,7 +29,6 @@ const AdminLogin = () => {
   const location = useLocation();
 
   useEffect(() => {
-    AOS.init({ duration: 1000, once: true, easing: 'ease-in-out' });
     if (isAuthenticated && !authLoading) {
       const from = location.state?.from?.pathname || '/admin/dashboard';
       navigate(from);
@@ -42,14 +48,9 @@ const AdminLogin = () => {
   };
 
   const validateField = (name, value) => {
-    switch (name) {
-      case 'email':
-        return validateEmail(value);
-      case 'password':
-        return validatePassword(value);
-      default:
-        return '';
-    }
+    if (name === 'email') return validateEmail(value);
+    if (name === 'password') return validatePassword(value);
+    return '';
   };
 
   const handleInputChange = (e) => {
@@ -57,57 +58,40 @@ const AdminLogin = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
     setTouched((prev) => ({ ...prev, [name]: true }));
     if (touched[name] || value !== '') {
-      const error = validateField(name, value);
-      setErrors((prev) => ({ ...prev, [name]: error }));
+      setErrors((prev) => ({ ...prev, [name]: validateField(name, value) }));
     }
   };
 
   const handleBlur = (e) => {
     const { name, value } = e.target;
     setTouched((prev) => ({ ...prev, [name]: true }));
-    const error = validateField(name, value);
-    setErrors((prev) => ({ ...prev, [name]: error }));
+    setErrors((prev) => ({ ...prev, [name]: validateField(name, value) }));
   };
 
   const validateForm = () => {
     const newErrors = {};
     newErrors.email = validateEmail(formData.email);
     newErrors.password = validatePassword(formData.password);
-    Object.keys(newErrors).forEach((key) => {
-      if (!newErrors[key]) delete newErrors[key];
-    });
+    Object.keys(newErrors).forEach((key) => { if (!newErrors[key]) delete newErrors[key]; });
     return newErrors;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setTouched({
-      email: true,
-      password: true,
-    });
+    setTouched({ email: true, password: true });
     const newErrors = validateForm();
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      return;
-    }
+    if (Object.keys(newErrors).length > 0) { setErrors(newErrors); return; }
     setIsLoading(true);
     setErrors({});
     try {
-      const response = await login({
-        adminEmail: formData.email,
-        password: formData.password,
-      });
+      const response = await login({ adminEmail: formData.email, password: formData.password });
       if (response.authenticated) {
-        const from = location.state?.from?.pathname || '/admin/dashboard';
-        navigate(from);
+        navigate(location.state?.from?.pathname || '/admin/dashboard');
       } else {
         setErrors({ general: response.message || 'Login failed' });
       }
     } catch (error) {
-      console.error('Login error:', error);
-      setErrors({
-        general: error.message || 'An error occurred during login. Please try again.',
-      });
+      setErrors({ general: error.message || 'An error occurred. Please try again.' });
     } finally {
       setIsLoading(false);
     }
@@ -115,235 +99,188 @@ const AdminLogin = () => {
 
   const handleGoogleLogin = () => {
     setIsLoading(true);
-    try {
-      loginWithGoogle(false);
-    } catch (error) {
-      setErrors({ general: 'Google login failed. Please try again.' });
-      setIsLoading(false);
-    }
+    try { loginWithGoogle(false); }
+    catch { setErrors({ general: 'Google login failed. Please try again.' }); setIsLoading(false); }
   };
 
-  const isFormValid = () => {
-    return !!formData.email && !!formData.password && !errors.email && !errors.password;
-  };
+  const isFormValid = () => !!formData.email && !!formData.password && !errors.email && !errors.password;
+
+  const inputStyle = (hasError) => ({
+    width: '100%', padding: '10px 12px', borderRadius: 4, outline: 'none',
+    background: bg3, border: `1px solid ${hasError ? '#e84040' : border}`,
+    ...ba(14, 400, { color: textC }),
+    transition: 'border-color .15s',
+  });
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white p-3 sm:p-4">
-      <div className=" w-[500px]">
-        <div className="bg-white rounded-3xl shadow-2xl border border-gray-200 p-6 sm:p-8">
-          {/* Header */}
-          <div className="text-center mb-6">
-            <div className="flex items-center justify-center mb-4">
-              <img src={Logo} alt="Fine Fish Logo" className="h-12 sm:h-14" />
+    <div className="min-h-screen flex" style={{ background: bg }}>
+
+      {/* LEFT — Brand panel (hidden on mobile) */}
+      <div className="hidden lg:flex flex-col justify-between py-16 px-14 shrink-0" style={{ background: "#0b1923", width: "clamp(280px,35%,480px)", borderRight: `1px solid rgba(255,255,255,.07)` }}>
+        {/* Top label */}
+        <div style={{ ...bc(10, 700, { color: ORG, letterSpacing: 5, textTransform: 'uppercase' }) }}>
+          ABYTECH-HUB &nbsp;·&nbsp; ADMIN
+        </div>
+
+        {/* Middle copy */}
+        <div>
+          <img src={Logo} alt="AbyTech" style={{ width: 56, height: 56, objectFit: 'contain', marginBottom: 28 }} />
+          <div style={{ fontFamily: "'Georgia,'Times New Roman',serif", fontSize: 'clamp(36px,4.5vw,64px)', fontWeight: 700, color: '#fff', lineHeight: 1.05 }}>
+            Welcome<br />Back.
+          </div>
+          <div style={{ fontFamily: "'Georgia,'Times New Roman',serif", fontSize: 'clamp(36px,4.5vw,64px)', fontWeight: 700, color: ORG, lineHeight: 1.05, fontStyle: 'italic' }}>
+            Admin.
+          </div>
+          <div style={{ width: 40, height: 2, background: 'rgba(255,255,255,.2)', marginTop: 20 }} />
+          <p style={{ ...ba(14, 300, { color: 'rgba(255,255,255,.5)', lineHeight: 1.85, marginTop: 16 }) }}>
+            Access your portal to manage operations, reports, and your team — all in one place.
+          </p>
+        </div>
+
+        {/* Bottom site label */}
+        <div style={{ ...bc(10, 700, { color: 'rgba(255,255,255,.3)', letterSpacing: 4, textTransform: 'uppercase' }) }}>
+          ABYTECHHUB.COM
+        </div>
+
+        {/* Left edge accent bar */}
+        <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 3, background: `linear-gradient(180deg,${ORG},${TEAL})` }} />
+      </div>
+
+      {/* RIGHT — Form panel */}
+      <div className="flex-1 flex items-center justify-center px-5 sm:px-10 py-12">
+        <div style={{ width: '100%', maxWidth: 440 }}>
+
+          {/* Mobile logo */}
+          <div className="flex items-center gap-3 mb-8 lg:hidden">
+            <img src={Logo} alt="AbyTech" style={{ width: 40, height: 40, objectFit: 'contain' }} />
+            <div>
+              <div style={{ ...bc(13, 700, { color: textC, letterSpacing: 1 }) }}>ABYTECH-HUB</div>
+              <div style={{ ...bc(9, 600, { color: ORG, letterSpacing: 3, textTransform: 'uppercase' }) }}>Admin Portal</div>
             </div>
-         
-            <h2 className="text-2xl sm:text-3xl font-bold mb-1" style={{ color: 'rgb(81, 96, 146)' }}>
-              Admin Login
-            </h2>
-            <p className="text-sm text-gray-600">Sign in to access your dashboard</p>
           </div>
 
-          {/* Error Message */}
+          {/* Heading */}
+          <div style={{ marginBottom: 28 }}>
+            <div style={{ ...bc(10, 700, { color: ORG, letterSpacing: 5, textTransform: 'uppercase', marginBottom: 6 }) }}>Admin Login</div>
+            <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 'clamp(32px,5vw,52px)', lineHeight: .9, letterSpacing: 2, color: textC }}>
+              SIGN IN
+            </div>
+            <p style={{ ...ba(13, 300, { color: text2, marginTop: 8 }) }}>Enter your credentials to continue</p>
+          </div>
+
+          {/* Error banner */}
           {errors.general && (
-            <div className="mb-4 p-2.5 bg-red-50 border border-red-200 rounded-xl flex items-start space-x-2">
-              <span className="text-red-500 text-sm mt-0.5">⚠</span>
-              <p className="text-xs text-red-700 flex-1">{errors.general}</p>
+            <div style={{ marginBottom: 16, padding: '10px 14px', borderRadius: 4, background: 'rgba(232,64,64,.1)', border: '1px solid rgba(232,64,64,.3)', ...ba(13, 400, { color: '#e84040' }) }}>
+              ⚠ {errors.general}
             </div>
           )}
 
-          {/* Login Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Email Field */}
-            <div>
-              <label htmlFor="email" className="block text-xs font-semibold text-gray-700 mb-1.5">
-                Email Address
-              </label>
+          {/* Form */}
+          <form onSubmit={handleSubmit}>
+            {/* Email */}
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ ...bc(10, 700, { color: text2, letterSpacing: 3, textTransform: 'uppercase', display: 'block', marginBottom: 6 }) }}>Email Address</label>
               <input
                 type="email"
-                id="email"
                 name="email"
                 value={formData.email}
                 onChange={handleInputChange}
-                
+                onBlur={handleBlur}
                 disabled={isLoading || authLoading}
-                className={`w-full px-3 py-2.5 text-sm border rounded-xl transition-all disabled:bg-gray-50 disabled:cursor-not-allowed ${
-                  errors.email && touched.email
-                    ? 'border-red-300 bg-red-50 focus:border-red-500'
-                    : 'border-gray-300'
-                }`}
-                style={!(errors.email && touched.email) ? {} : {}}
-                onFocus={(e) => {
-                  if (!(errors.email && touched.email)) {
-                    e.target.style.borderColor = 'rgb(81, 96, 146)';
-                    e.target.style.outline = 'none';
-                    e.target.style.boxShadow = '0 0 0 3px rgba(81, 96, 146, 0.1)';
-                  }
-                }}
-                onBlur={(e) => {
-                  handleBlur(e);
-                  if (!(errors.email && touched.email)) {
-                    e.target.style.borderColor = '';
-                    e.target.style.boxShadow = '';
-                  }
-                }}
                 placeholder="admin@example.com"
+                style={inputStyle(errors.email && touched.email)}
               />
               {errors.email && touched.email && (
-                <p className="mt-1.5 text-xs text-red-600 flex items-center">
-                  <span className="mr-1">⚠</span> {errors.email}
-                </p>
+                <div style={{ ...ba(11, 400, { color: '#e84040', marginTop: 4 }) }}>⚠ {errors.email}</div>
               )}
             </div>
 
-            {/* Password Field */}
-            <div>
-              <label htmlFor="password" className="block text-xs font-semibold text-gray-700 mb-1.5">
-                Password
-              </label>
-              <div className="relative">
+            {/* Password */}
+            <div style={{ marginBottom: 24 }}>
+              <label style={{ ...bc(10, 700, { color: text2, letterSpacing: 3, textTransform: 'uppercase', display: 'block', marginBottom: 6 }) }}>Password</label>
+              <div style={{ position: 'relative' }}>
                 <input
                   type={showPassword ? 'text' : 'password'}
-                  id="password"
                   name="password"
                   value={formData.password}
                   onChange={handleInputChange}
-                  
+                  onBlur={handleBlur}
                   disabled={isLoading || authLoading}
-                  className={`w-full px-3 py-2.5 pr-10 text-sm border rounded-xl transition-all disabled:bg-gray-50 disabled:cursor-not-allowed ${
-                    errors.password && touched.password
-                      ? 'border-red-300 bg-red-50 focus:border-red-500'
-                      : 'border-gray-300'
-                  }`}
-                  onFocus={(e) => {
-                    if (!(errors.password && touched.password)) {
-                      e.target.style.borderColor = 'rgb(81, 96, 146)';
-                      e.target.style.outline = 'none';
-                      e.target.style.boxShadow = '0 0 0 3px rgba(81, 96, 146, 0.1)';
-                    }
-                  }}
-                  onBlur={(e) => {
-                    handleBlur(e);
-                    if (!(errors.password && touched.password)) {
-                      e.target.style.borderColor = '';
-                      e.target.style.boxShadow = '';
-                    }
-                  }}
                   placeholder="••••••••"
+                  style={{ ...inputStyle(errors.password && touched.password), paddingRight: 40 }}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  disabled={isLoading || authLoading}
-                  className="absolute right-2.5 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 disabled:cursor-not-allowed transition-colors"
+                  style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', padding: 2 }}
                 >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  {showPassword ? <EyeOff size={15} color={text2} /> : <Eye size={15} color={text2} />}
                 </button>
               </div>
               {errors.password && touched.password && (
-                <p className="mt-1.5 text-xs text-red-600 flex items-center">
-                  <span className="mr-1">⚠</span> {errors.password}
-                </p>
+                <div style={{ ...ba(11, 400, { color: '#e84040', marginTop: 4 }) }}>⚠ {errors.password}</div>
               )}
             </div>
 
-            {/* Submit Button */}
+            {/* Submit */}
             <button
               type="submit"
               disabled={isLoading || authLoading || !isFormValid()}
-              className="w-full text-white py-2.5 px-4 rounded-xl transition-all font-semibold text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shadow-lg"
-              style={{ 
-                backgroundColor: 'rgb(81, 96, 146)',
-                boxShadow: '0 10px 25px -5px rgba(81, 96, 146, 0.3)'
-              }}
-              onMouseEnter={(e) => {
-                if (!isLoading && !authLoading && isFormValid()) {
-                  e.target.style.backgroundColor = 'rgb(71, 86, 136)';
-                }
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.backgroundColor = 'rgb(81, 96, 146)';
+              style={{
+                width: '100%', padding: '12px 0', borderRadius: 4, border: 'none', cursor: isLoading || authLoading || !isFormValid() ? 'not-allowed' : 'pointer',
+                background: ORG, opacity: isLoading || authLoading || !isFormValid() ? .5 : 1,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                ...bc(13, 700, { color: '#fff', letterSpacing: 2, textTransform: 'uppercase' }),
+                transition: 'opacity .15s',
               }}
             >
               {isLoading || authLoading ? (
                 <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                  Signing in...
+                  <div style={{ width: 14, height: 14, border: '2px solid rgba(255,255,255,.4)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+                  Signing in…
                 </>
               ) : (
                 <>
-                  <Lock className="w-4 h-4 mr-2" />
+                  <Lock size={14} />
                   Sign In
                 </>
               )}
             </button>
 
             {/* Divider */}
-            <div className="relative my-4">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-200"></div>
-              </div>
-              <div className="relative flex justify-center text-xs">
-                <span className="px-3 bg-white text-gray-500 font-medium">OR</span>
-              </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '20px 0' }}>
+              <div style={{ flex: 1, height: 1, background: border }} />
+              <span style={{ ...bc(10, 700, { color: text3, letterSpacing: 3 }) }}>OR</span>
+              <div style={{ flex: 1, height: 1, background: border }} />
             </div>
           </form>
 
-          {/* Google Login Button */}
+          {/* Google button */}
           <button
             type="button"
             onClick={handleGoogleLogin}
             disabled={isLoading || authLoading}
-            className="w-full flex items-center justify-center bg-white border-2 border-gray-300 text-gray-700 py-2.5 px-4 rounded-xl font-semibold hover:border-gray-400 focus:outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md text-sm"
+            style={{
+              width: '100%', padding: '11px 0', borderRadius: 4, cursor: isLoading || authLoading ? 'not-allowed' : 'pointer',
+              background: 'transparent', border: `1px solid ${border}`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+              ...ba(13, 500, { color: textC }),
+              opacity: isLoading || authLoading ? .5 : 1, transition: 'border-color .15s',
+            }}
           >
-            <svg
-              className="w-4 h-4 mr-2"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                fill="#4285F4"
-              />
-              <path
-                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-1.02.68-2.33 1.08-3.71 1.08-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                fill="#34A853"
-              />
-              <path
-                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"
-                fill="#FBBC05"
-              />
-              <path
-                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                fill="#EA4335"
-              />
-            </svg>
-            {isLoading || authLoading ? (
-              <>
-                <div className="w-4 h-4 border-2 border-gray-500 border-t-transparent rounded-full animate-spin mr-2"></div>
-                Signing in...
-              </>
-            ) : (
-              'Sign in with Google'
-            )}
+            {GOOGLE_SVG}
+            {isLoading || authLoading ? 'Signing in…' : 'Sign in with Google'}
           </button>
+
         </div>
       </div>
 
-      {/* Google One Tap */}
+      {/* Google One Tap (hidden) */}
       <div id="g_id_onload"
         data-client_id={import.meta.env.VITE_ADMIN_CLIENT_ID}
         data-login_uri={import.meta.env.VITE_ADMIN_CALLBACK_URL}
-        data-auto_prompt="false">
-      </div>
-
-      <div className="g_id_signin"
-        data-type="standard"
-        data-shape="rectangular"
-        data-theme="filled_black"
-        data-text="signin_with"
-        data-size="large">
-      </div>
+        data-auto_prompt="false" />
+      <div className="g_id_signin" data-type="standard" data-shape="rectangular" data-theme="filled_black" data-text="signin_with" data-size="large" />
     </div>
   );
 };

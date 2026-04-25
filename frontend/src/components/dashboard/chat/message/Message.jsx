@@ -1,9 +1,12 @@
 import React from 'react';
-import { Check } from 'lucide-react';
+import { Check, CornerUpLeft } from 'lucide-react';
 import Avatar from '../ui/Avatar';
 import TextMessage from './TextMessage';
 import CombinedMessage from './CombinedMessage';
 import useAdminAuth from '../../../../context/AdminAuthContext';
+import { useDashboardTheme } from '../../../../utils/dashboardTheme';
+import { ORG, TEAL, bb, bc, ba } from '../../../../utils/homeConstants';
+import { motion } from 'framer-motion';
 
 /**
  * Individual message wrapper component
@@ -22,6 +25,7 @@ const Message = ({
     scrollToMessage
 }) => {
     const { user: currentUser } = useAdminAuth();
+    const { bg, bg2, bg3, textC, text2, text3, border } = useDashboardTheme();
 
     const handleClick = () => {
         if (selectionMode) {
@@ -32,7 +36,7 @@ const Message = ({
     const handleContextMenu = (e) => {
         e.preventDefault();
         if (!selectionMode) {
-            onToggleSelection(message.id, true); // Start selection mode
+            onToggleSelection(message.id, true);
         }
     };
 
@@ -40,99 +44,118 @@ const Message = ({
     const isTextOnly = message.type === 'text';
     const isCombined = message.type === 'combined' || message.images || message.files;
 
-
     return (
         <div
             ref={(el) => setMessageRef && setMessageRef(message.id, el)}
             data-message-id={message.id}
-            className={`flex ${message.isSent ? 'justify-end' : 'justify-start'} ${selectionMode ? 'cursor-pointer' : ''
-                } ${isSelected ? 'bg-dashboard-50 -mx-2 px-2 py-2 rounded-lg' : ''} transition-all duration-200`}
             onClick={handleClick}
             onContextMenu={handleContextMenu}
+            style={{
+                display: 'flex',
+                justifyContent: message.isSent ? 'flex-end' : 'flex-start',
+                padding: '4px 32px',
+                width: '100%',
+                position: 'relative',
+                background: isSelected ? 'rgba(232,98,26,.05)' : 'transparent',
+                transition: 'all 0.2s',
+                cursor: selectionMode ? 'pointer' : 'default'
+            }}
         >
             {/* Selection checkbox */}
             {selectionMode && (
-                <div className="flex items-center mr-3">
-                    <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-200 ${isSelected ? 'bg-dashboard-600 border-dashboard-600 scale-110' : 'border-gray-300'
-                        }`}>
-                        {isSelected && <Check className="w-4 h-4 text-white" />}
+                <div style={{ display: 'flex', alignItems: 'center', marginRight: 16 }}>
+                    <div style={{ 
+                        width: 20, 
+                        height: 20, 
+                        borderRadius: 4, 
+                        border: `1px solid ${isSelected ? ORG : border}`, 
+                        background: isSelected ? ORG : 'transparent',
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center',
+                        transition: 'all 0.2s'
+                    }}>
+                        {isSelected && <Check style={{ width: 12, height: 12, color: '#fff' }} />}
                     </div>
                 </div>
             )}
 
-            {/* Sender avatar (for received messages) */}
-            {!message.isSent && (
-                <Avatar
-                    avatar={message.avatar || conversation?.avatar}
-                    initial={message.initial || conversation?.initial}
-                    name={message.sender}
-                    size="sm"
-                    className="mr-3 flex-shrink-0"
-                />
-            )}
-
-            {/* Message content */}
-            <div className={`max-w-md ${message.isSent ? 'items-end' : 'items-start'} flex flex-col`}>
-                {!message.isSent && (
-                    <span className="text-xs text-gray-500 mb-1 ml-1">{message.sender}</span>
-                )}
-
-                {/* Reply indicator */}
-                {message.replyTo && (
-                    <div
-                        className={`${message.isSent ? 'bg-gray-200' : 'bg-dashboard-500/30'} rounded-lg px-3 py-2 mb-2 border-l-2 ${message.isSent ? 'border-dashboard-600' : 'border-white'} cursor-pointer hover:opacity-80 transition-opacity`}
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            if (scrollToMessage && message.replyTo.id) {
-                                scrollToMessage(message.replyTo.id);
-                            }
-                        }}
-                    >
-                        <p className={`text-xs ${message.isSent ? 'text-gray-600' : 'text-white/80'} font-medium mb-1`}>
-                            Reply to {message.replyTo.sender}
-                        </p>
-                        <p className={`text-xs ${message.isSent ? 'text-gray-700' : 'text-white/90'} truncate`}>
-                            {message.replyTo.type === 'image' && '📷 Image'}
-                            {message.replyTo.type === 'file' && '📎 File'}
-                            {(message.replyTo.type === 'text' || message.replyTo.type === 'combined') &&
-                                (message.replyTo.content || 'Media')}
-                        </p>
-                    </div>
-                )}
-
-                {/* Render appropriate message type */}
-                {isCombined ? (
-                    <CombinedMessage
-                        message={message}
-                        onMenuAction={onAction}
-                        showMenu={showMenu}
-                        setShowMenu={setShowMenu}
-                        onMediaView={onMediaView}
-                        selectionMode={selectionMode}
-                        isGroup={conversation?.isGroup || false}
+            <div style={{ 
+                display: 'flex', 
+                flexDirection: message.isSent ? 'row-reverse' : 'row', 
+                gap: 12, 
+                maxWidth: '85%',
+                alignItems: 'flex-end'
+            }}>
+                {/* Avatar */}
+                <div style={{ flexShrink: 0 }}>
+                    <Avatar
+                        avatar={message.isSent ? currentUser?.profileImage : (message.avatar || conversation?.avatar)}
+                        initial={message.isSent ? currentUser?.name?.charAt(0) : (message.initial || conversation?.initial)}
+                        name={message.isSent ? 'You' : message.sender}
+                        size="xs"
                     />
-                ) : isTextOnly ? (
-                    <TextMessage
-                        message={message}
-                        onMenuAction={onAction}
-                        showMenu={showMenu}
-                        setShowMenu={setShowMenu}
-                        selectionMode={selectionMode}
-                        isGroup={conversation?.isGroup || false}
-                    />
-                ) : null}
+                </div>
+
+                {/* Content Area */}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: message.isSent ? 'flex-end' : 'flex-start', minWidth: 0 }}>
+                    {!message.isSent && (
+                        <span style={{ ...ba(11, 600, { color: text3, marginBottom: 4, marginLeft: 4 }) }}>{message.sender}</span>
+                    )}
+
+                    {/* Reply indicator */}
+                    {message.replyTo && (
+                        <div
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                if (scrollToMessage && message.replyTo.id) {
+                                    scrollToMessage(message.replyTo.id);
+                                }
+                            }}
+                            style={{
+                                background: bg2,
+                                borderLeft: `2px solid ${ORG}`,
+                                borderRadius: 4,
+                                padding: '6px 12px',
+                                marginBottom: 4,
+                                cursor: 'pointer',
+                                opacity: 0.8,
+                                maxWidth: 300
+                            }}
+                        >
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                                <CornerUpLeft style={{ width: 10, height: 10, color: ORG }} />
+                                <span style={{ ...ba(10, 700, { color: ORG }) }}>{message.replyTo.sender}</span>
+                            </div>
+                            <p style={{ ...ba(11, 400, { color: text2, margin: 0 }) }} className="truncate">
+                                {message.replyTo.content || (message.replyTo.images ? '📷 Image' : '📎 Attachment')}
+                            </p>
+                        </div>
+                    )}
+
+                    {/* Render appropriate message type */}
+                    {isCombined ? (
+                        <CombinedMessage
+                            message={message}
+                            onMenuAction={onAction}
+                            showMenu={showMenu}
+                            setShowMenu={setShowMenu}
+                            onMediaView={onMediaView}
+                            selectionMode={selectionMode}
+                            isGroup={conversation?.isGroup || false}
+                        />
+                    ) : isTextOnly ? (
+                        <TextMessage
+                            message={message}
+                            onMenuAction={onAction}
+                            showMenu={showMenu}
+                            setShowMenu={setShowMenu}
+                            selectionMode={selectionMode}
+                            isGroup={conversation?.isGroup || false}
+                        />
+                    ) : null}
+                </div>
             </div>
-
-            {/* Current user avatar (for sent messages) */}
-            {message.isSent && (
-                <Avatar
-                    avatar={currentUser?.profileImage}
-                    initial={currentUser?.name?.charAt(0)?.toUpperCase()}
-                    name={currentUser?.name || 'You'}
-                    size="sm"
-                    className="ml-3 flex-shrink-0"
-                />
-            )}
         </div>
     );
 };

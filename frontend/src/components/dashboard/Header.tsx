@@ -18,6 +18,8 @@ import { useNotifications } from "../../context/NotificationContext";
 import { NotificationPanel } from "./NotificationPanel";
 import { API_URL } from "../../api/api";
 import ReactCountryFlag from "react-country-flag";
+import { useDashboardTheme } from "../../utils/dashboardTheme";
+import { ORG, TEAL, bc, ba } from "../../utils/homeConstants";
 
 interface HeaderProps {
   onToggle: () => void;
@@ -46,13 +48,13 @@ const Header: React.FC<HeaderProps> = ({ onToggle }) => {
   const navigate = useNavigate();
   const { user: adminUser, logout: adminLogout, lockAdmin } = useAdminAuth();
   const { unreadCount } = useNotifications();
+  const { isDark, toggleTheme, bg2, bg3, textC, text2, text3, border } = useDashboardTheme();
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isCountryOpen, setIsCountryOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [isLocking, setIsLocking] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState(countryOptions[0]);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -60,24 +62,15 @@ const Header: React.FC<HeaderProps> = ({ onToggle }) => {
   const countryRef = useRef<HTMLDivElement | null>(null);
 
   const onLogout = async () => {
-    try {
-      await adminLogout();
-      setIsDropdownOpen(false);
-    } catch (error) {
-      console.error("Logout error:", error);
-    }
+    try { await adminLogout(); setIsDropdownOpen(false); }
+    catch (error) { console.error("Logout error:", error); }
   };
 
   const handleLock = async () => {
     setIsLocking(true);
-    try {
-      await lockAdmin();
-      setIsDropdownOpen(false);
-    } catch (error) {
-      console.error("Lock error:", error);
-    } finally {
-      setIsLocking(false);
-    }
+    try { await lockAdmin(); setIsDropdownOpen(false); }
+    catch (error) { console.error("Lock error:", error); }
+    finally { setIsLocking(false); }
   };
 
   const toggleFullscreen = () => {
@@ -90,32 +83,16 @@ const Header: React.FC<HeaderProps> = ({ onToggle }) => {
     }
   };
 
-  const toggleDarkMode = () => setIsDarkMode((prev) => !prev);
-
   const getDisplayName = (): string => adminUser?.adminName || "Admin";
-
-  const getProfileImage = (): string | null =>
-    handleReportUrl(adminUser?.profileImage);
-
+  const getProfileImage = (): string | null => handleReportUrl(adminUser?.profileImage);
   const getEmail = (): string | undefined => adminUser?.adminEmail;
-
   const getInitials = (): string =>
-    getDisplayName()
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
+    getDisplayName().split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
 
-  // Close dropdowns on outside click
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setIsDropdownOpen(false);
-      }
-      if (countryRef.current && !countryRef.current.contains(e.target as Node)) {
-        setIsCountryOpen(false);
-      }
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) setIsDropdownOpen(false);
+      if (countryRef.current && !countryRef.current.contains(e.target as Node)) setIsCountryOpen(false);
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -123,198 +100,185 @@ const Header: React.FC<HeaderProps> = ({ onToggle }) => {
 
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        setIsDropdownOpen(false);
-        setIsCountryOpen(false);
-        setIsNotificationOpen(false);
-      }
+      if (e.key === "Escape") { setIsDropdownOpen(false); setIsCountryOpen(false); setIsNotificationOpen(false); }
     };
     document.addEventListener("keydown", handleEsc);
     return () => document.removeEventListener("keydown", handleEsc);
   }, []);
 
+  const iconBtn: React.CSSProperties = {
+    padding: "6px 8px", borderRadius: 4, background: "transparent",
+    border: `1px solid ${border}`, cursor: "pointer", display: "flex",
+    alignItems: "center", justifyContent: "center", transition: "background .15s",
+  };
+
   return (
     <>
-      <header className="bg-white shadow-md border-b-2 border-gray-100">
-        <div className="px-6 py-2">
+      <header style={{ background: bg2, borderBottom: `1px solid ${border}` }}>
+        <div style={{ padding: "10px 20px" }}>
           <div className="flex items-center justify-between gap-4">
 
             {/* LEFT — Menu + Search */}
-            <div className="flex items-center gap-4 flex-1">
-              <button
-                onClick={onToggle}
-                className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors lg:hidden"
-              >
-                <Menu className="w-4 h-4" />
+            <div className="flex items-center gap-3 flex-1">
+              <button onClick={onToggle} style={{ ...iconBtn }} className="lg:hidden">
+                <Menu size={16} color={textC} />
               </button>
 
               <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Search size={14} color={text2} style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
                 <input
                   type="text"
                   placeholder="Search..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  style={{
+                    width: "100%", paddingLeft: 32, paddingRight: 12, paddingTop: 7, paddingBottom: 7,
+                    background: bg3, border: `1px solid ${border}`, borderRadius: 4, outline: "none",
+                    ...ba(13, 400, { color: textC }),
+                  }}
                 />
               </div>
             </div>
 
-            {/* RIGHT — Icons + Profile */}
-            <div className="flex items-center gap-1.5">
+            {/* RIGHT — Controls + Profile */}
+            <div className="flex items-center gap-2">
 
               {/* Country Selector */}
               <div className="relative" ref={countryRef}>
-                <button
-                  onClick={() => setIsCountryOpen((v) => !v)}
-                  className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors flex items-center"
-                  title="Select Country"
-                >
+                <button onClick={() => setIsCountryOpen((v) => !v)} style={iconBtn} title="Select Country">
                   <ReactCountryFlag
                     countryCode={selectedCountry.value.toUpperCase()}
                     svg
-                    style={{ width: "20px", height: "20px", borderRadius: "4px", boxShadow: "0 1px 3px rgba(0,0,0,0.2)" }}
+                    style={{ width: 18, height: 18, borderRadius: 3 }}
                     title={selectedCountry.label}
                   />
                 </button>
 
                 {isCountryOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-100 z-50 overflow-hidden">
-                    <div className="py-1">
-                      {countryOptions.map((c) => (
-                        <button
-                          key={c.value}
-                          onClick={() => { setSelectedCountry(c); setIsCountryOpen(false); }}
-                          className={`flex items-center w-full px-4 py-2 text-sm hover:bg-gray-50 transition-colors ${
-                            selectedCountry.value === c.value ? "bg-blue-50 text-blue-700" : "text-gray-700"
-                          }`}
-                        >
-                          <ReactCountryFlag
-                            countryCode={c.value.toUpperCase()}
-                            svg
-                            style={{ width: "20px", height: "20px", marginRight: "12px", borderRadius: "3px" }}
-                          />
-                          <span>{c.label}</span>
-                        </button>
-                      ))}
-                    </div>
+                  <div style={{ position: "absolute", right: 0, top: "calc(100% + 6px)", width: 180, background: bg2, border: `1px solid ${border}`, borderRadius: 4, zIndex: 50, overflow: "hidden" }}>
+                    {countryOptions.map((c) => (
+                      <button
+                        key={c.value}
+                        onClick={() => { setSelectedCountry(c); setIsCountryOpen(false); }}
+                        style={{
+                          display: "flex", alignItems: "center", gap: 10,
+                          width: "100%", padding: "8px 14px",
+                          background: selectedCountry.value === c.value ? "rgba(232,98,26,.1)" : "transparent",
+                          border: "none", cursor: "pointer", transition: "background .12s",
+                          ...ba(13, 400, { color: selectedCountry.value === c.value ? ORG : textC }),
+                        }}
+                      >
+                        <ReactCountryFlag countryCode={c.value.toUpperCase()} svg style={{ width: 16, height: 16, borderRadius: 2 }} />
+                        <span>{c.label}</span>
+                      </button>
+                    ))}
                   </div>
                 )}
               </div>
 
               {/* Fullscreen */}
-              <button
-                onClick={toggleFullscreen}
-                className="p-1.5 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-                title="Toggle Fullscreen"
-              >
-                <Maximize className="w-4 h-4" />
+              <button onClick={toggleFullscreen} style={iconBtn} title="Toggle Fullscreen">
+                <Maximize size={15} color={text2} />
               </button>
 
-              {/* Dark Mode */}
-              <button
-                onClick={toggleDarkMode}
-                className="p-1.5 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-                title="Toggle Dark Mode"
-              >
-                {isDarkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+              {/* Dark Mode Toggle — now wired to real ThemeContext */}
+              <button onClick={toggleTheme} style={iconBtn} title="Toggle Dark Mode">
+                {isDark ? <Sun size={15} color={ORG} /> : <Moon size={15} color={TEAL} />}
               </button>
 
-              {/* ── Notification Bell ── */}
+              {/* Notifications */}
               <button
                 onClick={() => setIsNotificationOpen(true)}
-                className="relative p-1.5 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                style={{ ...iconBtn, position: "relative" }}
                 title="Notifications"
               >
-                <Bell className="w-4 h-4" />
+                <Bell size={15} color={text2} />
                 {unreadCount > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] rounded-full flex items-center justify-center font-semibold shadow-sm">
+                  <span style={{
+                    position: "absolute", top: -4, right: -4, minWidth: 16, height: 16,
+                    padding: "0 4px", background: "#e84040", color: "#fff",
+                    borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center",
+                    ...bc(9, 700, {}),
+                  }}>
                     {unreadCount > 99 ? "99+" : unreadCount}
                   </span>
                 )}
               </button>
 
               {/* Profile Dropdown */}
-              <div className="relative md:ml-4" ref={dropdownRef}>
+              <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setIsDropdownOpen((v) => !v)}
-                  className="flex items-center gap-2 p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
                   disabled={isLocking}
+                  style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 8px", borderRadius: 4, border: `1px solid ${border}`, background: "transparent", cursor: "pointer" }}
                 >
-                  <div className="w-8 h-8 bg-[rgb(81,96,146)] rounded-full flex items-center justify-center overflow-hidden shadow-sm">
+                  <div style={{ width: 30, height: 30, borderRadius: "50%", background: ORG, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", flexShrink: 0 }}>
                     {getProfileImage() ? (
-                      <img src={getProfileImage()!} alt="Profile" className="w-full h-full object-cover" />
+                      <img src={getProfileImage()!} alt="Profile" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                     ) : (
-                      <span className="text-white font-semibold text-xs">{getInitials()}</span>
+                      <span style={{ ...bc(11, 700, { color: "#fff" }) }}>{getInitials()}</span>
                     )}
                   </div>
-
                   <div className="text-left hidden md:block">
-                    <div className="text-sm font-semibold text-gray-800">{getDisplayName()}</div>
-                    <div className="text-xs text-gray-500">Administrator</div>
+                    <div style={{ ...ba(12, 600, { color: textC }) }}>{getDisplayName()}</div>
+                    <div style={{ ...ba(10, 400, { color: ORG }) }}>Administrator</div>
                   </div>
-
-                  <ChevronDown
-                    className={`w-3.5 h-3.5 text-gray-500 transition-transform duration-200 hidden md:block ${
-                      isDropdownOpen ? "rotate-180" : ""
-                    }`}
-                  />
+                  <ChevronDown size={12} color={text2} style={{ transition: "transform .2s", transform: isDropdownOpen ? "rotate(180deg)" : "rotate(0)" }} className="hidden md:block" />
                 </button>
 
                 {isDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-xl border border-gray-100 z-50 overflow-hidden">
-                    {/* Dropdown header */}
-                    <div className="px-4 py-3 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-purple-50">
-                      <div className="flex items-center gap-3">
-                        <div className="w-11 h-11 bg-[rgb(81,96,146)] rounded-full flex items-center justify-center shadow-md overflow-hidden">
+                  <div style={{ position: "absolute", right: 0, top: "calc(100% + 6px)", width: 240, background: bg2, border: `1px solid ${border}`, borderRadius: 4, zIndex: 50, overflow: "hidden" }}>
+                    {/* Header */}
+                    <div style={{ padding: "12px 16px", borderBottom: `1px solid ${border}`, background: bg3 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                        <div style={{ width: 40, height: 40, borderRadius: "50%", background: ORG, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", flexShrink: 0 }}>
                           {getProfileImage() ? (
-                            <img src={getProfileImage()!} alt="Profile" className="w-full h-full object-cover" />
+                            <img src={getProfileImage()!} alt="Profile" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                           ) : (
-                            <span className="text-white font-semibold text-sm">{getInitials()}</span>
+                            <span style={{ ...bc(13, 700, { color: "#fff" }) }}>{getInitials()}</span>
                           )}
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="text-sm font-semibold text-gray-900 truncate">{getDisplayName()}</div>
-                          <div className="text-xs text-gray-600 truncate">{getEmail()}</div>
-                          <div className="text-xs font-medium text-[#ff5a00] mt-0.5">Administrator</div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ ...ba(13, 600, { color: textC, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }) }}>{getDisplayName()}</div>
+                          <div style={{ ...ba(11, 400, { color: text2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }) }}>{getEmail()}</div>
+                          <div style={{ ...ba(10, 600, { color: ORG }) }}>Administrator</div>
                         </div>
                       </div>
                     </div>
 
-                    {/* Dropdown menu */}
-                    <div className="py-1">
-                      <button
-                        onClick={() => { navigate(`/admin/dashboard/profile/${adminUser?.id}`); setIsDropdownOpen(false); }}
-                        className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                      >
-                        <User className="w-4 h-4 mr-3 text-gray-500" />
-                        My Profile
-                      </button>
+                    {/* Menu items */}
+                    <div style={{ padding: "4px 0" }}>
+                      {[
+                        { icon: User,     label: "My Profile", onClick: () => { navigate(`/admin/dashboard/profile/${adminUser?.id}`); setIsDropdownOpen(false); } },
+                        { icon: Settings, label: "Settings",   onClick: () => setIsDropdownOpen(false) },
+                        { icon: Lock,     label: isLocking ? "Locking…" : "Lock Screen", onClick: handleLock, disabled: isLocking },
+                      ].map(({ icon: Icon, label, onClick, disabled }) => (
+                        <button
+                          key={label}
+                          onClick={onClick}
+                          disabled={disabled}
+                          style={{
+                            display: "flex", alignItems: "center", gap: 10, width: "100%",
+                            padding: "9px 16px", background: "transparent", border: "none", cursor: disabled ? "not-allowed" : "pointer",
+                            ...ba(13, 400, { color: textC }), opacity: disabled ? .5 : 1, transition: "background .12s",
+                          }}
+                        >
+                          <Icon size={14} color={text2} />
+                          {label}
+                        </button>
+                      ))}
 
-                      <button
-                        onClick={() => setIsDropdownOpen(false)}
-                        className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                      >
-                        <Settings className="w-4 h-4 mr-3 text-gray-500" />
-                        Settings
-                      </button>
-
-                      <button
-                        onClick={handleLock}
-                        disabled={isLocking}
-                        className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        <Lock className="w-4 h-4 mr-3 text-gray-500" />
-                        {isLocking ? "Locking..." : "Lock Screen"}
-                      </button>
-
-                      <div className="border-t border-gray-100 my-1" />
+                      <div style={{ height: 1, background: border, margin: "4px 0" }} />
 
                       <button
                         onClick={onLogout}
-                        className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                        style={{
+                          display: "flex", alignItems: "center", gap: 10, width: "100%",
+                          padding: "9px 16px", background: "transparent", border: "none", cursor: "pointer",
+                          ...ba(13, 400, { color: "#e84040" }), transition: "background .12s",
+                        }}
                       >
-                        <LogOut className="w-4 h-4 mr-3" />
+                        <LogOut size={14} color="#e84040" />
                         Sign Out
                       </button>
                     </div>
@@ -326,11 +290,7 @@ const Header: React.FC<HeaderProps> = ({ onToggle }) => {
         </div>
       </header>
 
-      {/* Notification Panel — rendered outside header so it overlays everything */}
-      <NotificationPanel
-        isOpen={isNotificationOpen}
-        onClose={() => setIsNotificationOpen(false)}
-      />
+      <NotificationPanel isOpen={isNotificationOpen} onClose={() => setIsNotificationOpen(false)} />
     </>
   );
 };

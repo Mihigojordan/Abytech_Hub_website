@@ -1,14 +1,18 @@
 import React from 'react';
-import { Clock, MoreVertical, Check, Forward } from 'lucide-react';
+import { Clock, MoreVertical, Check, Forward, CheckCheck } from 'lucide-react';
 import { formatTime } from '../../../../utils/chat/dateUtils';
 import ImageAttachment from './ImageAttachment';
 import FileAttachment from './FileAttachment';
 import MessageMenu from './MessageMenu';
+import { useDashboardTheme } from '../../../../utils/dashboardTheme';
+import { ORG, TEAL, bb, bc, ba } from '../../../../utils/homeConstants';
 
 /**
  * Combined message component (text + images + files)
  */
 const CombinedMessage = ({ message, onMenuAction, showMenu, setShowMenu, onMediaView, selectionMode, isGroup = false }) => {
+    const { bg, bg2, bg3, textC, text2, text3, border } = useDashboardTheme();
+
     const handleMediaClick = () => {
         const allMedia = [
             ...(message.images || []).map(url => ({ type: 'image', url })),
@@ -27,12 +31,12 @@ const CombinedMessage = ({ message, onMenuAction, showMenu, setShowMenu, onMedia
     };
 
     return (
-        <div className="relative group space-y-2 max-w-md">
+        <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: 8, maxWidth: 400 }} className="group">
             {/* Forwarded indicator */}
             {message.isForwarded && (
-                <div className={`flex items-center gap-1 text-xs ${message.isSent ? 'text-gray-500' : 'text-gray-500'}`}>
-                    <Forward className="w-3 h-3" />
-                    <span className="italic">Forwarded</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4, opacity: 0.7 }}>
+                    <Forward style={{ width: 10, height: 10, color: text3 }} />
+                    <span style={{ ...ba(10, 400, { color: text3, fontStyle: 'italic' }) }}>Forwarded</span>
                 </div>
             )}
 
@@ -47,7 +51,7 @@ const CombinedMessage = ({ message, onMenuAction, showMenu, setShowMenu, onMedia
 
             {/* Files */}
             {message.files && message.files.length > 0 && (
-                <div className="space-y-1">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                     {message.files.map((file, idx) => (
                         <FileAttachment
                             key={idx}
@@ -61,46 +65,55 @@ const CombinedMessage = ({ message, onMenuAction, showMenu, setShowMenu, onMedia
 
             {/* Text content */}
             {message.content && (
-                <div className={`${message.isSent ? 'bg-gray-100' : 'bg-dashboard-600 text-white'} rounded-lg px-4 py-3`}>
-                    <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                <div style={{ 
+                    background: message.isSent ? bg3 : ORG,
+                    border: message.isSent ? `1px solid ${border}` : 'none',
+                    borderRadius: message.isSent ? '12px 12px 0 12px' : '12px 12px 12px 0',
+                    padding: '12px 16px',
+                    color: message.isSent ? textC : '#fff',
+                    boxShadow: message.isSent ? 'none' : '0 10px 20px rgba(232,98,26,0.2)'
+                }}>
+                    <p style={{ ...ba(14, 400, { margin: 0, lineHeight: 1.5, wordBreak: 'break-word' }) }}>
+                        {message.content}
+                    </p>
                 </div>
             )}
 
             {/* Timestamp */}
-            <div className={`flex items-center text-xs ${message.isSent ? 'text-gray-400' : 'text-gray-500'}`}>
-                <Clock className="w-3 h-3 mr-1" />
-                {formatTime(message.timestamp)}
-                {message.edited && (
-                    <span className="ml-2 italic">(edited)</span>
-                )}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 6, opacity: 0.7 }}>
+                <span style={{ ...ba(10, 400, { color: text3 }) }}>
+                    {formatTime(message.timestamp)}
+                </span>
+                {message.edited && <span style={{ ...ba(10, 400, { color: text3, fontStyle: 'italic' }) }}>(edited)</span>}
 
-                {/* Read receipts for sent messages */}
                 {message.isSent && (
-                    <span className={`ml-2 ${message.isRead ? 'text-blue-500' : 'text-gray-400'}`}>
-                        {message.isRead ? (
-                            <div className="flex -space-x-1">
-                                <Check className="w-3 h-3" />
-                                <Check className="w-3 h-3" />
-                            </div>
-                        ) : (
-                            <Check className="w-3 h-3" />
-                        )}
-                    </span>
+                    message.isRead ? <CheckCheck style={{ width: 12, height: 12, color: ORG }} /> : <Check style={{ width: 12, height: 12, color: text3 }} />
                 )}
             </div>
 
-            {/* Menu button */}
+            {/* Menu Toggle */}
             {!selectionMode && (
                 <button
-                    className="absolute top-2 right-2 p-1 bg-white/80 hover:bg-white rounded opacity-0 group-hover:opacity-100 transition-all duration-200"
+                    className="opacity-0 group-hover:opacity-100 transition-opacity"
                     onClick={(e) => {
                         e.stopPropagation();
                         setShowMenu(message.id);
                     }}
+                    style={{
+                        position: 'absolute',
+                        top: 0,
+                        [message.isSent ? 'left' : 'right']: -40,
+                        background: 'none',
+                        border: 'none',
+                        color: text3,
+                        cursor: 'pointer',
+                        padding: 8
+                    }}
                 >
-                    <MoreVertical className="w-4 h-4 text-gray-600" />
+                    <MoreVertical style={{ width: 16, height: 16 }} />
                 </button>
             )}
+
             {showMenu === message.id && (
                 <MessageMenu
                     messageId={message.id}

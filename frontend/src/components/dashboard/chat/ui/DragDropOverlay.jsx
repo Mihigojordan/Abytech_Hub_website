@@ -1,25 +1,66 @@
 import React from 'react';
-import { Image as ImageIcon } from 'lucide-react';
+import { Upload } from 'lucide-react';
+import { ORG, TEAL, bb, bc, ba } from '../../../../utils/homeConstants';
+import { motion, AnimatePresence } from 'framer-motion';
 
 /**
  * Drag and drop overlay component
  */
 const DragDropOverlay = ({ isVisible }) => {
-    if (!isVisible) return null;
-
     return (
-        <div
-            id="drag-overlay"
-            className="fixed inset-0 z-50 bg-slate-600/90 flex items-center justify-center backdrop-blur-sm transition-all duration-300"
-        >
-            <div className="text-center animate-pulse">
-                <div className="w-32 h-32 mx-auto mb-6 border-4 border-dashed border-white rounded-full flex items-center justify-center">
-                    <ImageIcon className="w-16 h-16 text-white" />
-                </div>
-                <h2 className="text-3xl font-bold text-white mb-2">Drop files here</h2>
-                <p className="text-white text-lg opacity-90">Release to upload your files</p>
-            </div>
-        </div>
+        <AnimatePresence>
+            {isVisible && (
+                <motion.div
+                    id="drag-overlay"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    style={{
+                        position: 'fixed',
+                        inset: 0,
+                        zIndex: 999,
+                        background: 'rgba(7,20,24,0.9)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        backdropFilter: 'blur(8px)'
+                    }}
+                >
+                    <motion.div 
+                        initial={{ scale: 0.9, y: 20 }}
+                        animate={{ scale: 1, y: 0 }}
+                        style={{ textAlign: 'center' }}
+                    >
+                        <motion.div 
+                            animate={{ 
+                                scale: [1, 1.1, 1],
+                                opacity: [0.7, 1, 0.7]
+                            }}
+                            transition={{ 
+                                repeat: Infinity,
+                                duration: 2,
+                                ease: "easeInOut"
+                            }}
+                            style={{ 
+                                width: 140, 
+                                height: 140, 
+                                margin: '0 auto 32px', 
+                                border: `4px dashed ${ORG}`, 
+                                borderRadius: '50%', 
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                justifyContent: 'center',
+                                background: 'rgba(232,98,26,0.1)'
+                            }}
+                        >
+                            <Upload style={{ width: 64, height: 64, color: ORG }} />
+                        </motion.div>
+                        <h2 style={{ ...bb(48, { color: '#fff', margin: '0 0 8px 0' }) }}>Drop files here</h2>
+                        <p style={{ ...ba(18, 400, { color: 'rgba(255,255,255,0.7)', margin: 0 }) }}>Release to upload your files</p>
+                    </motion.div>
+                </motion.div>
+            )}
+        </AnimatePresence>
     );
 };
 

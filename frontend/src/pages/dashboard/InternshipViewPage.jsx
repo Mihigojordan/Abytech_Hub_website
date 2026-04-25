@@ -8,36 +8,53 @@ import {
 } from 'lucide-react';
 import Swal from 'sweetalert2';
 import internshipService from '../../services/internshipService';
-
-const PRIMARY_COLOR = 'rgb(249, 115, 22)';
+import { useDashboardTheme } from '../../utils/dashboardTheme';
+import { ORG, TEAL, bb, bc, ba } from '../../utils/homeConstants';
 
 const STATUS_CONFIG = {
-  PENDING: { label: 'Pending', color: 'bg-amber-100 text-amber-800 border-amber-200', icon: Clock },
-  REVIEWING: { label: 'Reviewing', color: 'bg-blue-100 text-blue-800 border-blue-200', icon: AlertCircle },
-  ACCEPTED: { label: 'Accepted', color: 'bg-emerald-100 text-emerald-800 border-emerald-200', icon: CheckCircle },
-  REJECTED: { label: 'Rejected', color: 'bg-red-100 text-red-800 border-red-200', icon: XCircle },
-  WAITLISTED: { label: 'Waitlisted', color: 'bg-purple-100 text-purple-800 border-purple-200', icon: AlertCircle },
+  PENDING:    { label: 'Pending',    icon: Clock },
+  REVIEWING:  { label: 'Reviewing', icon: AlertCircle },
+  ACCEPTED:   { label: 'Accepted',  icon: CheckCircle },
+  REJECTED:   { label: 'Rejected',  icon: XCircle },
+  WAITLISTED: { label: 'Waitlisted',icon: AlertCircle },
 };
 
 const TYPE_CONFIG = {
-  SOFTWARE_DEVELOPMENT: { label: 'Software Development', color: 'bg-blue-100 text-blue-800 border-blue-200' },
-  UI_UX: { label: 'UI/UX Design', color: 'bg-pink-100 text-pink-800 border-pink-200' },
-  DATA: { label: 'Data', color: 'bg-indigo-100 text-indigo-800 border-indigo-200' },
-  MARKETING: { label: 'Marketing', color: 'bg-orange-100 text-orange-800 border-orange-200' },
-  IT_SUPPORT: { label: 'IT Support', color: 'bg-teal-100 text-teal-800 border-teal-200' },
-  OTHER: { label: 'Other', color: 'bg-gray-100 text-gray-800 border-gray-200' },
+  SOFTWARE_DEVELOPMENT: { label: 'Software Development' },
+  UI_UX:                { label: 'UI/UX Design' },
+  DATA:                 { label: 'Data' },
+  MARKETING:            { label: 'Marketing' },
+  IT_SUPPORT:           { label: 'IT Support' },
+  OTHER:                { label: 'Other' },
 };
 
 const PERIOD_CONFIG = {
-  ONE_MONTH: '1 Month',
+  ONE_MONTH:    '1 Month',
   THREE_MONTHS: '3 Months',
-  SIX_MONTHS: '6 Months',
-  ONE_YEAR: '1 Year',
+  SIX_MONTHS:   '6 Months',
+  ONE_YEAR:     '1 Year',
+};
+
+const getStatusStyle = (status) => {
+  switch (status) {
+    case 'ACCEPTED':
+      return { background: 'rgba(74,222,128,.15)', color: '#4ade80', border: '1px solid rgba(74,222,128,.3)' };
+    case 'REJECTED':
+      return { background: 'rgba(232,64,64,.15)', color: '#e84040', border: '1px solid rgba(232,64,64,.3)' };
+    case 'PENDING':
+      return { background: `rgba(232,98,26,.15)`, color: ORG, border: `1px solid rgba(232,98,26,.3)` };
+    case 'REVIEWING':
+    case 'IN_PROGRESS':
+      return { background: 'rgba(26,92,120,.15)', color: TEAL, border: '1px solid rgba(26,92,120,.3)' };
+    default:
+      return { background: 'rgba(232,98,26,.15)', color: ORG, border: `1px solid rgba(232,98,26,.3)` };
+  }
 };
 
 const InternshipViewPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { isDark, bg, bg2, bg3, textC, text2, text3, border } = useDashboardTheme();
 
   const [application, setApplication] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -59,7 +76,7 @@ const InternshipViewPage = () => {
           icon: 'error',
           title: 'Error',
           text: err.message || 'Failed to load application',
-          confirmButtonColor: PRIMARY_COLOR,
+          confirmButtonColor: ORG,
         }).then(() => {
           navigate('/admin/dashboard/internships');
         });
@@ -89,7 +106,7 @@ const InternshipViewPage = () => {
         icon: 'error',
         title: 'Error',
         text: err.message || 'Failed to update shortlist',
-        confirmButtonColor: PRIMARY_COLOR,
+        confirmButtonColor: ORG,
       });
     }
   };
@@ -127,14 +144,14 @@ const InternshipViewPage = () => {
           icon: 'success',
           title: 'Intern Accepted!',
           text: `${application.fullName} has been accepted as an intern and moved to Intern Management.`,
-          confirmButtonColor: PRIMARY_COLOR,
+          confirmButtonColor: ORG,
         });
       } catch (err) {
         Swal.fire({
           icon: 'error',
           title: 'Error',
           text: err.message || 'Failed to accept intern',
-          confirmButtonColor: PRIMARY_COLOR,
+          confirmButtonColor: ORG,
         });
       } finally {
         setAcceptLoading(false);
@@ -148,7 +165,7 @@ const InternshipViewPage = () => {
       text: `Are you sure you want to reject ${application.fullName}'s application?`,
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonColor: '#ef4444',
+      confirmButtonColor: '#e84040',
       cancelButtonColor: '#6b7280',
       confirmButtonText: 'Reject Application',
       cancelButtonText: 'Cancel',
@@ -163,14 +180,14 @@ const InternshipViewPage = () => {
           icon: 'success',
           title: 'Application Rejected',
           text: `${application.fullName}'s application has been rejected.`,
-          confirmButtonColor: PRIMARY_COLOR,
+          confirmButtonColor: ORG,
         });
       } catch (err) {
         Swal.fire({
           icon: 'error',
           title: 'Error',
           text: err.message || 'Failed to reject application',
-          confirmButtonColor: PRIMARY_COLOR,
+          confirmButtonColor: ORG,
         });
       } finally {
         setRejectLoading(false);
@@ -191,14 +208,16 @@ const InternshipViewPage = () => {
     return (
       <div
         className="min-h-screen flex items-center justify-center"
-        style={{
-          fontFamily: "'Plus Jakarta Sans', sans-serif",
-          background: 'linear-gradient(135deg, #fffbeb 0%, #fef3c7 50%, #fff7ed 100%)',
-        }}
+        style={{ background: bg }}
       >
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-orange-200 border-t-orange-500"></div>
-          <p className="mt-4 text-stone-600 font-medium">Loading application...</p>
+          <div
+            className="inline-block animate-spin rounded-full h-12 w-12 border-4"
+            style={{ borderColor: border, borderTopColor: ORG }}
+          />
+          <p className="mt-4 font-medium" style={{ ...ba(14, 500, { color: text2 }) }}>
+            Loading application...
+          </p>
         </div>
       </div>
     );
@@ -209,11 +228,12 @@ const InternshipViewPage = () => {
   }
 
   const StatusIcon = STATUS_CONFIG[application.status]?.icon || AlertCircle;
+  const statusStyle = getStatusStyle(application.status);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/30">
+    <div className="min-h-screen" style={{ background: bg }}>
       {/* Header */}
-      <div className="bg-white shadow-sm border-b border-gray-200">
+      <div style={{ background: bg2, borderBottom: '1px solid ' + border }}>
         <div className="mx-auto px-4 sm:px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -221,15 +241,19 @@ const InternshipViewPage = () => {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={handleBack}
-                className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-2 rounded-lg transition-opacity hover:opacity-80"
+                style={{ background: bg3, border: '1px solid ' + border, color: textC }}
               >
                 <ArrowLeft className="w-5 h-5" />
               </motion.button>
               <div>
-                <h1 className="text-xl sm:text-2xl font-bold" style={{ color: PRIMARY_COLOR }}>
+                <h1
+                  className="text-xl sm:text-2xl"
+                  style={{ ...bb('clamp(20px,3vw,32px)', { color: ORG, letterSpacing: 2 }) }}
+                >
                   Application Details
                 </h1>
-                <p className="text-xs text-gray-600 mt-0.5">
+                <p style={{ ...ba(12, 400, { color: text2, marginTop: 2 }) }}>
                   View internship application information
                 </p>
               </div>
@@ -240,11 +264,12 @@ const InternshipViewPage = () => {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={handleToggleShortlist}
-                className={`p-2.5 rounded-lg transition-colors ${
-                  application.isShortlisted
-                    ? 'text-amber-500 bg-amber-50 hover:bg-amber-100'
-                    : 'text-gray-400 hover:text-amber-500 hover:bg-amber-50'
-                }`}
+                className="p-2.5 rounded-lg transition-opacity hover:opacity-80"
+                style={{
+                  background: application.isShortlisted ? 'rgba(232,98,26,.15)' : bg3,
+                  border: '1px solid ' + (application.isShortlisted ? 'rgba(232,98,26,.3)' : border),
+                  color: application.isShortlisted ? ORG : text2,
+                }}
                 title={application.isShortlisted ? 'Remove from Shortlist' : 'Add to Shortlist'}
               >
                 {application.isShortlisted ? (
@@ -258,23 +283,38 @@ const InternshipViewPage = () => {
         </div>
       </div>
 
-      <div className="mx-auto px-4 sm:px-6 py-8 ">
+      <div className="mx-auto px-4 sm:px-6 py-8">
         {/* Applicant Header Card */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6"
+          className="rounded-2xl p-6 mb-6"
+          style={{ background: bg2, border: '1px solid ' + border, borderRadius: 4 }}
         >
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
-            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 text-white font-bold flex items-center justify-center text-3xl flex-shrink-0 shadow-lg">
+            {/* Avatar */}
+            <div
+              className="w-20 h-20 flex items-center justify-center text-3xl font-bold flex-shrink-0"
+              style={{ background: ORG, color: '#fff', borderRadius: 4 }}
+            >
               {application.fullName?.charAt(0) || '?'}
             </div>
 
             <div className="flex-1">
               <div className="flex flex-wrap items-center gap-3 mb-2">
-                <h2 className="text-2xl font-bold text-gray-900">{application.fullName}</h2>
+                <h2 style={{ ...ba(22, 700, { color: textC, margin: 0 }) }}>
+                  {application.fullName}
+                </h2>
                 {application.isShortlisted && (
-                  <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800 border border-amber-200">
+                  <span
+                    className="inline-flex items-center gap-1 px-3 py-1"
+                    style={{
+                      ...ba(11, 600, { color: ORG }),
+                      background: 'rgba(232,98,26,.15)',
+                      border: '1px solid rgba(232,98,26,.3)',
+                      borderRadius: 4,
+                    }}
+                  >
                     <Star className="w-3 h-3 fill-current" />
                     Shortlisted
                   </span>
@@ -282,35 +322,60 @@ const InternshipViewPage = () => {
               </div>
 
               <div className="flex flex-wrap gap-2 mb-4">
-                <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border ${STATUS_CONFIG[application.status]?.color}`}>
+                {/* Status badge */}
+                <span
+                  className="inline-flex items-center gap-1.5 px-3 py-1"
+                  style={{ ...ba(11, 600, { ...statusStyle, borderRadius: 4 }) }}
+                >
                   <StatusIcon className="w-3.5 h-3.5" />
                   {STATUS_CONFIG[application.status]?.label}
                 </span>
-                <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium border ${TYPE_CONFIG[application.internshipType]?.color || 'bg-gray-100 text-gray-700 border-gray-200'}`}>
+                {/* Type badge */}
+                <span
+                  className="inline-flex px-3 py-1"
+                  style={{
+                    ...ba(11, 600, { color: TEAL }),
+                    background: 'rgba(26,92,120,.15)',
+                    border: '1px solid rgba(26,92,120,.3)',
+                    borderRadius: 4,
+                  }}
+                >
                   {TYPE_CONFIG[application.internshipType]?.label || application.internshipType}
                 </span>
                 {application.score && (
-                  <span className="inline-block px-3 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 border border-indigo-200">
+                  <span
+                    className="inline-flex px-3 py-1"
+                    style={{
+                      ...ba(11, 600, { color: text2 }),
+                      background: bg3,
+                      border: '1px solid ' + border,
+                      borderRadius: 4,
+                    }}
+                  >
                     Score: {application.score}/10
                   </span>
                 )}
               </div>
 
-              <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
-                <div className="flex items-center gap-1.5">
+              <div className="flex flex-wrap items-center gap-4">
+                <div className="flex items-center gap-1.5" style={{ ...ba(13, 400, { color: text2 }) }}>
                   <Mail className="w-4 h-4" />
-                  <a href={`mailto:${application.email}`} className="hover:text-orange-500 transition-colors">
+                  <a
+                    href={`mailto:${application.email}`}
+                    className="transition-opacity hover:opacity-80"
+                    style={{ color: ORG }}
+                  >
                     {application.email}
                   </a>
                 </div>
                 {application.phone && (
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-1.5" style={{ ...ba(13, 400, { color: text2 }) }}>
                     <Phone className="w-4 h-4" />
                     <span>{application.phone}</span>
                   </div>
                 )}
                 {(application.city || application.country) && (
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-1.5" style={{ ...ba(13, 400, { color: text2 }) }}>
                     <MapPin className="w-4 h-4" />
                     <span>{[application.city, application.country].filter(Boolean).join(', ')}</span>
                   </div>
@@ -326,7 +391,13 @@ const InternshipViewPage = () => {
                   whileTap={{ scale: acceptLoading ? 1 : 0.98 }}
                   onClick={handleAccept}
                   disabled={acceptLoading}
-                  className="flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-medium bg-gradient-to-r from-emerald-600 to-green-600 text-white rounded-xl hover:from-emerald-700 hover:to-green-700 shadow-md transition-all disabled:opacity-70 disabled:cursor-not-allowed"
+                  className="flex items-center justify-center gap-2 px-5 py-2.5 transition-opacity disabled:opacity-70 disabled:cursor-not-allowed"
+                  style={{
+                    ...ba(13, 600, { color: '#fff' }),
+                    background: '#4ade80',
+                    border: 'none',
+                    borderRadius: 4,
+                  }}
                 >
                   {acceptLoading ? (
                     <>
@@ -347,7 +418,13 @@ const InternshipViewPage = () => {
                   whileTap={{ scale: rejectLoading ? 1 : 0.98 }}
                   onClick={handleReject}
                   disabled={rejectLoading}
-                  className="flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-medium bg-gradient-to-r from-red-600 to-rose-600 text-white rounded-xl hover:from-red-700 hover:to-rose-700 shadow-md transition-all disabled:opacity-70 disabled:cursor-not-allowed"
+                  className="flex items-center justify-center gap-2 px-5 py-2.5 transition-opacity disabled:opacity-70 disabled:cursor-not-allowed"
+                  style={{
+                    ...ba(13, 600, { color: '#fff' }),
+                    background: '#e84040',
+                    border: 'none',
+                    borderRadius: 4,
+                  }}
                 >
                   {rejectLoading ? (
                     <>
@@ -374,46 +451,50 @@ const InternshipViewPage = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6"
+              className="p-6"
+              style={{ background: bg2, border: '1px solid ' + border, borderRadius: 4 }}
             >
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <GraduationCap className="w-5 h-5 text-orange-500" />
-                Education & Internship Details
+              <h3
+                className="mb-4 flex items-center gap-2"
+                style={{ ...bc(11, 700, { letterSpacing: 3, textTransform: 'uppercase', color: text2 }), borderLeft: `3px solid ${ORG}`, paddingLeft: 10 }}
+              >
+                <GraduationCap className="w-4 h-4" style={{ color: ORG }} />
+                Education &amp; Internship Details
               </h3>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {application.institution && (
-                  <div className="bg-gray-50 rounded-xl p-4">
-                    <p className="text-xs text-gray-500 mb-1">Institution</p>
-                    <p className="font-medium text-gray-900">{application.institution}</p>
+                  <div className="p-4" style={{ background: bg3, borderRadius: 4 }}>
+                    <p style={{ ...ba(12, 400, { color: text2, marginBottom: 4 }) }}>Institution</p>
+                    <p style={{ ...ba(13, 600, { color: textC } )} }>{ application.institution}</p>
                   </div>
                 )}
                 {application.fieldOfStudy && (
-                  <div className="bg-gray-50 rounded-xl p-4">
-                    <p className="text-xs text-gray-500 mb-1">Field of Study</p>
-                    <p className="font-medium text-gray-900">{application.fieldOfStudy}</p>
+                  <div className="p-4" style={{ background: bg3, borderRadius: 4 }}>
+                    <p style={{ ...ba(12, 400, { color: text2, marginBottom: 4 }) }}>Field of Study</p>
+                    <p style={{ ...ba(13, 600, { color: textC }) }}>{application.fieldOfStudy}</p>
                   </div>
                 )}
                 {application.level && (
-                  <div className="bg-gray-50 rounded-xl p-4">
-                    <p className="text-xs text-gray-500 mb-1">Level</p>
-                    <p className="font-medium text-gray-900">{application.level}</p>
+                  <div className="p-4" style={{ background: bg3, borderRadius: 4 }}>
+                    <p style={{ ...ba(12, 400, { color: text2, marginBottom: 4 }) }}>Level</p>
+                    <p style={{ ...ba(13, 600, { color: textC }) }}>{application.level}</p>
                   </div>
                 )}
-                <div className="bg-gray-50 rounded-xl p-4">
-                  <p className="text-xs text-gray-500 mb-1">Preferred Period</p>
-                  <p className="font-medium text-gray-900">{PERIOD_CONFIG[application.period] || application.period || '—'}</p>
+                <div className="p-4" style={{ background: bg3, borderRadius: 4 }}>
+                  <p style={{ ...ba(12, 400, { color: text2, marginBottom: 4 }) }}>Preferred Period</p>
+                  <p style={{ ...ba(13, 600, { color: textC }) }}>{PERIOD_CONFIG[application.period] || application.period || '—'}</p>
                 </div>
                 {application.preferredStart && (
-                  <div className="bg-gray-50 rounded-xl p-4">
-                    <p className="text-xs text-gray-500 mb-1">Preferred Start</p>
-                    <p className="font-medium text-gray-900">{formatDate(application.preferredStart)}</p>
+                  <div className="p-4" style={{ background: bg3, borderRadius: 4 }}>
+                    <p style={{ ...ba(12, 400, { color: text2, marginBottom: 4 }) }}>Preferred Start</p>
+                    <p style={{ ...ba(13, 600, { color: textC }) }}>{formatDate(application.preferredStart)}</p>
                   </div>
                 )}
                 {application.preferredEnd && (
-                  <div className="bg-gray-50 rounded-xl p-4">
-                    <p className="text-xs text-gray-500 mb-1">Preferred End</p>
-                    <p className="font-medium text-gray-900">{formatDate(application.preferredEnd)}</p>
+                  <div className="p-4" style={{ background: bg3, borderRadius: 4 }}>
+                    <p style={{ ...ba(12, 400, { color: text2, marginBottom: 4 }) }}>Preferred End</p>
+                    <p style={{ ...ba(13, 600, { color: textC }) }}>{formatDate(application.preferredEnd)}</p>
                   </div>
                 )}
               </div>
@@ -425,13 +506,20 @@ const InternshipViewPage = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6"
+                className="p-6"
+                style={{ background: bg2, border: '1px solid ' + border, borderRadius: 4 }}
               >
-                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-orange-500" />
+                <h3
+                  className="mb-4 flex items-center gap-2"
+                  style={{ ...bc(11, 700, { letterSpacing: 3, textTransform: 'uppercase', color: text2 }), borderLeft: `3px solid ${ORG}`, paddingLeft: 10 }}
+                >
+                  <FileText className="w-4 h-4" style={{ color: ORG }} />
                   Cover Letter
                 </h3>
-                <div className="bg-gray-50 rounded-xl p-5 text-gray-700 whitespace-pre-wrap leading-relaxed">
+                <div
+                  className="whitespace-pre-wrap leading-relaxed p-5"
+                  style={{ ...ba(14, 400, { color: textC }), background: bg3, borderRadius: 4 }}
+                >
                   {application.coverLetter}
                 </div>
               </motion.div>
@@ -443,17 +531,29 @@ const InternshipViewPage = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
-                className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6"
+                className="p-6"
+                style={{ background: bg2, border: '1px solid ' + border, borderRadius: 4 }}
               >
-                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                  <Edit className="w-5 h-5 text-orange-500" />
+                <h3
+                  className="mb-4 flex items-center gap-2"
+                  style={{ ...bc(11, 700, { letterSpacing: 3, textTransform: 'uppercase', color: text2 }), borderLeft: `3px solid ${ORG}`, paddingLeft: 10 }}
+                >
+                  <Edit className="w-4 h-4" style={{ color: ORG }} />
                   Review Notes
                 </h3>
-                <div className="bg-blue-50 border border-blue-100 rounded-xl p-5 text-gray-700 whitespace-pre-wrap leading-relaxed">
+                <div
+                  className="whitespace-pre-wrap leading-relaxed p-5"
+                  style={{
+                    ...ba(14, 400, { color: textC }),
+                    background: 'rgba(26,92,120,.08)',
+                    border: '1px solid rgba(26,92,120,.2)',
+                    borderRadius: 4,
+                  }}
+                >
                   {application.reviewNotes}
                 </div>
                 {application.reviewedBy && (
-                  <p className="text-xs text-gray-500 mt-3">
+                  <p className="mt-3" style={{ ...ba(11, 400, { color: text2 }) }}>
                     Reviewed by: {application.reviewedBy.adminName || 'Admin'} on {formatDate(application.reviewedAt)}
                   </p>
                 )}
@@ -469,14 +569,26 @@ const InternshipViewPage = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.15 }}
-                className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6"
+                className="p-6"
+                style={{ background: bg2, border: '1px solid ' + border, borderRadius: 4 }}
               >
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Skills</h3>
+                <h3
+                  className="mb-4"
+                  style={{ ...bc(11, 700, { letterSpacing: 3, textTransform: 'uppercase', color: text2 }), borderLeft: `3px solid ${ORG}`, paddingLeft: 10 }}
+                >
+                  Skills
+                </h3>
                 <div className="flex flex-wrap gap-2">
                   {application.skills.map((skill, i) => (
                     <span
                       key={i}
-                      className="px-3 py-1.5 bg-orange-50 text-orange-700 rounded-full text-xs font-medium border border-orange-200"
+                      className="px-3 py-1.5"
+                      style={{
+                        ...ba(11, 600, { color: ORG }),
+                        background: 'rgba(232,98,26,.1)',
+                        border: '1px solid rgba(232,98,26,.25)',
+                        borderRadius: 4,
+                      }}
                     >
                       {skill}
                     </span>
@@ -485,24 +597,37 @@ const InternshipViewPage = () => {
               </motion.div>
             )}
 
-            {/* Links */}
+            {/* Links & Documents */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6"
+              className="p-6"
+              style={{ background: bg2, border: '1px solid ' + border, borderRadius: 4 }}
             >
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Links & Documents</h3>
+              <h3
+                className="mb-4"
+                style={{ ...bc(11, 700, { letterSpacing: 3, textTransform: 'uppercase', color: text2 }), borderLeft: `3px solid ${ORG}`, paddingLeft: 10 }}
+              >
+                Links &amp; Documents
+              </h3>
               <div className="space-y-3">
                 {application.cvUrl && (
                   <a
                     href={application.cvUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-3 p-3 bg-blue-50 text-blue-700 rounded-xl hover:bg-blue-100 transition-colors"
+                    className="flex items-center gap-3 p-3 transition-opacity hover:opacity-80"
+                    style={{
+                      ...ba(13, 600, { color: TEAL }),
+                      background: 'rgba(26,92,120,.1)',
+                      border: '1px solid rgba(26,92,120,.2)',
+                      borderRadius: 4,
+                      textDecoration: 'none',
+                    }}
                   >
                     <FileText className="w-5 h-5" />
-                    <span className="font-medium flex-1">View CV</span>
+                    <span className="flex-1">View CV</span>
                     <ExternalLink className="w-4 h-4" />
                   </a>
                 )}
@@ -511,10 +636,17 @@ const InternshipViewPage = () => {
                     href={application.portfolioUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-3 p-3 bg-purple-50 text-purple-700 rounded-xl hover:bg-purple-100 transition-colors"
+                    className="flex items-center gap-3 p-3 transition-opacity hover:opacity-80"
+                    style={{
+                      ...ba(13, 600, { color: ORG }),
+                      background: 'rgba(232,98,26,.1)',
+                      border: '1px solid rgba(232,98,26,.2)',
+                      borderRadius: 4,
+                      textDecoration: 'none',
+                    }}
                   >
                     <Briefcase className="w-5 h-5" />
-                    <span className="font-medium flex-1">Portfolio</span>
+                    <span className="flex-1">Portfolio</span>
                     <ExternalLink className="w-4 h-4" />
                   </a>
                 )}
@@ -523,10 +655,17 @@ const InternshipViewPage = () => {
                     href={application.githubUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-3 p-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors"
+                    className="flex items-center gap-3 p-3 transition-opacity hover:opacity-80"
+                    style={{
+                      ...ba(13, 600, { color: textC }),
+                      background: bg3,
+                      border: '1px solid ' + border,
+                      borderRadius: 4,
+                      textDecoration: 'none',
+                    }}
                   >
                     <Github className="w-5 h-5" />
-                    <span className="font-medium flex-1">GitHub</span>
+                    <span className="flex-1">GitHub</span>
                     <ExternalLink className="w-4 h-4" />
                   </a>
                 )}
@@ -535,15 +674,24 @@ const InternshipViewPage = () => {
                     href={application.linkedinUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-3 p-3 bg-sky-50 text-sky-700 rounded-xl hover:bg-sky-100 transition-colors"
+                    className="flex items-center gap-3 p-3 transition-opacity hover:opacity-80"
+                    style={{
+                      ...ba(13, 600, { color: TEAL }),
+                      background: 'rgba(26,92,120,.1)',
+                      border: '1px solid rgba(26,92,120,.2)',
+                      borderRadius: 4,
+                      textDecoration: 'none',
+                    }}
                   >
                     <Linkedin className="w-5 h-5" />
-                    <span className="font-medium flex-1">LinkedIn</span>
+                    <span className="flex-1">LinkedIn</span>
                     <ExternalLink className="w-4 h-4" />
                   </a>
                 )}
                 {!application.cvUrl && !application.portfolioUrl && !application.githubUrl && !application.linkedinUrl && (
-                  <p className="text-sm text-gray-500 text-center py-4">No links provided</p>
+                  <p className="text-center py-4" style={{ ...ba(13, 400, { color: text2 }) }}>
+                    No links provided
+                  </p>
                 )}
               </div>
             </motion.div>
@@ -553,21 +701,27 @@ const InternshipViewPage = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.25 }}
-              className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6"
+              className="p-6"
+              style={{ background: bg2, border: '1px solid ' + border, borderRadius: 4 }}
             >
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Application Info</h3>
-              <div className="space-y-3 text-sm">
+              <h3
+                className="mb-4"
+                style={{ ...bc(11, 700, { letterSpacing: 3, textTransform: 'uppercase', color: text2 }), borderLeft: `3px solid ${ORG}`, paddingLeft: 10 }}
+              >
+                Application Info
+              </h3>
+              <div className="space-y-3">
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Applied On</span>
-                  <span className="font-medium text-gray-900">{formatDate(application.createdAt)}</span>
+                  <span style={{ ...ba(12, 400, { color: text2 }) }}>Applied On</span>
+                  <span style={{ ...ba(13, 600, { color: textC }) }}>{formatDate(application.createdAt)}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Last Updated</span>
-                  <span className="font-medium text-gray-900">{formatDate(application.updatedAt)}</span>
+                <div className="flex justify-between" style={{ borderTop: '1px solid ' + border, paddingTop: 10 }}>
+                  <span style={{ ...ba(12, 400, { color: text2 }) }}>Last Updated</span>
+                  <span style={{ ...ba(13, 600, { color: textC }) }}>{formatDate(application.updatedAt)}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Contacted</span>
-                  <span className={`font-medium ${application.isContacted ? 'text-green-600' : 'text-gray-400'}`}>
+                <div className="flex justify-between" style={{ borderTop: '1px solid ' + border, paddingTop: 10 }}>
+                  <span style={{ ...ba(12, 400, { color: text2 }) }}>Contacted</span>
+                  <span style={{ ...ba(13, 600, { color: application.isContacted ? '#4ade80' : text2 }) }}>
                     {application.isContacted ? 'Yes' : 'No'}
                   </span>
                 </div>

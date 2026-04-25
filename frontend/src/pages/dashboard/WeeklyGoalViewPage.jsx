@@ -3,10 +3,13 @@ import { useParams, useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import WeeklyGoalView from '../../components/dashboard/weeklyGoal/WeeklyGoalView';
 import weeklyGoalService from '../../services/weeklyGoalService';
+import { useDashboardTheme } from '../../utils/dashboardTheme';
+import { ORG, TEAL, bb, bc, ba } from '../../utils/homeConstants';
 
 const WeeklyGoalViewPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { isDark, bg, bg2, bg3, textC, text2, text3, border } = useDashboardTheme();
 
   const [goal, setGoal] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -43,10 +46,19 @@ const WeeklyGoalViewPage = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50/20 to-stone-50 flex items-center justify-center">
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{ background: bg, fontFamily: "'Barlow',sans-serif" }}
+      >
         <div className="flex flex-col items-center gap-4">
-          <div className="w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full animate-spin" />
-          <p className="text-sm font-semibold text-stone-500">Loading goal...</p>
+          <div
+            className="w-10 h-10 rounded-full animate-spin"
+            style={{
+              border: `4px solid ${border}`,
+              borderTopColor: ORG,
+            }}
+          />
+          <p style={{ ...ba(13, 600, { color: text2 }) }}>Loading goal...</p>
         </div>
       </div>
     );
@@ -54,12 +66,21 @@ const WeeklyGoalViewPage = () => {
 
   if (!goal) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50/20 to-stone-50 flex items-center justify-center">
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{ background: bg, fontFamily: "'Barlow',sans-serif" }}
+      >
         <div className="text-center">
-          <p className="text-lg font-semibold text-stone-600">Goal not found</p>
+          <p style={{ ...ba(16, 600, { color: textC }) }}>Goal not found</p>
           <button
             onClick={handleBack}
-            className="mt-4 text-orange-500 hover:text-orange-600 font-semibold"
+            className="mt-4 font-semibold"
+            style={{
+              ...ba(14, 600, { color: ORG }),
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+            }}
           >
             ← Back to Goals
           </button>

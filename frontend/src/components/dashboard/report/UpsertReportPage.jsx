@@ -4,10 +4,20 @@ import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
 import Swal from 'sweetalert2';
 import reportService from '../../../services/reportService';
+import { useDashboardTheme } from '../../../utils/dashboardTheme';
+import { ORG, TEAL, bb, bc, ba } from '../../../utils/homeConstants';
+import { 
+  FileText, Calendar, Upload, Edit3, 
+  ArrowLeft, Eye, Save, X, Check,
+  Clock, AlertCircle, FilePlus, Zap
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const UpsertReportPage = () => {
-  const { id } = useParams(); // Get report ID from URL params
-  const navigate = useNavigate(); // For navigation
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const { bg, bg2, textC, text2, text3, border, isDark } = useDashboardTheme();
+
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [reportFile, setReportFile] = useState(null);
@@ -15,36 +25,28 @@ const UpsertReportPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [inputMethod, setInputMethod] = useState('editor'); // 'editor' or 'file'
-  const isEditMode = Boolean(id); // Determine if editing or creating
+  const isEditMode = Boolean(id);
 
-  // Fetch report data if in edit mode
   useEffect(() => {
     const fetchReport = async () => {
-      if (!id) return; // Skip if no ID (create mode)
+      if (!id) return;
       setIsLoading(true);
       try {
         const report = await reportService.getReportById(id);
         setTitle(report.title || '');
         setContent(report.content || '');
-        // Format createdAt for datetime-local input (YYYY-MM-DDThh:mm)
         if (report.createdAt) {
           const date = new Date(report.createdAt);
-          const formattedDate = date.toISOString().slice(0, 16); // e.g., 2025-10-27T22:34
-          setCreatedAt(formattedDate);
+          setCreatedAt(date.toISOString().slice(0, 16));
         }
-        // If reportUrl exists, set inputMethod to 'file'
-        if (report.reportUrl) {
-          setInputMethod('file');
-        }
+        if (report.reportUrl) setInputMethod('file');
       } catch (err) {
         Swal.fire({
           icon: 'error',
-          title: 'Failed to Load Report',
-          text: err.message || 'Could not fetch report data',
-          confirmButtonColor: '#ef4444',
-        }).then(() => {
-          navigate('/admin/dashboard/report');
-        });
+          title: 'LOAD FAILED',
+          text: err.message,
+          confirmButtonColor: ORG,
+        }).then(() => navigate('/admin/dashboard/report'));
       } finally {
         setIsLoading(false);
       }
@@ -52,464 +54,249 @@ const UpsertReportPage = () => {
     fetchReport();
   }, [id, navigate]);
 
-  // Handle file selection
   const handleFileChange = (e) => {
     const file = e.target.files[0];
-    if (file) {
-      setReportFile(file);
-    }
+    if (file) setReportFile(file);
   };
 
-  // Handle preview
   const handlePreview = () => {
     if (!title.trim()) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Missing Title',
-        text: 'Please enter a report title',
-        confirmButtonColor: '#3b82f6',
-      });
+      Swal.fire({ icon: 'warning', title: 'TITLE REQUIRED', text: 'Please provide a title for the report', confirmButtonColor: ORG });
       return;
     }
     if (inputMethod === 'editor' && (!content.trim() || content === '<p><br></p>')) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Empty Content',
-        text: 'Please write some content for the report',
-        confirmButtonColor: '#3b82f6',
-      });
+      Swal.fire({ icon: 'warning', title: 'CONTENT EMPTY', text: 'Please write some content', confirmButtonColor: ORG });
       return;
     }
-    if (inputMethod === 'file' && !reportFile && !isEditMode) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'No File Selected',
-        text: 'Please upload a file for the report',
-        confirmButtonColor: '#3b82f6',
-      });
-      return;
-    }
+    
     if (inputMethod === 'editor') {
       Swal.fire({
-        title: title,
-        html: `
-          <div class="text-left">
-            <div class="ql-editor" style="padding: 1rem;">
-              ${content}
-            </div>
-          </div>
-        `,
+        title: `<span style="font-family: 'Bebas Neue'; letter-spacing: 1px;">${title.toUpperCase()}</span>`,
+        html: `<div style="text-align: left; background: ${bg}; color: ${textC}; padding: 24px; border-radius: 16px;" class="ql-editor">${content}</div>`,
         width: '800px',
-        showCloseButton: true,
-        confirmButtonText: 'Close Preview',
-        confirmButtonColor: '#3b82f6',
-        customClass: {
-          htmlContainer: 'swal-preview-container',
-        },
+        background: bg2,
+        confirmButtonText: 'CLOSE PREVIEW',
+        confirmButtonColor: ORG,
       });
     } else {
-      Swal.fire({
-        icon: 'info',
-        title: 'File Preview',
-        text: 'File previews are not available. The selected file will be uploaded upon submission.',
-        confirmButtonColor: '#3b82f6',
-      });
+      Swal.fire({ icon: 'info', title: 'FILE MODE', text: 'File preview is not available for uploads.', confirmButtonColor: TEAL });
     }
   };
 
-  // Handle form submission
-  const handleSubmit = async () => {
-    // Validation
-    if (!title.trim()) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Validation Error',
-        text: 'Title is required',
-        confirmButtonColor: '#3b82f6',
-      });
-      return;
-    }
-    if (inputMethod === 'editor' && (!content.trim() || content === '<p><br></p>')) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Validation Error',
-        text: 'Report content is required',
-        confirmButtonColor: '#3b82f6',
-      });
-      return;
-    }
-    if (inputMethod === 'file' && !reportFile && !isEditMode) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Validation Error',
-        text: 'A file is required when uploading a report',
-        confirmButtonColor: '#3b82f6',
-      });
-      return;
-    }
-    if (!createdAt) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Validation Error',
-        text: 'Creation date and time are required',
-        confirmButtonColor: '#3b82f6',
-      });
-      return;
-    }
-    // Validate createdAt format
-    const date = new Date(createdAt);
-    if (isNaN(date.getTime())) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Validation Error',
-        text: 'Invalid date format',
-        confirmButtonColor: '#3b82f6',
-      });
-      return;
-    }
-
-    // Ask user what they want to do
-    const result = await Swal.fire({
-      title: 'Ready to Submit?',
-      text: 'Would you like to preview your report before submitting?',
-      icon: 'question',
-      showCancelButton: true,
-      showDenyButton: true,
-      confirmButtonText: 'Preview First',
-      denyButtonText: isEditMode ? 'Update Now' : 'Submit Now',
-      cancelButtonText: 'Cancel',
-      confirmButtonColor: '#3b82f6',
-      denyButtonColor: '#10b981',
-      cancelButtonColor: '#6b7280',
-    });
-
-    if (result.isConfirmed) {
-      handlePreview();
-      return;
-    }
-    if (result.isDenied) {
-      await submitReport();
-    }
-  };
-
-  // Submit report to backend
   const submitReport = async () => {
+    if (!title.trim() || !createdAt) {
+      Swal.fire({ icon: 'error', title: 'VALIDATION ERROR', text: 'Title and Date are required', confirmButtonColor: ORG });
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const reportData = {
         title: title.trim(),
-        createdAt: new Date(createdAt).toISOString(), // Convert to ISO string
+        createdAt: new Date(createdAt).toISOString(),
       };
-      if (inputMethod === 'editor') {
-        reportData.content = content;
-      } else if (inputMethod === 'file' && reportFile) {
-        reportData.reportFile = reportFile;
-      }
-      if (isEditMode) {
-        await reportService.updateReport(id, reportData);
-        await Swal.fire({
-          icon: 'success',
-          title: 'Report Updated!',
-          text: 'Your report has been successfully updated',
-          confirmButtonColor: '#10b981',
-        });
-      } else {
-        await reportService.createReport(reportData);
-        await Swal.fire({
-          icon: 'success',
-          title: 'Report Created!',
-          text: 'Your report has been successfully saved',
-          confirmButtonColor: '#10b981',
-        });
-      }
+      if (inputMethod === 'editor') reportData.content = content;
+      else if (inputMethod === 'file' && reportFile) reportData.reportFile = reportFile;
+
+      if (isEditMode) await reportService.updateReport(id, reportData);
+      else await reportService.createReport(reportData);
+
+      await Swal.fire({ icon: 'success', title: 'SUCCESS', text: `Report ${isEditMode ? 'updated' : 'created'} successfully`, confirmButtonColor: TEAL });
       navigate('/admin/dashboard/report');
     } catch (err) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Submission Failed',
-        text: err.message || `An error occurred while ${isEditMode ? 'updating' : 'saving'} the report`,
-        confirmButtonColor: '#ef4444',
-      });
+      Swal.fire({ icon: 'error', title: 'FAILED', text: err.message, confirmButtonColor: ORG });
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Handle cancel
-  const handleCancel = () => {
-    if (
-      title.trim() ||
-      (content.trim() && content !== '<p><br></p>') ||
-      reportFile ||
-      createdAt
-    ) {
-      Swal.fire({
-        title: 'Discard Changes?',
-        text: 'You have unsaved changes. Are you sure you want to leave?',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Yes, Discard',
-        cancelButtonText: 'No, Stay',
-        confirmButtonColor: '#ef4444',
-        cancelButtonColor: '#6b7280',
-      }).then((result) => {
-        if (result.isConfirmed) {
-          navigate('/admin/dashboard/report');
-        }
-      });
-    } else {
-      navigate('/admin/dashboard/report');
-    }
-  };
+  const SectionLabel = ({ icon: Icon, label, required = false }) => (
+    <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, ...bc(12, 800, { color: text3, letterSpacing: '0.05em' }) }}>
+      <Icon size={14} style={{ color: ORG }} />
+      {label.toUpperCase()} {required && <span style={{ color: ORG }}>*</span>}
+    </label>
+  );
 
-  // Loading state
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#ff5a00]"></div>
-          <p className="mt-4 text-gray-600 font-medium">Loading report...</p>
-        </div>
-      </div>
-    );
-  }
+  if (isLoading) return (
+    <div style={{ height: '100vh', background: bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ width: 40, height: 40, border: `3px solid ${border}`, borderTopColor: ORG, borderRadius: '50%' }} className="animate-spin" />
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
-      <div className=" mx-auto">
+    <div style={{ minHeight: '100vh', background: bg, paddingBottom: 100 }}>
+      <div className="max-w-[1000px] mx-auto px-4 py-12">
+        
         {/* Header */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-          <h1 className="text-3xl font-bold text-gray-800">
-            📋 {isEditMode ? 'Update Report' : 'Create New Report'}
-          </h1>
-          <p className="text-gray-600 mt-2">
-            {isEditMode ? 'Edit your work progress report' : 'Write or upload your daily work progress report'}
-          </p>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 40 }}>
+          <button
+            onClick={() => navigate('/admin/dashboard/report')}
+            style={{ background: 'none', border: 'none', color: text3, display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', ...bc(12, 700) }}
+          >
+            <ArrowLeft size={16} /> DISCARD & EXIT
+          </button>
+          <div style={{ ...bc(12, 800, { color: text3, letterSpacing: '0.1em' }) }}>
+            REPORTS / <span style={{ color: ORG }}>{isEditMode ? 'EDIT' : 'CREATE'} SESSION</span>
+          </div>
         </div>
-        {/* Form */}
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          {/* Title Input */}
-          <div className="mb-6">
-            <label htmlFor="title" className="block text-sm font-semibold text-gray-700 mb-2">
-              Report Title <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              id="title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="e.g., Daily Progress Report - October 21, 2025"
-              disabled={isSubmitting}
-            />
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          style={{ background: bg2, border: `1px solid ${border}`, borderRadius: 40, padding: '48px', boxShadow: '0 20px 60px rgba(0,0,0,0.02)' }}
+        >
+          <div style={{ marginBottom: 48 }}>
+            <h1 style={{ ...bc(40, 800, { color: textC, margin: '0 0 8px' }) }}>{isEditMode ? 'REFINE REPORT' : 'NEW PROGRESS LOG'}</h1>
+            <p style={{ ...ba(16, 500, { color: text2, margin: 0 }) }}>Document your results and maintain transparency with the team.</p>
           </div>
-          {/* Created At Input */}
-          <div className="mb-6">
-            <label htmlFor="createdAt" className="block text-sm font-semibold text-gray-700 mb-2">
-              Creation Date and Time <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="datetime-local"
-              id="createdAt"
-              value={createdAt}
-              onChange={(e) => setCreatedAt(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              disabled={isSubmitting}
-            />
-          </div>
-          {/* Input Method Selection */}
-          <div className="mb-6">
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Input Method <span className="text-red-500">*</span>
-            </label>
-            <div className="flex gap-4">
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  value="editor"
-                  checked={inputMethod === 'editor'}
-                  onChange={() => {
-                    setInputMethod('editor');
-                    setReportFile(null);
-                  }}
-                  disabled={isSubmitting}
-                  className="mr-2"
-                />
-                Write Report
-              </label>
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  value="file"
-                  checked={inputMethod === 'file'}
-                  onChange={() => {
-                    setInputMethod('file');
-                    setContent('');
-                  }}
-                  disabled={isSubmitting}
-                  className="mr-2"
-                />
-                Upload File
-              </label>
-            </div>
-          </div>
-          {/* Conditional Input: Editor or File Upload */}
-          {inputMethod === 'editor' ? (
-            <div className="mb-6">
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Report Content <span className="text-red-500">*</span>
-              </label>
-              <ReactQuill
-                theme="snow"
-                value={content}
-                onChange={setContent}
-                placeholder="Start writing your report here..."
-                modules={{
-                  toolbar: [
-                    [{ header: [1, 2, 3, false] }],
-                    ['bold', 'italic', 'underline', 'strike'],
-                    [{ list: 'ordered' }, { list: 'bullet' }],
-                    ['blockquote', 'code-block'],
-                    ['link', 'image'],
-                    [{ align: [] }],
-                    [{ color: [] }, { background: [] }],
-                    ['clean'],
-                  ],
-                }}
-                formats={[
-                  'header',
-                  'bold',
-                  'italic',
-                  'underline',
-                  'strike',
-                  'blockquote',
-                  'code-block',
-                  'list',
-                  'bullet',
-                  'link',
-                  'image',
-                  'align',
-                  'color',
-                  'background',
-                ]}
-                className="bg-white rounded-lg"
-                style={{ minHeight: '400px' }}
-              />
-            </div>
-          ) : (
-            <div className="mb-6">
-              <label htmlFor="reportFile" className="block text-sm font-semibold text-gray-700 mb-2">
-                Upload Report File <span className="text-red-500">*</span>
-              </label>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+            {/* Title */}
+            <div>
+              <SectionLabel icon={FileText} label="Report Title" required />
               <input
-                type="file"
-                id="reportFile"
-                onChange={handleFileChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                disabled={isSubmitting}
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="e.g. Weekly Operations Summary"
+                style={{ 
+                  width: '100%', padding: '16px 20px', background: bg, border: `1px solid ${border}`, borderRadius: 16, 
+                  color: textC, ...ba(15, 500), outline: 'none', transition: 'border-color 0.2s'
+                }}
               />
-              {isEditMode && inputMethod === 'file' && (
-                <p className="text-sm text-gray-500 mt-2">
-                  Current file: {reportFile ? reportFile.name : 'No new file selected'}
-                </p>
-              )}
             </div>
-          )}
-          {/* Action Buttons */}
-          <div className="flex justify-between items-center pt-4 border-t">
+
+            {/* Date */}
+            <div>
+              <SectionLabel icon={Clock} label="Report Timestamp" required />
+              <input
+                type="datetime-local"
+                value={createdAt}
+                onChange={(e) => setCreatedAt(e.target.value)}
+                style={{ 
+                  width: '100%', padding: '15px 20px', background: bg, border: `1px solid ${border}`, borderRadius: 16, 
+                  color: textC, ...ba(15, 500), outline: 'none'
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Input Method Toggle */}
+          <div style={{ marginBottom: 40 }}>
+            <SectionLabel icon={Zap} label="Submission Method" />
+            <div style={{ display: 'flex', gap: 8, background: bg, padding: 6, borderRadius: 16, border: `1px solid ${border}`, width: 'fit-content' }}>
+              {[
+                { id: 'editor', label: 'WRITTEN LOG', icon: Edit3 },
+                { id: 'file', label: 'FILE UPLOAD', icon: Upload }
+              ].map((m) => (
+                <button
+                  key={m.id}
+                  onClick={() => setInputMethod(m.id)}
+                  style={{ 
+                    display: 'flex', alignItems: 'center', gap: 10, padding: '10px 20px', borderRadius: 12, border: 'none',
+                    background: inputMethod === m.id ? ORG : 'transparent',
+                    color: inputMethod === m.id ? '#fff' : text3,
+                    cursor: 'pointer', ...bc(11, 800, { transition: 'all 0.2s' })
+                  }}
+                >
+                  <m.icon size={14} /> {m.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Content Area */}
+          <AnimatePresence mode="wait">
+            {inputMethod === 'editor' ? (
+              <motion.div
+                key="editor"
+                initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }}
+              >
+                <SectionLabel icon={Edit3} label="Detailed Content" required />
+                <div style={{ borderRadius: 24, overflow: 'hidden', border: `1px solid ${border}`, background: '#fff' }}>
+                  <ReactQuill
+                    theme="snow"
+                    value={content}
+                    onChange={setContent}
+                    placeholder="Capture your achievements, challenges, and next steps..."
+                    style={{ height: 400 }}
+                    modules={{
+                      toolbar: [
+                        [{ header: [1, 2, false] }],
+                        ['bold', 'italic', 'underline'],
+                        [{ list: 'ordered' }, { list: 'bullet' }],
+                        ['link', 'blockquote', 'code-block'],
+                        ['clean']
+                      ]
+                    }}
+                  />
+                </div>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="file"
+                initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }}
+              >
+                <SectionLabel icon={Upload} label="Report Document" required />
+                <div 
+                  style={{ 
+                    border: `2px dashed ${border}`, borderRadius: 32, padding: '60px 40px', textAlign: 'center',
+                    background: `${ORG}05`, cursor: 'pointer', transition: 'all 0.2s'
+                  }}
+                  onMouseOver={(e) => e.currentTarget.style.borderColor = ORG}
+                  onMouseOut={(e) => e.currentTarget.style.borderColor = border}
+                  onClick={() => document.getElementById('reportFile').click()}
+                >
+                  <div style={{ width: 64, height: 64, background: ORG, color: '#fff', borderRadius: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px', boxShadow: `0 8px 24px ${ORG}40` }}>
+                    <FilePlus size={32} />
+                  </div>
+                  <h3 style={{ ...bc(18, 800, { color: textC, margin: '0 0 8px' }) }}>{reportFile ? reportFile.name : 'SELECT DOCUMENT'}</h3>
+                  <p style={{ ...ba(14, 500, { color: text3, margin: 0 }) }}>PDF, DOCX, or Excel files preferred (Max 10MB)</p>
+                  <input type="file" id="reportFile" hidden onChange={handleFileChange} />
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
+
+        {/* Footer Actions */}
+        <div style={{ 
+          marginTop: 32, display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          background: bg2, border: `1px solid ${border}`, borderRadius: 24, padding: '20px 32px'
+        }}>
+          <button
+            onClick={() => navigate('/admin/dashboard/report')}
+            style={{ background: 'none', border: 'none', color: text3, ...bc(13, 700), cursor: 'pointer' }}
+          >
+            DISCARD
+          </button>
+          <div style={{ display: 'flex', gap: 16 }}>
             <button
-              type="button"
-              onClick={handleCancel}
-              disabled={isSubmitting}
-              className="px-6 py-2.5 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition"
+              onClick={handlePreview}
+              style={{ padding: '12px 24px', borderRadius: 12, background: bg, border: `1px solid ${border}`, color: text2, cursor: 'pointer', ...bc(13, 700), display: 'flex', alignItems: 'center', gap: 10 }}
             >
-              Cancel
+              <Eye size={18} /> PREVIEW
             </button>
-            <div className="flex space-x-3">
-              <button
-                type="button"
-                onClick={handlePreview}
-                disabled={isSubmitting}
-                className="px-6 py-2.5 text-blue-700 bg-blue-100 rounded-lg hover:bg-blue-200 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition"
-              >
-                👁️ Preview
-              </button>
-              <button
-                type="button"
-                onClick={handleSubmit}
-                disabled={isSubmitting}
-                className="px-6 py-2.5 text-white bg-slate-800 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition"
-              >
-                {isSubmitting
-                  ? '💾 Saving...'
-                  : isEditMode
-                  ? '💾 Update Report'
-                  : '💾 Submit Report'}
-              </button>
-            </div>
+            <button
+              onClick={submitReport}
+              disabled={isSubmitting}
+              style={{ 
+                padding: '12px 32px', borderRadius: 12, background: ORG, color: '#fff', border: 'none', 
+                cursor: 'pointer', ...bc(13, 700), display: 'flex', alignItems: 'center', gap: 10,
+                boxShadow: `0 8px 24px ${ORG}40`, opacity: isSubmitting ? 0.7 : 1
+              }}
+            >
+              <Save size={18} /> {isSubmitting ? 'SAVING...' : isEditMode ? 'UPDATE LOG' : 'PUBLISH REPORT'}
+            </button>
           </div>
         </div>
       </div>
-      {/* Custom Styles for Preview */}
-      <style jsx>{`
-        .swal-preview-container .ql-editor {
-          padding: 1rem;
-          max-height: 500px;
-          overflow-y: auto;
-        }
-        .swal-preview-container .ql-editor h1 {
-          font-size: 2em;
-          font-weight: bold;
-          margin-top: 0.67em;
-          margin-bottom: 0.67em;
-        }
-        .swal-preview-container .ql-editor h2 {
-          font-size: 1.5em;
-          font-weight: bold;
-          margin-top: 0.83em;
-          margin-bottom: 0.83em;
-        }
-        .swal-preview-container .ql-editor h3 {
-          font-size: 1.17em;
-          font-weight: bold;
-          margin-top: 1em;
-          margin-bottom: 1em;
-        }
-        .swal-preview-container .ql-editor ul,
-        .swal-preview-container .ql-editor ol {
-          padding-left: 1.5em;
-          margin-bottom: 1em;
-        }
-        .swal-preview-container .ql-editor ul {
-          list-style-type: disc;
-        }
-        .swal-preview-container .ql-editor ol {
-          list-style-type: decimal;
-        }
-        .swal-preview-container .ql-editor li {
-          margin-bottom: 0.5em;
-        }
-        .swal-preview-container .ql-editor p {
-          margin-bottom: 1em;
-        }
-        .swal-preview-container .ql-editor strong {
-          font-weight: bold;
-        }
-        .swal-preview-container .ql-editor em {
-          font-style: italic;
-        }
-        .swal-preview-container .ql-editor blockquote {
-          border-left: 4px solid #ccc;
-          padding-left: 1em;
-          margin-left: 0;
-          font-style: italic;
-        }
-        .ql-container {
-          min-height: 400px;
-        }
-        .ql-editor {
-          min-height: 400px;
-        }
+
+      <style>{`
+        .ql-toolbar.ql-snow { border: none !important; border-bottom: 1px solid ${border} !important; padding: 12px 20px !important; background: ${isDark ? '#f8f9fa' : '#fff'} !important; }
+        .ql-container.ql-snow { border: none !important; }
+        .ql-editor { padding: 24px !important; font-family: 'Barlow', sans-serif !important; font-size: 15px !important; color: #1a1a1a !important; line-height: 1.7 !important; }
+        .ql-editor.ql-blank::before { color: #999 !important; font-style: normal !important; }
       `}</style>
     </div>
   );

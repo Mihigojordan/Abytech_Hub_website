@@ -1,67 +1,72 @@
 import React from 'react';
-import { Copy, Edit, Trash2, Forward, CheckCheck } from 'lucide-react';
+import { Copy, Edit, Trash2, Forward, CheckCheck, Reply } from 'lucide-react';
+import { useDashboardTheme } from '../../../../utils/dashboardTheme';
+import { ORG, TEAL, bb, bc, ba } from '../../../../utils/homeConstants';
+import { motion } from 'framer-motion';
 
 /**
  * Context menu for message actions
- * @param {string} messageId - The message ID
- * @param {boolean} isSent - Whether the message was sent by current user
- * @param {boolean} isGroup - Whether this is a group conversation
- * @param {function} onAction - Callback for menu actions
- * @param {string} position - Menu position (left/right)
  */
 const MessageMenu = ({ messageId, isSent, isGroup = false, onAction, position = 'right' }) => {
+    const { bg, bg2, bg3, textC, text2, text3, border } = useDashboardTheme();
+
+    const MenuItem = ({ icon: Icon, label, onClick, color = textC, hoverBg = bg3 }) => (
+        <motion.button
+            whileHover={{ background: hoverBg }}
+            onClick={onClick}
+            style={{
+                width: '100%',
+                padding: '10px 16px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 10,
+                border: 'none',
+                background: 'none',
+                cursor: 'pointer',
+                ...ba(13, 500, { color }),
+                transition: 'all 0.2s'
+            }}
+        >
+            <Icon style={{ width: 14, height: 14 }} />
+            <span>{label}</span>
+        </motion.button>
+    );
+
     return (
-        <div className={`absolute top-8 ${position}-2 bg-white rounded-lg shadow-xl border border-gray-200 py-1 z-10 min-w-[150px] animate-in fade-in slide-in-from-top-2 duration-200`}>
-            <button
-                onClick={() => onAction('copy', messageId)}
-                className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 flex items-center space-x-2 transition-colors"
-            >
-                <Copy className="w-4 h-4" />
-                <span>Copy</span>
-            </button>
-            <button
-                onClick={() => onAction('reply', messageId)}
-                className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 flex items-center space-x-2 transition-colors"
-            >
-                <Forward className="w-4 h-4" />
-                <span>Reply</span>
-            </button>
+        <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            style={{
+                position: 'absolute',
+                top: 32,
+                [position]: 0,
+                background: bg,
+                border: `1px solid ${border}`,
+                borderRadius: 4,
+                padding: '4px 0',
+                zIndex: 100,
+                minWidth: 160,
+                boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
+                overflow: 'hidden'
+            }}
+        >
+            <MenuItem icon={Copy} label="Copy Text" onClick={() => onAction('copy', messageId)} />
+            <MenuItem icon={Reply} label="Reply" onClick={() => onAction('reply', messageId)} />
+            
             {isSent && (
-                <button
-                    onClick={() => onAction('edit', messageId)}
-                    className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 flex items-center space-x-2 transition-colors"
-                >
-                    <Edit className="w-4 h-4" />
-                    <span>Edit</span>
-                </button>
+                <MenuItem icon={Edit} label="Edit Message" onClick={() => onAction('edit', messageId)} />
             )}
-            <button
-                onClick={() => onAction('forward', messageId)}
-                className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 flex items-center space-x-2 transition-colors"
-            >
-                <Forward className="w-4 h-4" />
-                <span>Forward</span>
-            </button>
-            {/* Read by option - only for sent messages in group conversations */}
+            
+            <MenuItem icon={Forward} label="Forward" onClick={() => onAction('forward', messageId)} />
+            
             {isSent && isGroup && (
-                <button
-                    onClick={() => onAction('readby', messageId)}
-                    className="w-full px-4 py-2 text-left text-sm hover:bg-blue-50 flex items-center space-x-2 text-blue-600 transition-colors"
-                >
-                    <CheckCheck className="w-4 h-4" />
-                    <span>Read by</span>
-                </button>
+                <MenuItem icon={CheckCheck} label="Read By" color={ORG} hoverBg="rgba(232,98,26,0.1)" onClick={() => onAction('readby', messageId)} />
             )}
+            
             {isSent && (
-                <button
-                    onClick={() => onAction('delete', messageId)}
-                    className="w-full px-4 py-2 text-left text-sm hover:bg-red-50 flex items-center space-x-2 text-red-600 transition-colors"
-                >
-                    <Trash2 className="w-4 h-4" />
-                    <span>Delete</span>
-                </button>
+                <MenuItem icon={Trash2} label="Delete" color="#ef4444" hoverBg="rgba(239,68,68,0.1)" onClick={() => onAction('delete', messageId)} />
             )}
-        </div>
+        </motion.div>
     );
 };
 

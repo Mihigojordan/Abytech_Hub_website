@@ -9,6 +9,8 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import meetingService from '../../services/meetingService';
 import { useNavigate } from 'react-router-dom';
+import { useDashboardTheme } from '../../utils/dashboardTheme';
+import { ORG, TEAL, bb, bc, ba } from '../../utils/homeConstants';
 
 const MeetingManagement = () => {
   const [meetings, setMeetings] = useState([]);
@@ -34,12 +36,13 @@ const MeetingManagement = () => {
   });
   const [loadingStats, setLoadingStats] = useState(false);
   const navigate = useNavigate();
+  const { isDark, bg, bg2, bg3, textC, text2, text3, border } = useDashboardTheme();
 
   const statusConfig = {
-    SCHEDULED: { label: 'Scheduled', color: 'blue', bgColor: 'bg-blue-100', textColor: 'text-blue-700', icon: Calendar },
-    ONGOING: { label: 'Ongoing', color: 'green', bgColor: 'bg-green-100', textColor: 'text-green-700', icon: Play },
-    COMPLETED: { label: 'Completed', color: 'gray', bgColor: 'bg-gray-100', textColor: 'text-gray-700', icon: CheckCircle },
-    CANCELLED: { label: 'Cancelled', color: 'red', bgColor: 'bg-red-100', textColor: 'text-red-700', icon: XCircle },
+    SCHEDULED: { label: 'Scheduled', icon: Calendar },
+    ONGOING: { label: 'Ongoing', icon: Play },
+    COMPLETED: { label: 'Completed', icon: CheckCircle },
+    CANCELLED: { label: 'Cancelled', icon: XCircle },
   };
 
   useEffect(() => {
@@ -197,9 +200,23 @@ const MeetingManagement = () => {
   };
 
   const getStatusBadge = (status) => {
+    const badgeStyles = {
+      SCHEDULED: { background: 'rgba(26,92,120,.15)', color: TEAL },
+      ONGOING:   { background: 'rgba(232,98,26,.15)',  color: ORG },
+      COMPLETED: { background: 'rgba(74,222,128,.15)', color: '#4ade80' },
+      CANCELLED: { background: 'rgba(232,64,64,.15)',  color: '#e84040' },
+    };
     const config = statusConfig[status] || statusConfig.SCHEDULED;
+    const style = badgeStyles[status] || badgeStyles.SCHEDULED;
     return (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${config.bgColor} ${config.textColor}`}>
+      <span style={{
+        ...bc(10, 600),
+        ...style,
+        padding: '2px 8px',
+        borderRadius: 4,
+        letterSpacing: 1,
+        textTransform: 'uppercase',
+      }}>
         {config.label}
       </span>
     );
@@ -210,77 +227,94 @@ const MeetingManagement = () => {
   const endIndex = startIndex + itemsPerPage;
   const currentMeetings = meetings.slice(startIndex, endIndex);
 
+  const actionBtnStyle = {
+    background: bg3,
+    border: `1px solid ${border}`,
+    borderRadius: 4,
+    color: text2,
+    padding: '6px',
+    cursor: 'pointer',
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  };
+
   const renderTableView = () => (
-    <div className="bg-white rounded-xl border border-gray-100 shadow-sm w-full">
+    <div style={{ background: bg2, border: `1px solid ${border}`, borderRadius: 4 }} className="w-full">
       <div className="overflow-x-auto">
         <table className="w-full text-xs">
-          <thead style={{ backgroundColor: 'rgba(249, 115, 22, 0.05)' }}>
+          <thead style={{ background: bg3 }}>
             <tr>
-              <th className="text-left py-3 px-4 font-semibold cursor-pointer hover:bg-gray-50 transition-colors"
-                style={{ color: 'rgb(249, 115, 22)' }}
+              <th className="text-left py-3 px-4 cursor-pointer"
+                style={bc(10, 700, { letterSpacing: 3, textTransform: 'uppercase', color: text2 })}
                 onClick={() => { setSortBy('title'); setSortOrder(sortBy === 'title' ? (sortOrder === 'asc' ? 'desc' : 'asc') : 'asc'); }}>
                 <div className="flex items-center space-x-1">
                   <span>Title</span>
-                  <ChevronDown className={`w-3 h-3 transition-transform ${sortBy === 'title' ? (sortOrder === 'asc' ? 'rotate-180' : '') : 'opacity-40'}`} />
+                  <ChevronDown style={{ width: 12, height: 12, opacity: sortBy === 'title' ? 1 : 0.4, transform: sortBy === 'title' && sortOrder === 'asc' ? 'rotate(180deg)' : 'none' }} />
                 </div>
               </th>
-              <th className="text-left py-3 px-4 font-semibold" style={{ color: 'rgb(249, 115, 22)' }}>Status</th>
-              <th className="text-left py-3 px-4 font-semibold cursor-pointer hover:bg-gray-50 transition-colors hidden md:table-cell"
-                style={{ color: 'rgb(249, 115, 22)' }}
+              <th className="text-left py-3 px-4" style={bc(10, 700, { letterSpacing: 3, textTransform: 'uppercase', color: text2 })}>Status</th>
+              <th className="text-left py-3 px-4 cursor-pointer hidden md:table-cell"
+                style={bc(10, 700, { letterSpacing: 3, textTransform: 'uppercase', color: text2 })}
                 onClick={() => { setSortBy('startTime'); setSortOrder(sortBy === 'startTime' ? (sortOrder === 'asc' ? 'desc' : 'asc') : 'asc'); }}>
                 <div className="flex items-center space-x-1">
                   <span>Start Time</span>
-                  <ChevronDown className={`w-3 h-3 transition-transform ${sortBy === 'startTime' ? (sortOrder === 'asc' ? 'rotate-180' : '') : 'opacity-40'}`} />
+                  <ChevronDown style={{ width: 12, height: 12, opacity: sortBy === 'startTime' ? 1 : 0.4, transform: sortBy === 'startTime' && sortOrder === 'asc' ? 'rotate(180deg)' : 'none' }} />
                 </div>
               </th>
-              <th className="text-left py-3 px-4 font-semibold hidden lg:table-cell" style={{ color: 'rgb(249, 115, 22)' }}>Location</th>
-              <th className="text-left py-3 px-4 font-semibold hidden xl:table-cell" style={{ color: 'rgb(249, 115, 22)' }}>Created By</th>
-              <th className="text-right py-3 px-4 font-semibold" style={{ color: 'rgb(249, 115, 22)' }}>Actions</th>
+              <th className="text-left py-3 px-4 hidden lg:table-cell" style={bc(10, 700, { letterSpacing: 3, textTransform: 'uppercase', color: text2 })}>Location</th>
+              <th className="text-left py-3 px-4 hidden xl:table-cell" style={bc(10, 700, { letterSpacing: 3, textTransform: 'uppercase', color: text2 })}>Created By</th>
+              <th className="text-right py-3 px-4" style={bc(10, 700, { letterSpacing: 3, textTransform: 'uppercase', color: text2 })}>Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody>
             {currentMeetings.map((meeting, index) => (
               <motion.tr
                 key={meeting.id}
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.05 }}
-                className="hover:bg-gray-50 transition-colors"
+                style={{ background: bg2, borderBottom: `1px solid ${border}` }}
+                onMouseEnter={e => e.currentTarget.style.background = bg3}
+                onMouseLeave={e => e.currentTarget.style.background = bg2}
               >
                 <td className="py-3 px-4">
                   <div className="flex items-center space-x-2">
-                    <Video className="w-4 h-4 text-gray-400" />
+                    <Video style={{ width: 16, height: 16, color: text2 }} />
                     <div>
-                      <span className="font-medium text-gray-900">{meeting.title || 'N/A'}</span>
+                      <span style={{ ...ba(12, 600), color: textC }}>{meeting.title || 'N/A'}</span>
                       {meeting.description && (
-                        <p className="text-gray-500 text-xs truncate max-w-xs">{meeting.description}</p>
+                        <p style={{ ...ba(11, 400), color: text2 }} className="truncate max-w-xs">{meeting.description}</p>
                       )}
                     </div>
                   </div>
                 </td>
                 <td className="py-3 px-4">{getStatusBadge(meeting.status)}</td>
-                <td className="py-3 px-4 text-gray-600 hidden md:table-cell">{formatDateTime(meeting.startTime)}</td>
-                <td className="py-3 px-4 text-gray-600 hidden lg:table-cell">
+                <td className="py-3 px-4 hidden md:table-cell" style={{ ...ba(12, 400), color: text2 }}>{formatDateTime(meeting.startTime)}</td>
+                <td className="py-3 px-4 hidden lg:table-cell" style={{ ...ba(12, 400), color: text2 }}>
                   {meeting.meetingLink ? (
-                    <a href={meeting.meetingLink} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline flex items-center gap-1">
-                      <ExternalLink className="w-3 h-3" /> Online
+                    <a href={meeting.meetingLink} target="_blank" rel="noopener noreferrer" style={{ color: ORG, display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none' }}>
+                      <ExternalLink style={{ width: 12, height: 12 }} /> Online
                     </a>
                   ) : meeting.location || '-'}
                 </td>
-                <td className="py-3 px-4 text-gray-600 hidden xl:table-cell">{meeting.createdBy?.adminName || 'Unknown'}</td>
+                <td className="py-3 px-4 hidden xl:table-cell" style={{ ...ba(12, 400), color: text2 }}>{meeting.createdBy?.adminName || 'Unknown'}</td>
                 <td className="py-3 px-4">
                   <div className="flex items-center justify-end space-x-1">
-                    <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }} onClick={() => navigate(`/admin/dashboard/meetings/view/${meeting.id}`)}
-                      className="text-gray-400 hover:text-gray-600 p-1.5 rounded-md hover:bg-gray-100 transition-colors" title="View">
-                      <Eye className="w-3.5 h-3.5" />
+                    <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}
+                      onClick={() => navigate(`/admin/dashboard/meetings/view/${meeting.id}`)}
+                      style={actionBtnStyle} title="View">
+                      <Eye style={{ width: 14, height: 14 }} />
                     </motion.button>
-                    <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }} onClick={() => navigate(`/admin/dashboard/meetings/edit/${meeting.id}`)}
-                      className="text-gray-400 hover:text-yellow-600 p-1.5 rounded-md hover:bg-yellow-50 transition-colors" title="Edit">
-                      <Edit className="w-3.5 h-3.5" />
+                    <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}
+                      onClick={() => navigate(`/admin/dashboard/meetings/edit/${meeting.id}`)}
+                      style={actionBtnStyle} title="Edit">
+                      <Edit style={{ width: 14, height: 14 }} />
                     </motion.button>
-                    <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }} onClick={() => setDeleteConfirm(meeting)}
-                      className="text-gray-400 hover:text-red-600 p-1.5 rounded-md hover:bg-red-50 transition-colors" title="Delete">
-                      <Trash2 className="w-3.5 h-3.5" />
+                    <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}
+                      onClick={() => setDeleteConfirm(meeting)}
+                      style={{ ...actionBtnStyle, color: '#e84040' }} title="Delete">
+                      <Trash2 style={{ width: 14, height: 14 }} />
                     </motion.button>
                   </div>
                 </td>
@@ -301,50 +335,53 @@ const MeetingManagement = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: index * 0.05 }}
           whileHover={{ y: -4 }}
-          className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-all relative overflow-hidden group"
+          style={{ background: bg2, border: `1px solid ${border}`, borderRadius: 4 }}
+          className="p-5 relative overflow-hidden"
         >
-          <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-blue-50 to-purple-50 rounded-bl-full opacity-50 group-hover:opacity-100 transition-opacity" />
-
           <div className="relative">
             <div className="flex items-start justify-between mb-3">
               <div className="flex-1 pr-2">
                 <div className="flex items-center space-x-2 mb-2">
                   {getStatusBadge(meeting.status)}
                 </div>
-                <h3 className="text-sm font-semibold text-gray-900 mb-1 line-clamp-2 leading-snug">{meeting.title}</h3>
+                <h3 style={{ ...ba(13, 600), color: textC }} className="mb-1 line-clamp-2 leading-snug">{meeting.title}</h3>
                 {meeting.description && (
-                  <p className="text-xs text-gray-500 line-clamp-2">{meeting.description}</p>
+                  <p style={{ ...ba(11, 400), color: text2 }} className="line-clamp-2">{meeting.description}</p>
                 )}
               </div>
               <motion.div
                 whileHover={{ rotate: 360 }}
                 transition={{ duration: 0.5 }}
-                className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
-                style={{ backgroundColor: 'rgba(249, 115, 22, 0.1)' }}
+                style={{
+                  width: 40, height: 40, borderRadius: 4,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                  background: 'rgba(232,98,26,.1)', border: '1px solid rgba(232,98,26,.2)',
+                }}
               >
-                <Video className="w-5 h-5" style={{ color: 'rgb(249, 115, 22)' }} />
+                <Video style={{ width: 20, height: 20, color: ORG }} />
               </motion.div>
             </div>
 
-            <div className="space-y-2 mb-4 pb-4 border-b border-gray-100">
-              <div className="flex items-center text-xs text-gray-500">
-                <Clock className="w-3 h-3 mr-1" />
+            <div className="space-y-2 mb-4 pb-4" style={{ borderBottom: `1px solid ${border}` }}>
+              <div className="flex items-center" style={{ ...ba(11, 400), color: text2 }}>
+                <Clock style={{ width: 12, height: 12, marginRight: 4 }} />
                 <span>{formatDateTime(meeting.startTime)}</span>
               </div>
               {meeting.location && (
-                <div className="flex items-center text-xs text-gray-500">
-                  <MapPin className="w-3 h-3 mr-1" />
+                <div className="flex items-center" style={{ ...ba(11, 400), color: text2 }}>
+                  <MapPin style={{ width: 12, height: 12, marginRight: 4 }} />
                   <span>{meeting.location}</span>
                 </div>
               )}
               {meeting.meetingLink && (
-                <a href={meeting.meetingLink} target="_blank" rel="noopener noreferrer" className="flex items-center text-xs text-blue-600 hover:underline">
-                  <Link className="w-3 h-3 mr-1" />
+                <a href={meeting.meetingLink} target="_blank" rel="noopener noreferrer"
+                  style={{ ...ba(11, 400), color: ORG, textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
+                  <Link style={{ width: 12, height: 12, marginRight: 4 }} />
                   <span>Join Meeting</span>
                 </a>
               )}
-              <div className="flex items-center text-xs text-gray-500">
-                <Users className="w-3 h-3 mr-1" />
+              <div className="flex items-center" style={{ ...ba(11, 400), color: text2 }}>
+                <Users style={{ width: 12, height: 12, marginRight: 4 }} />
                 <span>{meeting.createdBy?.adminName || 'Unknown'}</span>
               </div>
             </div>
@@ -355,29 +392,29 @@ const MeetingManagement = () => {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => navigate(`/admin/dashboard/meetings/view/${meeting.id}`)}
-                  className="flex items-center space-x-1 text-gray-600 hover:text-gray-900 px-3 py-1.5 rounded-lg hover:bg-gray-100 text-xs font-medium transition-colors"
+                  style={{ ...actionBtnStyle, padding: '6px 12px', gap: 4 }}
                 >
-                  <Eye className="w-3.5 h-3.5" />
-                  <span>View</span>
+                  <Eye style={{ width: 14, height: 14 }} />
+                  <span style={ba(11, 500)}>View</span>
                 </motion.button>
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => navigate(`/admin/dashboard/meetings/edit/${meeting.id}`)}
-                  className="flex items-center space-x-1 text-yellow-600 hover:text-yellow-700 px-3 py-1.5 rounded-lg hover:bg-yellow-50 text-xs font-medium transition-colors"
+                  style={{ ...actionBtnStyle, padding: '6px 12px', gap: 4 }}
                 >
-                  <Edit className="w-3.5 h-3.5" />
-                  <span>Edit</span>
+                  <Edit style={{ width: 14, height: 14 }} />
+                  <span style={ba(11, 500)}>Edit</span>
                 </motion.button>
               </div>
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setDeleteConfirm(meeting)}
-                className="p-2 text-red-600 hover:text-red-700 rounded-lg hover:bg-red-50 transition-colors"
+                style={{ ...actionBtnStyle, color: '#e84040' }}
                 title="Delete"
               >
-                <Trash2 className="w-3.5 h-3.5" />
+                <Trash2 style={{ width: 14, height: 14 }} />
               </motion.button>
             </div>
           </div>
@@ -387,49 +424,59 @@ const MeetingManagement = () => {
   );
 
   const renderListView = () => (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 divide-y divide-gray-100 w-full">
+    <div style={{ background: bg2, border: `1px solid ${border}`, borderRadius: 4 }} className="w-full">
       {currentMeetings.map((meeting, index) => (
         <motion.div
           key={meeting.id}
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: index * 0.05 }}
-          className="p-4 hover:bg-gray-50 transition-colors"
+          className="p-4"
+          style={{ borderBottom: `1px solid ${border}` }}
+          onMouseEnter={e => e.currentTarget.style.background = bg3}
+          onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
         >
           <div className="flex items-center justify-between">
             <div className="flex-1 min-w-0 flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: 'rgba(249, 115, 22, 0.1)' }}>
-                <Video className="w-5 h-5" style={{ color: 'rgb(249, 115, 22)' }} />
+              <div style={{
+                width: 40, height: 40, borderRadius: 4, flexShrink: 0,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                background: 'rgba(232,98,26,.1)', border: '1px solid rgba(232,98,26,.2)',
+              }}>
+                <Video style={{ width: 20, height: 20, color: ORG }} />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center flex-wrap gap-2 mb-1">
-                  <h3 className="text-sm font-semibold text-gray-900">{meeting.title}</h3>
+                  <h3 style={{ ...ba(13, 600), color: textC }}>{meeting.title}</h3>
                   {getStatusBadge(meeting.status)}
                 </div>
-                <p className="text-xs text-gray-600 flex items-center space-x-3">
+                <p style={{ ...ba(11, 400), color: text2 }} className="flex items-center space-x-3">
                   <span className="flex items-center">
-                    <Clock className="w-3 h-3 mr-1" />
+                    <Clock style={{ width: 12, height: 12, marginRight: 4 }} />
                     {formatDateTime(meeting.startTime)}
                   </span>
                   <span className="flex items-center">
-                    <Users className="w-3 h-3 mr-1" />
+                    <Users style={{ width: 12, height: 12, marginRight: 4 }} />
                     {meeting.createdBy?.adminName || 'Unknown'}
                   </span>
                 </p>
               </div>
             </div>
             <div className="flex items-center space-x-1 ml-4">
-              <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }} onClick={() => navigate(`/admin/dashboard/meetings/view/${meeting.id}`)}
-                className="text-gray-400 hover:text-gray-600 p-2 rounded-lg hover:bg-gray-100 transition-colors" title="View">
-                <Eye className="w-4 h-4" />
+              <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}
+                onClick={() => navigate(`/admin/dashboard/meetings/view/${meeting.id}`)}
+                style={actionBtnStyle} title="View">
+                <Eye style={{ width: 16, height: 16 }} />
               </motion.button>
-              <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }} onClick={() => navigate(`/admin/dashboard/meetings/edit/${meeting.id}`)}
-                className="text-gray-400 hover:text-yellow-600 p-2 rounded-lg hover:bg-yellow-50 transition-colors" title="Edit">
-                <Edit className="w-4 h-4" />
+              <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}
+                onClick={() => navigate(`/admin/dashboard/meetings/edit/${meeting.id}`)}
+                style={actionBtnStyle} title="Edit">
+                <Edit style={{ width: 16, height: 16 }} />
               </motion.button>
-              <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }} onClick={() => setDeleteConfirm(meeting)}
-                className="text-gray-400 hover:text-red-600 p-2 rounded-lg hover:bg-red-50 transition-colors" title="Delete">
-                <Trash2 className="w-4 h-4" />
+              <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}
+                onClick={() => setDeleteConfirm(meeting)}
+                style={{ ...actionBtnStyle, color: '#e84040' }} title="Delete">
+                <Trash2 style={{ width: 16, height: 16 }} />
               </motion.button>
             </div>
           </div>
@@ -458,10 +505,18 @@ const MeetingManagement = () => {
       return pages;
     };
 
+    const pageBtnBase = {
+      border: `1px solid ${border}`,
+      borderRadius: 4,
+      cursor: 'pointer',
+      ...ba(11, 500),
+    };
+
     return (
-      <div className="flex items-center justify-between bg-white px-2 py-3 border-t border-gray-100 rounded-b-xl shadow-sm mt-4 border border-gray-100 shadow-sm">
-        <div className="text-xs text-gray-600 flex items-center space-x-2">
-          <span>Showing <span className="font-semibold">{startIndex + 1}</span>-<span className="font-semibold">{Math.min(endIndex, meetings.length)}</span> of <span className="font-semibold">{meetings.length}</span></span>
+      <div className="flex items-center justify-between px-2 py-3 mt-4"
+        style={{ background: bg2, border: `1px solid ${border}`, borderRadius: 4, borderTop: `1px solid ${border}` }}>
+        <div style={{ ...ba(11, 400), color: text2 }} className="flex items-center space-x-2">
+          <span>Showing <span style={{ fontWeight: 600, color: textC }}>{startIndex + 1}</span>–<span style={{ fontWeight: 600, color: textC }}>{Math.min(endIndex, meetings.length)}</span> of <span style={{ fontWeight: 600, color: textC }}>{meetings.length}</span></span>
         </div>
         <div className="flex items-center space-x-2">
           <motion.button
@@ -469,7 +524,7 @@ const MeetingManagement = () => {
             whileTap={{ scale: 0.95 }}
             onClick={() => setCurrentPage(1)}
             disabled={currentPage === 1}
-            className="flex items-center px-2.5 py-1.5 text-xs text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            style={{ ...pageBtnBase, background: bg3, color: text2, padding: '4px 10px', opacity: currentPage === 1 ? 0.4 : 1 }}
           >
             First
           </motion.button>
@@ -478,9 +533,9 @@ const MeetingManagement = () => {
             whileTap={{ scale: 0.95 }}
             onClick={() => setCurrentPage(currentPage - 1)}
             disabled={currentPage === 1}
-            className="flex items-center px-2.5 py-1.5 text-xs text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            style={{ ...pageBtnBase, background: bg3, color: text2, padding: '4px 8px', opacity: currentPage === 1 ? 0.4 : 1, display: 'flex', alignItems: 'center' }}
           >
-            <ChevronLeft className="w-3.5 h-3.5" />
+            <ChevronLeft style={{ width: 14, height: 14 }} />
           </motion.button>
 
           {getPageNumbers().map(page => (
@@ -489,11 +544,14 @@ const MeetingManagement = () => {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setCurrentPage(page)}
-              className={`px-3 py-1.5 text-xs rounded-md transition-colors ${currentPage === page
-                ? 'text-white font-semibold shadow-sm'
-                : 'text-gray-600 bg-white border border-gray-200 hover:bg-gray-50'
-                }`}
-              style={currentPage === page ? { backgroundColor: 'rgb(249, 115, 22)' } : {}}
+              style={{
+                ...pageBtnBase,
+                padding: '4px 10px',
+                background: currentPage === page ? ORG : bg3,
+                color: currentPage === page ? '#fff' : text2,
+                border: currentPage === page ? `1px solid ${ORG}` : `1px solid ${border}`,
+                fontWeight: currentPage === page ? 700 : 500,
+              }}
             >
               {page}
             </motion.button>
@@ -504,16 +562,16 @@ const MeetingManagement = () => {
             whileTap={{ scale: 0.95 }}
             onClick={() => setCurrentPage(currentPage + 1)}
             disabled={currentPage === totalPages}
-            className="flex items-center px-2.5 py-1.5 text-xs text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            style={{ ...pageBtnBase, background: bg3, color: text2, padding: '4px 8px', opacity: currentPage === totalPages ? 0.4 : 1, display: 'flex', alignItems: 'center' }}
           >
-            <ChevronRight className="w-3.5 h-3.5" />
+            <ChevronRight style={{ width: 14, height: 14 }} />
           </motion.button>
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => setCurrentPage(totalPages)}
             disabled={currentPage === totalPages}
-            className="flex items-center px-2.5 py-1.5 text-xs text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            style={{ ...pageBtnBase, background: bg3, color: text2, padding: '4px 10px', opacity: currentPage === totalPages ? 0.4 : 1 }}
           >
             Last
           </motion.button>
@@ -523,55 +581,17 @@ const MeetingManagement = () => {
   };
 
   const statCards = [
-    {
-      label: 'Total Meetings',
-      value: stats.total,
-      icon: Video,
-      color: 'rgb(249, 115, 22)',
-      bgColor: 'rgba(249, 115, 22, 0.1)',
-      gradient: 'from-blue-500 to-indigo-600'
-    },
-    {
-      label: 'Scheduled',
-      value: stats.scheduled,
-      icon: Calendar,
-      color: 'rgb(59, 130, 246)',
-      bgColor: 'rgba(59, 130, 246, 0.1)',
-      gradient: 'from-blue-400 to-cyan-600'
-    },
-    {
-      label: 'Ongoing',
-      value: stats.ongoing,
-      icon: Play,
-      color: 'rgb(34, 197, 94)',
-      bgColor: 'rgba(34, 197, 94, 0.1)',
-      gradient: 'from-green-500 to-emerald-600'
-    },
-    {
-      label: 'Completed',
-      value: stats.completed,
-      icon: CheckCircle,
-      color: 'rgb(107, 114, 128)',
-      bgColor: 'rgba(107, 114, 128, 0.1)',
-      gradient: 'from-gray-500 to-slate-600'
-    },
-    {
-      label: 'Cancelled',
-      value: stats.cancelled,
-      icon: XCircle,
-      color: 'rgb(239, 68, 68)',
-      bgColor: 'rgba(239, 68, 68, 0.1)',
-      gradient: 'from-red-500 to-rose-600'
-    },
+    { label: 'Total Meetings', value: stats.total, icon: Video },
+    { label: 'Scheduled',      value: stats.scheduled, icon: Calendar },
+    { label: 'Ongoing',        value: stats.ongoing, icon: Play },
+    { label: 'Completed',      value: stats.completed, icon: CheckCircle },
+    { label: 'Cancelled',      value: stats.cancelled, icon: XCircle },
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/30">
+    <div className="min-h-screen" style={{ background: bg }}>
       {/* Header */}
-      <div className="bg-white shadow-sm border-b border-gray-200 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-100/40 to-purple-100/40 rounded-full blur-3xl -mr-32 -mt-32" />
-        <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-indigo-100/40 to-blue-100/40 rounded-full blur-3xl -ml-24 -mb-24" />
-
+      <div style={{ background: bg2, borderBottom: `1px solid ${border}` }} className="relative overflow-hidden">
         <div className="mx-auto px-1 sm:px-6 py-6 relative">
           <div className="flex items-center justify-between">
             <div>
@@ -581,13 +601,13 @@ const MeetingManagement = () => {
                   animate={{ rotate: [0, 10, -10, 0] }}
                   transition={{ duration: 2, repeat: Infinity, repeatDelay: 5 }}
                 >
-                  <Sparkles className="w-5 h-5" style={{ color: 'rgb(249, 115, 22)' }} />
+                  <Sparkles style={{ width: 20, height: 20, color: ORG }} />
                 </motion.div>
-                <h1 className="text-xl sm:text-2xl font-bold text-orange-500 bg-clip-text">
+                <h1 style={{ ...bb(24, { color: ORG }) }}>
                   Meeting Management
                 </h1>
               </div>
-              <p className="text-xs text-gray-600">Schedule and manage all team meetings</p>
+              <p style={{ ...ba(12, 400), color: text2 }}>Schedule and manage all team meetings</p>
             </div>
             <div className="flex items-center space-x-2">
               <motion.button
@@ -595,9 +615,14 @@ const MeetingManagement = () => {
                 whileTap={{ scale: 0.95 }}
                 onClick={handleExport}
                 disabled={meetings.length === 0}
-                className="flex items-center space-x-2 px-3 py-2 text-xs text-gray-600 hover:text-gray-900 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-all shadow-sm hover:shadow"
+                style={{
+                  ...bc(11, 500),
+                  background: bg3, border: `1px solid ${border}`, color: textC,
+                  borderRadius: 4, padding: '6px 12px', display: 'flex', alignItems: 'center', gap: 6,
+                  opacity: meetings.length === 0 ? 0.5 : 1, cursor: meetings.length === 0 ? 'not-allowed' : 'pointer',
+                }}
               >
-                <Download className="w-3.5 h-3.5" />
+                <Download style={{ width: 14, height: 14 }} />
                 <span className="hidden sm:inline">Export</span>
               </motion.button>
               <motion.button
@@ -605,9 +630,14 @@ const MeetingManagement = () => {
                 whileTap={{ scale: 0.95 }}
                 onClick={loadData}
                 disabled={loading}
-                className="flex items-center space-x-2 px-3 py-2 text-xs text-gray-600 hover:text-gray-900 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-all shadow-sm hover:shadow"
+                style={{
+                  ...bc(11, 500),
+                  background: bg3, border: `1px solid ${border}`, color: textC,
+                  borderRadius: 4, padding: '6px 12px', display: 'flex', alignItems: 'center', gap: 6,
+                  opacity: loading ? 0.5 : 1, cursor: loading ? 'not-allowed' : 'pointer',
+                }}
               >
-                <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+                <RefreshCw style={{ width: 14, height: 14 }} className={loading ? 'animate-spin' : ''} />
                 <span className="hidden sm:inline">Refresh</span>
               </motion.button>
               <motion.button
@@ -615,9 +645,15 @@ const MeetingManagement = () => {
                 whileTap={{ scale: 0.95 }}
                 onClick={() => navigate('/admin/dashboard/meetings/create')}
                 disabled={operationLoading}
-                className="flex items-center space-x-2 text-white px-3 py-2 rounded-lg font-medium shadow-md hover:shadow-lg text-xs transition-all bg-orange-500 hover:to-indigo-700"
+                style={{
+                  ...bc(11, 600),
+                  background: ORG, color: '#fff',
+                  borderRadius: 4, padding: '6px 14px', display: 'flex', alignItems: 'center', gap: 6,
+                  border: 'none', cursor: operationLoading ? 'not-allowed' : 'pointer',
+                  opacity: operationLoading ? 0.7 : 1,
+                }}
               >
-                <Plus className="w-3.5 h-3.5" />
+                <Plus style={{ width: 14, height: 14 }} />
                 <span>New Meeting</span>
               </motion.button>
             </div>
@@ -635,31 +671,31 @@ const MeetingManagement = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
               whileHover={{ y: -4, scale: 1.02 }}
-              className="relative p-4 rounded-xl shadow-sm border border-gray-100 bg-white overflow-hidden group cursor-pointer"
+              style={{ background: bg2, border: `1px solid ${border}`, borderRadius: 4 }}
+              className="relative p-4 overflow-hidden cursor-pointer"
             >
-              <div className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-300`} />
-
               <div className="relative flex items-center space-x-3">
                 <motion.div
                   whileHover={{ rotate: 360, scale: 1.1 }}
                   transition={{ duration: 0.5 }}
-                  className="p-2.5 rounded-lg shadow-sm"
-                  style={{ backgroundColor: stat.bgColor }}
+                  style={{
+                    padding: '10px', borderRadius: 4,
+                    background: 'rgba(232,98,26,.1)', border: '1px solid rgba(232,98,26,.2)',
+                  }}
                 >
-                  <stat.icon className="w-4 h-4" style={{ color: stat.color }} />
+                  <stat.icon style={{ width: 16, height: 16, color: ORG }} />
                 </motion.div>
                 <div className="flex-1">
-                  <p className="text-xs font-medium text-gray-600 mb-0.5">{stat.label}</p>
-                  <p className="text-lg font-bold text-gray-900">
+                  <p style={bc(10, 700, { letterSpacing: 3, textTransform: 'uppercase', color: text2 })} className="mb-0.5">{stat.label}</p>
+                  <p style={bb(48, { color: ORG, lineHeight: 1 })}>
                     {loadingStats ? (
-                      <span className="inline-block w-8 h-4 bg-gray-200 rounded animate-pulse" />
+                      <span style={{ display: 'inline-block', width: 32, height: 16, background: bg3, borderRadius: 2 }} className="animate-pulse" />
                     ) : (
                       stat.value ?? '-'
                     )}
                   </p>
                 </div>
               </div>
-              <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br opacity-10 rounded-bl-full" style={{ background: stat.color }} />
             </motion.div>
           ))}
         </div>
@@ -668,79 +704,73 @@ const MeetingManagement = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-xl shadow-sm border border-gray-100 p-5"
+          style={{ background: bg2, border: `1px solid ${border}`, borderRadius: 4 }}
+          className="p-5"
         >
           <div className="space-y-4">
+            {/* Section label */}
+            <div className="flex items-center gap-2">
+              <div style={{ width: 3, height: 16, background: ORG, borderRadius: 2 }} />
+              <span style={bc(11, 700, { letterSpacing: 3, textTransform: 'uppercase', color: text2 })}>Filters</span>
+            </div>
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div className="relative flex-1 max-w-md">
-                <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
+                <Search style={{ width: 16, height: 16, color: text2, position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }} />
                 <input
                   type="text"
                   placeholder="Search meetings by title or organizer..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 text-xs border border-gray-200 rounded-lg focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all"
-                  style={{ outline: 'none' }}
+                  style={{
+                    ...ba(12, 400),
+                    width: '100%', paddingLeft: 36, paddingRight: 36, paddingTop: 10, paddingBottom: 10,
+                    background: bg3, border: `1px solid ${border}`, color: textC, borderRadius: 4,
+                    outline: 'none',
+                  }}
                 />
                 {searchTerm && (
                   <motion.button
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     onClick={() => setSearchTerm('')}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', color: text2, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
                   >
-                    <X className="w-4 h-4" />
+                    <X style={{ width: 16, height: 16 }} />
                   </motion.button>
                 )}
               </div>
 
-              <div className="flex items-center space-x-2 bg-gray-50 p-1 rounded-lg">
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setViewMode('table')}
-                  className={`p-2 rounded-md transition-all ${viewMode === 'table'
-                    ? 'text-white shadow-md'
-                    : 'text-gray-500 hover:text-gray-700 hover:bg-white'
-                    }`}
-                  style={viewMode === 'table' ? { backgroundColor: 'rgb(249, 115, 22)' } : {}}
-                  title="Table View"
-                >
-                  <Table className="w-4 h-4" />
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setViewMode('grid')}
-                  className={`p-2 rounded-md transition-all ${viewMode === 'grid'
-                    ? 'text-white shadow-md'
-                    : 'text-gray-500 hover:text-gray-700 hover:bg-white'
-                    }`}
-                  style={viewMode === 'grid' ? { backgroundColor: 'rgb(249, 115, 22)' } : {}}
-                  title="Grid View"
-                >
-                  <Grid3X3 className="w-4 h-4" />
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setViewMode('list')}
-                  className={`p-2 rounded-md transition-all ${viewMode === 'list'
-                    ? 'text-white shadow-md'
-                    : 'text-gray-500 hover:text-gray-700 hover:bg-white'
-                    }`}
-                  style={viewMode === 'list' ? { backgroundColor: 'rgb(249, 115, 22)' } : {}}
-                  title="List View"
-                >
-                  <List className="w-4 h-4" />
-                </motion.button>
+              {/* View toggle */}
+              <div className="flex items-center space-x-1" style={{ background: bg3, padding: 4, borderRadius: 4 }}>
+                {[
+                  { mode: 'table', Icon: Table, title: 'Table View' },
+                  { mode: 'grid', Icon: Grid3X3, title: 'Grid View' },
+                  { mode: 'list', Icon: List, title: 'List View' },
+                ].map(({ mode, Icon, title }) => (
+                  <motion.button
+                    key={mode}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setViewMode(mode)}
+                    style={{
+                      padding: 8, borderRadius: 4, border: 'none', cursor: 'pointer',
+                      background: viewMode === mode ? ORG : 'transparent',
+                      color: viewMode === mode ? '#fff' : text2,
+                    }}
+                    title={title}
+                  >
+                    <Icon style={{ width: 16, height: 16 }} />
+                  </motion.button>
+                ))}
               </div>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-3">
               <div className="relative flex-1">
-                <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                  {sortOrder === 'asc' ? <SortAsc className="w-4 h-4 text-gray-400" /> : <SortDesc className="w-4 h-4 text-gray-400" />}
+                <div style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
+                  {sortOrder === 'asc'
+                    ? <SortAsc style={{ width: 16, height: 16, color: text2 }} />
+                    : <SortDesc style={{ width: 16, height: 16, color: text2 }} />}
                 </div>
                 <select
                   value={`${sortBy}-${sortOrder}`}
@@ -749,8 +779,12 @@ const MeetingManagement = () => {
                     setSortBy(field);
                     setSortOrder(order);
                   }}
-                  className="w-full pl-10 pr-4 py-2.5 text-xs border border-gray-200 rounded-lg focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all appearance-none bg-white cursor-pointer"
-                  style={{ outline: 'none' }}
+                  style={{
+                    ...ba(12, 400),
+                    width: '100%', paddingLeft: 36, paddingRight: 16, paddingTop: 10, paddingBottom: 10,
+                    background: bg3, border: `1px solid ${border}`, color: textC,
+                    borderRadius: 4, outline: 'none', appearance: 'none', cursor: 'pointer',
+                  }}
                 >
                   <option value="title-asc">Title (A-Z)</option>
                   <option value="title-desc">Title (Z-A)</option>
@@ -759,14 +793,18 @@ const MeetingManagement = () => {
                 </select>
               </div>
               <div className="relative flex-1">
-                <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                  <Filter className="w-4 h-4 text-gray-400" />
+                <div style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
+                  <Filter style={{ width: 16, height: 16, color: text2 }} />
                 </div>
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 text-xs border border-gray-200 rounded-lg focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all appearance-none bg-white cursor-pointer"
-                  style={{ outline: 'none' }}
+                  style={{
+                    ...ba(12, 400),
+                    width: '100%', paddingLeft: 36, paddingRight: 16, paddingTop: 10, paddingBottom: 10,
+                    background: bg3, border: `1px solid ${border}`, color: textC,
+                    borderRadius: 4, outline: 'none', appearance: 'none', cursor: 'pointer',
+                  }}
                 >
                   <option value="ALL">All Status</option>
                   <option value="SCHEDULED">Scheduled</option>
@@ -786,43 +824,51 @@ const MeetingManagement = () => {
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="bg-gradient-to-r from-red-50 to-rose-50 border border-red-200 rounded-xl p-4 text-red-700 text-xs flex items-center space-x-2 shadow-sm"
+              style={{
+                background: 'rgba(232,64,64,.08)', border: '1px solid rgba(232,64,64,.25)',
+                borderRadius: 4, padding: '12px 16px', color: '#e84040',
+                display: 'flex', alignItems: 'center', gap: 8,
+              }}
             >
-              <AlertCircle className="w-4 h-4 flex-shrink-0" />
-              <span className="font-medium">{error}</span>
+              <AlertCircle style={{ width: 16, height: 16, flexShrink: 0 }} />
+              <span style={ba(12, 500)}>{error}</span>
             </motion.div>
           )}
         </AnimatePresence>
 
         {/* Meetings Content */}
         {loading ? (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12 text-center">
+          <div style={{ background: bg2, border: `1px solid ${border}`, borderRadius: 4 }} className="p-12 text-center">
             <div className="inline-flex flex-col items-center space-y-3">
               <motion.div
                 animate={{ rotate: 360 }}
-                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                className="w-8 h-8 border-3 border-t-transparent rounded-full"
-                style={{ borderColor: 'rgb(249, 115, 22)', borderTopColor: 'transparent', borderWidth: '3px' }}
+                transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                style={{
+                  width: 32, height: 32, borderRadius: '50%',
+                  border: `3px solid ${border}`,
+                  borderTopColor: ORG,
+                }}
               />
-              <span className="text-xs text-gray-600 font-medium">Loading meetings...</span>
+              <span style={{ ...ba(12, 500), color: text2 }}>Loading meetings...</span>
             </div>
           </div>
         ) : meetings.length === 0 ? (
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-xl shadow-sm w-full border border-gray-100 p-12 text-center"
+            style={{ background: bg2, border: `1px solid ${border}`, borderRadius: 4 }}
+            className="w-full p-12 text-center"
           >
             <motion.div
               animate={{ y: [0, -10, 0] }}
               transition={{ duration: 2, repeat: Infinity }}
             >
-              <Video className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+              <Video style={{ width: 64, height: 64, margin: '0 auto 16px', color: text3 }} />
             </motion.div>
-            <p className="text-base font-semibold text-gray-900 mb-2">
+            <p style={{ ...ba(15, 600), color: textC, marginBottom: 8 }}>
               {searchTerm || statusFilter !== 'ALL' ? 'No Meetings Found' : 'No Meetings Available'}
             </p>
-            <p className="text-xs text-gray-500 mb-4">
+            <p style={{ ...ba(12, 400), color: text2, marginBottom: 16 }}>
               {searchTerm || statusFilter !== 'ALL' ? 'Try adjusting your filters.' : 'Schedule a new meeting to get started.'}
             </p>
             {!searchTerm && statusFilter === 'ALL' && (
@@ -830,9 +876,14 @@ const MeetingManagement = () => {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => navigate('/admin/dashboard/meetings/create')}
-                className="inline-flex items-center space-x-2 text-white px-4 py-2 rounded-lg font-medium shadow-md text-xs bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                style={{
+                  ...bc(12, 600),
+                  background: ORG, color: '#fff', borderRadius: 4,
+                  padding: '8px 16px', border: 'none', cursor: 'pointer',
+                  display: 'inline-flex', alignItems: 'center', gap: 8,
+                }}
               >
-                <Plus className="w-4 h-4" />
+                <Plus style={{ width: 16, height: 16 }} />
                 <span>Schedule First Meeting</span>
               </motion.button>
             )}
@@ -840,10 +891,7 @@ const MeetingManagement = () => {
         ) : null}
 
         {!loading && meetings.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-          >
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
             {viewMode === 'table' && renderTableView()}
             {viewMode === 'grid' && renderCardView()}
             {viewMode === 'list' && renderListView()}
@@ -860,28 +908,31 @@ const MeetingManagement = () => {
               exit={{ opacity: 0, y: -50, scale: 0.9 }}
               className="fixed top-4 right-4 z-50"
             >
-              <div className={`flex items-center space-x-3 px-4 py-3 rounded-xl shadow-2xl text-xs border-2 ${operationStatus.type === 'success'
-                ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-300 text-green-800'
-                : 'bg-gradient-to-r from-red-50 to-rose-50 border-red-300 text-red-800'
-                }`}>
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: 12,
+                padding: '12px 16px', borderRadius: 4,
+                background: operationStatus.type === 'success' ? 'rgba(74,222,128,.12)' : 'rgba(232,64,64,.12)',
+                border: `1px solid ${operationStatus.type === 'success' ? 'rgba(74,222,128,.3)' : 'rgba(232,64,64,.3)'}`,
+                color: operationStatus.type === 'success' ? '#4ade80' : '#e84040',
+                ...ba(12, 600),
+              }}>
                 <motion.div
                   initial={{ scale: 0, rotate: -180 }}
                   animate={{ scale: 1, rotate: 0 }}
-                  transition={{ type: "spring", stiffness: 200 }}
+                  transition={{ type: 'spring', stiffness: 200 }}
                 >
-                  {operationStatus.type === 'success' ?
-                    <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" /> :
-                    <XCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
-                  }
+                  {operationStatus.type === 'success'
+                    ? <CheckCircle style={{ width: 20, height: 20, flexShrink: 0 }} />
+                    : <XCircle style={{ width: 20, height: 20, flexShrink: 0 }} />}
                 </motion.div>
-                <span className="font-semibold">{operationStatus.message}</span>
+                <span>{operationStatus.message}</span>
                 <motion.button
                   whileHover={{ scale: 1.2, rotate: 90 }}
                   whileTap={{ scale: 0.9 }}
                   onClick={() => setOperationStatus(null)}
-                  className="ml-2 hover:bg-white/50 rounded-full p-1 transition-colors"
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', padding: 4, marginLeft: 8 }}
                 >
-                  <X className="w-4 h-4" />
+                  <X style={{ width: 16, height: 16 }} />
                 </motion.button>
               </div>
             </motion.div>
@@ -895,22 +946,26 @@ const MeetingManagement = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-40"
+              className="fixed inset-0 flex items-center justify-center z-40"
+              style={{ background: 'rgba(0,0,0,.75)' }}
             >
               <motion.div
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
-                className="bg-white rounded-2xl p-8 shadow-2xl"
+                style={{ background: bg2, border: `1px solid ${border}`, borderRadius: 4, padding: 32 }}
               >
                 <div className="flex flex-col items-center space-y-4">
                   <motion.div
                     animate={{ rotate: 360 }}
-                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                    className="w-12 h-12 border-4 border-t-transparent rounded-full"
-                    style={{ borderColor: 'rgb(249, 115, 22)', borderTopColor: 'transparent' }}
+                    transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                    style={{
+                      width: 48, height: 48, borderRadius: '50%',
+                      border: `4px solid ${border}`,
+                      borderTopColor: ORG,
+                    }}
                   />
-                  <span className="text-gray-700 text-sm font-semibold">Processing...</span>
+                  <span style={{ ...ba(13, 600), color: textC }}>Processing...</span>
                 </div>
               </motion.div>
             </motion.div>
@@ -924,32 +979,37 @@ const MeetingManagement = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/40 backdrop-blur-md flex items-center justify-center z-50 p-4"
+              className="fixed inset-0 flex items-center justify-center z-50 p-4"
+              style={{ background: 'rgba(0,0,0,.75)' }}
             >
               <motion.div
                 initial={{ scale: 0.9, opacity: 0, y: 20 }}
                 animate={{ scale: 1, opacity: 1, y: 0 }}
                 exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                transition={{ type: "spring", duration: 0.5 }}
-                className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl"
+                transition={{ type: 'spring', duration: 0.5 }}
+                style={{ background: bg2, border: `1px solid ${border}`, borderRadius: 4, padding: 24, width: '100%', maxWidth: 420 }}
               >
                 <div className="flex items-start space-x-4 mb-5">
                   <motion.div
                     initial={{ scale: 0 }}
                     animate={{ scale: 1, rotate: [0, 10, -10, 0] }}
                     transition={{ delay: 0.2 }}
-                    className="w-12 h-12 bg-gradient-to-br from-red-100 to-rose-100 rounded-xl flex items-center justify-center flex-shrink-0"
+                    style={{
+                      width: 48, height: 48, borderRadius: 4, flexShrink: 0,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      background: 'rgba(232,64,64,.1)', border: '1px solid rgba(232,64,64,.2)',
+                    }}
                   >
-                    <AlertTriangle className="w-6 h-6 text-red-600" />
+                    <AlertTriangle style={{ width: 24, height: 24, color: '#e84040' }} />
                   </motion.div>
                   <div className="flex-1">
-                    <h3 className="text-base font-bold text-gray-900 mb-1">Delete Meeting?</h3>
-                    <p className="text-xs text-gray-500">This action cannot be undone</p>
+                    <h3 style={{ ...ba(15, 700), color: textC, marginBottom: 4 }}>Delete Meeting?</h3>
+                    <p style={{ ...ba(12, 400), color: text2 }}>This action cannot be undone</p>
                   </div>
                 </div>
-                <div className="bg-gray-50 rounded-lg p-4 mb-6">
-                  <p className="text-xs text-gray-700">
-                    Are you sure you want to delete <span className="font-bold text-gray-900">"{deleteConfirm.title || 'N/A'}"</span>?
+                <div style={{ background: bg3, borderRadius: 4, padding: 16, marginBottom: 24 }}>
+                  <p style={{ ...ba(12, 400), color: text2 }}>
+                    Are you sure you want to delete <span style={{ fontWeight: 700, color: textC }}>"{deleteConfirm.title || 'N/A'}"</span>?
                   </p>
                 </div>
                 <div className="flex items-center justify-end space-x-3">
@@ -957,7 +1017,11 @@ const MeetingManagement = () => {
                     whileHover={{ scale: 1.02, y: -1 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => setDeleteConfirm(null)}
-                    className="px-5 py-2.5 text-xs font-semibold text-gray-700 border-2 border-gray-200 rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-all"
+                    style={{
+                      ...bc(12, 600),
+                      background: bg3, border: `1px solid ${border}`, color: textC,
+                      borderRadius: 4, padding: '8px 20px', cursor: 'pointer',
+                    }}
                   >
                     Cancel
                   </motion.button>
@@ -965,7 +1029,11 @@ const MeetingManagement = () => {
                     whileHover={{ scale: 1.02, y: -1 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => handleDelete(deleteConfirm)}
-                    className="px-5 py-2.5 text-xs font-semibold bg-gradient-to-r from-red-600 to-rose-600 text-white rounded-lg hover:from-red-700 hover:to-rose-700 shadow-lg hover:shadow-xl transition-all"
+                    style={{
+                      ...bc(12, 600),
+                      background: '#e84040', color: '#fff',
+                      borderRadius: 4, padding: '8px 20px', border: 'none', cursor: 'pointer',
+                    }}
                   >
                     Delete Meeting
                   </motion.button>

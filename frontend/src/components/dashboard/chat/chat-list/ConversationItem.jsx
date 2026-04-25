@@ -1,16 +1,13 @@
 import React, { useMemo } from 'react';
 import Avatar from '../ui/Avatar';
-import { Check, CheckCheck, Users } from 'lucide-react';
+import { Check, CheckCheck, Users, ShieldCheck } from 'lucide-react';
 import useAdminAuth from '../../../../context/AdminAuthContext';
+import { useDashboardTheme } from '../../../../utils/dashboardTheme';
+import { ORG, TEAL, bb, bc, ba } from '../../../../utils/homeConstants';
+import { motion } from 'framer-motion';
 
 /**
  * Individual conversation item in the chat list
- * Enhanced with:
- * - Participant avatar display (for 1-on-1 chats)
- * - Group name display for group chats
- * - Online status indicator (only for 1-on-1)
- * - Read receipt ticks (only for 1-on-1)
- * - Enhanced styling for active state
  */
 const ConversationItem = ({
     chat,
@@ -21,121 +18,130 @@ const ConversationItem = ({
     onSelect
 }) => {
     const { user: currentUser } = useAdminAuth();
+    const { bg, bg2, bg3, textC, text2, text3, border, isDark } = useDashboardTheme();
 
     // Check if this is a group conversation
     const isGroup = chat?.isGroup || false;
 
-    // Extract participant info for 1-on-1 chats (not group chats)
+    // Extract participant info for 1-on-1 chats
     const participant = useMemo(() => {
-        if (isGroup || !chat.participants || chat.participants.length === 0) {
-            return null;
-        }
-
-        // For 1-on-1 chats, find the other participant (not current user)
-        const otherParticipant = chat.participants.find(p =>
-            !(p.participantId == currentUser?.id && p.participantType === 'ADMIN')
-        );
-
-        return otherParticipant || null;
+        if (isGroup || !chat.participants || chat.participants.length === 0) return null;
+        return chat.participants.find(p => !(p.participantId == currentUser?.id && p.participantType === 'ADMIN')) || null;
     }, [chat.participants, currentUser, isGroup]);
 
-    // Determine avatar and name to display
-    // For groups: use conversation name directly
-    // For 1-on-1: use other participant's info
-    const displayAvatar = isGroup ? chat.avatar : (participant?.avatar || chat.avatar);
-    const displayInitial = isGroup
-        ? (chat.name?.charAt(0)?.toUpperCase() || 'G')
-        : (participant?.initial || chat.initial);
     const displayName = isGroup ? (chat.name || 'Group') : (participant?.name || chat.name || 'Unknown');
-
-    // Online status only for 1-on-1 chats
     const isOnline = !isGroup && (participant?.isOnline || false);
 
-    // Determine if we should show read receipt ticks (only for 1-on-1 chats)
-    // For groups, don't show read receipts
-    const showReadReceipts = !isGroup &&
-        lastMessage?.senderId === currentUser?.id &&
-        lastMessage?.senderType === 'ADMIN';
-
-    // Check if last message is read (double tick vs single tick)
+    const showReadReceipts = !isGroup && lastMessage?.senderId === currentUser?.id && lastMessage?.senderType === 'ADMIN';
     const isMessageRead = lastMessage?.isRead || false;
 
     // Format last message text
     const lastMessageText = useMemo(() => {
-        if (!lastMessage) return '';
-
-        // Show typing indicator
+        if (!lastMessage) return 'Start a new conversation';
         if (isTyping) return null;
-
-        // Show attachments with icons
-        if (lastMessage.images && lastMessage.images.length > 0) {
-            return '📷 Photo';
-        }
-        if (lastMessage.files && lastMessage.files.length > 0) {
-            return '📎 File';
-        }
-
-        // Show message content, truncated
-        return lastMessage.content?.substring(0, 40) || '';
+        if (lastMessage.images?.length > 0) return '📷 Photo';
+        if (lastMessage.files?.length > 0) return '📎 File';
+        return lastMessage.content || '';
     }, [lastMessage, isTyping]);
 
     return (
-        <div
-            className={`px-4 py-3 hover:bg-gray-200 cursor-pointer transition-all duration-200 ${isSelected ? 'bg-dashboard-200 border-l-4 border-dashboard-600' : ''
-                }`}
+        <motion.div
+            whileHover={{ background: bg3 }}
             onClick={() => onSelect(chat.id)}
+            style={{
+                padding: '16px 20px',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                background: isSelected ? 'rgba(232,98,26,.05)' : 'transparent',
+                borderLeft: `3px solid ${isSelected ? ORG : 'transparent'}`,
+                borderBottom: `1px solid ${border}`,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 12
+            }}
         >
-            <div className="flex items-center space-x-3">
-                <div className="relative">
-                    {isGroup ? (
-                        // Group avatar with Users icon
-                        <div className="w-12 h-12 rounded-full bg-dashboard-100 flex items-center justify-center">
-                            <Users className="w-6 h-6 text-dashboard-600" />
+            <div style={{ position: 'relative', flexShrink: 0 }}>
+                {isGroup ? (
+                    <div style={{ 
+                        width: 48, 
+                        height: 48, 
+                        borderRadius: 4, 
+                        background: bg2, 
+                        border: `1px solid ${border}`, 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center' 
+                    }}>
+                        <Users style={{ width: 20, height: 20, color: ORG }} />
+                    </div>
+                ) : (
+                    <Avatar
+                        avatar={isGroup ? chat.avatar : (participant?.avatar || chat.avatar)}
+                        initial={isGroup ? (chat.name?.charAt(0)?.toUpperCase() || 'G') : (participant?.initial || chat.initial)}
+                        name={displayName}
+                        online={isOnline}
+                        size="lg"
+                    />
+                )}
+                {isOnline && (
+                    <div style={{ 
+                        position: 'absolute', 
+                        bottom: 2, 
+                        right: 2, 
+                        width: 10, 
+                        height: 10, 
+                        background: '#10b981', 
+                        borderRadius: '50%', 
+                        border: `2px solid ${isSelected ? 'rgba(232,98,26,.05)' : bg}` 
+                    }} />
+                )}
+            </div>
+
+            <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+                        <h3 style={{ ...bc(14, 700, { color: textC, margin: 0, letterSpacing: 0.5 }) }} className="truncate">
+                            {displayName}
+                        </h3>
+                        {isOnline && <ShieldCheck style={{ width: 12, height: 12, color: '#10b981' }} />}
+                    </div>
+                    <span style={{ ...ba(10, 400, { color: text3, whiteSpace: 'nowrap' }) }}>
+                        {lastMessage?.time || ''}
+                    </span>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+                        {showReadReceipts && (
+                            isMessageRead ? <CheckCheck style={{ width: 14, height: 14, color: ORG }} /> : <Check style={{ width: 14, height: 14, color: text3 }} />
+                        )}
+                        <p style={{ 
+                            ...ba(13, isTyping ? 500 : 400, { 
+                                color: isTyping ? ORG : unreadCount > 0 ? textC : text3, 
+                                margin: 0 
+                            }) 
+                        }} className="truncate">
+                            {isTyping ? 'thinking •••' : lastMessageText}
+                        </p>
+                    </div>
+
+                    {unreadCount > 0 && (
+                        <div style={{ 
+                            background: ORG, 
+                            color: '#fff', 
+                            ...bc(10, 700), 
+                            padding: '2px 6px', 
+                            borderRadius: 4, 
+                            minWidth: 18, 
+                            textAlign: 'center',
+                            boxShadow: '0 4px 8px rgba(232,98,26,0.3)'
+                        }}>
+                            {unreadCount}
                         </div>
-                    ) : (
-                        <Avatar
-                            avatar={displayAvatar}
-                            initial={displayInitial}
-                            name={displayName}
-                            online={isOnline}
-                            size="lg"
-                        />
                     )}
                 </div>
-                <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-1">
-                        <h3 className="text-sm font-semibold text-gray-800 truncate">{displayName}</h3>
-                        <span className="text-xs text-gray-400">{lastMessage?.time || ''}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-1 flex-1 min-w-0">
-                            {/* Read receipt ticks (only for sent messages) */}
-                            {showReadReceipts && (
-                                <div className="flex-shrink-0">
-                                    {isMessageRead ? (
-                                        <CheckCheck className="w-4 h-4 text-blue-500" />
-                                    ) : (
-                                        <Check className="w-4 h-4 text-gray-400" />
-                                    )}
-                                </div>
-                            )}
-
-                            {/* Message text */}
-                            <p className={`text-sm truncate ${isTyping ? 'text-dashboard-600' : 'text-gray-500'}`}>
-                                {isTyping ? 'typing •••' : lastMessageText}
-                            </p>
-                        </div>
-
-                        {/* Unread count badge */}
-                        {unreadCount > 0 && (
-                            <span className="ml-2 px-2 py-0.5 bg-dashboard-600 text-white text-xs rounded-full flex-shrink-0">
-                                {unreadCount}
-                            </span>
-                        )}
-                    </div>
-                </div>
             </div>
-        </div>
+        </motion.div>
     );
 };
 

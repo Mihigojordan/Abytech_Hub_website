@@ -1,111 +1,49 @@
-import { useState, useRef } from "react";
+import React, { useState, useEffect } from 'react';
+import {
+  ArrowLeft, Save, Plus, Trash2, CheckCircle2,
+  Calendar, Clock, Users, Zap, ListTodo, MessageSquare,
+  X, AlertCircle, FileText
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useDashboardTheme } from '../../../utils/dashboardTheme';
+import { ORG, TEAL, bb, bc, ba } from '../../../utils/homeConstants';
 
-const STATUS_OPTIONS = ["PENDING", "IN_PROGRESS", "COMPLETED", "MISSED"];
+const uid = () => Math.random().toString(36).slice(2, 9);
 
-const STATUS_META = {
-  PENDING: { bg: "bg-yellow-50", text: "text-yellow-700", border: "border-yellow-200", dot: "bg-yellow-500", activeBorder: "border-yellow-400" },
-  IN_PROGRESS: { bg: "bg-blue-50", text: "text-blue-700", border: "border-blue-200", dot: "bg-blue-500", activeBorder: "border-blue-400" },
-  COMPLETED: { bg: "bg-green-50", text: "text-green-700", border: "border-green-200", dot: "bg-green-500", activeBorder: "border-green-400" },
-  MISSED: { bg: "bg-red-50", text: "text-red-700", border: "border-red-200", dot: "bg-red-500", activeBorder: "border-red-400" },
+const formatDateTimeLocal = (isoString) => {
+  if (!isoString) return '';
+  return new Date(isoString).toISOString().slice(0, 10);
 };
 
-function uid() {
-  return Math.random().toString(36).slice(2, 10);
-}
+const STATUS_OPTIONS = [
+  { value: 'PENDING', label: 'PENDING', color: '#f59e0b', icon: Clock },
+  { value: 'IN_PROGRESS', label: 'IN PROGRESS', color: TEAL, icon: Zap },
+  { value: 'COMPLETED', label: 'COMPLETED', color: '#10b981', icon: CheckCircle2 },
+  { value: 'MISSED', label: 'MISSED', color: '#ef4444', icon: AlertCircle },
+];
+
+const TABS = [
+  { id: 'details', label: 'CORE DETAILS', icon: FileText },
+  { id: 'tasks', label: 'TASK PROTOCOL', icon: ListTodo },
+  { id: 'review', label: 'TEAM REFLECTIONS', icon: MessageSquare },
+];
 
 function initials(name) {
   if (!name) return "?";
   return name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
 }
 
-// Helper to format ISO date to date input
-function formatDateInput(isoString) {
-  if (!isoString) return '';
-  try {
-    return new Date(isoString).toISOString().slice(0, 10);
-  } catch {
-    return '';
-  }
-}
-
-// ─── Shared components ────────────────────────────────────────────────────────
-function EmptyState({ icon, text, sub }) {
-  return (
-    <div className="flex flex-col items-center py-12 text-center">
-      <div className="text-5xl mb-3 opacity-60">{icon}</div>
-      <p className="text-sm font-semibold text-stone-500">{text}</p>
-      <p className="text-xs text-stone-400 mt-1">{sub}</p>
-    </div>
-  );
-}
-
-function Toggle({ checked, onChange }) {
-  return (
-    <div
-      onClick={() => onChange(!checked)}
-      className={`w-10 h-5 rounded-full transition-all duration-200 flex items-center px-0.5 cursor-pointer ${checked ? "bg-green-500" : "bg-stone-200"}`}
-    >
-      <div className={`w-4 h-4 bg-white rounded-full shadow-sm transition-all duration-200 ${checked ? "translate-x-5" : "translate-x-0"}`} />
-    </div>
-  );
-}
-
-function FieldLabel({ children, required }) {
-  return (
-    <label className="block text-[11px] font-bold text-stone-400 uppercase tracking-widest mb-1.5">
-      {children} {required && <span className="text-red-400">*</span>}
-    </label>
-  );
-}
-
-function Input({ className = "", error, ...props }) {
-  return (
-    <input
-      className={`w-full bg-stone-50 border rounded-xl px-4 py-2.5 text-sm text-stone-800 font-medium outline-none transition-all placeholder-stone-300
-        ${error ? "border-red-400 ring-2 ring-red-100" : "border-stone-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 hover:border-stone-300"}
-        ${className}`}
-      {...props}
-    />
-  );
-}
-
-function SectionAddBtn({ onClick, label = "Add" }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="flex items-center gap-1.5 bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-sm shadow-orange-200 hover:shadow-orange-300"
-    >
-      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
-      </svg>
-      {label}
-    </button>
-  );
-}
-
-function RemoveBtn({ onClick }) {
-  return (
-    <button type="button" onClick={onClick} className="text-stone-300 hover:text-red-400 transition-colors p-1">
-      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-      </svg>
-    </button>
-  );
-}
-
 const INITIAL_FORM = {
-  title: "",
-  description: "",
-  weekStart: "",
-  weekEnd: "",
-  status: "PENDING",
+  title: '',
+  description: '',
+  weekStart: '',
+  weekEnd: '',
+  status: 'PENDING',
   progress: 0,
   tasks: [],
   reviewNotes: [],
 };
 
-// ─── Main Component ───────────────────────────────────────────────────────────
 export default function WeeklyGoalForm({
   goal = null,
   currentAdmin = null,
@@ -113,477 +51,413 @@ export default function WeeklyGoalForm({
   onCancel,
   isSubmitting = false
 }) {
+  const { bg, bg2, textC, text2, text3, border } = useDashboardTheme();
   const isEdit = !!goal;
+  const [activeTab, setActiveTab] = useState('details');
+  const [errors, setErrors] = useState({});
 
-  // Initialize form state from goal prop when editing
   const [form, setForm] = useState(() => {
     if (goal) {
-      // Parse reviewNotes if it's a string
-      let parsedReviewNotes = [];
-      if (goal.reviewNotes) {
-        try {
-          parsedReviewNotes = typeof goal.reviewNotes === 'string'
-            ? JSON.parse(goal.reviewNotes)
-            : goal.reviewNotes;
-        } catch {
-          parsedReviewNotes = [];
-        }
-      }
-
-      // Parse tasks if needed
       let parsedTasks = [];
-      if (goal.tasks) {
-        try {
-          parsedTasks = typeof goal.tasks === 'string'
-            ? JSON.parse(goal.tasks)
-            : goal.tasks;
-          parsedTasks = parsedTasks.map(t => ({ ...t, id: t.id || uid() }));
-        } catch {
-          parsedTasks = [];
-        }
-      }
+      try { parsedTasks = typeof goal.tasks === 'string' ? JSON.parse(goal.tasks) : (goal.tasks || []); } catch { parsedTasks = []; }
+      
+      let parsedReviewNotes = [];
+      try { parsedReviewNotes = typeof goal.reviewNotes === 'string' ? JSON.parse(goal.reviewNotes) : (goal.reviewNotes || []); } catch { parsedReviewNotes = []; }
 
       return {
         title: goal.title || '',
         description: goal.description || '',
-        weekStart: formatDateInput(goal.weekStart),
-        weekEnd: formatDateInput(goal.weekEnd),
+        weekStart: formatDateTimeLocal(goal.weekStart),
+        weekEnd: formatDateTimeLocal(goal.weekEnd),
         status: goal.status || 'PENDING',
         progress: goal.progress || 0,
-        tasks: parsedTasks,
+        tasks: parsedTasks.map(t => ({ ...t, id: t.id || uid() })),
         reviewNotes: parsedReviewNotes.map(r => ({ ...r, id: r.id || uid() })),
       };
     }
     return INITIAL_FORM;
   });
 
-  const [tab, setTab] = useState("details");
-  const [errors, setErrors] = useState({});
-
-  const set = (field, val) => {
-    setForm((f) => ({ ...f, [field]: val }));
-    setErrors((e) => ({ ...e, [field]: undefined }));
+  const handleChange = (field, value) => {
+    setForm(prev => ({ ...prev, [field]: value }));
+    if (errors[field]) setErrors(prev => ({ ...prev, [field]: undefined }));
   };
 
-  // Tasks
-  const addTask = () =>
-    set("tasks", [...(form.tasks || []), { id: uid(), title: "", description: "", done: false }]);
-  const updateTask = (id, patch) =>
-    set("tasks", (form.tasks || []).map((t) => (t.id === id ? { ...t, ...patch } : t)));
-  const removeTask = (id) =>
-    set("tasks", (form.tasks || []).filter((t) => t.id !== id));
+  const addTask = () => {
+    setForm(prev => ({
+      ...prev,
+      tasks: [...prev.tasks, { id: uid(), title: '', description: '', done: false }]
+    }));
+  };
 
-  // Review Notes
+  const updateTask = (id, patch) => {
+    setForm(prev => ({
+      ...prev,
+      tasks: prev.tasks.map(t => t.id === id ? { ...t, ...patch } : t)
+    }));
+  };
+
+  const removeTask = (id) => {
+    setForm(prev => ({
+      ...prev,
+      tasks: prev.tasks.filter(t => t.id !== id)
+    }));
+  };
+
   const addReviewNote = () => {
     if (!currentAdmin) return;
-    set("reviewNotes", [...(form.reviewNotes || []), {
-      id: uid(),
-      adminId: currentAdmin.id,
-      name: currentAdmin.adminName || currentAdmin.name || '',
-      notes: ""
-    }]);
+    setForm(prev => ({
+      ...prev,
+      reviewNotes: [...prev.reviewNotes, {
+        id: uid(),
+        adminId: currentAdmin.id,
+        name: currentAdmin.adminName || currentAdmin.name || '',
+        notes: ''
+      }]
+    }));
   };
-  const updateReviewNote = (id, notes) =>
-    set("reviewNotes", (form.reviewNotes || []).map((r) => (r.id === id ? { ...r, notes } : r)));
-  const removeReviewNote = (id) =>
-    set("reviewNotes", (form.reviewNotes || []).filter((r) => r.id !== id));
 
-  // Calculate progress from tasks
+  const updateReviewNote = (id, notes) => {
+    setForm(prev => ({
+      ...prev,
+      reviewNotes: prev.reviewNotes.map(r => r.id === id ? { ...r, notes } : r)
+    }));
+  };
+
+  const removeReviewNote = (id) => {
+    setForm(prev => ({
+      ...prev,
+      reviewNotes: prev.reviewNotes.filter(r => r.id !== id)
+    }));
+  };
+
   const calculateProgress = () => {
     const tasks = form.tasks || [];
-    if (tasks.length === 0) return 0;
+    if (tasks.length === 0) return form.progress || 0;
     const done = tasks.filter(t => t.done).length;
     return Math.round((done / tasks.length) * 100);
   };
 
   const validate = () => {
-    const e = {};
-    if (!form.title.trim()) e.title = "Title is required";
-    if (!form.weekStart) e.weekStart = "Week start date is required";
-    if (!form.weekEnd) e.weekEnd = "Week end date is required";
-    if (form.weekEnd && form.weekStart && form.weekEnd < form.weekStart)
-      e.weekEnd = "End date must be after start date";
-    setErrors(e);
-    return Object.keys(e).length === 0;
+    const errs = {};
+    if (!form.title.trim()) errs.title = 'Title is required';
+    if (!form.weekStart) errs.weekStart = 'Start date is required';
+    if (!form.weekEnd) errs.weekEnd = 'End date is required';
+    setErrors(errs);
+    return Object.keys(errs).length === 0;
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!validate()) { setTab("details"); return; }
-
-    // Auto-calculate progress from tasks
-    const progress = calculateProgress();
-    onSubmit?.({ ...form, progress });
+    if (!validate()) {
+      setActiveTab('details');
+      return;
+    }
+    onSubmit({
+      ...form,
+      progress: calculateProgress()
+    });
   };
 
-  const tabCounts = {
-    tasks: (form.tasks || []).length,
-    review: (form.reviewNotes || []).length,
-  };
-
-  const TABS = [
-    {
-      id: "details", label: "Details",
-      icon: <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>,
-    },
-    {
-      id: "tasks", label: "Tasks",
-      icon: <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg>,
-    },
-    {
-      id: "review", label: "Review Notes",
-      icon: <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" /></svg>,
-    },
-  ];
-
-  // Get progress color
-  const getProgressColor = () => {
-    const p = form.progress || calculateProgress();
-    if (p >= 80) return 'from-green-500 to-emerald-600';
-    if (p >= 50) return 'from-blue-500 to-indigo-600';
-    if (p >= 25) return 'from-yellow-500 to-amber-600';
-    return 'from-gray-400 to-gray-500';
-  };
+  const SectionLabel = ({ icon: Icon, label, required = false }) => (
+    <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, ...bc(11, 800, { color: text3, letterSpacing: '0.05em' }) }}>
+      <Icon size={14} style={{ color: ORG }} />
+      {label.toUpperCase()} {required && <span style={{ color: ORG }}>*</span>}
+    </label>
+  );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50/20 to-stone-50 flex items-start justify-center px-4 py-10 pb-24">
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-        .wgf-wrap * { font-family: 'Plus Jakarta Sans', sans-serif; }
-        input[type=date]::-webkit-calendar-picker-indicator { opacity: 0.5; cursor: pointer; filter: invert(55%) sepia(90%) saturate(500%) hue-rotate(340deg); }
-        .tab-bar::-webkit-scrollbar { display: none; }
-      `}</style>
-
-      <div className="wgf-wrap w-full ">
-
-        {/* ── Header ── */}
-        <div className="mb-7">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center shadow-sm shadow-orange-200">
-              <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <span className="text-xs font-bold tracking-widest text-orange-500 uppercase">Weekly Goals</span>
-          </div>
-          <h1 className="text-3xl font-extrabold text-stone-900 tracking-tight leading-tight">
-            {isEdit ? "Edit Weekly Goal" : "Create New Goal"}
-          </h1>
-          <p className="text-sm text-stone-400 mt-1 font-medium">
-            {isEdit ? "Update the details of this goal" : "Set your objectives for the week"}
-          </p>
-        </div>
-
-        {/* ── Status Bar ── */}
-        <div className="bg-white border border-stone-200 rounded-2xl px-5 py-4 mb-5 shadow-sm flex items-center gap-4 flex-wrap">
-          <span className="text-xs font-bold text-stone-400 uppercase tracking-widest">Status</span>
-          <div className="flex gap-2 flex-wrap">
-            {STATUS_OPTIONS.map((s) => {
-              const m = STATUS_META[s];
-              const active = form.status === s;
-              return (
-                <button
-                  key={s}
-                  type="button"
-                  onClick={() => set("status", s)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border-2 transition-all duration-150 ${
-                    active
-                      ? `${m.bg} ${m.text} ${m.activeBorder} shadow-sm`
-                      : "bg-white text-stone-400 border-stone-200 hover:border-stone-300 hover:bg-stone-50"
-                  }`}
-                >
-                  <span className={`w-2 h-2 rounded-full ${active ? m.dot : "bg-stone-300"} transition-all`} />
-                  {s.replace("_", " ")}
-                </button>
-              );
-            })}
+    <div style={{ background: bg, minHeight: '100vh', paddingBottom: 100 }}>
+      <form onSubmit={handleSubmit} className="max-w-[1000px] mx-auto px-6 py-12">
+        
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 40 }}>
+          <button
+            type="button"
+            onClick={onCancel}
+            style={{ background: 'none', border: 'none', color: text3, display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', ...bc(12, 700) }}
+          >
+            <ArrowLeft size={16} /> DISCARD & EXIT
+          </button>
+          <div style={{ ...bc(12, 800, { color: text3, letterSpacing: '0.1em' }) }}>
+            GOALS / <span style={{ color: ORG }}>{isEdit ? 'EDIT' : 'CREATE'} SESSION</span>
           </div>
         </div>
 
-        {/* ── Progress Bar ── */}
-        <div className="bg-white border border-stone-200 rounded-2xl px-5 py-4 mb-5 shadow-sm">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-bold text-stone-400 uppercase tracking-widest">Progress</span>
-            <span className="text-sm font-extrabold text-orange-500">{calculateProgress()}%</span>
-          </div>
-          <div className="w-full bg-stone-100 rounded-full h-2.5 overflow-hidden">
-            <div
-              className={`h-full rounded-full bg-gradient-to-r ${getProgressColor()} transition-all duration-500`}
-              style={{ width: `${calculateProgress()}%` }}
-            />
-          </div>
-          <p className="text-[11px] text-stone-400 mt-2 font-medium">
-            {(form.tasks || []).filter(t => t.done).length} of {(form.tasks || []).length} tasks completed
-          </p>
-        </div>
-
-        {/* ── Tabs ── */}
-        <div className="tab-bar flex gap-1 bg-white border border-stone-200 rounded-2xl p-1.5 mb-5 shadow-sm overflow-x-auto">
-          {TABS.map((t) => {
-            const active = tab === t.id;
-            const count = tabCounts[t.id];
-            return (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          style={{ background: bg2, border: `1px solid ${border}`, borderRadius: 40, padding: 0, overflow: 'hidden', boxShadow: '0 20px 60px rgba(0,0,0,0.02)' }}
+        >
+          {/* Tabs Navigation */}
+          <div style={{ display: 'flex', borderBottom: `1px solid ${border}` }}>
+            {TABS.map(tab => (
               <button
-                key={t.id}
+                key={tab.id}
                 type="button"
-                onClick={() => setTab(t.id)}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all duration-150 flex-1 justify-center uppercase tracking-wide ${
-                  active
-                    ? "bg-orange-500 text-white shadow-md shadow-orange-200"
-                    : "text-stone-400 hover:bg-stone-50 hover:text-stone-600"
-                }`}
+                onClick={() => setActiveTab(tab.id)}
+                style={{ 
+                  flex: 1, padding: '20px', background: activeTab === tab.id ? bg : 'transparent', 
+                  border: 'none', color: activeTab === tab.id ? ORG : text3, cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, ...bc(11, 800),
+                  transition: 'all 0.2s', borderBottom: activeTab === tab.id ? `2px solid ${ORG}` : 'none'
+                }}
               >
-                {t.icon}
-                <span className="hidden sm:inline">{t.label}</span>
-                {count > 0 && (
-                  <span
-                    className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center leading-4 ${
-                      active ? "bg-white/25 text-white" : "bg-orange-100 text-orange-600"
-                    }`}
-                  >
-                    {count}
-                  </span>
-                )}
+                <tab.icon size={16} /> {tab.label}
               </button>
-            );
-          })}
-        </div>
+            ))}
+          </div>
 
-        <form onSubmit={handleSubmit}>
-
-          {/* ══════════════ DETAILS ══════════════ */}
-          {tab === "details" && (
-            <div className="bg-white border border-stone-200 rounded-2xl p-7 shadow-sm space-y-5">
-
-              {/* Title */}
-              <div>
-                <FieldLabel required>Title</FieldLabel>
-                <Input
-                  placeholder="e.g. Complete API Integration"
-                  value={form.title}
-                  onChange={(e) => set("title", e.target.value)}
-                  error={errors.title}
-                />
-                {errors.title && (
-                  <p className="flex items-center gap-1.5 text-xs text-red-500 mt-1.5 font-semibold">
-                    <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
-                    {errors.title}
-                  </p>
-                )}
-              </div>
-
-              {/* Description */}
-              <div>
-                <FieldLabel>Description</FieldLabel>
-                <textarea
-                  className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-sm text-stone-800 font-medium outline-none transition-all focus:border-orange-400 focus:ring-2 focus:ring-orange-100 hover:border-stone-300 placeholder-stone-300 resize-none"
-                  rows={3}
-                  placeholder="What do you want to achieve this week?"
-                  value={form.description || ""}
-                  onChange={(e) => set("description", e.target.value)}
-                />
-              </div>
-
-              {/* Week Dates */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <FieldLabel required>Week Start</FieldLabel>
-                  <input
-                    type="date"
-                    className={`w-full bg-stone-50 border rounded-xl px-4 py-2.5 text-sm text-stone-800 font-medium outline-none transition-all ${
-                      errors.weekStart ? "border-red-400 ring-2 ring-red-100" : "border-stone-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 hover:border-stone-300"
-                    }`}
-                    value={form.weekStart}
-                    onChange={(e) => set("weekStart", e.target.value)}
-                  />
-                  {errors.weekStart && (
-                    <p className="flex items-center gap-1.5 text-xs text-red-500 mt-1.5 font-semibold">
-                      <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
-                      {errors.weekStart}
-                    </p>
-                  )}
-                </div>
-                <div>
-                  <FieldLabel required>Week End</FieldLabel>
-                  <input
-                    type="date"
-                    className={`w-full bg-stone-50 border rounded-xl px-4 py-2.5 text-sm text-stone-800 font-medium outline-none transition-all ${
-                      errors.weekEnd ? "border-red-400 ring-2 ring-red-100" : "border-stone-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 hover:border-stone-300"
-                    }`}
-                    value={form.weekEnd || ""}
-                    onChange={(e) => set("weekEnd", e.target.value)}
-                  />
-                  {errors.weekEnd && (
-                    <p className="flex items-center gap-1.5 text-xs text-red-500 mt-1.5 font-semibold">
-                      <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
-                      {errors.weekEnd}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              {isEdit && goal?.owner && (
-                <div className="pt-4 border-t border-stone-100">
-                  <FieldLabel>Owner</FieldLabel>
-                  <div className="flex items-center gap-3 bg-stone-50 rounded-xl px-4 py-3">
-                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-orange-400 to-amber-500 flex items-center justify-center text-white text-sm font-bold">
-                      {initials(goal.owner.adminName)}
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold text-stone-800">{goal.owner.adminName}</p>
-                      <p className="text-xs text-stone-400">{goal.owner.adminEmail}</p>
-                    </div>
+          <div style={{ padding: 48 }}>
+            <AnimatePresence mode="wait">
+              {/* Core Details */}
+              {activeTab === 'details' && (
+                <motion.div
+                  key="details"
+                  initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }}
+                  style={{ display: 'flex', flexDirection: 'column', gap: 32 }}
+                >
+                  <div>
+                    <SectionLabel icon={FileText} label="Goal Title" required />
+                    <input
+                      type="text"
+                      value={form.title}
+                      onChange={(e) => handleChange('title', e.target.value)}
+                      placeholder="e.g. Q2 Performance Optimization"
+                      style={{ width: '100%', padding: '16px 20px', background: bg, border: `1px solid ${errors.title ? '#ef4444' : border}`, borderRadius: 16, color: textC, ...ba(15, 500), outline: 'none' }}
+                    />
                   </div>
-                </div>
-              )}
-            </div>
-          )}
 
-          {/* ══════════════ TASKS ══════════════ */}
-          {tab === "tasks" && (
-            <div className="bg-white border border-stone-200 rounded-2xl p-7 shadow-sm">
-              <div className="flex items-start justify-between mb-6">
-                <div>
-                  <h3 className="font-bold text-stone-800 text-base">Tasks</h3>
-                  <p className="text-xs text-stone-400 mt-0.5 font-medium">
-                    Break down your goal into actionable tasks
-                  </p>
-                </div>
-                <SectionAddBtn onClick={addTask} label="Add Task" />
-              </div>
+                  <div>
+                    <SectionLabel icon={Zap} label="Strategic Intent" />
+                    <textarea
+                      value={form.description}
+                      onChange={(e) => handleChange('description', e.target.value)}
+                      placeholder="High-level description of what this goal accomplishes..."
+                      rows={4}
+                      style={{ width: '100%', padding: '16px 20px', background: bg, border: `1px solid ${border}`, borderRadius: 16, color: textC, ...ba(15, 500), outline: 'none', resize: 'none' }}
+                    />
+                  </div>
 
-              {(form.tasks || []).length === 0 ? (
-                <EmptyState icon="✅" text="No tasks yet" sub="Click Add Task to create your first task" />
-              ) : (
-                <div className="space-y-3">
-                  {(form.tasks || []).map((task, i) => (
-                    <div
-                      key={task.id}
-                      className={`border rounded-xl p-4 transition-all ${
-                        task.done ? "bg-green-50/60 border-green-200" : "bg-stone-50 border-stone-200"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-2">
-                          <div className={`w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center ${task.done ? "bg-green-100 text-green-600" : "bg-orange-100 text-orange-500"}`}>
-                            {task.done ? "✓" : i + 1}
-                          </div>
-                          <span className="text-[11px] font-bold text-stone-400 uppercase tracking-widest">Task</span>
-                          {task.done && <span className="text-[10px] bg-green-100 text-green-600 px-1.5 py-0.5 rounded-full font-bold">Done</span>}
-                        </div>
-                        <RemoveBtn onClick={() => removeTask(task.id)} />
-                      </div>
-
-                      <div className="mb-3">
-                        <FieldLabel>Task Title</FieldLabel>
-                        <input
-                          className={`w-full bg-white border border-stone-200 rounded-lg px-3 py-2.5 text-sm font-medium outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all placeholder-stone-300 ${task.done ? "line-through text-stone-400" : "text-stone-800"}`}
-                          placeholder="e.g. Design API endpoints"
-                          value={task.title}
-                          onChange={(e) => updateTask(task.id, { title: e.target.value })}
-                        />
-                      </div>
-
-                      <div className="mb-3">
-                        <FieldLabel>Description (optional)</FieldLabel>
-                        <textarea
-                          className="w-full bg-white border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-800 font-medium outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all resize-none placeholder-stone-300"
-                          rows={2}
-                          placeholder="Additional details..."
-                          value={task.description || ""}
-                          onChange={(e) => updateTask(task.id, { description: e.target.value })}
-                        />
-                      </div>
-
-                      <label className="flex items-center gap-2 cursor-pointer w-fit">
-                        <Toggle checked={!!task.done} onChange={(val) => updateTask(task.id, { done: val })} />
-                        <span className="text-xs font-semibold text-stone-500">Mark as done</span>
-                      </label>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* ══════════════ REVIEW NOTES ══════════════ */}
-          {tab === "review" && (
-            <div className="bg-white border border-stone-200 rounded-2xl p-7 shadow-sm">
-              <div className="flex items-start justify-between mb-6">
-                <div>
-                  <h3 className="font-bold text-stone-800 text-base">Review Notes</h3>
-                  <p className="text-xs text-stone-400 mt-0.5 font-medium">
-                    End-of-week reflections and notes from team members
-                  </p>
-                </div>
-                {currentAdmin && (
-                  <SectionAddBtn onClick={addReviewNote} label="Add Note" />
-                )}
-              </div>
-
-              {(form.reviewNotes || []).length === 0 ? (
-                <EmptyState icon="💬" text="No review notes yet" sub="Add reflections at the end of the week" />
-              ) : (
-                <div className="space-y-3">
-                  {(form.reviewNotes || []).map((note, i) => (
-                    <div key={note.id} className="bg-stone-50 border border-stone-200 rounded-xl p-4">
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-400 to-amber-500 flex items-center justify-center text-white text-xs font-bold">
-                            {initials(note.name)}
-                          </div>
-                          <div>
-                            <p className="text-sm font-semibold text-stone-800">{note.name}</p>
-                            <p className="text-[10px] text-stone-400 font-medium">Team Member</p>
-                          </div>
-                        </div>
-                        <RemoveBtn onClick={() => removeReviewNote(note.id)} />
-                      </div>
-
-                      <textarea
-                        className="w-full bg-white border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-800 font-medium outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all resize-none placeholder-stone-300"
-                        rows={3}
-                        placeholder="What went well? What could be improved?"
-                        value={note.notes}
-                        onChange={(e) => updateReviewNote(note.id, e.target.value)}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                      <SectionLabel icon={Calendar} label="Week Start" required />
+                      <input
+                        type="date"
+                        value={form.weekStart}
+                        onChange={(e) => handleChange('weekStart', e.target.value)}
+                        style={{ width: '100%', padding: '16px 20px', background: bg, border: `1px solid ${errors.weekStart ? '#ef4444' : border}`, borderRadius: 16, color: textC, ...ba(15, 500), outline: 'none' }}
                       />
                     </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
+                    <div>
+                      <SectionLabel icon={CheckCircle2} label="Week End" required />
+                      <input
+                        type="date"
+                        value={form.weekEnd}
+                        onChange={(e) => handleChange('weekEnd', e.target.value)}
+                        style={{ width: '100%', padding: '16px 20px', background: bg, border: `1px solid ${errors.weekEnd ? '#ef4444' : border}`, borderRadius: 16, color: textC, ...ba(15, 500), outline: 'none' }}
+                      />
+                    </div>
+                  </div>
 
-          {/* ── Submit Footer ── */}
-          <div className="flex items-center justify-between mt-6 bg-white border border-stone-200 rounded-2xl px-6 py-4 shadow-sm">
-            <div>
-              {Object.keys(errors).length > 0 && (
-                <p className="text-xs text-red-500 font-semibold flex items-center gap-1.5">
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
-                  Please fix the errors in Details tab
-                </p>
+                  <div>
+                    <SectionLabel icon={Clock} label="Current Status" />
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                      {STATUS_OPTIONS.map(opt => (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => handleChange('status', opt.value)}
+                          style={{ 
+                            display: 'flex', alignItems: 'center', gap: 10, padding: '12px 20px', borderRadius: 12, border: `1px solid ${form.status === opt.value ? opt.color : border}`,
+                            background: form.status === opt.value ? `${opt.color}10` : bg, color: form.status === opt.value ? opt.color : text3,
+                            cursor: 'pointer', ...bc(11, 800), transition: 'all 0.2s'
+                          }}
+                        >
+                          <opt.icon size={14} /> {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </motion.div>
               )}
-            </div>
-            <div className="flex gap-3">
-              <button
-                type="button"
-                onClick={onCancel}
-                disabled={isSubmitting}
-                className="px-6 py-2.5 rounded-xl border-2 border-stone-200 text-stone-600 text-sm font-bold hover:bg-stone-50 hover:border-stone-300 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="px-8 py-2.5 rounded-xl bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white text-sm font-bold transition-all shadow-md shadow-orange-200 hover:shadow-lg hover:shadow-orange-200 hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
-              >
-                {isSubmitting ? "Saving..." : (isEdit ? "Save Changes" : "Create Goal")}
-              </button>
-            </div>
+
+              {/* Task Protocol */}
+              {activeTab === 'tasks' && (
+                <motion.div
+                  key="tasks"
+                  initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }}
+                  style={{ display: 'flex', flexDirection: 'column', gap: 32 }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <div style={{ width: 4, height: 16, background: ORG, borderRadius: 2 }}></div>
+                      <h4 style={{ ...bc(14, 800, { color: textC, margin: 0 }) }}>ACTIVE TASK UNITS</h4>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={addTask}
+                      style={{ background: 'none', border: 'none', color: ORG, display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', ...bc(11, 800) }}
+                    >
+                      <Plus size={14} /> INITIALIZE TASK
+                    </button>
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                    {form.tasks.map((task, index) => (
+                      <motion.div
+                        key={task.id}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        style={{ background: bg, border: `1px solid ${border}`, borderRadius: 24, padding: 24, position: 'relative' }}
+                      >
+                        <button
+                          type="button"
+                          onClick={() => removeTask(task.id)}
+                          style={{ position: 'absolute', top: 24, right: 24, color: text3, cursor: 'pointer', background: 'none', border: 'none' }}
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                        
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                            <button
+                              type="button"
+                              onClick={() => updateTask(task.id, { done: !task.done })}
+                              style={{ 
+                                width: 24, height: 24, borderRadius: 8, border: `2px solid ${task.done ? '#10b981' : border}`,
+                                background: task.done ? '#10b981' : 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center'
+                              }}
+                            >
+                              {task.done && <CheckCircle2 size={14} color="#fff" />}
+                            </button>
+                            <input
+                              type="text"
+                              value={task.title}
+                              onChange={(e) => updateTask(task.id, { title: e.target.value })}
+                              placeholder="Task Title..."
+                              style={{ flex: 1, background: 'transparent', border: 'none', borderBottom: `1px solid ${border}`, color: textC, ...ba(14, 700), padding: '8px 0', outline: 'none', textDecoration: task.done ? 'line-through' : 'none' }}
+                            />
+                          </div>
+                          <textarea
+                            value={task.description}
+                            onChange={(e) => updateTask(task.id, { description: e.target.value })}
+                            placeholder="Supporting details or methodology..."
+                            rows={2}
+                            style={{ width: '100%', background: 'transparent', border: 'none', color: text2, ...ba(14, 500), outline: 'none', resize: 'none' }}
+                          />
+                        </div>
+                      </motion.div>
+                    ))}
+                    {form.tasks.length === 0 && (
+                      <div style={{ textAlign: 'center', padding: '40px 0', color: text3, ...ba(14, 500), border: `1px dashed ${border}`, borderRadius: 32 }}>No tasks defined.</div>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+
+              {/* Team Reflections */}
+              {activeTab === 'review' && (
+                <motion.div
+                  key="review"
+                  initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }}
+                  style={{ display: 'flex', flexDirection: 'column', gap: 32 }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <div style={{ width: 4, height: 16, background: '#8b5cf6', borderRadius: 2 }}></div>
+                      <h4 style={{ ...bc(14, 800, { color: textC, margin: 0 }) }}>RETROSPECTIVE LOGS</h4>
+                    </div>
+                    {currentAdmin && (
+                      <button
+                        type="button"
+                        onClick={addReviewNote}
+                        style={{ background: 'none', border: 'none', color: '#8b5cf6', display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', ...bc(11, 800) }}
+                      >
+                        <Plus size={14} /> LOG REFLECTION
+                      </button>
+                    )}
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+                    {form.reviewNotes.map((note, index) => (
+                      <motion.div
+                        key={note.id}
+                        style={{ display: 'flex', gap: 20 }}
+                      >
+                        <div style={{ width: 40, height: 40, borderRadius: 12, background: `${ORG}15`, color: ORG, display: 'flex', alignItems: 'center', justifyContent: 'center', ...bc(14, 800), flexShrink: 0 }}>
+                          {initials(note.name)}
+                        </div>
+                        <div style={{ flex: 1, background: bg, border: `1px solid ${border}`, borderRadius: 24, padding: 24, position: 'relative' }}>
+                          <button
+                            type="button"
+                            onClick={() => removeReviewNote(note.id)}
+                            style={{ position: 'absolute', top: 24, right: 24, color: text3, cursor: 'pointer', background: 'none', border: 'none' }}
+                          >
+                            <X size={16} />
+                          </button>
+                          <div style={{ marginBottom: 12 }}>
+                            <p style={{ ...bc(12, 800, { color: textC, margin: 0 }) }}>{note.name?.toUpperCase()}</p>
+                            <p style={{ ...bc(10, 800, { color: text3, margin: 0 }) }}>TEAM MEMBER</p>
+                          </div>
+                          <textarea
+                            value={note.notes}
+                            onChange={(e) => updateReviewNote(note.id, e.target.value)}
+                            placeholder="Share your reflections on this week's progress..."
+                            rows={3}
+                            style={{ width: '100%', background: 'transparent', border: 'none', color: text2, ...ba(14, 500), outline: 'none', resize: 'none' }}
+                          />
+                        </div>
+                      </motion.div>
+                    ))}
+                    {form.reviewNotes.length === 0 && (
+                      <div style={{ textAlign: 'center', padding: '40px 0', color: text3, ...ba(14, 500), border: `1px dashed ${border}`, borderRadius: 32 }}>No team reflections logged yet.</div>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
-        </form>
-      </div>
+        </motion.div>
+
+        {/* Footer Actions */}
+        <div style={{ 
+          marginTop: 32, display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          background: bg2, border: `1px solid ${border}`, borderRadius: 24, padding: '20px 32px'
+        }}>
+          <div>
+            {Object.keys(errors).length > 0 && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#ef4444', ...bc(11, 800) }}>
+                <AlertCircle size={14} /> CORE PROTOCOLS INCOMPLETE
+              </div>
+            )}
+          </div>
+          <div style={{ display: 'flex', gap: 16 }}>
+            <button
+              type="button"
+              onClick={onCancel}
+              style={{ background: 'none', border: 'none', color: text3, ...bc(13, 700), cursor: 'pointer' }}
+            >
+              DISCARD
+            </button>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              style={{ 
+                padding: '12px 32px', borderRadius: 12, background: ORG, color: '#fff', border: 'none', 
+                cursor: 'pointer', ...bc(13, 700), display: 'flex', alignItems: 'center', gap: 10,
+                boxShadow: `0 8px 24px ${ORG}40`, opacity: isSubmitting ? 0.7 : 1
+              }}
+            >
+              {isSubmitting ? (
+                <><div style={{ width: 16, height: 16, border: '2px solid #fff', borderTopColor: 'transparent', borderRadius: '50%' }} className="animate-spin" /> SAVING...</>
+              ) : (
+                <><Save size={18} /> {isEdit ? 'SAVE MODIFICATIONS' : 'INITIALIZE GOAL'}</>
+              )}
+            </button>
+          </div>
+        </div>
+      </form>
     </div>
   );
 }

@@ -9,6 +9,8 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import researchService from '../../services/researchService';
 import { useNavigate } from 'react-router-dom';
+import { useDashboardTheme } from '../../utils/dashboardTheme';
+import { ORG, TEAL, bb, bc, ba } from '../../utils/homeConstants';
 
 const ResearchManagement = () => {
   const [researches, setResearches] = useState([]);
@@ -36,19 +38,21 @@ const ResearchManagement = () => {
   const [loadingStats, setLoadingStats] = useState(false);
   const navigate = useNavigate();
 
+  const { isDark, bg, bg2, bg3, textC, text2, text3, border } = useDashboardTheme();
+
   const statusConfig = {
-    DRAFT: { label: 'Draft', color: 'gray', bgColor: 'bg-gray-100', textColor: 'text-gray-700' },
-    IN_PROGRESS: { label: 'In Progress', color: 'blue', bgColor: 'bg-blue-100', textColor: 'text-blue-700' },
-    COMPLETED: { label: 'Completed', color: 'green', bgColor: 'bg-green-100', textColor: 'text-green-700' },
-    REVIEW: { label: 'Review', color: 'yellow', bgColor: 'bg-yellow-100', textColor: 'text-yellow-700' },
-    PUBLISHED: { label: 'Published', color: 'purple', bgColor: 'bg-purple-100', textColor: 'text-purple-700' }
+    DRAFT: { label: 'Draft', color: '#e8621a', bg: 'rgba(232,98,26,.15)' },
+    IN_PROGRESS: { label: 'In Progress', color: '#e8621a', bg: 'rgba(232,98,26,.15)' },
+    COMPLETED: { label: 'Completed', color: '#22c55e', bg: 'rgba(34,197,94,.15)' },
+    REVIEW: { label: 'Review', color: '#1a5c78', bg: 'rgba(26,92,120,.15)' },
+    PUBLISHED: { label: 'Published', color: '#22c55e', bg: 'rgba(34,197,94,.15)' }
   };
 
   const typeConfig = {
     TECHNICAL: { label: 'Technical', icon: FlaskConical, color: 'rgb(59, 130, 246)' },
     MARKET: { label: 'Market', icon: TrendingUp, color: 'rgb(34, 197, 94)' },
     USER: { label: 'User', icon: Users, color: 'rgb(168, 85, 247)' },
-    PERFORMANCE: { label: 'Performance', icon: Target, color: 'rgb(249, 115, 22)' },
+    PERFORMANCE: { label: 'Performance', icon: Target, color: ORG },
     OTHER: { label: 'Other', icon: Lightbulb, color: 'rgb(107, 114, 128)' }
   };
 
@@ -206,7 +210,17 @@ const ResearchManagement = () => {
   const getStatusBadge = (status) => {
     const config = statusConfig[status] || statusConfig.DRAFT;
     return (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${config.bgColor} ${config.textColor}`}>
+      <span style={{
+        padding: '2px 10px',
+        borderRadius: 4,
+        fontSize: 10,
+        fontWeight: 700,
+        letterSpacing: 1,
+        textTransform: 'uppercase',
+        backgroundColor: config.bg,
+        color: config.color,
+        fontFamily: "'Barlow Condensed',sans-serif",
+      }}>
         {config.label}
       </span>
     );
@@ -224,64 +238,73 @@ const ResearchManagement = () => {
   const currentResearches = researches.slice(startIndex, endIndex);
 
   const renderTableView = () => (
-    <div className="bg-white rounded-xl border border-gray-100 shadow-sm w-full">
+    <div style={{ background: bg2, border: `1px solid ${border}`, borderRadius: 4 }} className="w-full">
       <div className="overflow-x-auto">
         <table className="w-full text-xs">
-          <thead style={{ backgroundColor: 'rgba(249, 115, 22, 0.05)' }}>
+          <thead style={{ background: bg3 }}>
             <tr>
-              <th className="text-left py-3 px-4 font-semibold cursor-pointer hover:bg-gray-50 transition-colors"
-                style={{ color: 'rgb(249, 115, 22)' }}
-                onClick={() => { setSortBy('title'); setSortOrder(sortBy === 'title' ? (sortOrder === 'asc' ? 'desc' : 'asc') : 'asc'); }}>
+              <th
+                className="text-left py-3 px-4 cursor-pointer"
+                style={bc(10, 700, { letterSpacing: 3, textTransform: 'uppercase', color: text2 })}
+                onClick={() => { setSortBy('title'); setSortOrder(sortBy === 'title' ? (sortOrder === 'asc' ? 'desc' : 'asc') : 'asc'); }}
+              >
                 <div className="flex items-center space-x-1">
                   <span>Title</span>
                   <ChevronDown className={`w-3 h-3 transition-transform ${sortBy === 'title' ? (sortOrder === 'asc' ? 'rotate-180' : '') : 'opacity-40'}`} />
                 </div>
               </th>
-              <th className="text-left py-3 px-4 font-semibold" style={{ color: 'rgb(249, 115, 22)' }}>Type</th>
-              <th className="text-left py-3 px-4 font-semibold" style={{ color: 'rgb(249, 115, 22)' }}>Status</th>
-              <th className="text-left py-3 px-4 font-semibold hidden md:table-cell" style={{ color: 'rgb(249, 115, 22)' }}>Owner</th>
-              <th className="text-left py-3 px-4 font-semibold cursor-pointer hover:bg-gray-50 transition-colors hidden lg:table-cell"
-                style={{ color: 'rgb(249, 115, 22)' }}
-                onClick={() => { setSortBy('createdAt'); setSortOrder(sortBy === 'createdAt' ? (sortOrder === 'asc' ? 'desc' : 'asc') : 'asc'); }}>
+              <th className="text-left py-3 px-4" style={bc(10, 700, { letterSpacing: 3, textTransform: 'uppercase', color: text2 })}>Type</th>
+              <th className="text-left py-3 px-4" style={bc(10, 700, { letterSpacing: 3, textTransform: 'uppercase', color: text2 })}>Status</th>
+              <th className="text-left py-3 px-4 hidden md:table-cell" style={bc(10, 700, { letterSpacing: 3, textTransform: 'uppercase', color: text2 })}>Owner</th>
+              <th
+                className="text-left py-3 px-4 cursor-pointer hidden lg:table-cell"
+                style={bc(10, 700, { letterSpacing: 3, textTransform: 'uppercase', color: text2 })}
+                onClick={() => { setSortBy('createdAt'); setSortOrder(sortBy === 'createdAt' ? (sortOrder === 'asc' ? 'desc' : 'asc') : 'asc'); }}
+              >
                 <div className="flex items-center space-x-1">
                   <span>Created</span>
                   <ChevronDown className={`w-3 h-3 transition-transform ${sortBy === 'createdAt' ? (sortOrder === 'asc' ? 'rotate-180' : '') : 'opacity-40'}`} />
                 </div>
               </th>
-              <th className="text-right py-3 px-4 font-semibold" style={{ color: 'rgb(249, 115, 22)' }}>Actions</th>
+              <th className="text-right py-3 px-4" style={bc(10, 700, { letterSpacing: 3, textTransform: 'uppercase', color: text2 })}>Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody>
             {currentResearches.map((research, index) => (
               <motion.tr
                 key={research.id}
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.05 }}
-                className="hover:bg-gray-50 transition-colors"
+                style={{ background: bg2, borderBottom: `1px solid ${border}`, cursor: 'default' }}
+                onMouseEnter={e => e.currentTarget.style.background = bg3}
+                onMouseLeave={e => e.currentTarget.style.background = bg2}
               >
                 <td className="py-3 px-4">
                   <div className="flex items-center space-x-2">
                     {getTypeIcon(research.type)}
-                    <span className="font-medium text-gray-900">{research.title || 'N/A'}</span>
+                    <span style={{ ...ba(12, 500, { color: textC }) }}>{research.title || 'N/A'}</span>
                   </div>
                 </td>
-                <td className="py-3 px-4 text-gray-600">{typeConfig[research.type]?.label || research.type}</td>
+                <td className="py-3 px-4" style={{ color: text2, ...ba(12) }}>{typeConfig[research.type]?.label || research.type}</td>
                 <td className="py-3 px-4">{getStatusBadge(research.status)}</td>
-                <td className="py-3 px-4 text-gray-600 hidden md:table-cell">{research.owner?.adminName || 'Unknown'}</td>
-                <td className="py-3 px-4 text-gray-600 hidden lg:table-cell">{formatDate(research.createdAt)}</td>
+                <td className="py-3 px-4 hidden md:table-cell" style={{ color: text2, ...ba(12) }}>{research.owner?.adminName || 'Unknown'}</td>
+                <td className="py-3 px-4 hidden lg:table-cell" style={{ color: text2, ...ba(12) }}>{formatDate(research.createdAt)}</td>
                 <td className="py-3 px-4">
                   <div className="flex items-center justify-end space-x-1">
                     <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }} onClick={() => handleViewResearch(research)}
-                      className="text-gray-400 hover:text-gray-600 p-1.5 rounded-md hover:bg-gray-100 transition-colors" title="View">
+                      style={{ background: bg3, border: `1px solid ${border}`, borderRadius: 4, padding: '5px 7px', color: text2 }}
+                      title="View">
                       <Eye className="w-3.5 h-3.5" />
                     </motion.button>
                     <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }} onClick={() => handleEditResearch(research)}
-                      className="text-gray-400 hover:text-yellow-600 p-1.5 rounded-md hover:bg-yellow-50 transition-colors" title="Edit">
+                      style={{ background: bg3, border: `1px solid ${border}`, borderRadius: 4, padding: '5px 7px', color: text2 }}
+                      title="Edit">
                       <Edit className="w-3.5 h-3.5" />
                     </motion.button>
                     <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }} onClick={() => setDeleteConfirm(research)}
-                      className="text-gray-400 hover:text-red-600 p-1.5 rounded-md hover:bg-red-50 transition-colors" title="Delete">
+                      style={{ background: bg3, border: `1px solid ${border}`, borderRadius: 4, padding: '5px 7px', color: '#e84040' }}
+                      title="Delete">
                       <Trash2 className="w-3.5 h-3.5" />
                     </motion.button>
                   </div>
@@ -303,18 +326,17 @@ const ResearchManagement = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: index * 0.05 }}
           whileHover={{ y: -4 }}
-          className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-all relative overflow-hidden group"
+          style={{ background: bg2, border: `1px solid ${border}`, borderRadius: 4 }}
+          className="p-5 relative overflow-hidden"
         >
-          <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-bl-full opacity-50 group-hover:opacity-100 transition-opacity" />
-
           <div className="relative">
             <div className="flex items-start justify-between mb-3">
               <div className="flex-1 pr-2">
                 <div className="flex items-center space-x-2 mb-2">
                   {getStatusBadge(research.status)}
                 </div>
-                <h3 className="text-sm font-semibold text-gray-900 mb-1 line-clamp-2 leading-snug">{research.title}</h3>
-                <p className="text-xs text-gray-500 flex items-center space-x-1">
+                <h3 style={{ ...ba(13, 600, { color: textC }) }} className="mb-1 line-clamp-2 leading-snug">{research.title}</h3>
+                <p style={{ ...ba(11, 400, { color: text2 }) }} className="flex items-center space-x-1">
                   <Users className="w-3 h-3" />
                   <span>{research.owner?.adminName || 'Unknown'}</span>
                 </p>
@@ -322,23 +344,27 @@ const ResearchManagement = () => {
               <motion.div
                 whileHover={{ rotate: 360 }}
                 transition={{ duration: 0.5 }}
-                className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
-                style={{ backgroundColor: 'rgba(249, 115, 22, 0.1)' }}
+                style={{
+                  width: 40, height: 40, borderRadius: 4,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  background: 'rgba(232,98,26,.1)', border: '1px solid rgba(232,98,26,.2)',
+                  flexShrink: 0,
+                }}
               >
                 {getTypeIcon(research.type)}
               </motion.div>
             </div>
 
             {research.description && (
-              <p className="text-xs text-gray-500 mb-3 line-clamp-2">{research.description}</p>
+              <p style={{ ...ba(11, 400, { color: text2 }) }} className="mb-3 line-clamp-2">{research.description}</p>
             )}
 
-            <div className="flex items-center text-xs text-gray-500 mb-4 pb-4 border-b border-gray-100 space-x-4">
-              <span className="flex items-center">
+            <div className="flex items-center mb-4 pb-4 space-x-4" style={{ borderBottom: `1px solid ${border}` }}>
+              <span className="flex items-center" style={{ ...ba(11, 400, { color: text2 }) }}>
                 <Calendar className="w-3 h-3 mr-1" />
                 {formatDate(research.createdAt)}
               </span>
-              <span className="px-2 py-0.5 rounded bg-gray-100 text-gray-600">
+              <span style={{ ...bc(10, 600, { color: text2, background: bg3, padding: '2px 8px', borderRadius: 4 }) }}>
                 {typeConfig[research.type]?.label || research.type}
               </span>
             </div>
@@ -349,7 +375,8 @@ const ResearchManagement = () => {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => handleViewResearch(research)}
-                  className="flex items-center space-x-1 text-gray-600 hover:text-gray-900 px-3 py-1.5 rounded-lg hover:bg-gray-100 text-xs font-medium transition-colors"
+                  style={{ ...bc(11, 600, { color: text2, background: bg3, border: `1px solid ${border}`, borderRadius: 4, padding: '5px 10px' }) }}
+                  className="flex items-center space-x-1"
                 >
                   <Eye className="w-3.5 h-3.5" />
                   <span>View</span>
@@ -358,7 +385,8 @@ const ResearchManagement = () => {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => handleEditResearch(research)}
-                  className="flex items-center space-x-1 text-yellow-600 hover:text-yellow-700 px-3 py-1.5 rounded-lg hover:bg-yellow-50 text-xs font-medium transition-colors"
+                  style={{ ...bc(11, 600, { color: text2, background: bg3, border: `1px solid ${border}`, borderRadius: 4, padding: '5px 10px' }) }}
+                  className="flex items-center space-x-1"
                 >
                   <Edit className="w-3.5 h-3.5" />
                   <span>Edit</span>
@@ -368,7 +396,7 @@ const ResearchManagement = () => {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setDeleteConfirm(research)}
-                className="p-2 text-red-600 hover:text-red-700 rounded-lg hover:bg-red-50 transition-colors"
+                style={{ background: bg3, border: `1px solid ${border}`, borderRadius: 4, padding: '7px', color: '#e84040' }}
                 title="Delete"
               >
                 <Trash2 className="w-3.5 h-3.5" />
@@ -381,26 +409,33 @@ const ResearchManagement = () => {
   );
 
   const renderListView = () => (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 divide-y divide-gray-100 w-full">
+    <div style={{ background: bg2, border: `1px solid ${border}`, borderRadius: 4 }} className="w-full">
       {currentResearches.map((research, index) => (
         <motion.div
           key={research.id}
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: index * 0.05 }}
-          className="p-4 hover:bg-gray-50 transition-colors"
+          style={{ borderBottom: `1px solid ${border}`, background: bg2 }}
+          className="p-4"
+          onMouseEnter={e => e.currentTarget.style.background = bg3}
+          onMouseLeave={e => e.currentTarget.style.background = bg2}
         >
           <div className="flex items-center justify-between">
             <div className="flex-1 min-w-0 flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: 'rgba(249, 115, 22, 0.1)' }}>
+              <div style={{
+                width: 40, height: 40, borderRadius: 4, flexShrink: 0,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                background: 'rgba(232,98,26,.1)', border: '1px solid rgba(232,98,26,.2)',
+              }}>
                 {getTypeIcon(research.type)}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center flex-wrap gap-2 mb-1">
-                  <h3 className="text-sm font-semibold text-gray-900">{research.title}</h3>
+                  <h3 style={{ ...ba(13, 600, { color: textC }) }}>{research.title}</h3>
                   {getStatusBadge(research.status)}
                 </div>
-                <p className="text-xs text-gray-600 flex items-center space-x-3">
+                <p style={{ ...ba(11, 400, { color: text2 }) }} className="flex items-center space-x-3">
                   <span className="flex items-center">
                     <Users className="w-3 h-3 mr-1" />
                     {research.owner?.adminName || 'Unknown'}
@@ -414,15 +449,15 @@ const ResearchManagement = () => {
             </div>
             <div className="flex items-center space-x-1 ml-4">
               <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }} onClick={() => handleViewResearch(research)}
-                className="text-gray-400 hover:text-gray-600 p-2 rounded-lg hover:bg-gray-100 transition-colors" title="View">
+                style={{ background: bg3, border: `1px solid ${border}`, borderRadius: 4, padding: '7px', color: text2 }} title="View">
                 <Eye className="w-4 h-4" />
               </motion.button>
               <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }} onClick={() => handleEditResearch(research)}
-                className="text-gray-400 hover:text-yellow-600 p-2 rounded-lg hover:bg-yellow-50 transition-colors" title="Edit">
+                style={{ background: bg3, border: `1px solid ${border}`, borderRadius: 4, padding: '7px', color: text2 }} title="Edit">
                 <Edit className="w-4 h-4" />
               </motion.button>
               <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }} onClick={() => setDeleteConfirm(research)}
-                className="text-gray-400 hover:text-red-600 p-2 rounded-lg hover:bg-red-50 transition-colors" title="Delete">
+                style={{ background: bg3, border: `1px solid ${border}`, borderRadius: 4, padding: '7px', color: '#e84040' }} title="Delete">
                 <Trash2 className="w-4 h-4" />
               </motion.button>
             </div>
@@ -453,9 +488,10 @@ const ResearchManagement = () => {
     };
 
     return (
-      <div className="flex items-center justify-between bg-white px-2 py-3 border-t border-gray-100 rounded-b-xl shadow-sm mt-4 border border-gray-100 shadow-sm">
-        <div className="text-xs text-gray-600 flex items-center space-x-2">
-          <span>Showing <span className="font-semibold">{startIndex + 1}</span>-<span className="font-semibold">{Math.min(endIndex, researches.length)}</span> of <span className="font-semibold">{researches.length}</span></span>
+      <div className="flex items-center justify-between px-2 py-3 mt-4"
+        style={{ background: bg2, border: `1px solid ${border}`, borderRadius: 4 }}>
+        <div style={{ ...ba(11, 400, { color: text2 }) }} className="flex items-center space-x-2">
+          <span>Showing <span style={{ fontWeight: 600, color: textC }}>{startIndex + 1}</span>–<span style={{ fontWeight: 600, color: textC }}>{Math.min(endIndex, researches.length)}</span> of <span style={{ fontWeight: 600, color: textC }}>{researches.length}</span></span>
         </div>
         <div className="flex items-center space-x-2">
           <motion.button
@@ -463,7 +499,7 @@ const ResearchManagement = () => {
             whileTap={{ scale: 0.95 }}
             onClick={() => setCurrentPage(1)}
             disabled={currentPage === 1}
-            className="flex items-center px-2.5 py-1.5 text-xs text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            style={{ ...bc(11, 600, { color: text2, background: bg3, border: `1px solid ${border}`, borderRadius: 4, padding: '5px 10px' }), opacity: currentPage === 1 ? 0.4 : 1 }}
           >
             First
           </motion.button>
@@ -472,7 +508,8 @@ const ResearchManagement = () => {
             whileTap={{ scale: 0.95 }}
             onClick={() => setCurrentPage(currentPage - 1)}
             disabled={currentPage === 1}
-            className="flex items-center px-2.5 py-1.5 text-xs text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            style={{ background: bg3, border: `1px solid ${border}`, borderRadius: 4, padding: '5px 8px', color: text2, opacity: currentPage === 1 ? 0.4 : 1 }}
+            className="flex items-center"
           >
             <ChevronLeft className="w-3.5 h-3.5" />
           </motion.button>
@@ -483,11 +520,10 @@ const ResearchManagement = () => {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setCurrentPage(page)}
-              className={`px-3 py-1.5 text-xs rounded-md transition-colors ${currentPage === page
-                ? 'text-white font-semibold shadow-sm'
-                : 'text-gray-600 bg-white border border-gray-200 hover:bg-gray-50'
-                }`}
-              style={currentPage === page ? { backgroundColor: 'rgb(249, 115, 22)' } : {}}
+              style={currentPage === page
+                ? { ...bc(11, 700, { color: '#fff', background: ORG, borderRadius: 4, padding: '5px 10px' })  }
+                : { ...bc(11, 600, { color: text2, background: bg3, border: `1px solid ${border}`, borderRadius: 4, padding: '5px 10px' }) }
+              }
             >
               {page}
             </motion.button>
@@ -498,7 +534,8 @@ const ResearchManagement = () => {
             whileTap={{ scale: 0.95 }}
             onClick={() => setCurrentPage(currentPage + 1)}
             disabled={currentPage === totalPages}
-            className="flex items-center px-2.5 py-1.5 text-xs text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            style={{ background: bg3, border: `1px solid ${border}`, borderRadius: 4, padding: '5px 8px', color: text2, opacity: currentPage === totalPages ? 0.4 : 1 }}
+            className="flex items-center"
           >
             <ChevronRight className="w-3.5 h-3.5" />
           </motion.button>
@@ -507,7 +544,7 @@ const ResearchManagement = () => {
             whileTap={{ scale: 0.95 }}
             onClick={() => setCurrentPage(totalPages)}
             disabled={currentPage === totalPages}
-            className="flex items-center px-2.5 py-1.5 text-xs text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            style={{ ...bc(11, 600, { color: text2, background: bg3, border: `1px solid ${border}`, borderRadius: 4, padding: '5px 10px' }), opacity: currentPage === totalPages ? 0.4 : 1 }}
           >
             Last
           </motion.button>
@@ -521,67 +558,51 @@ const ResearchManagement = () => {
       label: 'Total Research',
       value: stats.total,
       icon: Beaker,
-      color: 'rgb(249, 115, 22)',
-      bgColor: 'rgba(249, 115, 22, 0.1)',
-      gradient: 'from-blue-500 to-indigo-600'
     },
     {
       label: 'Draft',
       value: stats.draft,
       icon: FileText,
-      color: 'rgb(107, 114, 128)',
-      bgColor: 'rgba(107, 114, 128, 0.1)',
-      gradient: 'from-gray-500 to-slate-600'
     },
     {
       label: 'In Progress',
       value: stats.inProgress,
       icon: Clock,
-      color: 'rgb(59, 130, 246)',
-      bgColor: 'rgba(59, 130, 246, 0.1)',
-      gradient: 'from-blue-500 to-cyan-600'
     },
     {
       label: 'Completed',
       value: stats.completed,
       icon: CheckCircle,
-      color: 'rgb(34, 197, 94)',
-      bgColor: 'rgba(34, 197, 94, 0.1)',
-      gradient: 'from-green-500 to-emerald-600'
     },
     {
       label: 'Published',
       value: stats.published,
       icon: BookOpen,
-      color: 'rgb(168, 85, 247)',
-      bgColor: 'rgba(168, 85, 247, 0.1)',
-      gradient: 'from-purple-500 to-violet-600'
     },
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/30">
+    <div className="min-h-screen" style={{ background: bg }}>
       {/* Header */}
-      <div className="bg-white shadow-sm border-b border-gray-200 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-indigo-100/40 to-purple-100/40 rounded-full blur-3xl -mr-32 -mt-32" />
-        <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-blue-100/40 to-indigo-100/40 rounded-full blur-3xl -ml-24 -mb-24" />
-
+      <div style={{ background: bg2, borderBottom: `1px solid ${border}` }} className="relative overflow-hidden">
         <div className="mx-auto px-1 sm:px-6 py-6 relative">
           <div className="flex items-center justify-between">
             <div>
-              <div className="flex items-center space-x-2 mb-2">
+              <div className="flex items-center space-x-3 mb-2">
+                {/* Orange left accent bar */}
+                <div style={{ width: 4, height: 28, background: ORG, borderRadius: 2, flexShrink: 0 }} />
                 <motion.div
                   initial={{ rotate: 0 }}
                   animate={{ rotate: [0, 10, -10, 0] }}
                   transition={{ duration: 2, repeat: Infinity, repeatDelay: 5 }}
                 >
-                  <Sparkles className="w-5 h-5" style={{ color: 'rgb(249, 115, 22)' }} />
+                  <Sparkles className="w-5 h-5" style={{ color: ORG }} />
                 </motion.div>
-                <h1 className="text-xl sm:text-2xl font-bold text-orange-500 bg-clip-text">
+                <h1 style={bb(28, { color: ORG, lineHeight: 1 })}>
                   Research Management
                 </h1>
               </div>
-              <p className="text-xs text-gray-600">Manage and track all research projects</p>
+              <p style={bc(11, 400, { color: text2, marginLeft: 7 })}>Manage and track all research projects</p>
             </div>
             <div className="flex items-center space-x-2">
               <motion.button
@@ -589,7 +610,8 @@ const ResearchManagement = () => {
                 whileTap={{ scale: 0.95 }}
                 onClick={handleExport}
                 disabled={researches.length === 0}
-                className="flex items-center space-x-2 px-3 py-2 text-xs text-gray-600 hover:text-gray-900 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-all shadow-sm hover:shadow"
+                style={{ ...bc(11, 600, { color: text2, background: bg3, border: `1px solid ${border}`, borderRadius: 4, padding: '7px 12px', opacity: researches.length === 0 ? 0.5 : 1 }) }}
+                className="flex items-center space-x-2"
               >
                 <Download className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Export</span>
@@ -599,7 +621,8 @@ const ResearchManagement = () => {
                 whileTap={{ scale: 0.95 }}
                 onClick={loadData}
                 disabled={loading}
-                className="flex items-center space-x-2 px-3 py-2 text-xs text-gray-600 hover:text-gray-900 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-all shadow-sm hover:shadow"
+                style={{ ...bc(11, 600, { color: text2, background: bg3, border: `1px solid ${border}`, borderRadius: 4, padding: '7px 12px', opacity: loading ? 0.5 : 1 }) }}
+                className="flex items-center space-x-2"
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
                 <span className="hidden sm:inline">Refresh</span>
@@ -609,7 +632,8 @@ const ResearchManagement = () => {
                 whileTap={{ scale: 0.95 }}
                 onClick={handleCreateResearch}
                 disabled={operationLoading}
-                className="flex items-center space-x-2 text-white px-3 py-2 rounded-lg font-medium shadow-md hover:shadow-lg text-xs transition-all bg-orange-500 hover:bg-orange-600"
+                style={{ background: ORG, color: '#fff', borderRadius: 4, padding: '7px 14px', ...bc(11, 700, {}), opacity: operationLoading ? 0.7 : 1 }}
+                className="flex items-center space-x-2"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>New Research</span>
@@ -629,31 +653,32 @@ const ResearchManagement = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
               whileHover={{ y: -4, scale: 1.02 }}
-              className="relative p-4 rounded-xl shadow-sm border border-gray-100 bg-white overflow-hidden group cursor-pointer"
+              style={{ background: bg2, border: `1px solid ${border}`, borderRadius: 4 }}
+              className="relative p-4 overflow-hidden cursor-pointer"
             >
-              <div className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-300`} />
-
               <div className="relative flex items-center space-x-3">
                 <motion.div
                   whileHover={{ rotate: 360, scale: 1.1 }}
                   transition={{ duration: 0.5 }}
-                  className="p-2.5 rounded-lg shadow-sm"
-                  style={{ backgroundColor: stat.bgColor }}
+                  style={{
+                    padding: 10, borderRadius: 4,
+                    background: 'rgba(232,98,26,.1)',
+                    border: '1px solid rgba(232,98,26,.2)',
+                  }}
                 >
-                  <stat.icon className="w-4 h-4" style={{ color: stat.color }} />
+                  <stat.icon className="w-4 h-4" style={{ color: ORG }} />
                 </motion.div>
                 <div className="flex-1">
-                  <p className="text-xs font-medium text-gray-600 mb-0.5">{stat.label}</p>
-                  <p className="text-lg font-bold text-gray-900">
+                  <p style={bc(10, 700, { letterSpacing: 3, textTransform: 'uppercase', color: text2 })} className="mb-0.5">{stat.label}</p>
+                  <p style={bb(48, { color: ORG, lineHeight: 1 })}>
                     {loadingStats ? (
-                      <span className="inline-block w-8 h-4 bg-gray-200 rounded animate-pulse" />
+                      <span style={{ display: 'inline-block', width: 32, height: 16, background: bg3, borderRadius: 4 }} className="animate-pulse" />
                     ) : (
                       stat.value ?? '-'
                     )}
                   </p>
                 </div>
               </div>
-              <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br opacity-10 rounded-bl-full" style={{ background: stat.color }} />
             </motion.div>
           ))}
         </div>
@@ -662,42 +687,49 @@ const ResearchManagement = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-xl shadow-sm border border-gray-100 p-5"
+          style={{ background: bg2, border: `1px solid ${border}`, borderRadius: 4 }}
+          className="p-5"
         >
           <div className="space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div className="relative flex-1 max-w-md">
-                <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
+                <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2" style={{ color: text2 }} />
                 <input
                   type="text"
                   placeholder="Search research by title or owner..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 text-xs border border-gray-200 rounded-lg focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all"
-                  style={{ outline: 'none' }}
+                  style={{
+                    width: '100%', paddingLeft: 36, paddingRight: searchTerm ? 36 : 14,
+                    paddingTop: 9, paddingBottom: 9,
+                    background: bg3, border: `1px solid ${border}`, borderRadius: 4,
+                    color: textC, outline: 'none',
+                    ...ba(12, 400, {}),
+                  }}
                 />
                 {searchTerm && (
                   <motion.button
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     onClick={() => setSearchTerm('')}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2"
+                    style={{ color: text2 }}
                   >
                     <X className="w-4 h-4" />
                   </motion.button>
                 )}
               </div>
 
-              <div className="flex items-center space-x-2 bg-gray-50 p-1 rounded-lg">
+              {/* View toggle */}
+              <div className="flex items-center space-x-1 p-1" style={{ background: bg3, borderRadius: 4, border: `1px solid ${border}` }}>
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setViewMode('table')}
-                  className={`p-2 rounded-md transition-all ${viewMode === 'table'
-                    ? 'text-white shadow-md'
-                    : 'text-gray-500 hover:text-gray-700 hover:bg-white'
-                    }`}
-                  style={viewMode === 'table' ? { backgroundColor: 'rgb(249, 115, 22)' } : {}}
+                  style={viewMode === 'table'
+                    ? { background: ORG, color: '#fff', borderRadius: 4, padding: 7 }
+                    : { color: text2, borderRadius: 4, padding: 7 }
+                  }
                   title="Table View"
                 >
                   <Table className="w-4 h-4" />
@@ -706,11 +738,10 @@ const ResearchManagement = () => {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setViewMode('grid')}
-                  className={`p-2 rounded-md transition-all ${viewMode === 'grid'
-                    ? 'text-white shadow-md'
-                    : 'text-gray-500 hover:text-gray-700 hover:bg-white'
-                    }`}
-                  style={viewMode === 'grid' ? { backgroundColor: 'rgb(249, 115, 22)' } : {}}
+                  style={viewMode === 'grid'
+                    ? { background: ORG, color: '#fff', borderRadius: 4, padding: 7 }
+                    : { color: text2, borderRadius: 4, padding: 7 }
+                  }
                   title="Grid View"
                 >
                   <Grid3X3 className="w-4 h-4" />
@@ -719,11 +750,10 @@ const ResearchManagement = () => {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setViewMode('list')}
-                  className={`p-2 rounded-md transition-all ${viewMode === 'list'
-                    ? 'text-white shadow-md'
-                    : 'text-gray-500 hover:text-gray-700 hover:bg-white'
-                    }`}
-                  style={viewMode === 'list' ? { backgroundColor: 'rgb(249, 115, 22)' } : {}}
+                  style={viewMode === 'list'
+                    ? { background: ORG, color: '#fff', borderRadius: 4, padding: 7 }
+                    : { color: text2, borderRadius: 4, padding: 7 }
+                  }
                   title="List View"
                 >
                   <List className="w-4 h-4" />
@@ -734,7 +764,7 @@ const ResearchManagement = () => {
             <div className="flex flex-col sm:flex-row gap-3">
               <div className="relative flex-1">
                 <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                  {sortOrder === 'asc' ? <SortAsc className="w-4 h-4 text-gray-400" /> : <SortDesc className="w-4 h-4 text-gray-400" />}
+                  {sortOrder === 'asc' ? <SortAsc className="w-4 h-4" style={{ color: text2 }} /> : <SortDesc className="w-4 h-4" style={{ color: text2 }} />}
                 </div>
                 <select
                   value={`${sortBy}-${sortOrder}`}
@@ -743,8 +773,14 @@ const ResearchManagement = () => {
                     setSortBy(field);
                     setSortOrder(order);
                   }}
-                  className="w-full pl-10 pr-4 py-2.5 text-xs border border-gray-200 rounded-lg focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all appearance-none bg-white cursor-pointer"
-                  style={{ outline: 'none' }}
+                  style={{
+                    width: '100%', paddingLeft: 36, paddingRight: 14,
+                    paddingTop: 9, paddingBottom: 9,
+                    background: bg3, border: `1px solid ${border}`, borderRadius: 4,
+                    color: textC, outline: 'none', cursor: 'pointer',
+                    appearance: 'none',
+                    ...ba(12, 400, {}),
+                  }}
                 >
                   <option value="title-asc">Title (A-Z)</option>
                   <option value="title-desc">Title (Z-A)</option>
@@ -754,13 +790,19 @@ const ResearchManagement = () => {
               </div>
               <div className="relative flex-1">
                 <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                  <Filter className="w-4 h-4 text-gray-400" />
+                  <Filter className="w-4 h-4" style={{ color: text2 }} />
                 </div>
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 text-xs border border-gray-200 rounded-lg focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all appearance-none bg-white cursor-pointer"
-                  style={{ outline: 'none' }}
+                  style={{
+                    width: '100%', paddingLeft: 36, paddingRight: 14,
+                    paddingTop: 9, paddingBottom: 9,
+                    background: bg3, border: `1px solid ${border}`, borderRadius: 4,
+                    color: textC, outline: 'none', cursor: 'pointer',
+                    appearance: 'none',
+                    ...ba(12, 400, {}),
+                  }}
                 >
                   <option value="ALL">All Status</option>
                   <option value="DRAFT">Draft</option>
@@ -772,13 +814,19 @@ const ResearchManagement = () => {
               </div>
               <div className="relative flex-1">
                 <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                  <Beaker className="w-4 h-4 text-gray-400" />
+                  <Beaker className="w-4 h-4" style={{ color: text2 }} />
                 </div>
                 <select
                   value={typeFilter}
                   onChange={(e) => setTypeFilter(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 text-xs border border-gray-200 rounded-lg focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all appearance-none bg-white cursor-pointer"
-                  style={{ outline: 'none' }}
+                  style={{
+                    width: '100%', paddingLeft: 36, paddingRight: 14,
+                    paddingTop: 9, paddingBottom: 9,
+                    background: bg3, border: `1px solid ${border}`, borderRadius: 4,
+                    color: textC, outline: 'none', cursor: 'pointer',
+                    appearance: 'none',
+                    ...ba(12, 400, {}),
+                  }}
                 >
                   <option value="ALL">All Types</option>
                   <option value="TECHNICAL">Technical</option>
@@ -799,43 +847,52 @@ const ResearchManagement = () => {
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="bg-gradient-to-r from-red-50 to-rose-50 border border-red-200 rounded-xl p-4 text-red-700 text-xs flex items-center space-x-2 shadow-sm"
+              style={{
+                background: 'rgba(232,64,64,.1)', border: '1px solid rgba(232,64,64,.3)',
+                borderRadius: 4, padding: '12px 16px', color: '#e84040',
+              }}
+              className="flex items-center space-x-2"
             >
               <AlertCircle className="w-4 h-4 flex-shrink-0" />
-              <span className="font-medium">{error}</span>
+              <span style={ba(12, 600, {})}>{error}</span>
             </motion.div>
           )}
         </AnimatePresence>
 
         {/* Research Content */}
         {loading ? (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12 text-center">
+          <div style={{ background: bg2, border: `1px solid ${border}`, borderRadius: 4 }} className="p-12 text-center">
             <div className="inline-flex flex-col items-center space-y-3">
               <motion.div
                 animate={{ rotate: 360 }}
-                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                className="w-8 h-8 border-3 border-t-transparent rounded-full"
-                style={{ borderColor: 'rgb(249, 115, 22)', borderTopColor: 'transparent', borderWidth: '3px' }}
+                transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                style={{
+                  width: 32, height: 32,
+                  borderRadius: '50%',
+                  border: `3px solid ${border}`,
+                  borderTopColor: ORG,
+                }}
               />
-              <span className="text-xs text-gray-600 font-medium">Loading researches...</span>
+              <span style={bc(11, 600, { color: text2 })}>Loading researches...</span>
             </div>
           </div>
         ) : researches.length === 0 ? (
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-xl shadow-sm w-full border border-gray-100 p-12 text-center"
+            style={{ background: bg2, border: `1px solid ${border}`, borderRadius: 4 }}
+            className="w-full p-12 text-center"
           >
             <motion.div
               animate={{ y: [0, -10, 0] }}
               transition={{ duration: 2, repeat: Infinity }}
             >
-              <Beaker className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+              <Beaker className="w-16 h-16 mx-auto mb-4" style={{ color: text3 }} />
             </motion.div>
-            <p className="text-base font-semibold text-gray-900 mb-2">
+            <p style={bb(28, { color: textC, lineHeight: 1 })} className="mb-2">
               {searchTerm || statusFilter !== 'ALL' || typeFilter !== 'ALL' ? 'No Research Found' : 'No Research Available'}
             </p>
-            <p className="text-xs text-gray-500 mb-4">
+            <p style={bc(12, 400, { color: text2 })} className="mb-4">
               {searchTerm || statusFilter !== 'ALL' || typeFilter !== 'ALL' ? 'Try adjusting your filters.' : 'Create a new research project to get started.'}
             </p>
             {!searchTerm && statusFilter === 'ALL' && typeFilter === 'ALL' && (
@@ -843,7 +900,8 @@ const ResearchManagement = () => {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={handleCreateResearch}
-                className="inline-flex items-center space-x-2 text-white px-4 py-2 rounded-lg font-medium shadow-md text-xs bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                style={{ background: ORG, color: '#fff', borderRadius: 4, padding: '8px 18px', ...bc(12, 700, {}) }}
+                className="inline-flex items-center space-x-2"
               >
                 <Plus className="w-4 h-4" />
                 <span>Create First Research</span>
@@ -873,26 +931,26 @@ const ResearchManagement = () => {
               exit={{ opacity: 0, y: -50, scale: 0.9 }}
               className="fixed top-4 right-4 z-50"
             >
-              <div className={`flex items-center space-x-3 px-4 py-3 rounded-xl shadow-2xl text-xs border-2 ${operationStatus.type === 'success'
-                ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-300 text-green-800'
-                : 'bg-gradient-to-r from-red-50 to-rose-50 border-red-300 text-red-800'
-                }`}>
+              <div style={operationStatus.type === 'success'
+                ? { background: 'rgba(34,197,94,.15)', border: '2px solid rgba(34,197,94,.4)', color: '#22c55e', borderRadius: 4, padding: '10px 16px' }
+                : { background: 'rgba(232,64,64,.15)', border: '2px solid rgba(232,64,64,.4)', color: '#e84040', borderRadius: 4, padding: '10px 16px' }
+              } className="flex items-center space-x-3">
                 <motion.div
                   initial={{ scale: 0, rotate: -180 }}
                   animate={{ scale: 1, rotate: 0 }}
-                  transition={{ type: "spring", stiffness: 200 }}
+                  transition={{ type: 'spring', stiffness: 200 }}
                 >
                   {operationStatus.type === 'success' ?
-                    <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" /> :
-                    <XCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
+                    <CheckCircle className="w-5 h-5 flex-shrink-0" /> :
+                    <XCircle className="w-5 h-5 flex-shrink-0" />
                   }
                 </motion.div>
-                <span className="font-semibold">{operationStatus.message}</span>
+                <span style={bc(12, 700, {})}>{operationStatus.message}</span>
                 <motion.button
                   whileHover={{ scale: 1.2, rotate: 90 }}
                   whileTap={{ scale: 0.9 }}
                   onClick={() => setOperationStatus(null)}
-                  className="ml-2 hover:bg-white/50 rounded-full p-1 transition-colors"
+                  className="ml-2 rounded-full p-1"
                 >
                   <X className="w-4 h-4" />
                 </motion.button>
@@ -908,22 +966,27 @@ const ResearchManagement = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-40"
+              className="fixed inset-0 flex items-center justify-center z-40"
+              style={{ background: 'rgba(0,0,0,.75)' }}
             >
               <motion.div
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
-                className="bg-white rounded-2xl p-8 shadow-2xl"
+                style={{ background: bg2, border: `1px solid ${border}`, borderRadius: 4, padding: 32 }}
               >
                 <div className="flex flex-col items-center space-y-4">
                   <motion.div
                     animate={{ rotate: 360 }}
-                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                    className="w-12 h-12 border-4 border-t-transparent rounded-full"
-                    style={{ borderColor: 'rgb(249, 115, 22)', borderTopColor: 'transparent' }}
+                    transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                    style={{
+                      width: 48, height: 48,
+                      borderRadius: '50%',
+                      border: `4px solid ${border}`,
+                      borderTopColor: ORG,
+                    }}
                   />
-                  <span className="text-gray-700 text-sm font-semibold">Processing...</span>
+                  <span style={bc(13, 700, { color: textC })}>Processing...</span>
                 </div>
               </motion.div>
             </motion.div>
@@ -937,32 +1000,40 @@ const ResearchManagement = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/40 backdrop-blur-md flex items-center justify-center z-50 p-4"
+              className="fixed inset-0 flex items-center justify-center z-50 p-4"
+              style={{ background: 'rgba(0,0,0,.75)' }}
             >
               <motion.div
                 initial={{ scale: 0.9, opacity: 0, y: 20 }}
                 animate={{ scale: 1, opacity: 1, y: 0 }}
                 exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                transition={{ type: "spring", duration: 0.5 }}
-                className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl"
+                transition={{ type: 'spring', duration: 0.5 }}
+                style={{ background: bg2, border: `1px solid ${border}`, borderRadius: 4 }}
+                className="w-full max-w-md p-6"
               >
                 <div className="flex items-start space-x-4 mb-5">
                   <motion.div
                     initial={{ scale: 0 }}
                     animate={{ scale: 1, rotate: [0, 10, -10, 0] }}
                     transition={{ delay: 0.2 }}
-                    className="w-12 h-12 bg-gradient-to-br from-red-100 to-rose-100 rounded-xl flex items-center justify-center flex-shrink-0"
+                    style={{
+                      width: 48, height: 48, borderRadius: 4,
+                      background: 'rgba(232,64,64,.15)',
+                      border: '1px solid rgba(232,64,64,.3)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                    }}
                   >
-                    <AlertTriangle className="w-6 h-6 text-red-600" />
+                    <AlertTriangle className="w-6 h-6" style={{ color: '#e84040' }} />
                   </motion.div>
                   <div className="flex-1">
-                    <h3 className="text-base font-bold text-gray-900 mb-1">Delete Research?</h3>
-                    <p className="text-xs text-gray-500">This action cannot be undone</p>
+                    <h3 style={bb(22, { color: textC, lineHeight: 1 })} className="mb-1">Delete Research?</h3>
+                    <p style={bc(11, 400, { color: text2 })}>This action cannot be undone</p>
                   </div>
                 </div>
-                <div className="bg-gray-50 rounded-lg p-4 mb-6">
-                  <p className="text-xs text-gray-700">
-                    Are you sure you want to delete <span className="font-bold text-gray-900">"{deleteConfirm.title || 'N/A'}"</span>?
+                <div style={{ background: bg3, borderRadius: 4, padding: '12px 16px', marginBottom: 24 }}>
+                  <p style={ba(12, 400, { color: text2 })}>
+                    Are you sure you want to delete{' '}
+                    <span style={{ fontWeight: 700, color: textC }}>"{deleteConfirm.title || 'N/A'}"</span>?
                   </p>
                 </div>
                 <div className="flex items-center justify-end space-x-3">
@@ -970,7 +1041,7 @@ const ResearchManagement = () => {
                     whileHover={{ scale: 1.02, y: -1 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => setDeleteConfirm(null)}
-                    className="px-5 py-2.5 text-xs font-semibold text-gray-700 border-2 border-gray-200 rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-all"
+                    style={{ background: bg3, border: `1px solid ${border}`, borderRadius: 4, padding: '8px 20px', color: textC, ...bc(12, 600, {}) }}
                   >
                     Cancel
                   </motion.button>
@@ -978,7 +1049,7 @@ const ResearchManagement = () => {
                     whileHover={{ scale: 1.02, y: -1 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => handleDeleteResearch(deleteConfirm)}
-                    className="px-5 py-2.5 text-xs font-semibold bg-gradient-to-r from-red-600 to-rose-600 text-white rounded-lg hover:from-red-700 hover:to-rose-700 shadow-lg hover:shadow-xl transition-all"
+                    style={{ background: '#e84040', color: '#fff', borderRadius: 4, padding: '8px 20px', ...bc(12, 700, {}) }}
                   >
                     Delete Research
                   </motion.button>

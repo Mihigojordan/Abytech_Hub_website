@@ -1,62 +1,37 @@
 import React, { useState, useEffect } from "react";
 import {
-  MapPin,
-  Plane,
-  Users,
+  Users2,
   TrendingUp,
   User,
   X,
-  Building,
-  Briefcase,
-  User2,
-  Cog,
-  Settings,
-  Grid,
-  ShoppingBasket,
-  LucideBoxes,
-  Inbox,
-  PackageSearch,
-  History,
-  Store,
-  ClipboardList,
-  FolderTree,
-  UserPlus,
-  ChevronDown,
-  ChevronRight,
-  Layers,
-  MapPinned,
-  Truck,
-  TruckIcon,
-  FlaskConical,
-  FishSymbol,
-  Database,
-  Droplet,
-  Beaker,
-  Microscope,
-  Egg,
-  Waves,
-  Soup,
-  MoveRight,
-  ClipboardCheck,
-  SoupIcon,
-  WheatIcon,
-  Milk,
   ShoppingBag,
-  File,
-  Users2,
+  ClipboardList,
   MessageSquare,
   Target,
   Calendar,
   Globe,
   GraduationCap,
-  Monitor,
+  Microscope,
   Wallet,
+  ChevronDown,
 } from "lucide-react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
-
 import useAdminAuth from "../../context/AdminAuthContext";
-import logo from '../../assets/tran.png'
+import logo from "../../assets/tran.png";
+import { ORG, TEAL, bc, ba } from "../../utils/homeConstants";
 
+/* ── Always-dark sidebar palette ─────────────────────── */
+const SB = {
+  bg:       "#0b1923",
+  item:     "#0d1f2d",
+  border:   "rgba(255,255,255,.07)",
+  text:     "rgba(255,255,255,.75)",
+  textMuted:"rgba(255,255,255,.35)",
+  activeText: "#ffffff",
+  activeBg: "rgba(232,98,26,.12)",
+  activeBorder: ORG,
+  hoverBg:  "rgba(255,255,255,.04)",
+};
 
 interface SidebarProps {
   isOpen?: boolean;
@@ -69,7 +44,6 @@ interface NavItem {
   label: string;
   icon: React.ElementType;
   path: string;
-  allowedRoles?: string[];
   requiredPermission?: string;
   requireSuperAdmin?: boolean;
 }
@@ -81,145 +55,53 @@ interface DropdownGroup {
   items: NavItem[];
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onToggle, }) => {
-  const role = 'admin'
+const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onToggle }) => {
+  const role = "admin";
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const location = useLocation();
   const adminAuth = useAdminAuth();
-
-  const auth = adminAuth;
-  const user = auth.user;
+  const { user } = adminAuth;
   const navigate = useNavigate();
 
   const toggleDropdown = (id: string) => {
     setOpenDropdown((prev) => (prev === id ? null : id));
   };
 
-
-
   const getNavlinks = (role: string): (NavItem | DropdownGroup)[] => {
     const basePath = `/${role}/dashboard`;
-
     return [
-      {
-        id: "dashboard",
-        label: "Dashboard Summary",
-        icon: TrendingUp,
-        path: basePath,
-      },
-      {
-        id: "expense",
-        label: "Expense Management",
-        icon: ShoppingBag,
-        path: `${basePath}/expense`,
-        requiredPermission: 'expense_management',
-      },
-      {
-        id: "salary",
-        label: "Salary Management",
-        icon: Wallet,
-        path: `${basePath}/salary`,
-        requiredPermission: 'salary_management',
-      },
-      {
-        id: "employee",
-        label: "Employee Management",
-        icon: Users2,
-        path: `${basePath}/employee`,
-        requiredPermission: 'employee_management',
-      },
-      {
-        id: "interns",
-        label: "Intern Management",
-        icon: GraduationCap,
-        path: `${basePath}/interns`,
-        requiredPermission: 'internship_management',
-      },
-      {
-        id: "chat",
-        label: "Chat Management",
-        icon: MessageSquare,
-        path: `${basePath}/chat`,
-        requiredPermission: 'chat_management',
-      },
-      {
-        id: "report",
-        label: "Report Management",
-        icon: ClipboardList,
-        path: `${basePath}/report`,
-        // Always visible — behavior differs based on report_management perm
-      },
-      {
-        id: "meeting",
-        label: "Meeting Management",
-        icon: Calendar,
-        path: `${basePath}/meetings`,
-        requiredPermission: 'meeting_management',
-      },
-      {
-        id: "weekly-goals",
-        label: "Weekly Goals Management",
-        icon: Target,
-        path: `${basePath}/weekly-goals`,
-        requiredPermission: 'weekly_management',
-      },
-      {
-        id: "research",
-        label: "Research Management",
-        icon: Microscope,
-        path: `${basePath}/research`,
-        requiredPermission: 'research_management',
-      },
-      {
-        id: "hosted-web",
-        label: "Hosted Website Management",
-        icon: Globe,
-        path: `${basePath}/hosted-website`,
-        requiredPermission: 'hosted_website',
-      },
-      {
-        id: "internships",
-        label: "Internship Management",
-        icon: GraduationCap,
-        path: `${basePath}/internships`,
-        requiredPermission: 'internship_management',
-      },
-      {
-        id: "permissions",
-        label: "Permission Management",
-        icon: Users2,
-        path: `${basePath}/permissions`,
-        requireSuperAdmin: true,
-      },
+      { id: "dashboard",   label: "Dashboard Summary",          icon: TrendingUp,    path: basePath },
+      { id: "expense",     label: "Expense Management",         icon: ShoppingBag,   path: `${basePath}/expense`,        requiredPermission: "expense_management" },
+      { id: "salary",      label: "Salary Management",          icon: Wallet,        path: `${basePath}/salary`,         requiredPermission: "salary_management" },
+      { id: "employee",    label: "Employee Management",        icon: Users2,        path: `${basePath}/employee`,       requiredPermission: "employee_management" },
+      { id: "interns",     label: "Intern Management",          icon: GraduationCap, path: `${basePath}/interns`,        requiredPermission: "internship_management" },
+      { id: "chat",        label: "Chat Management",            icon: MessageSquare, path: `${basePath}/chat`,           requiredPermission: "chat_management" },
+      { id: "report",      label: "Report Management",          icon: ClipboardList, path: `${basePath}/report` },
+      { id: "meeting",     label: "Meeting Management",         icon: Calendar,      path: `${basePath}/meetings`,       requiredPermission: "meeting_management" },
+      { id: "weekly-goals",label: "Weekly Goals Management",    icon: Target,        path: `${basePath}/weekly-goals`,   requiredPermission: "weekly_management" },
+      { id: "research",    label: "Research Management",        icon: Microscope,    path: `${basePath}/research`,       requiredPermission: "research_management" },
+      { id: "hosted-web",  label: "Hosted Website Management",  icon: Globe,         path: `${basePath}/hosted-website`, requiredPermission: "hosted_website" },
+      { id: "internships", label: "Internship Management",      icon: GraduationCap, path: `${basePath}/internships`,    requiredPermission: "internship_management" },
+      { id: "permissions", label: "Permission Management",      icon: Users2,        path: `${basePath}/permissions`,    requireSuperAdmin: true },
     ];
   };
-
 
   const filterNavItems = (items: (NavItem | DropdownGroup)[]): (NavItem | DropdownGroup)[] => {
     return items
       .map((item) => {
         if ("items" in item) {
-          const filteredItems = item.items.filter(
-            (subItem) => {
-              if (subItem.requireSuperAdmin && !adminAuth.isSuperAdmin) return false;
-              if (adminAuth.isSuperAdmin) return true; // Super admin bypass
-              if (subItem.requiredPermission && !adminAuth.hasPermission(subItem.requiredPermission)) return false;
-              return true;
-            }
-          );
+          const filteredItems = item.items.filter((subItem) => {
+            if (subItem.requireSuperAdmin && !adminAuth.isSuperAdmin) return false;
+            if (adminAuth.isSuperAdmin) return true;
+            if (subItem.requiredPermission && !adminAuth.hasPermission(subItem.requiredPermission)) return false;
+            return true;
+          });
           if (filteredItems.length === 0) return null;
           return { ...item, items: filteredItems };
         }
-        // Check permission
-        if (item.requireSuperAdmin && !adminAuth.isSuperAdmin) {
-          return null;
-        }
-        if (adminAuth.isSuperAdmin) {
-          return item; // Super admin bypass
-        }
-        if (item.requiredPermission && !adminAuth.hasPermission(item.requiredPermission)) {
-          return null;
-        }
+        if (item.requireSuperAdmin && !adminAuth.isSuperAdmin) return null;
+        if (adminAuth.isSuperAdmin) return item;
+        if (item.requiredPermission && !adminAuth.hasPermission(item.requiredPermission)) return null;
         return item;
       })
       .filter((item): item is NavItem | DropdownGroup => item !== null);
@@ -227,68 +109,59 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onToggle, }) => {
 
   const navlinks = filterNavItems(getNavlinks(role));
 
-  // Auto-open dropdown if current path matches any item inside it
   useEffect(() => {
     const currentPath = location.pathname;
     for (const item of navlinks) {
       if ("items" in item) {
         const hasActiveChild = item.items.some((subItem) => currentPath === subItem.path);
-        if (hasActiveChild) {
-          setOpenDropdown(item.id);
-          break;
-        }
+        if (hasActiveChild) { setOpenDropdown(item.id); break; }
       }
     }
   }, [location.pathname]);
 
   const getProfileRoute = () => `/${role}/dashboard/profile/${user?.id}`;
 
-  const handleNavigateProfile = () => {
-    const route = getProfileRoute();
-    navigate(route, { replace: true });
-  };
-
   const displayName =
-    role === "admin"
-      ? user?.adminName || "Admin User"
-      : `${user?.first_name || ""} ${user?.last_name || ""}`.trim() || "Employee User";
+    user?.adminName || "Admin User";
 
   const displayEmail =
-    role === "admin"
-      ? user?.adminEmail || "admin@example.com"
-      : user?.email || "employee@example.com";
+    user?.adminEmail || "admin@abytechhub.com";
 
-  const portalTitle = `${role.charAt(0).toUpperCase() + role.slice(1)} Portal`;
-
-  const isDropdownActive = (dropdown: DropdownGroup) => {
-    const currentPath = location.pathname;
-    return dropdown.items.some((item) => currentPath === item.path);
-  };
+  const isDropdownActive = (dropdown: DropdownGroup) =>
+    dropdown.items.some((item) => location.pathname === item.path);
 
   const renderMenuItem = (item: NavItem) => {
     const Icon = item.icon;
-
     return (
       <NavLink
         key={item.id}
         to={item.path}
         end
-        className={({ isActive }) =>
-          `w-full flex items-center space-x-2 px-2 py-2 rounded-lg transition-all duration-200 group border-l-4 ${isActive
-            ? "bg-orange-50 text-orange-500 border-orange-500"
-            : "text-gray-700 hover:bg-gray-100 border-transparent"
-          }`
-        }
-        onClick={() => {
-          if (window.innerWidth < 1024) onToggle();
-        }}
+        style={({ isActive }) => ({
+          display: "flex",
+          alignItems: "center",
+          gap: 10,
+          padding: "9px 12px",
+          borderRadius: 4,
+          borderLeft: `3px solid ${isActive ? ORG : "transparent"}`,
+          background: isActive ? SB.activeBg : "transparent",
+          textDecoration: "none",
+          transition: "all .15s",
+        })}
+        onClick={() => { if (window.innerWidth < 1024) onToggle(); }}
       >
         {({ isActive }) => (
           <>
-            <div className={`p-1 rounded-md ${isActive ? "bg-orange-500 text-white" : "bg-gray-100 text-gray-700"}`}>
-              <Icon className="w-4 h-4" />
+            <div style={{
+              width: 30, height: 30, borderRadius: 4, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+              background: isActive ? ORG : "rgba(255,255,255,.06)",
+              transition: "background .15s",
+            }}>
+              <Icon size={14} color={isActive ? "#fff" : SB.text} />
             </div>
-            <span className="text-sm font-medium">{item.label}</span>
+            <span style={{ ...ba(13, 500, { color: isActive ? SB.activeText : SB.text, letterSpacing: .3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }) }}>
+              {item.label}
+            </span>
           </>
         )}
       </NavLink>
@@ -297,64 +170,56 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onToggle, }) => {
 
   const renderDropdown = (dropdown: DropdownGroup) => {
     const Icon = dropdown.icon;
-    const isOpen = openDropdown === dropdown.id;
-    const hasActiveChild = isDropdownActive(dropdown);
+    const open = openDropdown === dropdown.id;
+    const active = isDropdownActive(dropdown);
 
     return (
-      <div key={dropdown.id} className="w-full">
+      <div key={dropdown.id}>
         <button
           onClick={() => toggleDropdown(dropdown.id)}
-          className={`w-full flex items-center justify-between px-2 py-4 rounded-lg transition-all duration-200 ${hasActiveChild
-            ? "bg-orange-50 text-orange-500 border-l-4 border-orange-500"
-            : "text-gray-700 hover:bg-gray-100 border-l-4 border-transparent"
-            }`}
+          style={{
+            width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between",
+            gap: 10, padding: "9px 12px", borderRadius: 4,
+            borderLeft: `3px solid ${active ? ORG : "transparent"}`,
+            background: active ? SB.activeBg : "transparent",
+            cursor: "pointer", border: "none", transition: "all .15s",
+          }}
         >
-          <div className="flex items-center space-x-2">
-            <div className={`p-1 rounded-md ${hasActiveChild ? "bg-orange-500 text-white" : "bg-gray-100 text-gray-700"}`}>
-              <Icon className="w-4 h-4" />
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{ width: 30, height: 30, borderRadius: 4, display: "flex", alignItems: "center", justifyContent: "center", background: active ? ORG : "rgba(255,255,255,.06)" }}>
+              <Icon size={14} color={active ? "#fff" : SB.text} />
             </div>
-            <span className="text-sm font-medium">{dropdown.label}</span>
+            <span style={{ ...ba(13, 500, { color: active ? SB.activeText : SB.text }) }}>{dropdown.label}</span>
           </div>
-          <ChevronDown
-            className={`w-4 h-4 transition-transform duration-300 ${isOpen ? "rotate-180" : "rotate-0"
-              } ${hasActiveChild ? "text-orange-500" : "text-gray-600"}`}
-          />
+          <ChevronDown size={13} color={SB.textMuted} style={{ transform: open ? "rotate(180deg)" : "rotate(0deg)", transition: "transform .25s" }} />
         </button>
-        <div
-          className={`overflow-hidden transition-all duration-300 ease-in-out ${isOpen ? "max-h-96 opacity-100 mt-1" : "max-h-0 opacity-0"
-            }`}
-        >
-          <div className="ml-4 space-y-0.5 border-l-2 border-gray-300 pl-3 py-0.5">
-            {dropdown.items.map((item) => {
-              const SubIcon = item.icon;
-              return (
-                <NavLink
-                  key={item.id}
-                  to={item.path}
-                  end
-                  className={({ isActive }) =>
-                    `w-full flex items-center space-x-4 px-2 py-6 rounded-md transition-all duration-200 group relative ${isActive
-                      ? "bg-orange-500 text-white shadow-sm"
-                      : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-                    }`
-                  }
-                  onClick={() => {
-                    if (window.innerWidth < 1024) onToggle();
-                  }}
-                >
-                  {({ isActive }) => (
-                    <>
-                      {isActive && (
-                        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-orange-500 rounded-r-full -ml-3"></div>
-                      )}
-                      <SubIcon className="w-4 h-4" />
-                      <span className="text-sm">{item.label}</span>
-                    </>
-                  )}
-                </NavLink>
-              );
-            })}
-          </div>
+
+        <div style={{ overflow: "hidden", maxHeight: open ? 400 : 0, transition: "max-height .3s ease", marginLeft: 14, borderLeft: `1px solid ${SB.border}`, paddingLeft: 10 }}>
+          {dropdown.items.map((item) => {
+            const SubIcon = item.icon;
+            return (
+              <NavLink
+                key={item.id}
+                to={item.path}
+                end
+                style={({ isActive }) => ({
+                  display: "flex", alignItems: "center", gap: 8,
+                  padding: "8px 10px", borderRadius: 4, margin: "2px 0",
+                  background: isActive ? SB.activeBg : "transparent",
+                  borderLeft: `2px solid ${isActive ? ORG : "transparent"}`,
+                  textDecoration: "none", transition: "all .15s",
+                })}
+                onClick={() => { if (window.innerWidth < 1024) onToggle(); }}
+              >
+                {({ isActive }) => (
+                  <>
+                    <SubIcon size={13} color={isActive ? ORG : SB.text} />
+                    <span style={{ ...ba(12, 400, { color: isActive ? SB.activeText : SB.text }) }}>{item.label}</span>
+                  </>
+                )}
+              </NavLink>
+            );
+          })}
         </div>
       </div>
     );
@@ -362,74 +227,70 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onToggle, }) => {
 
   return (
     <>
-      {/* Mobile Overlay */}
+      {/* Mobile overlay */}
       {isOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
-          onClick={onToggle}
-        />
+        <div className="fixed inset-0 bg-black/60 z-40 lg:hidden" onClick={onToggle} />
       )}
 
-      {/* Sidebar Container */}
+      {/* Sidebar */}
       <div
-        className={`fixed left-0 top-0 min-h-screen bg-white flex flex-col border-r border-gray-200 shadow-lg transform transition-transform duration-300 z-50 lg:relative lg:translate-x-0 ${isOpen ? "translate-x-0" : "-translate-x-full"
-          } w-72`}
+        className={`fixed left-0 top-0 min-h-screen flex flex-col transform transition-transform duration-300 z-50 lg:relative lg:translate-x-0 w-72 ${isOpen ? "translate-x-0" : "-translate-x-full"}`}
+        style={{ background: SB.bg, borderRight: `1px solid ${SB.border}` }}
       >
-        {/* Sidebar Header */}
-        <div className="flex items-center justify-between p-3 border-b border-gray-200">
-          <div className="flex items-center space-x-2">
-            <img src={logo} className="flex items-center justify-center w-10 h-10 rounded-lg" />
-
-
+        {/* Logo header */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 16px", borderBottom: `1px solid ${SB.border}` }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <img src={logo} alt="AbyTech" style={{ width: 36, height: 36, borderRadius: 4, objectFit: "contain" }} />
             <div>
-              <h2 className="font-bold text-base text-gray-800">
-                ABYTECH-HUB LTD
-              </h2>
-              <p className="text-xs text-gray-600">{portalTitle}</p>
+              <div style={{ ...bc(13, 700, { color: "#fff", letterSpacing: 1 }) }}>ABYTECH-HUB</div>
+              <div style={{ ...bc(9, 600, { color: ORG, letterSpacing: 3, textTransform: "uppercase" }) }}>Admin Portal</div>
             </div>
           </div>
           <button
             onClick={onToggle}
-            className="lg:hidden p-1 rounded-lg hover:bg-gray-100 transition-colors"
+            className="lg:hidden"
+            style={{ padding: 4, borderRadius: 4, background: "rgba(255,255,255,.06)", border: "none", cursor: "pointer" }}
           >
-            <X className="w-4 h-4 text-gray-700" />
+            <X size={14} color={SB.text} />
           </button>
         </div>
 
-        {/* Navigation Menu */}
-        <div className="flex-1 overflow-y-auto p-2">
-          <nav className="space-y-0.5">
+        {/* Section label */}
+        <div style={{ padding: "14px 16px 6px", ...bc(9, 700, { color: SB.textMuted, letterSpacing: 4, textTransform: "uppercase" }) }}>
+          Navigation
+        </div>
+
+        {/* Nav items */}
+        <div className="flex-1 overflow-y-auto" style={{ padding: "0 8px 12px" }}>
+          <nav style={{ display: "flex", flexDirection: "column", gap: 2 }}>
             {navlinks.length > 0 ? (
-              navlinks.map((item) => {
-                if ("items" in item) {
-                  return renderDropdown(item);
-                }
-                return renderMenuItem(item);
-              })
+              navlinks.map((item) =>
+                "items" in item ? renderDropdown(item) : renderMenuItem(item)
+              )
             ) : (
-              <div className="text-center py-4">
-                <p className="text-gray-500 text-xs">No menu items available</p>
+              <div style={{ textAlign: "center", padding: "16px 0", ...ba(12, 400, { color: SB.textMuted }) }}>
+                No menu items available
               </div>
             )}
           </nav>
         </div>
 
-        {/* Sidebar Footer */}
+        {/* User footer */}
         <div
-          className="p-2 border-t border-orange-200 cursor-pointer"
-          onClick={handleNavigateProfile}
+          onClick={() => navigate(getProfileRoute())}
+          style={{ padding: "10px 12px", borderTop: `1px solid ${SB.border}`, cursor: "pointer" }}
         >
-          <div className="flex items-center space-x-2 p-1.5 bg-orange-100 rounded-lg hover:bg-orange-200 transition-colors">
-            <div className="w-7 h-7 bg-orange-300 rounded-full flex items-center justify-center">
-              <User className="w-4 h-4 text-orange-700" />
+          <div style={{
+            display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 4,
+            background: "rgba(232,98,26,.08)", border: `1px solid rgba(232,98,26,.2)`,
+            transition: "background .15s",
+          }}>
+            <div style={{ width: 32, height: 32, borderRadius: "50%", background: ORG, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <User size={15} color="#fff" />
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-normal text-orange-800 truncate">
-                {displayName}
-              </p>
-              <p className="text-xs text-orange-600 truncate">
-                {displayEmail}
-              </p>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ ...ba(12, 600, { color: "#fff", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }) }}>{displayName}</div>
+              <div style={{ ...ba(10, 400, { color: "rgba(232,98,26,.8)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }) }}>{displayEmail}</div>
             </div>
           </div>
         </div>

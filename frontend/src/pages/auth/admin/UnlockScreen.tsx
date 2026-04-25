@@ -1,18 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { 
-  Lock, 
-  Eye, 
-  EyeOff, 
-  Loader2, 
-  AlertCircle, 
-  User,
-  ArrowLeft 
-} from 'lucide-react';
+import { Lock, Eye, EyeOff, Loader2, AlertCircle, User, ArrowLeft } from 'lucide-react';
 import useAdminAuth from '../../../context/AdminAuthContext';
 import { API_URL } from '../../../api/api';
 import Logo from '../../../assets/tran.png';
-
+import { useDashboardTheme } from '../../../utils/dashboardTheme';
+import { ORG, TEAL, bc, ba } from '../../../utils/homeConstants';
 
 const UnlockScreen = () => {
   const [password, setPassword] = useState('');
@@ -20,182 +13,141 @@ const UnlockScreen = () => {
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [touched, setTouched] = useState(false);
-  
+
   const { user, unlockAdmin } = useAdminAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const { bg, bg2, bg3, textC, text2, border } = useDashboardTheme();
 
-  // Real-time validation
-  const validatePassword = (password) => {
-    if (!password) {
-      return 'Password is required';
-    }
-    if (password.length < 6) {
-      return 'Password must be at least 6 characters';
-    }
+  const validatePassword = (pw: string) => {
+    if (!pw) return 'Password is required';
+    if (pw.length < 6) return 'Password must be at least 6 characters';
     return '';
   };
 
-  const handlePasswordChange = (e) => {
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setPassword(value);
-    
-    // Clear general error when user starts typing
-    if (error) {
-      setError('');
-    }
-
-    // Show validation error in real-time if field has been touched
+    if (error) setError('');
     if (touched && value !== '') {
       const validationError = validatePassword(value);
-      if (validationError && validationError !== 'Password is required') {
-        setError(validationError);
-      }
+      if (validationError && validationError !== 'Password is required') setError(validationError);
     }
   };
 
   const handlePasswordBlur = () => {
     setTouched(true);
     const validationError = validatePassword(password);
-    if (validationError) {
-      setError(validationError);
-    }
+    if (validationError) setError(validationError);
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setTouched(true);
-    
     const validationError = validatePassword(password);
-    if (validationError) {
-      setError(validationError);
-      return;
-    }
-
+    if (validationError) { setError(validationError); return; }
     setIsSubmitting(true);
     setError('');
-
     try {
       const response = await unlockAdmin(password);
-      
       if (response) {
-        // Redirect to intended page or dashboard
-        const from = location.state?.from?.pathname || "/admin/dashboard";
+        const from = (location.state as any)?.from?.pathname || '/admin/dashboard';
         navigate(from, { replace: true });
       }
-    } catch (err) {
-      console.error('Unlock error:', err);
+    } catch (err: any) {
       setError(err.message || 'Invalid password. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleBackToLogin = async () => {
-    try {
-      // Logout to clear the locked state
-      // This ensures the user goes back to a clean login state
-      navigate('/auth/admin/login', { replace: true });
-    } catch (error) {
-      console.error('Error navigating back to login:', error);
-      navigate('/auth/admin/login', { replace: true });
-    }
-  };
+  const handleBackToLogin = () => navigate('/auth/admin/login', { replace: true });
+  const isFormValid = () => !!password && !validatePassword(password);
 
-  // Check if form is valid
-  const isFormValid = () => {
-    return password && !validatePassword(password);
-  };
+  const initials = (user?.adminName || 'A')
+    .split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2);
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center p-3 sm:p-4">
-      <div className="w-full max-w-md">
-        <div className="bg-white rounded-3xl shadow-2xl border border-gray-200 p-6 sm:p-8">
-          {/* Header */}
-          <div className="text-center mb-6">
-                <div className="flex items-center justify-center mb-4">
-              <img src={Logo} alt="Fine Fish Logo" className="h-12 sm:h-14" />
+    <div className="min-h-screen flex items-center justify-center px-5" style={{ background: bg }}>
+      {/* Decorative slashes */}
+      <div className="fixed inset-0 pointer-events-none" style={{ background: ORG, clipPath: 'polygon(62% 0%,74% 0%,58% 100%,46% 100%)', opacity: .05 }} />
+      <div className="fixed inset-0 pointer-events-none" style={{ background: TEAL, clipPath: 'polygon(66% 0%,70% 0%,54% 100%,50% 100%)', opacity: .04 }} />
+
+      <div style={{ width: '100%', maxWidth: 420, position: 'relative', zIndex: 10 }}>
+
+        {/* Card */}
+        <div style={{ background: bg2, border: `1px solid ${border}`, borderRadius: 4, padding: '36px 32px' }}>
+
+          {/* Logo + heading */}
+          <div style={{ textAlign: 'center', marginBottom: 28 }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 56, height: 56, borderRadius: 4, background: `rgba(232,98,26,.1)`, border: `1px solid rgba(232,98,26,.25)`, marginBottom: 16 }}>
+              <img src={Logo} alt="AbyTech" style={{ width: 36, height: 36, objectFit: 'contain' }} />
             </div>
-            <h2 className="text-2xl sm:text-3xl font-bold mb-1" style={{ color: 'rgb(81, 96, 146)' }}>
-              Locked
-            </h2>
-            <p className="text-sm text-gray-600">Enter password to continue</p>
+            <div style={{ ...bc(10, 700, { color: ORG, letterSpacing: 5, textTransform: 'uppercase', marginBottom: 6 }) }}>
+              Screen Locked
+            </div>
+            <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 40, lineHeight: .9, letterSpacing: 2, color: textC }}>
+              UNLOCK
+            </div>
+            <p style={{ ...ba(13, 300, { color: text2, marginTop: 8 }) }}>Enter your password to continue</p>
           </div>
 
-          {/* User Info */}
-          <div className="flex items-center space-x-3 mb-5 p-3 rounded-2xl border" style={{ backgroundColor: 'rgba(81, 96, 146, 0.08)', borderColor: 'rgba(81, 96, 146, 0.2)' }}>
-            <div className="w-10 h-10 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0" style={{ backgroundColor: 'rgba(81, 96, 146, 0.15)' }}>
+          {/* User info */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', borderRadius: 4, background: bg3, border: `1px solid ${border}`, marginBottom: 24 }}>
+            <div style={{ width: 38, height: 38, borderRadius: '50%', background: ORG, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
               {user?.profileImg ? (
-                <img 
-                  src={`${API_URL}${user.profileImg}`} 
-                  alt="Profile" 
-                  className="w-10 h-10 rounded-full object-cover"
-                />
+                <img src={`${API_URL}${user.profileImg}`} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               ) : (
-                <User className="w-5 h-5" style={{ color: 'rgb(81, 96, 146)' }} />
+                <span style={{ ...bc(12, 700, { color: '#fff' }) }}>{initials}</span>
               )}
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-semibold text-gray-900 text-sm truncate">{user?.adminName || 'Admin'}</p>
-              <p className="text-xs text-gray-600 truncate">{user?.adminEmail}</p>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ ...ba(13, 600, { color: textC, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }) }}>
+                {user?.adminName || 'Admin'}
+              </div>
+              <div style={{ ...ba(11, 400, { color: text2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }) }}>
+                {user?.adminEmail}
+              </div>
             </div>
+            <Lock size={14} color={text2} />
           </div>
 
-          {/* Error Message */}
+          {/* Error */}
           {error && (
-            <div className="mb-4 p-2.5 bg-red-50 border border-red-200 rounded-xl flex items-center space-x-2">
-              <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0" />
-              <p className="text-xs text-red-700">{error}</p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', borderRadius: 4, background: 'rgba(232,64,64,.1)', border: '1px solid rgba(232,64,64,.3)', marginBottom: 16, ...ba(13, 400, { color: '#e84040' }) }}>
+              <AlertCircle size={14} color="#e84040" />
+              {error}
             </div>
           )}
 
-          {/* Unlock Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label htmlFor="password" className="block text-xs font-semibold text-gray-700 mb-1.5">
-                Password
-              </label>
-              <div className="relative">
+          {/* Form */}
+          <form onSubmit={handleSubmit}>
+            <div style={{ marginBottom: 20 }}>
+              <label style={{ ...bc(10, 700, { color: text2, letterSpacing: 3, textTransform: 'uppercase', display: 'block', marginBottom: 6 }) }}>Password</label>
+              <div style={{ position: 'relative' }}>
                 <input
                   id="password"
-                  type={showPassword ? "text" : "password"}
+                  type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={handlePasswordChange}
-                  
+                  onBlur={handlePasswordBlur}
                   disabled={isSubmitting}
-                  className={`w-full px-3 py-2.5 pr-10 text-sm border rounded-xl outline-0 focus:ring-0 transition-all disabled:bg-gray-50 disabled:cursor-not-allowed ${
-                    error && touched
-                      ? 'border-red-300 bg-red-50 focus:border-red-500'
-                      : 'border-gray-300'
-                  }`}
-                  style={!(error && touched) ? { 
-                    '--tw-ring-color': 'rgba(81, 96, 146, 0.5)',
-                  } : {}}
-                  onFocus={(e) => {
-                    if (!(error && touched)) {
-                      e.target.style.borderColor = 'rgb(81, 96, 146)';
-                      e.target.style.outline = 'none';
-                      e.target.style.boxShadow = '0 0 0 3px rgba(81, 96, 146, 0.1)';
-                    }
-                  }}
-                  onBlur={(e) => {
-                    handlePasswordBlur();
-                    if (!(error && touched)) {
-                      e.target.style.borderColor = '';
-                      e.target.style.boxShadow = '';
-                    }
-                  }}
-                  placeholder="••••••••"
-                  autoComplete="current-password"
                   autoFocus
+                  autoComplete="current-password"
+                  placeholder="••••••••"
+                  style={{
+                    width: '100%', padding: '10px 40px 10px 12px', borderRadius: 4, outline: 'none',
+                    background: bg3, border: `1px solid ${error && touched ? '#e84040' : border}`,
+                    ...ba(14, 400, { color: textC }), transition: 'border-color .15s',
+                    opacity: isSubmitting ? .6 : 1,
+                  }}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  disabled={isSubmitting}
-                  className="absolute right-2.5 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 disabled:cursor-not-allowed transition-colors"
+                  style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', padding: 2 }}
                 >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  {showPassword ? <EyeOff size={15} color={text2} /> : <Eye size={15} color={text2} />}
                 </button>
               </div>
             </div>
@@ -203,42 +155,44 @@ const UnlockScreen = () => {
             <button
               type="submit"
               disabled={isSubmitting || !isFormValid()}
-              className="w-full text-white py-2.5 px-4 rounded-xl focus:ring-2 focus:ring-offset-2 transition-all font-semibold text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shadow-lg"
-              style={{ 
-                backgroundColor: 'rgb(81, 96, 146)',
-                boxShadow: '0 10px 25px -5px rgba(81, 96, 146, 0.3)'
-              }}
-              onMouseEnter={(e) => {
-                if (!isSubmitting && isFormValid()) {
-                  e.target.style.backgroundColor = 'rgb(71, 86, 136)';
-                }
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.backgroundColor = 'rgb(81, 96, 146)';
+              style={{
+                width: '100%', padding: '12px 0', borderRadius: 4, border: 'none',
+                cursor: isSubmitting || !isFormValid() ? 'not-allowed' : 'pointer',
+                background: ORG, opacity: isSubmitting || !isFormValid() ? .5 : 1,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                ...bc(13, 700, { color: '#fff', letterSpacing: 2, textTransform: 'uppercase' }),
+                transition: 'opacity .15s',
               }}
             >
               {isSubmitting ? (
                 <>
-                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                  Unlocking...
+                  <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} />
+                  Unlocking…
                 </>
-              ) : (
-                'Unlock'
-              )}
+              ) : 'Unlock Screen'}
             </button>
           </form>
 
-          {/* Footer */}
-          <div className="mt-5 text-center">
+          {/* Back to login */}
+          <div style={{ textAlign: 'center', marginTop: 20 }}>
             <button
               onClick={handleBackToLogin}
               disabled={isSubmitting}
-              className="inline-flex items-center text-xs text-gray-500 hover:text-indigo-600 font-medium transition-colors disabled:cursor-not-allowed"
+              style={{
+                background: 'none', border: 'none', cursor: 'pointer',
+                display: 'inline-flex', alignItems: 'center', gap: 6,
+                ...ba(12, 400, { color: text2 }), transition: 'color .15s',
+              }}
             >
-              <ArrowLeft className="w-3.5 h-3.5 mr-1" />
+              <ArrowLeft size={13} />
               Back to Login
             </button>
           </div>
+        </div>
+
+        {/* Site label */}
+        <div style={{ textAlign: 'center', marginTop: 20, ...bc(9, 700, { color: 'rgba(255,255,255,.18)', letterSpacing: 4, textTransform: 'uppercase' }) }}>
+          ABYTECHHUB.COM
         </div>
       </div>
     </div>

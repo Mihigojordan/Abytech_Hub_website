@@ -8,17 +8,11 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import salaryService from '../../services/salaryService';
 import useAdminAuth from '../../context/AdminAuthContext';
-
-const PRIMARY = 'rgb(249, 115, 22)';
-
-const STATUS_CONFIG = {
-    PENDING: { label: 'Pending', color: 'bg-amber-100 text-amber-800 border-amber-200' },
-    APPROVED: { label: 'Approved', color: 'bg-blue-100 text-blue-800 border-blue-200' },
-    REJECTED: { label: 'Rejected', color: 'bg-red-100 text-red-800 border-red-200' },
-    PAID: { label: 'Paid', color: 'bg-emerald-100 text-emerald-800 border-emerald-200' },
-};
+import { useDashboardTheme } from '../../utils/dashboardTheme';
+import { ORG, TEAL, bb, bc, ba } from '../../utils/homeConstants';
 
 const MONTHS = ['', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
 const formatCurrency = (value) => {
     const amount = Number(value);
     return new Intl.NumberFormat('en-RW', {
@@ -28,44 +22,114 @@ const formatCurrency = (value) => {
     }).format(Number.isFinite(amount) ? amount : 0);
 };
 
+const getStatusStyle = (status) => {
+    switch (status) {
+        case 'PAID':
+            return { background: 'rgba(74,222,128,.15)', color: '#4ade80' };
+        case 'PENDING':
+            return { background: 'rgba(232,98,26,.15)', color: ORG };
+        case 'REJECTED':
+            return { background: 'rgba(232,64,64,.15)', color: '#e84040' };
+        case 'PROCESSING':
+        case 'APPROVED':
+            return { background: 'rgba(26,92,120,.15)', color: TEAL };
+        default:
+            return { background: 'rgba(128,128,128,.15)', color: '#888' };
+    }
+};
+
+const STATUS_LABELS = {
+    PENDING: 'Pending',
+    APPROVED: 'Approved',
+    REJECTED: 'Rejected',
+    PAID: 'Paid',
+    PROCESSING: 'Processing',
+};
+
 // ── Confirmation Modal helper ──
-const ConfirmModal = ({ show, onClose, onConfirm, icon: Icon, iconBg, title, desc, children, btnText, btnClass }) => (
-    <AnimatePresence>{show && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/40 backdrop-blur-md flex items-center justify-center z-50 p-4">
-            <motion.div initial={{ scale: 0.85, y: 30 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.85, y: 30 }} className="bg-white rounded-2xl p-7 w-full max-w-md shadow-2xl">
-                <div className="flex items-start gap-5 mb-6">
-                    <div className={`w-14 h-14 ${iconBg} rounded-xl flex items-center justify-center shrink-0`}><Icon className="w-7 h-7" /></div>
-                    <div><h3 className="text-xl font-bold text-gray-900 mb-2">{title}</h3><p className="text-gray-600">{desc}</p></div>
-                </div>
-                {children}
-                <div className="flex justify-end gap-4 mt-6">
-                    <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={onClose} className="px-7 py-3 text-sm font-medium text-gray-700 border border-gray-200 rounded-xl hover:bg-gray-50">Cancel</motion.button>
-                    <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={onConfirm} className={`px-7 py-3 text-sm font-medium text-white rounded-xl shadow-md ${btnClass}`}>{btnText}</motion.button>
-                </div>
+const ConfirmModal = ({ show, onClose, onConfirm, icon: Icon, iconColor, title, desc, children, btnText, btnDanger }) => {
+    const { bg2, bg3, border, textC, text2 } = useDashboardTheme();
+    return (
+        <AnimatePresence>{show && (
+            <motion.div
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: 16 }}
+            >
+                <motion.div
+                    initial={{ scale: 0.85, y: 30 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.85, y: 30 }}
+                    style={{ background: bg2, border: '1px solid ' + border, borderRadius: 4, padding: 28, width: '100%', maxWidth: 448, boxShadow: '0 24px 64px rgba(0,0,0,.4)' }}
+                >
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 20, marginBottom: 24 }}>
+                        <div style={{ width: 56, height: 56, background: 'rgba(232,98,26,.1)', border: '1px solid rgba(232,98,26,.2)', borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                            <Icon style={{ width: 24, height: 24, color: iconColor || ORG }} />
+                        </div>
+                        <div>
+                            <h3 style={{ ...bc(16, 700, { color: textC, margin: '0 0 8px' }) }}>{title}</h3>
+                            <p style={{ ...ba(13, 400, { color: text2, margin: 0 }) }}>{desc}</p>
+                        </div>
+                    </div>
+                    {children}
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginTop: 24 }}>
+                        <motion.button
+                            whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                            onClick={onClose}
+                            style={{ padding: '10px 24px', ...ba(13, 500, { color: textC }), background: bg3, border: '1px solid ' + border, borderRadius: 4, cursor: 'pointer' }}
+                        >
+                            Cancel
+                        </motion.button>
+                        <motion.button
+                            whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                            onClick={onConfirm}
+                            style={{ padding: '10px 24px', ...ba(13, 600, { color: '#fff' }), background: btnDanger ? '#e84040' : ORG, border: 'none', borderRadius: 4, cursor: 'pointer' }}
+                        >
+                            {btnText}
+                        </motion.button>
+                    </div>
+                </motion.div>
             </motion.div>
-        </motion.div>
-    )}</AnimatePresence>
-);
+        )}</AnimatePresence>
+    );
+};
 
 // ── Form Modal Component ──
 const FormModal = ({ show, isEdit, onClose, onSubmit, formData, setFormData, opLoading, isSuperAdmin, adminList }) => {
-    const isRecordingForOther = isSuperAdmin && formData.targetAdminId;
+    const { bg2, bg3, border, textC, text2 } = useDashboardTheme();
+    const labelStyle = { ...bc(11, 700, { letterSpacing: 2, textTransform: 'uppercase', color: text2, display: 'block', marginBottom: 6 }) };
+    const inputStyle = { width: '100%', padding: '10px 14px', background: bg3, border: '1px solid ' + border, color: textC, borderRadius: 4, outline: 'none', boxSizing: 'border-box', ...ba(13, 400, {}) };
+
     return (
         <AnimatePresence>{show && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/40 backdrop-blur-md flex items-center justify-center z-50 p-4">
-                <motion.div initial={{ scale: 0.85, y: 30 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.85, y: 30 }} className="bg-white rounded-2xl w-full max-w-lg shadow-2xl">
-                    <div className="flex items-center justify-between p-6 border-b border-gray-200">
-                        <h2 className="text-xl font-bold text-gray-900">{isEdit ? 'Edit Salary Request' : isSuperAdmin ? 'Record Salary' : 'Request Salary'}</h2>
-                        <motion.button whileHover={{ scale: 1.1, rotate: 90 }} whileTap={{ scale: 0.9 }} onClick={onClose} className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-xl"><X className="w-5 h-5" /></motion.button>
+            <motion.div
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: 16 }}
+            >
+                <motion.div
+                    initial={{ scale: 0.85, y: 30 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.85, y: 30 }}
+                    style={{ background: bg2, border: '1px solid ' + border, borderRadius: 4, width: '100%', maxWidth: 480, boxShadow: '0 24px 64px rgba(0,0,0,.4)', display: 'flex', flexDirection: 'column' }}
+                >
+                    {/* Header */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 24px', background: bg3, borderBottom: '1px solid ' + border, borderRadius: '4px 4px 0 0' }}>
+                        <h2 style={{ ...bc(15, 700, { color: textC, margin: 0, letterSpacing: 1 }) }}>
+                            {isEdit ? 'Edit Salary Request' : isSuperAdmin ? 'Record Salary' : 'Request Salary'}
+                        </h2>
+                        <motion.button
+                            whileHover={{ scale: 1.1, rotate: 90 }} whileTap={{ scale: 0.9 }}
+                            onClick={onClose}
+                            style={{ background: 'transparent', border: 'none', color: text2, cursor: 'pointer', padding: 4, display: 'flex' }}
+                        >
+                            <X style={{ width: 20, height: 20 }} />
+                        </motion.button>
                     </div>
-                    <div className="p-6 space-y-4">
+
+                    {/* Body */}
+                    <div style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
                         {isSuperAdmin && !isEdit && (
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-1">Employee *</label>
+                                <label style={labelStyle}>Employee *</label>
                                 <select
                                     value={formData.targetAdminId || ''}
                                     onChange={e => setFormData({ ...formData, targetAdminId: e.target.value })}
-                                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20"
+                                    style={{ ...inputStyle, appearance: 'none' }}
                                 >
                                     <option value="">— Select employee —</option>
                                     {adminList.map(a => (
@@ -74,25 +138,73 @@ const FormModal = ({ show, isEdit, onClose, onSubmit, formData, setFormData, opL
                                 </select>
                             </div>
                         )}
-                        <div className="grid grid-cols-2 gap-4">
-                            <div><label className="block text-sm font-semibold text-gray-700 mb-1">Month *</label>
-                                <select value={formData.month} onChange={e => setFormData({ ...formData, month: e.target.value })} className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20">
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                            <div>
+                                <label style={labelStyle}>Month *</label>
+                                <select
+                                    value={formData.month}
+                                    onChange={e => setFormData({ ...formData, month: e.target.value })}
+                                    style={{ ...inputStyle, background: bg3, border: '1px solid ' + border, color: textC, appearance: 'none' }}
+                                >
                                     {MONTHS.slice(1).map((m, i) => <option key={i + 1} value={i + 1}>{m}</option>)}
-                                </select></div>
-                            <div><label className="block text-sm font-semibold text-gray-700 mb-1">Year *</label>
-                                <input type="number" value={formData.year} onChange={e => setFormData({ ...formData, year: e.target.value })} className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20" /></div>
+                                </select>
+                            </div>
+                            <div>
+                                <label style={labelStyle}>Year *</label>
+                                <input
+                                    type="number"
+                                    value={formData.year}
+                                    onChange={e => setFormData({ ...formData, year: e.target.value })}
+                                    style={inputStyle}
+                                />
+                            </div>
                         </div>
-                        <div><label className="block text-sm font-semibold text-gray-700 mb-1">Amount (RWF) *</label>
-                            <input type="number" value={formData.amount} onChange={e => setFormData({ ...formData, amount: e.target.value })} placeholder="e.g. 500000" className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20" /></div>
-                        <div><label className="block text-sm font-semibold text-gray-700 mb-1">Reason</label>
-                            <textarea value={formData.reason} onChange={e => setFormData({ ...formData, reason: e.target.value })} rows={3} placeholder="My pay date has arrived..." className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 resize-none" /></div>
-                        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm"><span className="text-amber-700">Note: Bonus and deductions will be set by the manager when approving your request.</span></div>
-                        <div className="bg-gray-50 rounded-xl p-4 text-sm"><span className="text-gray-500">Requested Amount: </span><span className="font-bold text-gray-900">{formatCurrency(parseFloat(formData.amount) || 0)}</span></div>
+                        <div>
+                            <label style={labelStyle}>Amount (RWF) *</label>
+                            <input
+                                type="number"
+                                value={formData.amount}
+                                onChange={e => setFormData({ ...formData, amount: e.target.value })}
+                                placeholder="e.g. 500000"
+                                style={inputStyle}
+                            />
+                        </div>
+                        <div>
+                            <label style={labelStyle}>Reason</label>
+                            <textarea
+                                value={formData.reason}
+                                onChange={e => setFormData({ ...formData, reason: e.target.value })}
+                                rows={3}
+                                placeholder="My pay date has arrived..."
+                                style={{ ...inputStyle, resize: 'none' }}
+                            />
+                        </div>
+                        <div style={{ background: 'rgba(232,98,26,.08)', border: '1px solid rgba(232,98,26,.2)', borderRadius: 4, padding: '12px 16px' }}>
+                            <span style={{ ...ba(12, 400, { color: ORG }) }}>Note: Bonus and deductions will be set by the manager when approving your request.</span>
+                        </div>
+                        <div style={{ background: bg3, border: '1px solid ' + border, borderRadius: 4, padding: '12px 16px' }}>
+                            <span style={{ ...ba(12, 400, { color: text2 }) }}>Requested Amount: </span>
+                            <span style={{ ...ba(13, 700, { color: ORG }) }}>{formatCurrency(parseFloat(formData.amount) || 0)}</span>
+                        </div>
                     </div>
-                    <div className="p-6 border-t border-gray-200 flex justify-end gap-4">
-                        <button onClick={onClose} className="px-6 py-3 text-sm font-medium text-gray-700 border border-gray-200 rounded-xl hover:bg-gray-50">Cancel</button>
-                        <button onClick={onSubmit} disabled={!formData.amount || (isSuperAdmin && !isEdit && !formData.targetAdminId) || opLoading} className="px-6 py-3 text-sm font-medium bg-orange-500 text-white rounded-xl hover:bg-orange-600 shadow-md disabled:opacity-50 flex items-center gap-2">
-                            {opLoading ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <DollarSign className="w-4 h-4" />}
+
+                    {/* Footer */}
+                    <div style={{ padding: '16px 24px', borderTop: '1px solid ' + border, display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
+                        <button
+                            onClick={onClose}
+                            style={{ padding: '10px 20px', ...ba(13, 500, { color: textC }), background: bg3, border: '1px solid ' + border, borderRadius: 4, cursor: 'pointer' }}
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            onClick={onSubmit}
+                            disabled={!formData.amount || (isSuperAdmin && !isEdit && !formData.targetAdminId) || opLoading}
+                            style={{ padding: '10px 20px', ...ba(13, 600, { color: '#fff' }), background: ORG, border: 'none', borderRadius: 4, cursor: 'pointer', opacity: (!formData.amount || (isSuperAdmin && !isEdit && !formData.targetAdminId) || opLoading) ? 0.5 : 1, display: 'flex', alignItems: 'center', gap: 8 }}
+                        >
+                            {opLoading
+                                ? <div style={{ width: 14, height: 14, border: '2px solid rgba(255,255,255,.4)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+                                : <DollarSign style={{ width: 14, height: 14 }} />
+                            }
                             {isEdit ? 'Update' : isSuperAdmin ? 'Record Salary' : 'Submit Request'}
                         </button>
                     </div>
@@ -104,6 +216,8 @@ const FormModal = ({ show, isEdit, onClose, onSubmit, formData, setFormData, opL
 
 const SalaryManagement = () => {
     const { user, isSuperAdmin } = useAdminAuth();
+    const { isDark, bg, bg2, bg3, textC, text2, text3, border } = useDashboardTheme();
+
     const [salaries, setSalaries] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -238,61 +352,127 @@ const SalaryManagement = () => {
     };
 
     const statCards = [
-        { label: 'Total', value: stats.total, icon: DollarSign, color: PRIMARY, bgColor: 'rgba(249,115,22,0.1)', gradient: 'from-orange-500 to-amber-600' },
-        { label: 'Pending', value: stats.pending, icon: Clock, color: 'rgb(234,179,8)', bgColor: 'rgba(234,179,8,0.1)', gradient: 'from-yellow-500 to-amber-600' },
-        { label: 'Approved', value: stats.approved, icon: CheckCircle, color: 'rgb(59,130,246)', bgColor: 'rgba(59,130,246,0.1)', gradient: 'from-blue-500 to-indigo-600' },
-        { label: 'Paid', value: stats.paid, icon: CreditCard, color: 'rgb(34,197,94)', bgColor: 'rgba(34,197,94,0.1)', gradient: 'from-green-500 to-emerald-600' },
-        { label: 'Rejected', value: stats.rejected, icon: XCircle, color: 'rgb(239,68,68)', bgColor: 'rgba(239,68,68,0.1)', gradient: 'from-red-500 to-rose-600' },
-        { label: 'Paid Amount', value: formatCurrency(stats.totalPaidAmount), icon: Wallet, color: 'rgb(168,85,247)', bgColor: 'rgba(168,85,247,0.1)', gradient: 'from-purple-500 to-violet-600' },
-        { label: 'Pending Amount', value: formatCurrency(stats.totalPendingAmount), icon: TrendingUp, color: 'rgb(245,158,11)', bgColor: 'rgba(245,158,11,0.1)', gradient: 'from-amber-500 to-orange-600' },
+        { label: 'Total', value: stats.total, icon: DollarSign },
+        { label: 'Pending', value: stats.pending, icon: Clock },
+        { label: 'Approved', value: stats.approved, icon: CheckCircle },
+        { label: 'Paid', value: stats.paid, icon: CreditCard },
+        { label: 'Rejected', value: stats.rejected, icon: XCircle },
+        { label: 'Paid Amount', value: formatCurrency(stats.totalPaidAmount), icon: Wallet },
+        { label: 'Pending Amount', value: formatCurrency(stats.totalPendingAmount), icon: TrendingUp },
     ];
 
-    const renderActionButtons = (s, size = 'sm') => {
-        const p = size === 'sm' ? 'p-1.5' : 'p-2';
-        const w = size === 'sm' ? 'w-4 h-4' : 'w-4 h-4';
-        return (
-            <div className="flex items-center gap-1">
-                <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }} onClick={() => { setSelected(s); setShowViewModal(true); }} className={`${p} text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-md`} title="View"><Eye className={w} /></motion.button>
-                {s.status === 'PENDING' && <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }} onClick={() => openEdit(s)} className={`${p} text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-md`} title="Edit"><Edit className={w} /></motion.button>}
-                {s.status === 'PENDING' && <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }} onClick={() => setApproveConfirm(s)} className={`${p} text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-md`} title="Approve"><CheckCircle className={w} /></motion.button>}
-                {s.status === 'PENDING' && <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }} onClick={() => setRejectConfirm(s)} className={`${p} text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-md`} title="Reject"><XCircle className={w} /></motion.button>}
-                {s.status === 'APPROVED' && <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }} onClick={() => setPayConfirm(s)} className={`${p} text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-md`} title="Mark Paid"><CreditCard className={w} /></motion.button>}
-                <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }} onClick={() => setDeleteConfirm(s)} className={`${p} text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-md`} title="Delete"><Trash2 className={w} /></motion.button>
-            </div>
-        );
-    };
+    const renderActionButtons = (s) => (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <motion.button
+                whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}
+                onClick={() => { setSelected(s); setShowViewModal(true); }}
+                style={{ padding: 6, background: bg3, border: '1px solid ' + border, borderRadius: 4, color: text2, cursor: 'pointer', display: 'flex' }}
+                title="View"
+            >
+                <Eye style={{ width: 14, height: 14 }} />
+            </motion.button>
+            {s.status === 'PENDING' && (
+                <motion.button
+                    whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}
+                    onClick={() => openEdit(s)}
+                    style={{ padding: 6, background: bg3, border: '1px solid ' + border, borderRadius: 4, color: text2, cursor: 'pointer', display: 'flex' }}
+                    title="Edit"
+                >
+                    <Edit style={{ width: 14, height: 14 }} />
+                </motion.button>
+            )}
+            {s.status === 'PENDING' && (
+                <motion.button
+                    whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}
+                    onClick={() => setApproveConfirm(s)}
+                    style={{ padding: 6, background: bg3, border: '1px solid ' + border, borderRadius: 4, color: '#4ade80', cursor: 'pointer', display: 'flex' }}
+                    title="Approve"
+                >
+                    <CheckCircle style={{ width: 14, height: 14 }} />
+                </motion.button>
+            )}
+            {s.status === 'PENDING' && (
+                <motion.button
+                    whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}
+                    onClick={() => setRejectConfirm(s)}
+                    style={{ padding: 6, background: bg3, border: '1px solid ' + border, borderRadius: 4, color: '#e84040', cursor: 'pointer', display: 'flex' }}
+                    title="Reject"
+                >
+                    <XCircle style={{ width: 14, height: 14 }} />
+                </motion.button>
+            )}
+            {s.status === 'APPROVED' && (
+                <motion.button
+                    whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}
+                    onClick={() => setPayConfirm(s)}
+                    style={{ padding: 6, background: bg3, border: '1px solid ' + border, borderRadius: 4, color: '#4ade80', cursor: 'pointer', display: 'flex' }}
+                    title="Mark Paid"
+                >
+                    <CreditCard style={{ width: 14, height: 14 }} />
+                </motion.button>
+            )}
+            <motion.button
+                whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}
+                onClick={() => setDeleteConfirm(s)}
+                style={{ padding: 6, background: bg3, border: '1px solid ' + border, borderRadius: 4, color: '#e84040', cursor: 'pointer', display: 'flex' }}
+                title="Delete"
+            >
+                <Trash2 style={{ width: 14, height: 14 }} />
+            </motion.button>
+        </div>
+    );
 
     // ── Table View ──
     const renderTableView = () => (
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-            <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                    <thead style={{ backgroundColor: 'rgba(249,115,22,0.05)' }}>
-                        <tr>
-                            <th className="text-left py-4 px-6 font-semibold text-orange-500">Employee</th>
-                            <th className="text-left py-4 px-6 font-semibold text-orange-500">Period</th>
-                            <th className="text-left py-4 px-6 font-semibold text-orange-500">Amount</th>
-                            <th className="text-left py-4 px-6 font-semibold text-orange-500 hidden lg:table-cell">Net</th>
-                            <th className="text-left py-4 px-6 font-semibold text-orange-500">Status</th>
-                            <th className="text-left py-4 px-6 font-semibold text-orange-500 hidden md:table-cell">Requested</th>
-                            <th className="text-right py-4 px-6 font-semibold text-orange-500">Actions</th>
+        <div style={{ background: bg2, border: '1px solid ' + border, borderRadius: 4, overflow: 'hidden' }}>
+            <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <thead>
+                        <tr style={{ background: bg3 }}>
+                            {['Employee', 'Period', 'Amount', 'Net', 'Status', 'Requested', 'Actions'].map((h, i) => (
+                                <th key={h} style={{
+                                    textAlign: i === 6 ? 'right' : 'left',
+                                    padding: '14px 20px',
+                                    ...bc(10, 700, { letterSpacing: 3, textTransform: 'uppercase', color: text2 }),
+                                    display: (h === 'Net') ? undefined : undefined,
+                                }}>
+                                    {h}
+                                </th>
+                            ))}
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-100">
+                    <tbody>
                         {salaries.map((s, i) => (
-                            <motion.tr key={s.id} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.04 }} className="hover:bg-gray-50 transition-colors">
-                                <td className="py-4 px-6">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-full bg-orange-500 text-white font-medium flex items-center justify-center shrink-0">{s.admin?.adminName?.charAt(0) || '?'}</div>
-                                        <div><div className="font-medium text-gray-900">{s.admin?.adminName || 'Unknown'}</div><div className="text-xs text-gray-500">{s.admin?.adminEmail}</div></div>
+                            <motion.tr
+                                key={s.id}
+                                initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.04 }}
+                                style={{ background: bg2, borderBottom: '1px solid ' + border, cursor: 'default' }}
+                                onMouseEnter={e => e.currentTarget.style.background = bg3}
+                                onMouseLeave={e => e.currentTarget.style.background = bg2}
+                            >
+                                <td style={{ padding: '14px 20px' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                        <div style={{ width: 38, height: 38, borderRadius: '50%', background: ORG, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, ...bc(14, 700, {}) }}>
+                                            {s.admin?.adminName?.charAt(0) || '?'}
+                                        </div>
+                                        <div>
+                                            <div style={{ ...ba(13, 600, { color: textC }) }}>{s.admin?.adminName || 'Unknown'}</div>
+                                            <div style={{ ...ba(11, 400, { color: text2 }) }}>{s.admin?.adminEmail}</div>
+                                        </div>
                                     </div>
                                 </td>
-                                <td className="py-4 px-6 text-gray-700">{MONTHS[s.month]} {s.year}</td>
-                                <td className="py-4 px-6 font-medium text-gray-900">{formatCurrency(s.amount)}</td>
-                                <td className="py-4 px-6 font-medium text-gray-900 hidden lg:table-cell">{formatCurrency(s.netAmount)}</td>
-                                <td className="py-4 px-6"><span className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-medium border ${STATUS_CONFIG[s.status]?.color}`}>{STATUS_CONFIG[s.status]?.label}</span></td>
-                                <td className="py-4 px-6 text-gray-600 text-sm hidden md:table-cell">{formatDate(s.createdAt)}</td>
-                                <td className="py-4 px-6"><div className="flex justify-end">{renderActionButtons(s)}</div></td>
+                                <td style={{ padding: '14px 20px', ...ba(13, 400, { color: textC }) }}>{MONTHS[s.month]} {s.year}</td>
+                                <td style={{ padding: '14px 20px', ...ba(14, 700, { color: ORG }) }}>{formatCurrency(s.amount)}</td>
+                                <td style={{ padding: '14px 20px', ...ba(14, 700, { color: ORG }) }}>{formatCurrency(s.netAmount)}</td>
+                                <td style={{ padding: '14px 20px' }}>
+                                    <span style={{ ...ba(11, 600, { ...getStatusStyle(s.status), padding: '3px 10px', borderRadius: 20, display: 'inline-block', letterSpacing: 0.5 }) }}>
+                                        {STATUS_LABELS[s.status] || s.status}
+                                    </span>
+                                </td>
+                                <td style={{ padding: '14px 20px', ...ba(12, 400, { color: text2 }) }}>{formatDate(s.createdAt)}</td>
+                                <td style={{ padding: '14px 20px' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'flex-end' }}>{renderActionButtons(s)}</div>
+                                </td>
                             </motion.tr>
                         ))}
                     </tbody>
@@ -303,29 +483,55 @@ const SalaryManagement = () => {
 
     // ── Grid View ──
     const renderGridView = () => (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
             {salaries.map((s, i) => (
-                <motion.div key={s.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} whileHover={{ y: -4 }}
-                    className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-all relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-orange-50 to-amber-50 rounded-bl-full opacity-40 group-hover:opacity-70 transition-opacity" />
-                    <div className="relative">
-                        <div className="flex items-start justify-between mb-4">
-                            <div className="flex items-center gap-3">
-                                <div className="w-12 h-12 rounded-full bg-orange-500 text-white font-medium flex items-center justify-center shrink-0">{s.admin?.adminName?.charAt(0) || '?'}</div>
-                                <div><h3 className="font-semibold text-gray-900">{s.admin?.adminName}</h3><p className="text-xs text-gray-500">{s.admin?.adminEmail}</p></div>
+                <motion.div
+                    key={s.id}
+                    initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
+                    whileHover={{ y: -4 }}
+                    style={{ background: bg2, border: '1px solid ' + border, borderRadius: 4, padding: 20, position: 'relative', overflow: 'hidden' }}
+                    onMouseEnter={e => e.currentTarget.style.background = bg3}
+                    onMouseLeave={e => e.currentTarget.style.background = bg2}
+                >
+                    {/* Orange accent top bar */}
+                    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: ORG, borderRadius: '4px 4px 0 0' }} />
+                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 16, marginTop: 8 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                            <div style={{ width: 44, height: 44, borderRadius: '50%', background: ORG, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, ...bc(16, 700, {}) }}>
+                                {s.admin?.adminName?.charAt(0) || '?'}
                             </div>
-                            <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium border ${STATUS_CONFIG[s.status]?.color}`}>{STATUS_CONFIG[s.status]?.label}</span>
+                            <div>
+                                <div style={{ ...ba(13, 600, { color: textC }) }}>{s.admin?.adminName}</div>
+                                <div style={{ ...ba(11, 400, { color: text2 }) }}>{s.admin?.adminEmail}</div>
+                            </div>
                         </div>
-                        <div className="space-y-2 text-sm mb-4">
-                            <div className="flex justify-between"><span className="text-gray-500">Period</span><span className="font-medium text-gray-900">{MONTHS[s.month]} {s.year}</span></div>
-                            <div className="flex justify-between"><span className="text-gray-500">Amount</span><span className="font-medium text-gray-900">{formatCurrency(s.amount)}</span></div>
-                            {(s.bonus > 0 || s.deduction > 0) && <div className="flex justify-between"><span className="text-gray-500">Bonus / Deduction</span><span className="text-gray-700">+{formatCurrency(s.bonus)} / -{formatCurrency(s.deduction)}</span></div>}
-                            <div className="flex justify-between border-t pt-2"><span className="text-gray-500 font-medium">Net</span><span className="font-bold text-gray-900">{formatCurrency(s.netAmount)}</span></div>
+                        <span style={{ ...ba(11, 600, { ...getStatusStyle(s.status), padding: '3px 10px', borderRadius: 20, flexShrink: 0 }) }}>
+                            {STATUS_LABELS[s.status] || s.status}
+                        </span>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                            <span style={{ ...ba(12, 400, { color: text2 }) }}>Period</span>
+                            <span style={{ ...ba(12, 600, { color: textC }) }}>{MONTHS[s.month]} {s.year}</span>
                         </div>
-                        <div className="flex items-center justify-between pt-3 border-t border-gray-100 text-xs text-gray-500">
-                            <span>{formatDate(s.createdAt)}</span>
-                            {renderActionButtons(s)}
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                            <span style={{ ...ba(12, 400, { color: text2 }) }}>Amount</span>
+                            <span style={{ ...ba(13, 700, { color: ORG }) }}>{formatCurrency(s.amount)}</span>
                         </div>
+                        {(s.bonus > 0 || s.deduction > 0) && (
+                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                <span style={{ ...ba(12, 400, { color: text2 }) }}>Bonus / Deduction</span>
+                                <span style={{ ...ba(12, 400, { color: textC }) }}>+{formatCurrency(s.bonus)} / -{formatCurrency(s.deduction)}</span>
+                            </div>
+                        )}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid ' + border, paddingTop: 8 }}>
+                            <span style={{ ...ba(12, 600, { color: text2 }) }}>Net</span>
+                            <span style={{ ...ba(14, 700, { color: ORG }) }}>{formatCurrency(s.netAmount)}</span>
+                        </div>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 12, borderTop: '1px solid ' + border }}>
+                        <span style={{ ...ba(11, 400, { color: text3 }) }}>{formatDate(s.createdAt)}</span>
+                        {renderActionButtons(s)}
                     </div>
                 </motion.div>
             ))}
@@ -334,59 +540,89 @@ const SalaryManagement = () => {
 
     // ── List View ──
     const renderListView = () => (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 divide-y divide-gray-100">
+        <div style={{ background: bg2, border: '1px solid ' + border, borderRadius: 4, overflow: 'hidden' }}>
             {salaries.map((s, i) => (
-                <motion.div key={s.id} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.04 }} className="p-5 hover:bg-gray-50 transition-colors">
-                    <div className="flex items-center justify-between gap-4">
-                        <div className="flex items-center gap-4 flex-1 min-w-0">
-                            <div className="w-12 h-12 rounded-full bg-orange-500 text-white font-medium flex items-center justify-center shrink-0">{s.admin?.adminName?.charAt(0) || '?'}</div>
-                            <div className="flex-1 min-w-0">
-                                <div className="flex items-center flex-wrap gap-3 mb-1">
-                                    <h3 className="font-semibold text-gray-900 truncate">{s.admin?.adminName}</h3>
-                                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium border ${STATUS_CONFIG[s.status]?.color}`}>{STATUS_CONFIG[s.status]?.label}</span>
+                <motion.div
+                    key={s.id}
+                    initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.04 }}
+                    style={{ padding: '16px 20px', borderBottom: '1px solid ' + border, background: bg2 }}
+                    onMouseEnter={e => e.currentTarget.style.background = bg3}
+                    onMouseLeave={e => e.currentTarget.style.background = bg2}
+                >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 16, flex: 1, minWidth: 0 }}>
+                            <div style={{ width: 44, height: 44, borderRadius: '50%', background: ORG, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, ...bc(16, 700, {}) }}>
+                                {s.admin?.adminName?.charAt(0) || '?'}
+                            </div>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 10, marginBottom: 4 }}>
+                                    <span style={{ ...ba(13, 600, { color: textC }) }}>{s.admin?.adminName}</span>
+                                    <span style={{ ...ba(11, 600, { ...getStatusStyle(s.status), padding: '2px 8px', borderRadius: 20 }) }}>
+                                        {STATUS_LABELS[s.status] || s.status}
+                                    </span>
                                 </div>
-                                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-600">
-                                    <span>{MONTHS[s.month]} {s.year}</span>
-                                    <span className="font-medium">{formatCurrency(s.netAmount)}</span>
-                                    <span>{formatDate(s.createdAt)}</span>
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 16px' }}>
+                                    <span style={{ ...ba(12, 400, { color: text2 }) }}>{MONTHS[s.month]} {s.year}</span>
+                                    <span style={{ ...ba(13, 700, { color: ORG }) }}>{formatCurrency(s.netAmount)}</span>
+                                    <span style={{ ...ba(11, 400, { color: text3 }) }}>{formatDate(s.createdAt)}</span>
                                 </div>
                             </div>
                         </div>
-                        {renderActionButtons(s, 'md')}
+                        {renderActionButtons(s)}
                     </div>
                 </motion.div>
             ))}
         </div>
     );
 
-
-
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 via-orange-50/30 to-amber-50/20">
+        <div style={{ minHeight: '100vh', background: bg }}>
+            <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+
             {/* Header */}
-            <div className="bg-white shadow-sm border-b border-gray-200 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-orange-100/40 to-amber-100/40 rounded-full blur-3xl -mr-32 -mt-32" />
-                <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-yellow-100/40 to-orange-100/40 rounded-full blur-3xl -ml-24 -mb-24" />
-                <div className="mx-auto px-4 sm:px-6 py-6 relative">
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div style={{ background: bg2, borderBottom: '1px solid ' + border, position: 'relative', overflow: 'hidden' }}>
+                {/* Orange left accent bar */}
+                <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 4, background: ORG }} />
+                <div style={{ padding: '20px 24px 20px 32px' }}>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
                         <div>
-                            <div className="flex items-center space-x-3 mb-2">
-                                <motion.div animate={{ rotate: [0, 10, -10, 0] }} transition={{ duration: 2, repeat: Infinity, repeatDelay: 5 }}><Sparkles className="w-6 h-6" style={{ color: PRIMARY }} /></motion.div>
-                                <h1 className="text-2xl sm:text-3xl font-bold text-orange-500">Salary Management</h1>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+                                <motion.div animate={{ rotate: [0, 10, -10, 0] }} transition={{ duration: 2, repeat: Infinity, repeatDelay: 5 }}>
+                                    <Sparkles style={{ width: 20, height: 20, color: ORG }} />
+                                </motion.div>
+                                <h1 style={{ ...bb(28, { color: ORG, margin: 0, lineHeight: 1 }) }}>Salary Management</h1>
                             </div>
-                            <p className="text-sm text-gray-600">Request and manage monthly salary payments</p>
+                            <p style={{ ...ba(12, 400, { color: text2, margin: 0 }) }}>Request and manage monthly salary payments</p>
                         </div>
-                        <div className="flex items-center gap-3 flex-wrap">
-                            <motion.button whileHover={{ scale: 1.05, y: -2 }} whileTap={{ scale: 0.95 }} onClick={() => { loadSalaries(); loadStats(); }} disabled={loading} className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-50 shadow-sm disabled:opacity-50">
-                                <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />Refresh
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                            <motion.button
+                                whileHover={{ scale: 1.05, y: -2 }} whileTap={{ scale: 0.95 }}
+                                onClick={() => { loadSalaries(); loadStats(); }}
+                                disabled={loading}
+                                style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 16px', ...ba(12, 500, { color: text2 }), background: bg3, border: '1px solid ' + border, borderRadius: 4, cursor: 'pointer', opacity: loading ? 0.5 : 1 }}
+                            >
+                                <RefreshCw style={{ width: 14, height: 14, animation: loading ? 'spin 1s linear infinite' : 'none' }} />
+                                Refresh
                             </motion.button>
-                            <motion.button whileHover={{ scale: 1.05, y: -2 }} whileTap={{ scale: 0.95 }} onClick={() => setShowCreateModal(true)} className="flex items-center gap-2 px-4 py-2.5 text-sm bg-orange-500 text-white rounded-lg shadow-md hover:bg-orange-600">
-                                <Plus className="w-4 h-4" />{isSuperAdmin ? 'Record Salary' : 'Request Salary'}
+                            <motion.button
+                                whileHover={{ scale: 1.05, y: -2 }} whileTap={{ scale: 0.95 }}
+                                onClick={() => setShowCreateModal(true)}
+                                style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 16px', ...ba(12, 600, { color: '#fff' }), background: ORG, border: 'none', borderRadius: 4, cursor: 'pointer' }}
+                            >
+                                <Plus style={{ width: 14, height: 14 }} />
+                                {isSuperAdmin ? 'Record Salary' : 'Request Salary'}
                             </motion.button>
-                            <div className="flex items-center bg-gray-50 p-1 rounded-lg border border-gray-100">
+                            {/* View mode toggle */}
+                            <div style={{ display: 'flex', alignItems: 'center', background: bg3, border: '1px solid ' + border, borderRadius: 4, padding: 3, gap: 2 }}>
                                 {[{ mode: 'table', Icon: TableIcon }, { mode: 'grid', Icon: Grid3X3 }, { mode: 'list', Icon: List }].map(({ mode, Icon }) => (
-                                    <motion.button key={mode} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setViewMode(mode)}
-                                        className={`p-2.5 rounded transition-all ${viewMode === mode ? 'bg-orange-500 text-white shadow-sm' : 'text-gray-600 hover:bg-white'}`}><Icon className="w-5 h-5" /></motion.button>
+                                    <motion.button
+                                        key={mode}
+                                        whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                                        onClick={() => setViewMode(mode)}
+                                        style={{ padding: '6px 10px', borderRadius: 3, border: 'none', cursor: 'pointer', display: 'flex', background: viewMode === mode ? ORG : 'transparent', color: viewMode === mode ? '#fff' : text2 }}
+                                    >
+                                        <Icon style={{ width: 16, height: 16 }} />
+                                    </motion.button>
                                 ))}
                             </div>
                         </div>
@@ -394,67 +630,124 @@ const SalaryManagement = () => {
                 </div>
             </div>
 
-            <div className="mx-auto px-4 sm:px-6 py-8 space-y-6">
-                {/* Stats — 4+3 grid */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: 20 }}>
+                {/* Stats row 1 — 4 cols */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
                     {statCards.slice(0, 4).map((stat, i) => (
-                        <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }} whileHover={{ y: -4, scale: 1.02 }}
-                            className="relative p-4 rounded-xl shadow-sm border border-gray-100 bg-white overflow-hidden group cursor-pointer">
-                            <div className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-0 group-hover:opacity-5 transition-opacity`} />
-                            <div className="relative flex items-center space-x-3">
-                                <motion.div whileHover={{ rotate: 360, scale: 1.1 }} transition={{ duration: 0.5 }} className="p-2.5 rounded-lg shadow-sm shrink-0" style={{ backgroundColor: stat.bgColor }}><stat.icon className="w-4 h-4" style={{ color: stat.color }} /></motion.div>
-                                <div><p className="text-xs font-medium text-gray-600 mb-0.5">{stat.label}</p><p className="text-lg font-bold text-gray-900">{stat.value ?? '-'}</p></div>
+                        <motion.div
+                            key={i}
+                            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }}
+                            whileHover={{ y: -4 }}
+                            style={{ background: bg2, border: '1px solid ' + border, borderRadius: 4, padding: '16px 20px', position: 'relative', overflow: 'hidden', cursor: 'pointer' }}
+                        >
+                            <div style={{ position: 'absolute', top: 0, left: 0, width: 3, height: '100%', background: ORG }} />
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 14, paddingLeft: 8 }}>
+                                <div style={{ width: 40, height: 40, background: 'rgba(232,98,26,.1)', border: '1px solid rgba(232,98,26,.2)', borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                    <stat.icon style={{ width: 18, height: 18, color: ORG }} />
+                                </div>
+                                <div>
+                                    <p style={{ ...bc(10, 700, { letterSpacing: 3, textTransform: 'uppercase', color: text2, margin: '0 0 4px' }) }}>{stat.label}</p>
+                                    <p style={{ ...bb(28, { color: ORG, lineHeight: 1, margin: 0 }) }}>{stat.value ?? '-'}</p>
+                                </div>
                             </div>
-                            <div className="absolute top-0 right-0 w-14 h-14 opacity-10 rounded-bl-full" style={{ background: stat.color }} />
                         </motion.div>
                     ))}
                 </div>
-                <div className="grid grid-cols-3 gap-3">
+
+                {/* Stats row 2 — 3 cols */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
                     {statCards.slice(4).map((stat, i) => (
-                        <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: (i + 4) * 0.08 }} whileHover={{ y: -4, scale: 1.02 }}
-                            className="relative p-4 rounded-xl shadow-sm border border-gray-100 bg-white overflow-hidden group cursor-pointer">
-                            <div className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-0 group-hover:opacity-5 transition-opacity`} />
-                            <div className="relative flex items-center space-x-3">
-                                <motion.div whileHover={{ rotate: 360, scale: 1.1 }} transition={{ duration: 0.5 }} className="p-2.5 rounded-lg shadow-sm shrink-0" style={{ backgroundColor: stat.bgColor }}><stat.icon className="w-4 h-4" style={{ color: stat.color }} /></motion.div>
-                                <div><p className="text-xs font-medium text-gray-600 mb-0.5">{stat.label}</p><p className="text-lg font-bold text-gray-900">{stat.value ?? '-'}</p></div>
+                        <motion.div
+                            key={i}
+                            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: (i + 4) * 0.08 }}
+                            whileHover={{ y: -4 }}
+                            style={{ background: bg2, border: '1px solid ' + border, borderRadius: 4, padding: '16px 20px', position: 'relative', overflow: 'hidden', cursor: 'pointer' }}
+                        >
+                            <div style={{ position: 'absolute', top: 0, left: 0, width: 3, height: '100%', background: ORG }} />
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 14, paddingLeft: 8 }}>
+                                <div style={{ width: 40, height: 40, background: 'rgba(232,98,26,.1)', border: '1px solid rgba(232,98,26,.2)', borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                    <stat.icon style={{ width: 18, height: 18, color: ORG }} />
+                                </div>
+                                <div>
+                                    <p style={{ ...bc(10, 700, { letterSpacing: 3, textTransform: 'uppercase', color: text2, margin: '0 0 4px' }) }}>{stat.label}</p>
+                                    <p style={{ ...bb(28, { color: ORG, lineHeight: 1, margin: 0 }) }}>{stat.value ?? '-'}</p>
+                                </div>
                             </div>
-                            <div className="absolute top-0 right-0 w-14 h-14 opacity-10 rounded-bl-full" style={{ background: stat.color }} />
                         </motion.div>
                     ))}
                 </div>
 
                 {/* Filters */}
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-                    <div className="flex flex-col sm:flex-row gap-4">
-                        <div className="relative flex-1 max-w-lg">
-                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                            <input type="text" placeholder="Search by name, email..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full pl-12 pr-4 py-3 text-sm border border-gray-200 rounded-lg focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20" />
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+                    style={{ background: bg2, border: '1px solid ' + border, borderRadius: 4, padding: '16px 20px' }}
+                >
+                    {/* Section header */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+                        <div style={{ width: 3, height: 16, background: ORG, borderRadius: 2 }} />
+                        <span style={{ ...bc(11, 700, { letterSpacing: 3, textTransform: 'uppercase', color: text2 }) }}>Filters</span>
+                    </div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
+                        <div style={{ position: 'relative', flex: '1 1 240px', maxWidth: 400 }}>
+                            <Search style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', width: 16, height: 16, color: text2 }} />
+                            <input
+                                type="text"
+                                placeholder="Search by name, email..."
+                                value={searchTerm}
+                                onChange={e => setSearchTerm(e.target.value)}
+                                style={{ width: '100%', paddingLeft: 38, paddingRight: 14, paddingTop: 10, paddingBottom: 10, background: bg3, border: '1px solid ' + border, color: textC, borderRadius: 4, outline: 'none', boxSizing: 'border-box', ...ba(13, 400, {}) }}
+                            />
                         </div>
-                        <div className="flex items-center gap-3">
-                            <div className="relative min-w-[160px]">
-                                <Filter className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
-                                <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="w-full pl-11 pr-4 py-3 text-sm border border-gray-200 rounded-lg focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 appearance-none bg-white cursor-pointer">
-                                    <option value="">All Statuses</option>
-                                    {Object.entries(STATUS_CONFIG).map(([k, { label }]) => <option key={k} value={k}>{label}</option>)}
-                                </select>
-                            </div>
-                            {(statusFilter || searchTerm) && <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => { setStatusFilter(''); setSearchTerm(''); setCurrentPage(1); }} className="px-5 py-3 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-200 rounded-lg hover:bg-gray-200">Clear</motion.button>}
+                        <div style={{ position: 'relative', minWidth: 160 }}>
+                            <Filter style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', width: 14, height: 14, color: text2, pointerEvents: 'none' }} />
+                            <select
+                                value={statusFilter}
+                                onChange={e => setStatusFilter(e.target.value)}
+                                style={{ width: '100%', paddingLeft: 34, paddingRight: 14, paddingTop: 10, paddingBottom: 10, background: bg3, border: '1px solid ' + border, color: textC, borderRadius: 4, outline: 'none', appearance: 'none', cursor: 'pointer', ...ba(13, 400, {}) }}
+                            >
+                                <option value="">All Statuses</option>
+                                {Object.entries(STATUS_LABELS).map(([k, label]) => <option key={k} value={k}>{label}</option>)}
+                            </select>
                         </div>
+                        {(statusFilter || searchTerm) && (
+                            <motion.button
+                                whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                                onClick={() => { setStatusFilter(''); setSearchTerm(''); setCurrentPage(1); }}
+                                style={{ padding: '10px 18px', ...ba(12, 500, { color: text2 }), background: bg3, border: '1px solid ' + border, borderRadius: 4, cursor: 'pointer' }}
+                            >
+                                Clear
+                            </motion.button>
+                        )}
                     </div>
                 </motion.div>
 
                 {/* Content */}
                 {loading ? (
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12 text-center">
-                        <motion.div animate={{ rotate: 360 }} transition={{ duration: 1.2, repeat: Infinity, ease: 'linear' }} className="w-12 h-12 border-4 border-t-transparent rounded-full mx-auto mb-4" style={{ borderColor: PRIMARY, borderTopColor: 'transparent' }} />
-                        <p className="text-gray-600 font-medium">Loading salary requests...</p>
+                    <div style={{ background: bg2, border: '1px solid ' + border, borderRadius: 4, padding: '64px 24px', textAlign: 'center' }}>
+                        <div style={{ width: 44, height: 44, border: `3px solid ${border}`, borderTopColor: ORG, borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 16px' }} />
+                        <p style={{ ...ba(13, 500, { color: text2, margin: 0 }) }}>Loading salary requests...</p>
                     </div>
                 ) : salaries.length === 0 ? (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-white rounded-xl shadow-sm border border-gray-100 p-16 text-center">
-                        <DollarSign className="w-20 h-20 mx-auto mb-6 text-gray-300" />
-                        <h3 className="text-xl font-semibold text-gray-900 mb-3">{searchTerm || statusFilter ? 'No matching requests' : 'No salary requests yet'}</h3>
-                        <p className="text-gray-600 mb-8">{searchTerm || statusFilter ? 'Try adjusting filters' : isSuperAdmin ? 'Record the first salary entry' : 'Submit your first salary request'}</p>
-                        {!searchTerm && !statusFilter && <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setShowCreateModal(true)} className="px-6 py-3 bg-orange-500 text-white rounded-xl font-medium shadow-md hover:bg-orange-600">{isSuperAdmin ? 'Record Salary' : 'Request Salary'}</motion.button>}
+                    <motion.div
+                        initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                        style={{ background: bg2, border: '1px solid ' + border, borderRadius: 4, padding: '72px 24px', textAlign: 'center' }}
+                    >
+                        <DollarSign style={{ width: 64, height: 64, margin: '0 auto 24px', color: text3 }} />
+                        <h3 style={{ ...bc(18, 700, { color: textC, margin: '0 0 10px' }) }}>
+                            {searchTerm || statusFilter ? 'No matching requests' : 'No salary requests yet'}
+                        </h3>
+                        <p style={{ ...ba(13, 400, { color: text2, margin: '0 0 28px' }) }}>
+                            {searchTerm || statusFilter ? 'Try adjusting filters' : isSuperAdmin ? 'Record the first salary entry' : 'Submit your first salary request'}
+                        </p>
+                        {!searchTerm && !statusFilter && (
+                            <motion.button
+                                whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                                onClick={() => setShowCreateModal(true)}
+                                style={{ padding: '11px 24px', ...ba(13, 600, { color: '#fff' }), background: ORG, border: 'none', borderRadius: 4, cursor: 'pointer' }}
+                            >
+                                {isSuperAdmin ? 'Record Salary' : 'Request Salary'}
+                            </motion.button>
+                        )}
                     </motion.div>
                 ) : (
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
@@ -464,17 +757,51 @@ const SalaryManagement = () => {
 
                         {/* Pagination */}
                         {totalPages > 1 && (
-                            <div className="flex justify-center mt-10">
-                                <div className="flex items-center gap-2 bg-white px-3 py-3 rounded-xl border border-gray-200 shadow-sm">
-                                    <button onClick={() => setCurrentPage(1)} disabled={currentPage === 1} className="px-4 py-2 text-sm text-gray-600 bg-white border border-gray-200 rounded disabled:opacity-50">First</button>
-                                    <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="px-4 py-2 text-sm text-gray-600 bg-white border border-gray-200 rounded disabled:opacity-50"><ChevronLeft className="w-4 h-4" /></button>
+                            <div style={{ display: 'flex', justifyContent: 'center', marginTop: 28 }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: bg2, border: '1px solid ' + border, borderRadius: 4, padding: '8px 12px' }}>
+                                    <button
+                                        onClick={() => setCurrentPage(1)}
+                                        disabled={currentPage === 1}
+                                        style={{ padding: '6px 12px', ...ba(12, 500, { color: text2 }), background: bg3, border: '1px solid ' + border, borderRadius: 4, cursor: 'pointer', opacity: currentPage === 1 ? 0.4 : 1 }}
+                                    >
+                                        First
+                                    </button>
+                                    <button
+                                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                        disabled={currentPage === 1}
+                                        style={{ padding: '6px 10px', background: bg3, border: '1px solid ' + border, borderRadius: 4, cursor: 'pointer', color: text2, opacity: currentPage === 1 ? 0.4 : 1, display: 'flex' }}
+                                    >
+                                        <ChevronLeft style={{ width: 14, height: 14 }} />
+                                    </button>
                                     {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                                        let p = currentPage - 2 + i; if (p < 1) p = 1; if (p > totalPages) p = totalPages; return (
-                                            <button key={p} onClick={() => setCurrentPage(p)} className={`px-4 py-2 text-sm rounded-md ${currentPage === p ? 'bg-orange-500 text-white font-medium shadow-sm' : 'text-gray-600 hover:bg-gray-50 border border-gray-200'}`}>{p}</button>
+                                        let p = currentPage - 2 + i;
+                                        if (p < 1) p = 1;
+                                        if (p > totalPages) p = totalPages;
+                                        const isActive = currentPage === p;
+                                        return (
+                                            <button
+                                                key={p}
+                                                onClick={() => setCurrentPage(p)}
+                                                style={{ padding: '6px 12px', ...ba(12, isActive ? 700 : 500, { color: isActive ? '#fff' : text2 }), background: isActive ? ORG : bg3, border: isActive ? 'none' : '1px solid ' + border, borderRadius: 4, cursor: 'pointer' }}
+                                            >
+                                                {p}
+                                            </button>
                                         );
                                     })}
-                                    <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="px-4 py-2 text-sm text-gray-600 bg-white border border-gray-200 rounded disabled:opacity-50"><ChevronRight className="w-4 h-4" /></button>
-                                    <button onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages} className="px-4 py-2 text-sm text-gray-600 bg-white border border-gray-200 rounded disabled:opacity-50">Last</button>
+                                    <button
+                                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                        disabled={currentPage === totalPages}
+                                        style={{ padding: '6px 10px', background: bg3, border: '1px solid ' + border, borderRadius: 4, cursor: 'pointer', color: text2, opacity: currentPage === totalPages ? 0.4 : 1, display: 'flex' }}
+                                    >
+                                        <ChevronRight style={{ width: 14, height: 14 }} />
+                                    </button>
+                                    <button
+                                        onClick={() => setCurrentPage(totalPages)}
+                                        disabled={currentPage === totalPages}
+                                        style={{ padding: '6px 12px', ...ba(12, 500, { color: text2 }), background: bg3, border: '1px solid ' + border, borderRadius: 4, cursor: 'pointer', opacity: currentPage === totalPages ? 0.4 : 1 }}
+                                    >
+                                        Last
+                                    </button>
                                 </div>
                             </div>
                         )}
@@ -484,42 +811,94 @@ const SalaryManagement = () => {
 
             {/* Toast */}
             <AnimatePresence>{toast && (
-                <motion.div initial={{ opacity: 0, y: -60, scale: 0.9 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -60 }} className="fixed top-6 right-6 z-50">
-                    <div className={`flex items-center gap-3 px-6 py-4 rounded-xl shadow-2xl text-sm border ${toast.type === 'success' ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-300 text-green-800' : 'bg-gradient-to-r from-red-50 to-rose-50 border-red-300 text-red-800'}`}>
-                        {toast.type === 'success' ? <CheckCircle className="w-5 h-5 text-green-600" /> : <XCircle className="w-5 h-5 text-red-600" />}
-                        <span className="font-medium">{toast.message}</span>
-                        <button onClick={() => setToast(null)} className="ml-2 p-1 hover:bg-white/40 rounded-full"><X className="w-4 h-4" /></button>
+                <motion.div
+                    initial={{ opacity: 0, y: -60, scale: 0.9 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -60 }}
+                    style={{ position: 'fixed', top: 24, right: 24, zIndex: 50 }}
+                >
+                    <div style={{
+                        display: 'flex', alignItems: 'center', gap: 12, padding: '14px 20px', borderRadius: 4,
+                        boxShadow: '0 12px 40px rgba(0,0,0,.35)',
+                        background: toast.type === 'success' ? 'rgba(74,222,128,.15)' : 'rgba(232,64,64,.15)',
+                        border: `1px solid ${toast.type === 'success' ? 'rgba(74,222,128,.3)' : 'rgba(232,64,64,.3)'}`,
+                    }}>
+                        {toast.type === 'success'
+                            ? <CheckCircle style={{ width: 18, height: 18, color: '#4ade80', flexShrink: 0 }} />
+                            : <XCircle style={{ width: 18, height: 18, color: '#e84040', flexShrink: 0 }} />
+                        }
+                        <span style={{ ...ba(13, 600, { color: toast.type === 'success' ? '#4ade80' : '#e84040' }) }}>{toast.message}</span>
+                        <button
+                            onClick={() => setToast(null)}
+                            style={{ marginLeft: 8, background: 'transparent', border: 'none', cursor: 'pointer', padding: 4, color: text2, display: 'flex' }}
+                        >
+                            <X style={{ width: 14, height: 14 }} />
+                        </button>
                     </div>
                 </motion.div>
             )}</AnimatePresence>
 
             {/* Loading Overlay */}
             <AnimatePresence>{opLoading && (
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50">
-                    <motion.div initial={{ scale: 0.85 }} animate={{ scale: 1 }} className="bg-white rounded-2xl p-10 shadow-2xl flex flex-col items-center gap-5">
-                        <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }} className="w-14 h-14 border-4 border-t-transparent rounded-full" style={{ borderColor: PRIMARY, borderTopColor: 'transparent' }} />
-                        <span className="text-gray-700 font-medium text-lg">Processing...</span>
+                <motion.div
+                    initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                    style={{ position: 'fixed', inset: 0, background: isDark ? 'rgba(7,20,24,.7)' : 'rgba(245,239,230,.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}
+                >
+                    <motion.div
+                        initial={{ scale: 0.85 }} animate={{ scale: 1 }}
+                        style={{ background: bg2, border: '1px solid ' + border, borderRadius: 4, padding: '40px 56px', boxShadow: '0 24px 64px rgba(0,0,0,.4)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20 }}
+                    >
+                        <div style={{ width: 48, height: 48, border: `3px solid ${border}`, borderTopColor: ORG, borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+                        <span style={{ ...bc(13, 700, { letterSpacing: 2, textTransform: 'uppercase', color: text2 }) }}>Processing...</span>
                     </motion.div>
                 </motion.div>
             )}</AnimatePresence>
 
-            {/* Modals */}
-            <FormModal show={showCreateModal} isEdit={false} onClose={() => { setShowCreateModal(false); setFormData({ amount: '', month: new Date().getMonth() + 1, year: new Date().getFullYear(), reason: '', targetAdminId: '' }); }} onSubmit={handleCreate} formData={formData} setFormData={setFormData} opLoading={opLoading} isSuperAdmin={isSuperAdmin} adminList={adminList} />
-            <FormModal show={showEditModal} isEdit={true} onClose={() => setShowEditModal(false)} onSubmit={handleUpdate} formData={formData} setFormData={setFormData} opLoading={opLoading} isSuperAdmin={isSuperAdmin} adminList={adminList} />
+            {/* Form Modals */}
+            <FormModal
+                show={showCreateModal} isEdit={false}
+                onClose={() => { setShowCreateModal(false); setFormData({ amount: '', month: new Date().getMonth() + 1, year: new Date().getFullYear(), reason: '', targetAdminId: '' }); }}
+                onSubmit={handleCreate} formData={formData} setFormData={setFormData}
+                opLoading={opLoading} isSuperAdmin={isSuperAdmin} adminList={adminList}
+            />
+            <FormModal
+                show={showEditModal} isEdit={true}
+                onClose={() => setShowEditModal(false)}
+                onSubmit={handleUpdate} formData={formData} setFormData={setFormData}
+                opLoading={opLoading} isSuperAdmin={isSuperAdmin} adminList={adminList}
+            />
 
             {/* View Modal */}
             <AnimatePresence>{showViewModal && selected && (
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/40 backdrop-blur-md flex items-center justify-center z-50 p-4">
-                    <motion.div initial={{ scale: 0.88, y: 30 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.88, y: 30 }} className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden shadow-2xl flex flex-col">
-                        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-                            <div className="flex items-center gap-4">
-                                <div className="w-14 h-14 rounded-xl bg-orange-500 text-white font-bold flex items-center justify-center text-xl">{selected.admin?.adminName?.charAt(0) || '?'}</div>
-                                <div><h2 className="text-2xl font-bold text-gray-900">{selected.admin?.adminName}</h2><p className="text-sm text-gray-500">Salary Request Details</p></div>
+                <motion.div
+                    initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                    style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: 16 }}
+                >
+                    <motion.div
+                        initial={{ scale: 0.88, y: 30 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.88, y: 30 }}
+                        style={{ background: bg2, border: '1px solid ' + border, borderRadius: 4, width: '100%', maxWidth: 640, maxHeight: '90vh', overflow: 'hidden', boxShadow: '0 24px 64px rgba(0,0,0,.4)', display: 'flex', flexDirection: 'column' }}
+                    >
+                        {/* Modal header */}
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 24px', background: bg3, borderBottom: '1px solid ' + border }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                                <div style={{ width: 48, height: 48, borderRadius: 4, background: ORG, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', ...bc(20, 700, {}) }}>
+                                    {selected.admin?.adminName?.charAt(0) || '?'}
+                                </div>
+                                <div>
+                                    <h2 style={{ ...bc(17, 700, { color: textC, margin: '0 0 2px', letterSpacing: 0.5 }) }}>{selected.admin?.adminName}</h2>
+                                    <p style={{ ...ba(11, 400, { color: text2, margin: 0 }) }}>Salary Request Details</p>
+                                </div>
                             </div>
-                            <motion.button whileHover={{ scale: 1.1, rotate: 90 }} whileTap={{ scale: 0.9 }} onClick={() => setShowViewModal(false)} className="p-3 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-xl"><X className="w-6 h-6" /></motion.button>
+                            <motion.button
+                                whileHover={{ scale: 1.1, rotate: 90 }} whileTap={{ scale: 0.9 }}
+                                onClick={() => setShowViewModal(false)}
+                                style={{ background: 'transparent', border: 'none', color: text2, cursor: 'pointer', padding: 6, display: 'flex' }}
+                            >
+                                <X style={{ width: 20, height: 20 }} />
+                            </motion.button>
                         </div>
-                        <div className="flex-1 overflow-y-auto p-6 space-y-6">
-                            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+
+                        {/* Modal body */}
+                        <div style={{ flex: 1, overflowY: 'auto', padding: 24, display: 'flex', flexDirection: 'column', gap: 20 }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
                                 {[
                                     { label: 'Period', value: `${MONTHS[selected.month]} ${selected.year}` },
                                     { label: 'Status', value: selected.status, badge: true },
@@ -528,63 +907,165 @@ const SalaryManagement = () => {
                                     { label: 'Deduction', value: formatCurrency(selected.deduction) },
                                     { label: 'Net Amount', value: formatCurrency(selected.netAmount) },
                                 ].map((item, i) => (
-                                    <div key={i} className="bg-gray-50 p-4 rounded-xl">
-                                        <p className="text-gray-500 text-sm mb-1">{item.label}</p>
-                                        {item.badge ? <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium border ${STATUS_CONFIG[item.value]?.color}`}>{STATUS_CONFIG[item.value]?.label}</span>
-                                            : <p className="font-medium text-gray-900">{item.value}</p>}
+                                    <div key={i} style={{ background: bg3, border: '1px solid ' + border, borderRadius: 4, padding: '12px 16px' }}>
+                                        <p style={{ ...bc(10, 700, { letterSpacing: 2, textTransform: 'uppercase', color: text2, margin: '0 0 6px' }) }}>{item.label}</p>
+                                        {item.badge
+                                            ? <span style={{ ...ba(12, 600, { ...getStatusStyle(item.value), padding: '3px 10px', borderRadius: 20, display: 'inline-block' }) }}>
+                                                {STATUS_LABELS[item.value] || item.value}
+                                              </span>
+                                            : <p style={{ ...ba(14, 700, { color: ORG, margin: 0 }) }}>{item.value}</p>
+                                        }
                                     </div>
                                 ))}
                             </div>
-                            {selected.reason && <div><p className="text-gray-500 text-sm mb-2 font-medium">Reason</p><div className="bg-gray-50 p-4 rounded-xl text-gray-700">{selected.reason}</div></div>}
-                            {selected.rejectionReason && <div><p className="text-gray-500 text-sm mb-2 font-medium">Rejection Reason</p><div className="bg-red-50 border border-red-200 p-4 rounded-xl text-red-700">{selected.rejectionReason}</div></div>}
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="bg-gray-50 p-4 rounded-xl"><p className="text-gray-500 text-sm mb-1">Requested On</p><p className="font-medium text-gray-900">{formatDate(selected.createdAt)}</p></div>
-                                {selected.paidAt && <div className="bg-green-50 p-4 rounded-xl"><p className="text-green-600 text-sm mb-1">Paid On</p><p className="font-medium text-green-800">{formatDate(selected.paidAt)}</p></div>}
+
+                            {selected.reason && (
+                                <div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                                        <div style={{ width: 3, height: 14, background: ORG, borderRadius: 2 }} />
+                                        <span style={{ ...bc(10, 700, { letterSpacing: 3, textTransform: 'uppercase', color: text2 }) }}>Reason</span>
+                                    </div>
+                                    <div style={{ background: bg3, border: '1px solid ' + border, borderRadius: 4, padding: '12px 16px', ...ba(13, 400, { color: textC }) }}>
+                                        {selected.reason}
+                                    </div>
+                                </div>
+                            )}
+
+                            {selected.rejectionReason && (
+                                <div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                                        <div style={{ width: 3, height: 14, background: '#e84040', borderRadius: 2 }} />
+                                        <span style={{ ...bc(10, 700, { letterSpacing: 3, textTransform: 'uppercase', color: text2 }) }}>Rejection Reason</span>
+                                    </div>
+                                    <div style={{ background: 'rgba(232,64,64,.08)', border: '1px solid rgba(232,64,64,.2)', borderRadius: 4, padding: '12px 16px', ...ba(13, 400, { color: '#e84040' }) }}>
+                                        {selected.rejectionReason}
+                                    </div>
+                                </div>
+                            )}
+
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                                <div style={{ background: bg3, border: '1px solid ' + border, borderRadius: 4, padding: '12px 16px' }}>
+                                    <p style={{ ...bc(10, 700, { letterSpacing: 2, textTransform: 'uppercase', color: text2, margin: '0 0 6px' }) }}>Requested On</p>
+                                    <p style={{ ...ba(13, 600, { color: textC, margin: 0 }) }}>{formatDate(selected.createdAt)}</p>
+                                </div>
+                                {selected.paidAt && (
+                                    <div style={{ background: 'rgba(74,222,128,.08)', border: '1px solid rgba(74,222,128,.2)', borderRadius: 4, padding: '12px 16px' }}>
+                                        <p style={{ ...bc(10, 700, { letterSpacing: 2, textTransform: 'uppercase', color: '#4ade80', margin: '0 0 6px' }) }}>Paid On</p>
+                                        <p style={{ ...ba(13, 600, { color: '#4ade80', margin: 0 }) }}>{formatDate(selected.paidAt)}</p>
+                                    </div>
+                                )}
                             </div>
                         </div>
-                        <div className="p-6 border-t border-gray-200 flex justify-end"><button onClick={() => setShowViewModal(false)} className="px-8 py-3 text-sm font-medium text-gray-700 border border-gray-200 rounded-xl hover:bg-gray-50">Close</button></div>
+
+                        {/* Modal footer */}
+                        <div style={{ padding: '16px 24px', borderTop: '1px solid ' + border, display: 'flex', justifyContent: 'flex-end' }}>
+                            <button
+                                onClick={() => setShowViewModal(false)}
+                                style={{ padding: '10px 28px', ...ba(13, 500, { color: textC }), background: bg3, border: '1px solid ' + border, borderRadius: 4, cursor: 'pointer' }}
+                            >
+                                Close
+                            </button>
+                        </div>
                     </motion.div>
                 </motion.div>
             )}</AnimatePresence>
 
             {/* Delete Confirm */}
-            <ConfirmModal show={!!deleteConfirm} onClose={() => setDeleteConfirm(null)} onConfirm={() => handleDelete(deleteConfirm)} icon={AlertTriangle} iconBg="bg-gradient-to-br from-red-100 to-rose-100 text-red-600" title="Delete Request?" desc="This action cannot be undone." btnText="Delete" btnClass="bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700">
-                {deleteConfirm && <div className="bg-gray-50 rounded-xl p-4"><p className="text-gray-700">Delete <strong>{deleteConfirm.admin?.adminName}</strong>'s salary request for {MONTHS[deleteConfirm.month]} {deleteConfirm.year}?</p></div>}
+            <ConfirmModal
+                show={!!deleteConfirm}
+                onClose={() => setDeleteConfirm(null)}
+                onConfirm={() => handleDelete(deleteConfirm)}
+                icon={AlertTriangle} iconColor="#e84040"
+                title="Delete Request?"
+                desc="This action cannot be undone."
+                btnText="Delete" btnDanger
+            >
+                {deleteConfirm && (
+                    <div style={{ background: bg3, border: '1px solid ' + border, borderRadius: 4, padding: '12px 16px', marginBottom: 4 }}>
+                        <p style={{ ...ba(13, 400, { color: textC, margin: 0 }) }}>
+                            Delete <strong>{deleteConfirm.admin?.adminName}</strong>'s salary request for {MONTHS[deleteConfirm.month]} {deleteConfirm.year}?
+                        </p>
+                    </div>
+                )}
             </ConfirmModal>
 
             {/* Approve Confirm */}
-            <ConfirmModal show={!!approveConfirm} onClose={() => { setApproveConfirm(null); setApproveBonus(0); setApproveDeduction(0); }} onConfirm={() => handleApprove(approveConfirm)} icon={CheckCircle} iconBg="bg-gradient-to-br from-emerald-100 to-green-100 text-emerald-600" title="Approve Salary?" desc="Set bonus/deduction and approve the request." btnText="Approve" btnClass="bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700">
+            <ConfirmModal
+                show={!!approveConfirm}
+                onClose={() => { setApproveConfirm(null); setApproveBonus(0); setApproveDeduction(0); }}
+                onConfirm={() => handleApprove(approveConfirm)}
+                icon={CheckCircle} iconColor="#4ade80"
+                title="Approve Salary?"
+                desc="Set bonus/deduction and approve the request."
+                btnText="Approve"
+            >
                 {approveConfirm && (
-                    <div className="space-y-4">
-                        <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
-                            <p className="text-gray-700">Approving <strong>{approveConfirm.admin?.adminName}</strong>'s salary request of <strong>{formatCurrency(approveConfirm.amount)}</strong> for {MONTHS[approveConfirm.month]} {approveConfirm.year}</p>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                        <div style={{ background: 'rgba(74,222,128,.08)', border: '1px solid rgba(74,222,128,.2)', borderRadius: 4, padding: '12px 16px' }}>
+                            <p style={{ ...ba(13, 400, { color: textC, margin: 0 }) }}>
+                                Approving <strong>{approveConfirm.admin?.adminName}</strong>'s salary request of <strong style={{ color: ORG }}>{formatCurrency(approveConfirm.amount)}</strong> for {MONTHS[approveConfirm.month]} {approveConfirm.year}
+                            </p>
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-1">Bonus (RWF)</label>
-                                <input type="number" value={approveBonus} onChange={e => setApproveBonus(e.target.value)} placeholder="0" className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20" />
+                                <label style={{ ...bc(10, 700, { letterSpacing: 2, textTransform: 'uppercase', color: text2, display: 'block', marginBottom: 6 }) }}>Bonus (RWF)</label>
+                                <input
+                                    type="number" value={approveBonus} onChange={e => setApproveBonus(e.target.value)} placeholder="0"
+                                    style={{ width: '100%', padding: '10px 14px', background: bg3, border: '1px solid ' + border, color: textC, borderRadius: 4, outline: 'none', boxSizing: 'border-box', ...ba(13, 400, {}) }}
+                                />
                             </div>
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-1">Deduction (RWF)</label>
-                                <input type="number" value={approveDeduction} onChange={e => setApproveDeduction(e.target.value)} placeholder="0" className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20" />
+                                <label style={{ ...bc(10, 700, { letterSpacing: 2, textTransform: 'uppercase', color: text2, display: 'block', marginBottom: 6 }) }}>Deduction (RWF)</label>
+                                <input
+                                    type="number" value={approveDeduction} onChange={e => setApproveDeduction(e.target.value)} placeholder="0"
+                                    style={{ width: '100%', padding: '10px 14px', background: bg3, border: '1px solid ' + border, color: textC, borderRadius: 4, outline: 'none', boxSizing: 'border-box', ...ba(13, 400, {}) }}
+                                />
                             </div>
                         </div>
-                        <div className="bg-gray-50 rounded-xl p-4 text-sm">
-                            <span className="text-gray-500">Final Net Amount: </span>
-                            <span className="font-bold text-gray-900">{formatCurrency((approveConfirm.amount || 0) + (parseFloat(approveBonus) || 0) - (parseFloat(approveDeduction) || 0))}</span>
+                        <div style={{ background: bg3, border: '1px solid ' + border, borderRadius: 4, padding: '12px 16px' }}>
+                            <span style={{ ...ba(12, 400, { color: text2 }) }}>Final Net Amount: </span>
+                            <span style={{ ...ba(14, 700, { color: ORG }) }}>{formatCurrency((approveConfirm.amount || 0) + (parseFloat(approveBonus) || 0) - (parseFloat(approveDeduction) || 0))}</span>
                         </div>
                     </div>
                 )}
             </ConfirmModal>
 
             {/* Reject Confirm */}
-            <ConfirmModal show={!!rejectConfirm} onClose={() => { setRejectConfirm(null); setRejectionReason(''); }} onConfirm={() => handleReject(rejectConfirm)} icon={XCircle} iconBg="bg-gradient-to-br from-red-100 to-rose-100 text-red-600" title="Reject Salary?" desc="Provide a reason for rejection." btnText="Reject" btnClass="bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700">
-                <textarea value={rejectionReason} onChange={e => setRejectionReason(e.target.value)} rows={3} placeholder="Reason for rejection..." className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 resize-none" />
+            <ConfirmModal
+                show={!!rejectConfirm}
+                onClose={() => { setRejectConfirm(null); setRejectionReason(''); }}
+                onConfirm={() => handleReject(rejectConfirm)}
+                icon={XCircle} iconColor="#e84040"
+                title="Reject Salary?"
+                desc="Provide a reason for rejection."
+                btnText="Reject" btnDanger
+            >
+                <textarea
+                    value={rejectionReason}
+                    onChange={e => setRejectionReason(e.target.value)}
+                    rows={3}
+                    placeholder="Reason for rejection..."
+                    style={{ width: '100%', padding: '10px 14px', background: bg3, border: '1px solid ' + border, color: textC, borderRadius: 4, outline: 'none', resize: 'none', boxSizing: 'border-box', ...ba(13, 400, {}) }}
+                />
             </ConfirmModal>
 
             {/* Pay Confirm */}
-            <ConfirmModal show={!!payConfirm} onClose={() => setPayConfirm(null)} onConfirm={() => handlePay(payConfirm)} icon={CreditCard} iconBg="bg-gradient-to-br from-green-100 to-emerald-100 text-green-600" title="Mark as Paid?" desc="Confirm salary payment." btnText="Mark Paid" btnClass="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700">
-                {payConfirm && <div className="bg-green-50 border border-green-200 rounded-xl p-4"><p className="text-gray-700">Confirm payment of <strong>{formatCurrency(payConfirm.netAmount)}</strong> to <strong>{payConfirm.admin?.adminName}</strong> for {MONTHS[payConfirm.month]} {payConfirm.year}?</p></div>}
+            <ConfirmModal
+                show={!!payConfirm}
+                onClose={() => setPayConfirm(null)}
+                onConfirm={() => handlePay(payConfirm)}
+                icon={CreditCard} iconColor="#4ade80"
+                title="Mark as Paid?"
+                desc="Confirm salary payment."
+                btnText="Mark Paid"
+            >
+                {payConfirm && (
+                    <div style={{ background: 'rgba(74,222,128,.08)', border: '1px solid rgba(74,222,128,.2)', borderRadius: 4, padding: '12px 16px' }}>
+                        <p style={{ ...ba(13, 400, { color: textC, margin: 0 }) }}>
+                            Confirm payment of <strong style={{ color: ORG }}>{formatCurrency(payConfirm.netAmount)}</strong> to <strong>{payConfirm.admin?.adminName}</strong> for {MONTHS[payConfirm.month]} {payConfirm.year}?
+                        </p>
+                    </div>
+                )}
             </ConfirmModal>
         </div>
     );

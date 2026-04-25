@@ -1,47 +1,86 @@
 import React from 'react';
 import Avatar from '../ui/Avatar';
+import { useDashboardTheme } from '../../../../utils/dashboardTheme';
+import { ORG, TEAL, bb, bc, ba } from '../../../../utils/homeConstants';
+import { motion } from 'framer-motion';
 
 /**
  * Contacts list component - horizontal scrolling contacts with avatars
  */
 const ContactsList = ({ contacts = [], onlineUsers = new Map() }) => {
-    // Helper function to check if a contact is online
-    const isContactOnline = (contactId) => {
-        // Contacts can be either ADMIN or USER type
-        // Check if the contact ID exists in onlineUsers Map
-        return onlineUsers.has(contactId);
-    };
+    const { bg, bg2, textC, text2, text3, border } = useDashboardTheme();
 
-    // Filter to show only online contacts
+    const isContactOnline = (contactId) => onlineUsers.has(contactId);
+
     const onlineContacts = contacts.filter(contact =>
         isContactOnline(contact.contactId || contact.id)
     );
 
-    if (onlineContacts.length === 0) {
-        return null; // Don't show if no one is online
-    }
+    if (onlineContacts.length === 0) return null;
 
     return (
-        <div className="px-4 py-4 bg-white border-b border-gray-200">
-            <h3 className="text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wider">Online ({onlineContacts.length})</h3>
-            <div className="flex space-x-4 overflow-x-auto pb-2 scrollbar-thin">
+        <div style={{ padding: '24px 20px', background: bg, borderBottom: `1px solid ${border}` }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                <h3 style={{ ...ba(11, 700, { color: text3, letterSpacing: 1.5, textTransform: 'uppercase', margin: 0 }) }}>
+                    Active Now
+                </h3>
+                <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#10b981', boxShadow: '0 0 10px #10b981' }} />
+            </div>
+            
+            <div style={{ 
+                display: 'flex', 
+                gap: 20, 
+                overflowX: 'auto', 
+                paddingBottom: 8,
+                msOverflowStyle: 'none',
+                scrollbarWidth: 'none'
+            }} className="no-scrollbar">
                 {onlineContacts.map((contact) => (
-                    <div
+                    <motion.div
                         key={contact.id}
-                        className="flex flex-col items-center min-w-[60px] cursor-pointer hover:opacity-80 transition-opacity"
+                        whileHover={{ y: -4 }}
+                        whileTap={{ scale: 0.95 }}
+                        style={{ 
+                            display: 'flex', 
+                            flexDirection: 'column', 
+                            alignItems: 'center', 
+                            minWidth: 56, 
+                            cursor: 'pointer' 
+                        }}
                     >
-                        <div className="relative">
+                        <div style={{ position: 'relative' }}>
                             <Avatar
                                 avatar={contact.avatar}
+                                initial={contact.initial || contact.name?.charAt(0)}
                                 name={contact.name}
                                 size="lg"
                                 online={true}
                             />
+                            <div style={{ 
+                                position: 'absolute', 
+                                bottom: 2, 
+                                right: 2, 
+                                width: 12, 
+                                height: 12, 
+                                background: '#10b981', 
+                                borderRadius: '50%', 
+                                border: `2.5px solid ${bg}`,
+                                boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                            }} />
                         </div>
-                        <span className="text-xs text-gray-600 mt-1 truncate max-w-[60px] text-center">
+                        <span style={{ 
+                            ...ba(11, 600, { 
+                                color: textC, 
+                                marginTop: 10, 
+                                maxWidth: 64, 
+                                textAlign: 'center',
+                                fontSize: '0.65rem',
+                                letterSpacing: 0.3
+                            }) 
+                        }} className="truncate">
                             {contact.name?.split(' ')[0]}
                         </span>
-                    </div>
+                    </motion.div>
                 ))}
             </div>
         </div>

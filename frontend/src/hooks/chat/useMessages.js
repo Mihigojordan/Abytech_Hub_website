@@ -39,7 +39,9 @@ export const useMessages = (currentUser = null) => {
                 sender: msg.senderName || msg.sender || msg.senderId, // Prioritize senderName
                 avatar: msg.senderAvatar,
                 initial: msg.senderInitial,
-                isRead: msg.isRead || (msg.readers && msg.readers.length > 0) // Check if read by current user
+                isRead: msg.isRead || (msg.readers && msg.readers.some(r => 
+                    String(r.readerId) !== String(msg.senderId) || r.readerType !== msg.senderType
+                ))
             };
         });
     }, [currentUser]);
@@ -401,10 +403,14 @@ export const useMessages = (currentUser = null) => {
                             updatedReaders.push({ readerId, readerType });
                         }
 
+                        const isReadByOthers = updatedReaders.some(
+                            r => String(r.readerId) !== String(msg.senderId) || r.readerType !== msg.senderType
+                        );
+
                         return {
                             ...msg,
                             readers: updatedReaders,
-                            isRead: true // Mark as read
+                            isRead: isReadByOthers
                         };
                     }
                     return msg;

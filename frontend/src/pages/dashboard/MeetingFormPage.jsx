@@ -4,11 +4,14 @@ import Swal from 'sweetalert2';
 import meetingService from '../../services/meetingService';
 import adminAuthService from '../../services/adminAuthService';
 import MeetingForm from '../../components/dashboard/meeting/MeetingForm';
+import { useDashboardTheme } from '../../utils/dashboardTheme';
+import { ORG, TEAL, bb, bc, ba } from '../../utils/homeConstants';
 
 const MeetingFormPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const isEditMode = Boolean(id);
+  const { isDark, bg, bg2, bg3, textC, text2, text3, border } = useDashboardTheme();
 
   const [admins, setAdmins] = useState([]);
   const [meeting, setMeeting] = useState(null);
@@ -129,14 +132,20 @@ const MeetingFormPage = () => {
     return (
       <div
         className="min-h-screen flex items-center justify-center"
-        style={{
-          fontFamily: "'Plus Jakarta Sans', sans-serif",
-          background: 'linear-gradient(135deg, #fffbeb 0%, #fef3c7 50%, #fff7ed 100%)',
-        }}
+        style={{ background: bg, fontFamily: "'Barlow',sans-serif" }}
       >
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-orange-200 border-t-orange-500"></div>
-          <p className="mt-4 text-stone-600 font-medium">
+          <div
+            className="inline-block animate-spin rounded-full h-12 w-12"
+            style={{
+              border: `4px solid ${border}`,
+              borderTopColor: ORG,
+            }}
+          />
+          <p
+            className="mt-4 font-medium"
+            style={{ ...ba(14, 500, { color: text2 }) }}
+          >
             {isEditMode ? 'Loading meeting...' : 'Preparing form...'}
           </p>
         </div>

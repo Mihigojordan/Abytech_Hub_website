@@ -1,10 +1,18 @@
-import { useState } from "react";
+import React, { useState } from 'react';
+import { 
+  ArrowLeft, Edit, Calendar, Clock, Users, CheckCircle2, 
+  Target, BarChart3, MessageSquare, ChevronRight, Zap,
+  Circle, ListTodo, ClipboardCheck
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useDashboardTheme } from '../../../utils/dashboardTheme';
+import { ORG, TEAL, bb, bc, ba } from '../../../utils/homeConstants';
 
 const STATUS_META = {
-  PENDING: { bg: "bg-yellow-50", text: "text-yellow-700", border: "border-yellow-200", dot: "bg-yellow-500", label: "Pending" },
-  IN_PROGRESS: { bg: "bg-blue-50", text: "text-blue-700", border: "border-blue-200", dot: "bg-blue-500", label: "In Progress" },
-  COMPLETED: { bg: "bg-green-50", text: "text-green-700", border: "border-green-200", dot: "bg-green-500", label: "Completed" },
-  MISSED: { bg: "bg-red-50", text: "text-red-700", border: "border-red-200", dot: "bg-red-500", label: "Missed" },
+  PENDING: { label: 'PENDING', color: '#f59e0b', icon: Clock },
+  IN_PROGRESS: { label: 'IN PROGRESS', color: TEAL, icon: Zap },
+  COMPLETED: { label: 'COMPLETED', color: '#10b981', icon: CheckCircle2 },
+  MISSED: { label: 'MISSED', color: '#ef4444', icon: Target },
 };
 
 function initials(name) {
@@ -14,401 +22,277 @@ function initials(name) {
 
 function formatDate(dt) {
   if (!dt) return "—";
-  const d = new Date(dt);
-  return d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" });
+  return new Date(dt).toLocaleDateString("en-GB", { weekday: "short", month: "short", day: "numeric", year: "numeric" });
 }
 
 function formatDateRange(start, end) {
   if (!start || !end) return "—";
-  const s = new Date(start);
-  const e = new Date(end);
-  const startStr = s.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-  const endStr = e.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-  return `${startStr} — ${endStr}`;
-}
-
-function Badge({ children, className = "" }) {
-  return (
-    <span className={`inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full ${className}`}>
-      {children}
-    </span>
-  );
-}
-
-function SectionCard({ title, count, icon, children, empty, emptyIcon, emptyText }) {
-  return (
-    <div className="bg-white border border-stone-200 rounded-2xl overflow-hidden shadow-sm">
-      <div className="flex items-center justify-between px-6 py-4 border-b border-stone-100">
-        <div className="flex items-center gap-2.5">
-          <span className="text-base">{icon}</span>
-          <h3 className="font-bold text-stone-800 text-sm">{title}</h3>
-          {count !== undefined && (
-            <span className="text-xs font-bold bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full">{count}</span>
-          )}
-        </div>
-      </div>
-      {count === 0 ? (
-        <div className="flex flex-col items-center py-10 text-center px-6">
-          <span className="text-4xl mb-2 opacity-40">{emptyIcon || "—"}</span>
-          <p className="text-sm text-stone-400 font-medium">{emptyText || "Nothing here"}</p>
-        </div>
-      ) : (
-        <div className="divide-y divide-stone-100">{children}</div>
-      )}
-    </div>
-  );
+  const s = new Date(start).toLocaleDateString("en-GB", { month: "short", day: "numeric" });
+  const e = new Date(end).toLocaleDateString("en-GB", { month: "short", day: "numeric", year: "numeric" });
+  return `${s.toUpperCase()} — ${e.toUpperCase()}`;
 }
 
 const TABS = [
-  { id: "overview", label: "Overview", icon: "◎" },
-  { id: "tasks", label: "Tasks", icon: "✅" },
-  { id: "review", label: "Review Notes", icon: "💬" },
+  { id: "overview", label: "OVERVIEW", icon: BarChart3 },
+  { id: "tasks", label: "TASK PROTOCOL", icon: ListTodo },
+  { id: "review", label: "TEAM REFLECTIONS", icon: MessageSquare },
 ];
 
 export default function WeeklyGoalView({ goal, onEdit, onBack }) {
+  const { bg, bg2, textC, text2, text3, border } = useDashboardTheme();
   const [tab, setTab] = useState("overview");
 
   if (!goal) return null;
 
   const status = STATUS_META[goal.status] || STATUS_META.PENDING;
 
-  // Parse tasks and reviewNotes
   let tasks = [];
-  if (goal.tasks) {
-    try {
-      tasks = typeof goal.tasks === 'string' ? JSON.parse(goal.tasks) : goal.tasks;
-    } catch {
-      tasks = [];
-    }
-  }
+  try { tasks = typeof goal.tasks === 'string' ? JSON.parse(goal.tasks) : (goal.tasks || []); } catch { tasks = []; }
 
   let reviewNotes = [];
-  if (goal.reviewNotes) {
-    try {
-      reviewNotes = typeof goal.reviewNotes === 'string' ? JSON.parse(goal.reviewNotes) : goal.reviewNotes;
-    } catch {
-      reviewNotes = [];
-    }
-  }
+  try { reviewNotes = typeof goal.reviewNotes === 'string' ? JSON.parse(goal.reviewNotes) : (goal.reviewNotes || []); } catch { reviewNotes = []; }
 
   const completedTasks = tasks.filter(t => t.done).length;
   const progress = tasks.length > 0 ? Math.round((completedTasks / tasks.length) * 100) : (goal.progress || 0);
 
-  const tabCounts = {
-    tasks: tasks.length,
-    review: reviewNotes.length,
-  };
-
   const getProgressColor = () => {
-    if (progress >= 80) return 'from-green-500 to-emerald-600';
-    if (progress >= 50) return 'from-blue-500 to-indigo-600';
-    if (progress >= 25) return 'from-yellow-500 to-amber-600';
-    return 'from-gray-400 to-gray-500';
+    if (progress >= 80) return '#10b981';
+    if (progress >= 50) return TEAL;
+    if (progress >= 25) return '#f59e0b';
+    return '#94a3b8';
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50/20 to-stone-50 px-4 py-10 pb-24">
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-        .wgv-wrap * { font-family: 'Plus Jakarta Sans', sans-serif; }
-        .tab-scroll::-webkit-scrollbar { display: none; }
-        .progress-bar { transition: width 0.6s cubic-bezier(.4,0,.2,1); }
-      `}</style>
-
-      <div className="wgv-wrap w-full  mx-auto">
-
-        {/* Back + Edit bar */}
-        <div className="flex items-center justify-between mb-6">
+    <div style={{ background: bg, minHeight: '100vh', paddingBottom: 80 }}>
+      <div className="max-w-[1200px] mx-auto px-6 py-10">
+        
+        {/* Navigation */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 40 }}>
           <button
-            type="button"
             onClick={onBack}
-            className="flex items-center gap-2 text-sm font-semibold text-stone-500 hover:text-orange-600 transition-colors group"
+            style={{ background: 'none', border: 'none', color: text3, display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', ...bc(12, 700) }}
           >
-            <svg className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
-            </svg>
-            All Goals
+            <ArrowLeft size={16} /> BACK TO ARCHIVE
           </button>
-          <button
-            type="button"
-            onClick={onEdit}
-            className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold px-4 py-2 rounded-xl shadow-sm shadow-orange-200 hover:shadow-orange-300 transition-all hover:-translate-y-0.5 active:translate-y-0"
-          >
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-            </svg>
-            Edit Goal
-          </button>
+          <div style={{ ...bc(12, 800, { color: text3, letterSpacing: '0.1em' }) }}>
+            GOALS / <span style={{ color: ORG }}>SESSION VIEW</span>
+          </div>
         </div>
 
-        {/* Hero Card */}
-        <div className="bg-white border border-stone-200 rounded-2xl p-7 shadow-sm mb-5">
-          <div className="flex items-start justify-between gap-4 flex-wrap">
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-3 flex-wrap">
-                <Badge className={`${status.bg} ${status.text} border ${status.border}`}>
-                  <span className={`w-1.5 h-1.5 rounded-full ${status.dot}`} />
-                  {status.label}
-                </Badge>
+        {/* Hero Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          style={{ 
+            background: bg2, border: `1px solid ${border}`, borderRadius: 40, padding: '48px', 
+            marginBottom: 32, boxShadow: '0 20px 60px rgba(0,0,0,0.02)', position: 'relative', overflow: 'hidden' 
+          }}
+        >
+          <div style={{ position: 'absolute', top: 0, right: 0, width: '40%', height: '100%', background: `linear-gradient(225deg, ${ORG}05 0%, transparent 70%)` }}></div>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center relative z-10">
+            <div className="lg:col-span-8">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
+                <span style={{ background: `${status.color}15`, color: status.color, padding: '6px 16px', borderRadius: 10, ...bc(10, 800), display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <status.icon size={12} /> {status.label}
+                </span>
+                <span style={{ color: text3, ...bc(10, 800) }}>•</span>
+                <div style={{ color: text2, ...bc(10, 800) }}>
+                  WEEK {formatDateRange(goal.weekStart, goal.weekEnd)}
+                </div>
               </div>
-              <h1 className="text-2xl font-extrabold text-stone-900 tracking-tight leading-tight mb-2">
-                {goal.title}
-              </h1>
-              {goal.description && (
-                <p className="text-sm text-stone-500 font-medium leading-relaxed max-w-xl">{goal.description}</p>
-              )}
+
+              <h1 style={{ ...bc(48, 800, { color: textC, margin: '0 0 16px', lineHeight: 1.1 }) }}>{goal.title}</h1>
+              <p style={{ ...ba(16, 500, { color: text2, margin: 0, lineHeight: 1.6, maxWidth: 600 }) }}>{goal.description}</p>
             </div>
 
-            {/* Progress Circle */}
-            <div className="bg-orange-50 border border-orange-100 rounded-2xl px-5 py-4 text-center shrink-0">
-              <div className="text-2xl font-extrabold text-orange-500 leading-none">{progress}%</div>
-              <div className="text-[11px] font-bold text-orange-300 uppercase tracking-widest mt-1">Progress</div>
+            <div className="lg:col-span-4 flex justify-end">
+              <div style={{ 
+                width: 140, height: 140, borderRadius: '50%', border: `8px solid ${border}`, 
+                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                background: bg, boxShadow: `0 10px 30px rgba(0,0,0,0.05)`
+              }}>
+                <span style={{ ...bc(32, 800, { color: getProgressColor(), lineHeight: 1 }) }}>{progress}%</span>
+                <span style={{ ...bc(10, 800, { color: text3, letterSpacing: '0.05em', marginTop: 4 }) }}>ACHIEVED</span>
+              </div>
             </div>
           </div>
 
-          {/* Meta row */}
-          <div className="mt-5 pt-5 border-t border-stone-100 grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <div>
-              <div className="text-[11px] font-bold text-stone-400 uppercase tracking-widest mb-1">Week</div>
-              <div className="text-sm font-semibold text-stone-700">{formatDateRange(goal.weekStart, goal.weekEnd)}</div>
-            </div>
-            <div>
-              <div className="text-[11px] font-bold text-stone-400 uppercase tracking-widest mb-1">Tasks</div>
-              <div className="text-sm font-semibold text-stone-700">{completedTasks} / {tasks.length} done</div>
-            </div>
-            <div>
-              <div className="text-[11px] font-bold text-stone-400 uppercase tracking-widest mb-1">Owner</div>
-              <div className="text-sm font-semibold text-stone-700">{goal.owner?.adminName || "—"}</div>
-            </div>
-            <div>
-              <div className="text-[11px] font-bold text-stone-400 uppercase tracking-widest mb-1">Last Updated</div>
-              <div className="text-sm font-semibold text-stone-700">{formatDate(goal.updatedAt)}</div>
-            </div>
-          </div>
-        </div>
+          <button
+            onClick={onEdit}
+            style={{ 
+              position: 'absolute', bottom: 48, right: 48, background: ORG, color: '#fff', border: 'none', 
+              padding: '12px 24px', borderRadius: 12, cursor: 'pointer', ...bc(12, 800),
+              display: 'flex', alignItems: 'center', gap: 10, boxShadow: `0 10px 25px ${ORG}40`
+            }}
+          >
+            <Edit size={16} /> MODIFY GOAL
+          </button>
+        </motion.div>
 
-        {/* Progress Bar */}
-        <div className="bg-white border border-stone-200 rounded-2xl p-5 shadow-sm mb-5">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[11px] font-bold text-stone-400 uppercase tracking-widest">Task Completion</span>
-            <span className="text-sm font-extrabold text-orange-500">{progress}%</span>
-          </div>
-          <div className="w-full bg-stone-100 rounded-full h-3 overflow-hidden">
-            <div
-              className={`progress-bar h-full rounded-full bg-gradient-to-r ${getProgressColor()}`}
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-          <div className="flex items-center justify-between mt-2">
-            <span className="text-xs text-stone-400 font-medium">{completedTasks} done · {tasks.length - completedTasks} remaining</span>
-          </div>
-        </div>
-
-        {/* Stats Row */}
-        <div className="grid grid-cols-3 gap-3 mb-5">
+        {/* Quick Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-32">
           {[
-            { label: "Tasks", value: tasks.length, sub: `${completedTasks} done`, icon: "✅", color: "text-green-600", bg: "bg-green-50" },
-            { label: "Notes", value: reviewNotes.length, sub: "reflections", icon: "💬", color: "text-purple-600", bg: "bg-purple-50" },
-            { label: "Status", value: status.label, sub: "current", icon: "📊", color: "text-blue-600", bg: "bg-blue-50" },
-          ].map((s) => (
-            <div key={s.label} className="bg-white border border-stone-200 rounded-2xl px-4 py-4 shadow-sm flex flex-col gap-1">
-              <div className={`w-8 h-8 ${s.bg} rounded-xl flex items-center justify-center text-sm mb-1`}>{s.icon}</div>
-              <div className={`text-xl font-extrabold ${s.color} leading-none`}>{s.value}</div>
-              <div className="text-[11px] font-bold text-stone-400 uppercase tracking-widest">{s.label}</div>
-              <div className="text-[11px] text-stone-400">{s.sub}</div>
+            { label: 'TASK PROGRESS', value: `${completedTasks} / ${tasks.length}`, sub: 'UNITS COMPLETED', icon: ClipboardCheck, color: TEAL },
+            { label: 'TEAM FEEDBACK', value: reviewNotes.length, sub: 'REFLECTIONS LOGGED', icon: MessageSquare, color: '#8b5cf6' },
+            { label: 'PRINCIPAL OWNER', value: goal.owner?.adminName?.toUpperCase() || '—', sub: goal.owner?.adminEmail?.toLowerCase() || '—', icon: Users, color: ORG },
+          ].map((stat, i) => (
+            <div key={i} style={{ background: bg2, border: `1px solid ${border}`, borderRadius: 32, padding: 32, display: 'flex', alignItems: 'center', gap: 20 }}>
+              <div style={{ width: 56, height: 56, borderRadius: 16, background: `${stat.color}10`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <stat.icon size={24} style={{ color: stat.color }} />
+              </div>
+              <div>
+                <p style={{ ...bc(10, 800, { color: text3, margin: 0, letterSpacing: '0.05em' }) }}>{stat.label}</p>
+                <p style={{ ...bc(20, 800, { color: textC, margin: '4px 0' }) }}>{stat.value}</p>
+                <p style={{ ...ba(11, 600, { color: text3, margin: 0 }) }}>{stat.sub}</p>
+              </div>
             </div>
           ))}
         </div>
 
-        {/* Tabs */}
-        <div className="tab-scroll flex gap-1 bg-white border border-stone-200 rounded-2xl p-1.5 mb-5 shadow-sm overflow-x-auto">
-          {TABS.map((t) => {
-            const active = tab === t.id;
-            const count = tabCounts[t.id];
-            return (
-              <button
-                key={t.id}
-                type="button"
-                onClick={() => setTab(t.id)}
-                className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all duration-150 flex-1 justify-center uppercase tracking-wide ${
-                  active ? "bg-orange-500 text-white shadow-md shadow-orange-200" : "text-stone-400 hover:bg-stone-50 hover:text-stone-600"
-                }`}
-              >
-                <span>{t.icon}</span>
-                <span className="hidden sm:inline">{t.label}</span>
-                {count !== undefined && count > 0 && (
-                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${active ? "bg-white/25 text-white" : "bg-orange-100 text-orange-600"}`}>
-                    {count}
-                  </span>
-                )}
-              </button>
-            );
-          })}
+        {/* Tab System */}
+        <div style={{ display: 'flex', gap: 8, background: bg2, border: `1px solid ${border}`, padding: 6, borderRadius: 20, width: 'fit-content', margin: '0 auto 48px' }}>
+          {TABS.map(t => (
+            <button
+              key={t.id}
+              onClick={() => setTab(t.id)}
+              style={{ 
+                display: 'flex', alignItems: 'center', gap: 10, padding: '12px 24px', borderRadius: 16, border: 'none',
+                background: tab === t.id ? ORG : 'transparent', color: tab === t.id ? '#fff' : text3,
+                cursor: 'pointer', ...bc(11, 800), transition: 'all 0.2s'
+              }}
+            >
+              <t.icon size={14} /> {t.label}
+            </button>
+          ))}
         </div>
 
-        {/* OVERVIEW TAB */}
-        {tab === "overview" && (
-          <div className="space-y-4">
-            {/* Goal Info */}
-            <div className="bg-white border border-stone-200 rounded-2xl p-6 shadow-sm">
-              <h3 className="text-[11px] font-bold text-stone-400 uppercase tracking-widest mb-4">Goal Details</h3>
-              <div className="space-y-4">
-                <div>
-                  <div className="text-[11px] font-bold text-stone-400 uppercase tracking-widest mb-1">Title</div>
-                  <div className="text-sm font-semibold text-stone-700">{goal.title}</div>
-                </div>
-                {goal.description && (
-                  <div>
-                    <div className="text-[11px] font-bold text-stone-400 uppercase tracking-widest mb-1">Description</div>
-                    <div className="text-sm text-stone-600 font-medium leading-relaxed">{goal.description}</div>
-                  </div>
-                )}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <div className="text-[11px] font-bold text-stone-400 uppercase tracking-widest mb-1">Week Start</div>
-                    <div className="text-sm font-semibold text-stone-700">{formatDate(goal.weekStart)}</div>
-                  </div>
-                  <div>
-                    <div className="text-[11px] font-bold text-stone-400 uppercase tracking-widest mb-1">Week End</div>
-                    <div className="text-sm font-semibold text-stone-700">{formatDate(goal.weekEnd)}</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Owner Info */}
-            {goal.owner && (
-              <div className="bg-white border border-stone-200 rounded-2xl p-6 shadow-sm">
-                <h3 className="text-[11px] font-bold text-stone-400 uppercase tracking-widest mb-4">Owner</h3>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-amber-500 flex items-center justify-center text-white text-sm font-bold">
-                    {initials(goal.owner.adminName)}
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-stone-800">{goal.owner.adminName}</p>
-                    <p className="text-xs text-stone-400">{goal.owner.adminEmail}</p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Quick Tasks Preview */}
-            {tasks.length > 0 && (
-              <div className="bg-white border border-stone-200 rounded-2xl overflow-hidden shadow-sm">
-                <div className="flex items-center justify-between px-6 py-4 border-b border-stone-100">
-                  <h3 className="text-[11px] font-bold text-stone-400 uppercase tracking-widest">Recent Tasks</h3>
-                  <button type="button" onClick={() => setTab("tasks")} className="text-xs font-bold text-orange-500 hover:text-orange-700 transition-colors">
-                    View all →
-                  </button>
-                </div>
-                {tasks.slice(0, 3).map((task, idx) => (
-                  <div key={task.id || idx} className={`flex items-center gap-3 px-6 py-3.5 border-b border-stone-50 last:border-0 ${task.done ? "opacity-60" : ""}`}>
-                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${task.done ? "bg-green-500 border-green-500" : "border-stone-300"}`}>
-                      {task.done && <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7"/></svg>}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className={`text-sm font-semibold truncate ${task.done ? "line-through text-stone-400" : "text-stone-800"}`}>{task.title}</p>
-                      {task.description && <p className="text-xs text-stone-400 mt-0.5 truncate">{task.description}</p>}
-                    </div>
-                    <Badge className={task.done ? "bg-green-50 text-green-600 border border-green-200" : "bg-stone-50 text-stone-400 border border-stone-200"}>
-                      {task.done ? "Done" : "Pending"}
-                    </Badge>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* TASKS TAB */}
-        {tab === "tasks" && (
-          <div className="space-y-4">
-            {/* Progress bar card */}
-            {tasks.length > 0 && (
-              <div className="bg-white border border-stone-200 rounded-2xl p-5 shadow-sm">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-[11px] font-bold text-stone-400 uppercase tracking-widest">Completion</span>
-                  <span className="text-sm font-extrabold text-orange-500">{progress}%</span>
-                </div>
-                <div className="w-full bg-stone-100 rounded-full h-3 overflow-hidden">
-                  <div
-                    className={`progress-bar h-full rounded-full bg-gradient-to-r ${getProgressColor()}`}
-                    style={{ width: `${progress}%` }}
-                  />
-                </div>
-                <div className="flex items-center justify-between mt-2">
-                  <span className="text-xs text-stone-400 font-medium">{completedTasks} done · {tasks.length - completedTasks} remaining</span>
-                </div>
-              </div>
-            )}
-
-            <SectionCard
-              title="Tasks"
-              count={tasks.length}
-              icon="✅"
-              emptyIcon="📋"
-              emptyText="No tasks added to this goal"
+        <AnimatePresence mode="wait">
+          {tab === 'overview' && (
+            <motion.div
+              key="overview"
+              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
+              style={{ background: bg2, border: `1px solid ${border}`, borderRadius: 40, padding: 48 }}
             >
-              {tasks.map((task, idx) => (
-                <div key={task.id || idx} className={`flex items-start gap-4 px-6 py-4 hover:bg-stone-50/50 transition-colors ${task.done ? "opacity-70" : ""}`}>
-                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 ${task.done ? "bg-green-500 border-green-500" : "border-stone-300"}`}>
-                    {task.done && (
-                      <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                      </svg>
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className={`text-sm font-semibold ${task.done ? "line-through text-stone-400" : "text-stone-800"}`}>
-                      {task.title}
-                    </p>
-                    {task.description && (
-                      <p className="text-xs text-stone-500 mt-1 leading-relaxed">{task.description}</p>
-                    )}
-                  </div>
-                  <Badge className={task.done ? "bg-green-50 text-green-600 border border-green-200 shrink-0" : "bg-stone-50 text-stone-400 border border-stone-200 shrink-0"}>
-                    {task.done ? "Done" : "Pending"}
-                  </Badge>
-                </div>
-              ))}
-            </SectionCard>
-          </div>
-        )}
-
-        {/* REVIEW NOTES TAB */}
-        {tab === "review" && (
-          <SectionCard
-            title="Review Notes"
-            count={reviewNotes.length}
-            icon="💬"
-            emptyIcon="📝"
-            emptyText="No review notes added yet"
-          >
-            {reviewNotes.map((note, idx) => (
-              <div key={note.id || idx} className="px-6 py-5 hover:bg-stone-50/50 transition-colors">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-amber-500 flex items-center justify-center text-white text-sm font-bold">
-                    {initials(note.name)}
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-stone-800">{note.name}</p>
-                    <p className="text-[10px] text-stone-400 font-medium uppercase tracking-wider">Team Member</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
+                <div>
+                  <h3 style={{ ...bc(14, 800, { color: textC, marginBottom: 24 }) }}>SESSION CORE</h3>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+                    <div>
+                      <p style={{ ...bc(10, 800, { color: text3, margin: '0 0 4px' }) }}>OBJECTIVE TITLE</p>
+                      <p style={{ ...ba(15, 600, { color: textC, margin: 0 }) }}>{goal.title}</p>
+                    </div>
+                    <div>
+                      <p style={{ ...bc(10, 800, { color: text3, margin: '0 0 4px' }) }}>STRATEGIC DESCRIPTION</p>
+                      <p style={{ ...ba(14, 500, { color: text2, margin: 0, lineHeight: 1.6 }) }}>{goal.description || 'No strategic description provided.'}</p>
+                    </div>
                   </div>
                 </div>
-                <div className="bg-stone-50 border border-stone-200 rounded-xl p-4">
-                  <p className="text-sm text-stone-600 font-medium leading-relaxed whitespace-pre-line">
-                    {note.notes || <span className="text-stone-400 italic">No notes written</span>}
-                  </p>
+                <div>
+                  <h3 style={{ ...bc(14, 800, { color: textC, marginBottom: 24 }) }}>TIMELINE & OWNERSHIP</h3>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+                    <div style={{ display: 'flex', gap: 32 }}>
+                      <div>
+                        <p style={{ ...bc(10, 800, { color: text3, margin: '0 0 4px' }) }}>COMMENCEMENT</p>
+                        <p style={{ ...ba(14, 700, { color: textC, margin: 0 }) }}>{formatDate(goal.weekStart)}</p>
+                      </div>
+                      <div>
+                        <p style={{ ...bc(10, 800, { color: text3, margin: '0 0 4px' }) }}>COMPLETION</p>
+                        <p style={{ ...ba(14, 700, { color: textC, margin: 0 }) }}>{formatDate(goal.weekEnd)}</p>
+                      </div>
+                    </div>
+                    <div>
+                      <p style={{ ...bc(10, 800, { color: text3, margin: '0 0 12px' }) }}>SESSION ORGANIZER</p>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                        <div style={{ width: 44, height: 44, borderRadius: 14, background: ORG, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', ...bc(16, 800) }}>
+                          {initials(goal.owner?.adminName)}
+                        </div>
+                        <div>
+                          <p style={{ ...ba(14, 700, { color: textC, margin: 0 }) }}>{goal.owner?.adminName}</p>
+                          <p style={{ ...ba(12, 500, { color: text3, margin: 0 }) }}>{goal.owner?.adminEmail}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
-            ))}
-          </SectionCard>
-        )}
+            </motion.div>
+          )}
 
-        {/* Footer meta */}
-        <div className="mt-6 flex items-center justify-between text-xs text-stone-400 font-medium px-1">
-          <span>ID: {goal.id}</span>
-          <span>Created {formatDate(goal.createdAt)}</span>
+          {tab === 'tasks' && (
+            <motion.div
+              key="tasks"
+              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
+              style={{ background: bg2, border: `1px solid ${border}`, borderRadius: 40, padding: 48 }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 40 }}>
+                <h3 style={{ ...bc(14, 800, { color: textC, margin: 0 }) }}>TASK PROTOCOL ({tasks.length} UNITS)</h3>
+                <div style={{ ...bc(11, 800, { color: ORG }) }}>{completedTasks} COMPLETED</div>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                {tasks.length > 0 ? tasks.map((t, i) => (
+                  <div key={i} style={{ 
+                    background: bg, border: `1px solid ${border}`, borderRadius: 24, padding: 24, 
+                    display: 'flex', alignItems: 'flex-start', gap: 20, opacity: t.done ? 0.7 : 1,
+                    transition: 'all 0.2s'
+                  }}>
+                    <div style={{ 
+                      width: 24, height: 24, borderRadius: 8, border: `2px solid ${t.done ? '#10b981' : border}`,
+                      background: t.done ? '#10b981' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center'
+                    }}>
+                      {t.done && <CheckCircle2 size={14} color="#fff" />}
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <h4 style={{ ...ba(16, 700, { color: textC, margin: '0 0 4px', textDecoration: t.done ? 'line-through' : 'none' }) }}>{t.title}</h4>
+                      <p style={{ ...ba(13, 500, { color: text2, margin: 0 }) }}>{t.description}</p>
+                    </div>
+                    <span style={{ ...bc(10, 800, { color: t.done ? '#10b981' : text3, padding: '4px 12px', background: t.done ? '#10b98115' : border, borderRadius: 8 }) }}>
+                      {t.done ? 'COMPLETED' : 'PENDING'}
+                    </span>
+                  </div>
+                )) : (
+                  <div style={{ textAlign: 'center', padding: '48px 0', color: text3, ...ba(14, 500) }}>No tasks defined for this goal protocol.</div>
+                )}
+              </div>
+            </motion.div>
+          )}
+
+          {tab === 'review' && (
+            <motion.div
+              key="review"
+              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
+              style={{ background: bg2, border: `1px solid ${border}`, borderRadius: 40, padding: 48 }}
+            >
+              <h3 style={{ ...bc(14, 800, { color: textC, marginBottom: 40 }) }}>TEAM REFLECTIONS ({reviewNotes.length})</h3>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
+                {reviewNotes.length > 0 ? reviewNotes.map((note, i) => (
+                  <div key={i} style={{ display: 'flex', gap: 24 }}>
+                    <div style={{ width: 48, height: 48, borderRadius: 16, background: `${ORG}15`, color: ORG, display: 'flex', alignItems: 'center', justifyContent: 'center', ...bc(18, 800), flexShrink: 0 }}>
+                      {initials(note.name)}
+                    </div>
+                    <div style={{ flex: 1, background: bg, border: `1px solid ${border}`, borderRadius: 24, padding: 24, position: 'relative' }}>
+                      <div style={{ position: 'absolute', top: 24, left: -8, width: 16, height: 16, background: bg, borderLeft: `1px solid ${border}`, borderBottom: `1px solid ${border}`, transform: 'rotate(45deg)' }}></div>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                        <h4 style={{ ...bc(13, 800, { color: textC, margin: 0 }) }}>{note.name?.toUpperCase()}</h4>
+                        <span style={{ ...bc(10, 800, { color: text3 }) }}>TEAM MEMBER</span>
+                      </div>
+                      <p style={{ ...ba(14, 500, { color: text2, margin: 0, lineHeight: 1.6, whiteSpace: 'pre-line' }) }}>{note.notes}</p>
+                    </div>
+                  </div>
+                )) : (
+                  <div style={{ textAlign: 'center', padding: '48px 0', color: text3, ...ba(14, 500) }}>No reflections have been logged yet.</div>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Footer */}
+        <div style={{ marginTop: 40, display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: text3, ...bc(10, 700) }}>
+          <span>GOAL ID: {goal.id}</span>
+          <span>INITIATED: {formatDate(goal.createdAt)}</span>
         </div>
       </div>
     </div>

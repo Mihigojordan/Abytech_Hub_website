@@ -1,10 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Header from '../components/dashboard/Header';
 import Sidebar from '../components/dashboard/Sidebar';
-import { Outlet, useOutletContext, useSearchParams } from 'react-router-dom';
+import { Outlet, useSearchParams } from 'react-router-dom';
 import useAdminAuth from '../context/AdminAuthContext';
 import { useSocket } from '../context/SocketContext';
 import { useNotifications } from '../context/NotificationContext';
+import { useDashboardTheme } from '../utils/dashboardTheme';
 
 export type RoleType = 'admin';
 
@@ -12,28 +13,26 @@ export interface Roles {
   role: RoleType;
 }
 
-const DashboardLayout = ({role}) => {
+const DashboardLayout = ({ role }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
- 
+
   const { user } = useAdminAuth();
   const { setRecipient } = useNotifications();
   const { socket, isConnected, emit } = useSocket();
+  const { bg } = useDashboardTheme();
 
   const isAdminRegistered = useRef(false);
 
   const onToggle = () => setIsOpen(!isOpen);
 
-  // ── Register admin presence (online status) ──
   useEffect(() => {
     if (user?.id && isConnected && !isAdminRegistered.current) {
-      console.log('online ADMIN:', user.id);
       emit('registerUser', { id: user.id, type: 'ADMIN' });
       isAdminRegistered.current = true;
     }
   }, [user?.id, isConnected, emit, socket]);
 
-  // ── Set notification recipient ──
   useEffect(() => {
     if (user?.id) {
       setRecipient(user.id, 'ADMIN');
@@ -41,7 +40,7 @@ const DashboardLayout = ({role}) => {
   }, [user?.id]);
 
   return (
-    <div className="flex h-screen bg-slate-50">
+    <div className="flex h-screen" style={{ background: bg }}>
       <Sidebar onToggle={onToggle} role={role} isOpen={isOpen} />
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header onToggle={onToggle} role={role} />

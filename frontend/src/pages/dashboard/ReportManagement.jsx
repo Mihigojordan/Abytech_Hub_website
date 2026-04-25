@@ -11,6 +11,8 @@ import { useNavigate } from 'react-router-dom';
 import html2pdf from 'html2pdf.js';
 import { API_URL } from '../../api/api';
 import useAdminAuth from '../../context/AdminAuthContext';
+import { useDashboardTheme } from '../../utils/dashboardTheme';
+import { ORG, TEAL, bb, bc, ba } from '../../utils/homeConstants';
 
 // Helper function to handle reportUrl
 function handleReportUrl(reportUrl) {
@@ -44,6 +46,7 @@ async function downloadFile(url, fileName) {
 const ReportDashboard = () => {
   const { hasPermission, permissions, isSuperAdmin } = useAdminAuth();
   const hasReportPermission = hasPermission('report_management');
+  const { isDark, bg, bg2, bg3, textC, text2, text3, border } = useDashboardTheme();
 
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -351,45 +354,59 @@ const ReportDashboard = () => {
   const currentReports = reports; // Already paginated from server
 
   const renderTableView = () => (
-    <div className="bg-white  rounded-xl border border-gray-100 shadow-sm w-full  ">
-      <div className="overflow-x-auto ">
+    <div style={{ background: bg2, border: `1px solid ${border}`, borderRadius: 4 }} className="w-full">
+      <div className="overflow-x-auto">
         <table className="w-full text-xs">
-          <thead style={{ backgroundColor: 'rgba(81, 96, 146, 0.05)' }}>
+          <thead style={{ background: bg3 }}>
             <tr>
-              <th className="text-left py-3 px-4 font-semibold" style={{ color: 'rgb(249, 115, 22)' }}>Title</th>
-              <th className="text-left py-3 px-4 font-semibold hidden md:table-cell" style={{ color: 'rgb(249, 115, 22)' }}>Created By</th>
-              <th className="text-left py-3 px-4 font-semibold" style={{ color: 'rgb(249, 115, 22)' }}>Created</th>
-              <th className="text-right py-3 px-4 font-semibold" style={{ color: 'rgb(249, 115, 22)' }}>Actions</th>
+              <th className="text-left py-3 px-4" style={bc(10, 700, { letterSpacing: 3, textTransform: 'uppercase', color: text2 })}>Title</th>
+              <th className="text-left py-3 px-4 hidden md:table-cell" style={bc(10, 700, { letterSpacing: 3, textTransform: 'uppercase', color: text2 })}>Created By</th>
+              <th className="text-left py-3 px-4" style={bc(10, 700, { letterSpacing: 3, textTransform: 'uppercase', color: text2 })}>Created</th>
+              <th className="text-right py-3 px-4" style={bc(10, 700, { letterSpacing: 3, textTransform: 'uppercase', color: text2 })}>Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody>
             {currentReports.map((report, index) => (
               <motion.tr
                 key={report.id}
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.05 }}
-                className="hover:bg-gray-50 transition-colors"
+                style={{ background: bg2, borderBottom: `1px solid ${border}`, cursor: 'default' }}
+                onMouseEnter={e => e.currentTarget.style.background = bg3}
+                onMouseLeave={e => e.currentTarget.style.background = bg2}
               >
-                <td className="py-3 px-4 font-medium text-gray-900">{report.title || 'N/A'}</td>
-                <td className="py-3 px-4 text-gray-600 hidden md:table-cell">{report.admin?.adminName || 'Unknown'}</td>
-                <td className="py-3 px-4 text-gray-600">{formatDate(report.createdAt)}</td>
+                <td className="py-3 px-4" style={ba(12, 600, { color: textC })}>{report.title || 'N/A'}</td>
+                <td className="py-3 px-4 hidden md:table-cell" style={ba(12, 400, { color: text2 })}>{report.admin?.adminName || 'Unknown'}</td>
+                <td className="py-3 px-4" style={ba(12, 400, { color: text2 })}>{formatDate(report.createdAt)}</td>
                 <td className="py-3 px-4">
                   <div className="flex items-center justify-end space-x-1">
                     <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }} onClick={() => handleViewReport(report)}
-                      className="text-gray-400 hover:text-gray-600 p-1.5 rounded-md hover:bg-gray-100 transition-colors" title="View">
+                      style={{ color: text3, padding: 6, borderRadius: 4, background: 'transparent' }}
+                      onMouseEnter={e => { e.currentTarget.style.color = textC; e.currentTarget.style.background = bg3; }}
+                      onMouseLeave={e => { e.currentTarget.style.color = text3; e.currentTarget.style.background = 'transparent'; }}
+                      title="View">
                       <Eye className="w-3.5 h-3.5" />
                     </motion.button>
                     <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }} onClick={() => handleEditReport(report)}
-                      className="text-gray-400 hover:text-yellow-600 p-1.5 rounded-md hover:bg-yellow-50 transition-colors" title="Edit">
+                      style={{ color: text3, padding: 6, borderRadius: 4, background: 'transparent' }}
+                      onMouseEnter={e => { e.currentTarget.style.color = ORG; e.currentTarget.style.background = bg3; }}
+                      onMouseLeave={e => { e.currentTarget.style.color = text3; e.currentTarget.style.background = 'transparent'; }}
+                      title="Edit">
                       <Edit className="w-3.5 h-3.5" />
                     </motion.button>
                     <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }} onClick={() => handleDownloadReport(report)}
-                      className="text-gray-400 hover:text-green-600 p-1.5 rounded-md hover:bg-green-50 transition-colors" title="Download">
+                      style={{ color: text3, padding: 6, borderRadius: 4, background: 'transparent' }}
+                      onMouseEnter={e => { e.currentTarget.style.color = TEAL; e.currentTarget.style.background = bg3; }}
+                      onMouseLeave={e => { e.currentTarget.style.color = text3; e.currentTarget.style.background = 'transparent'; }}
+                      title="Download">
                       <Download className="w-3.5 h-3.5" />
                     </motion.button>
                     <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }} onClick={() => setDeleteConfirm(report)}
-                      className="text-gray-400 hover:text-red-600 p-1.5 rounded-md hover:bg-red-50 transition-colors" title="Delete">
+                      style={{ color: text3, padding: 6, borderRadius: 4, background: 'transparent' }}
+                      onMouseEnter={e => { e.currentTarget.style.color = '#e84040'; e.currentTarget.style.background = bg3; }}
+                      onMouseLeave={e => { e.currentTarget.style.color = text3; e.currentTarget.style.background = 'transparent'; }}
+                      title="Delete">
                       <Trash2 className="w-3.5 h-3.5" />
                     </motion.button>
                   </div>
@@ -403,7 +420,7 @@ const ReportDashboard = () => {
   );
 
   const renderCardView = () => (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4      ">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {currentReports.map((report, index) => (
         <motion.div
           key={report.id}
@@ -411,15 +428,13 @@ const ReportDashboard = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: index * 0.05 }}
           whileHover={{ y: -4 }}
-          className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-all relative overflow-hidden group"
+          style={{ background: bg2, border: `1px solid ${border}`, borderRadius: 4, padding: 20, position: 'relative', overflow: 'hidden' }}
         >
-          <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-blue-50 to-purple-50 rounded-bl-full opacity-50 group-hover:opacity-100 transition-opacity" />
-
           <div className="relative">
             <div className="flex items-start justify-between mb-3">
               <div className="flex-1 pr-2">
-                <h3 className="text-sm font-semibold text-gray-900 mb-1 line-clamp-2 leading-snug">{report.title}</h3>
-                <p className="text-xs text-gray-500 flex items-center space-x-1">
+                <h3 className="mb-1 line-clamp-2 leading-snug" style={ba(13, 600, { color: textC })}>{report.title}</h3>
+                <p className="flex items-center space-x-1" style={ba(11, 400, { color: text2 })}>
                   <Users className="w-3 h-3" />
                   <span>{report.admin?.adminName || 'Unknown'}</span>
                 </p>
@@ -427,16 +442,16 @@ const ReportDashboard = () => {
               <motion.div
                 whileHover={{ rotate: 360 }}
                 transition={{ duration: 0.5 }}
-                className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
-                style={{ backgroundColor: 'rgba(81, 96, 146, 0.1)' }}
+                className="w-10 h-10 flex items-center justify-center flex-shrink-0"
+                style={{ background: 'rgba(232,98,26,.1)', border: '1px solid rgba(232,98,26,.2)', borderRadius: 4 }}
               >
-                <FileText className="w-5 h-5" style={{ color: 'rgb(249, 115, 22)' }} />
+                <FileText className="w-5 h-5" style={{ color: ORG }} />
               </motion.div>
             </div>
 
-            <div className="flex items-center text-xs text-gray-500 mb-4 pb-4 border-b border-gray-100">
-              <Calendar className="w-3 h-3 mr-1" />
-              <span>{formatDate(report.createdAt)}</span>
+            <div className="flex items-center mb-4 pb-4" style={{ borderBottom: `1px solid ${border}` }}>
+              <Calendar className="w-3 h-3 mr-1" style={{ color: text3 }} />
+              <span style={ba(11, 400, { color: text2 })}>{formatDate(report.createdAt)}</span>
             </div>
 
             <div className="flex items-center justify-between gap-2">
@@ -445,7 +460,7 @@ const ReportDashboard = () => {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => handleViewReport(report)}
-                  className="flex items-center space-x-1 text-gray-600 hover:text-gray-900 px-3 py-1.5 rounded-lg hover:bg-gray-100 text-xs font-medium transition-colors"
+                  style={{ ...ba(11, 500, { color: text2 }), display: 'flex', alignItems: 'center', gap: 4, padding: '6px 10px', borderRadius: 4, background: bg3, border: 'none', cursor: 'pointer' }}
                 >
                   <Eye className="w-3.5 h-3.5" />
                   <span>View</span>
@@ -454,7 +469,7 @@ const ReportDashboard = () => {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => handleEditReport(report)}
-                  className="flex items-center space-x-1 text-yellow-600 hover:text-yellow-700 px-3 py-1.5 rounded-lg hover:bg-yellow-50 text-xs font-medium transition-colors"
+                  style={{ ...ba(11, 500, { color: ORG }), display: 'flex', alignItems: 'center', gap: 4, padding: '6px 10px', borderRadius: 4, background: bg3, border: 'none', cursor: 'pointer' }}
                 >
                   <Edit className="w-3.5 h-3.5" />
                   <span>Edit</span>
@@ -465,7 +480,7 @@ const ReportDashboard = () => {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => handleDownloadReport(report)}
-                  className="p-2 text-green-600 hover:text-green-700 rounded-lg hover:bg-green-50 transition-colors"
+                  style={{ color: TEAL, padding: 8, borderRadius: 4, background: bg3, border: 'none', cursor: 'pointer' }}
                   title="Download"
                 >
                   <Download className="w-3.5 h-3.5" />
@@ -474,7 +489,7 @@ const ReportDashboard = () => {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setDeleteConfirm(report)}
-                  className="p-2 text-red-600 hover:text-red-700 rounded-lg hover:bg-red-50 transition-colors"
+                  style={{ color: '#e84040', padding: 8, borderRadius: 4, background: bg3, border: 'none', cursor: 'pointer' }}
                   title="Delete"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
@@ -488,29 +503,32 @@ const ReportDashboard = () => {
   );
 
   const renderListView = () => (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 divide-y divide-gray-100 w-full">
+    <div style={{ background: bg2, border: `1px solid ${border}`, borderRadius: 4 }} className="w-full">
       {currentReports.map((report, index) => (
         <motion.div
           key={report.id}
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: index * 0.05 }}
-          className="p-4 hover:bg-gray-50 transition-colors"
+          style={{ padding: 16, borderBottom: `1px solid ${border}`, background: bg2 }}
+          onMouseEnter={e => e.currentTarget.style.background = bg3}
+          onMouseLeave={e => e.currentTarget.style.background = bg2}
         >
           <div className="flex items-center justify-between">
             <div className="flex-1 min-w-0 flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: 'rgba(81, 96, 146, 0.1)' }}>
-                <FileText className="w-5 h-5" style={{ color: 'rgb(249, 115, 22)' }} />
+              <div className="w-10 h-10 flex items-center justify-center flex-shrink-0"
+                style={{ background: 'rgba(232,98,26,.1)', border: '1px solid rgba(232,98,26,.2)', borderRadius: 4 }}>
+                <FileText className="w-5 h-5" style={{ color: ORG }} />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center flex-wrap gap-2 mb-1">
-                  <h3 className="text-sm font-semibold text-gray-900">{report.title}</h3>
-                  <span className="text-xs text-gray-500 hidden sm:inline flex items-center">
+                  <h3 style={ba(13, 600, { color: textC })}>{report.title}</h3>
+                  <span className="hidden sm:inline flex items-center" style={ba(11, 400, { color: text2 })}>
                     <Calendar className="w-3 h-3 mr-1" />
                     {formatDate(report.createdAt)}
                   </span>
                 </div>
-                <p className="text-xs text-gray-600 flex items-center">
+                <p className="flex items-center" style={ba(11, 400, { color: text2 })}>
                   <Users className="w-3 h-3 mr-1" />
                   {report.admin?.adminName || 'Unknown'}
                 </p>
@@ -518,19 +536,31 @@ const ReportDashboard = () => {
             </div>
             <div className="flex items-center space-x-1 ml-4">
               <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }} onClick={() => handleViewReport(report)}
-                className="text-gray-400 hover:text-gray-600 p-2 rounded-lg hover:bg-gray-100 transition-colors" title="View">
+                style={{ color: text3, padding: 8, borderRadius: 4, background: 'transparent', border: 'none', cursor: 'pointer' }}
+                onMouseEnter={e => { e.currentTarget.style.color = textC; e.currentTarget.style.background = bg3; }}
+                onMouseLeave={e => { e.currentTarget.style.color = text3; e.currentTarget.style.background = 'transparent'; }}
+                title="View">
                 <Eye className="w-4 h-4" />
               </motion.button>
               <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }} onClick={() => handleEditReport(report)}
-                className="text-gray-400 hover:text-yellow-600 p-2 rounded-lg hover:bg-yellow-50 transition-colors" title="Edit">
+                style={{ color: text3, padding: 8, borderRadius: 4, background: 'transparent', border: 'none', cursor: 'pointer' }}
+                onMouseEnter={e => { e.currentTarget.style.color = ORG; e.currentTarget.style.background = bg3; }}
+                onMouseLeave={e => { e.currentTarget.style.color = text3; e.currentTarget.style.background = 'transparent'; }}
+                title="Edit">
                 <Edit className="w-4 h-4" />
               </motion.button>
               <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }} onClick={() => handleDownloadReport(report)}
-                className="text-gray-400 hover:text-green-600 p-2 rounded-lg hover:bg-green-50 transition-colors" title="Download">
+                style={{ color: text3, padding: 8, borderRadius: 4, background: 'transparent', border: 'none', cursor: 'pointer' }}
+                onMouseEnter={e => { e.currentTarget.style.color = TEAL; e.currentTarget.style.background = bg3; }}
+                onMouseLeave={e => { e.currentTarget.style.color = text3; e.currentTarget.style.background = 'transparent'; }}
+                title="Download">
                 <Download className="w-4 h-4" />
               </motion.button>
               <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }} onClick={() => setDeleteConfirm(report)}
-                className="text-gray-400 hover:text-red-600 p-2 rounded-lg hover:bg-red-50 transition-colors" title="Delete">
+                style={{ color: text3, padding: 8, borderRadius: 4, background: 'transparent', border: 'none', cursor: 'pointer' }}
+                onMouseEnter={e => { e.currentTarget.style.color = '#e84040'; e.currentTarget.style.background = bg3; }}
+                onMouseLeave={e => { e.currentTarget.style.color = text3; e.currentTarget.style.background = 'transparent'; }}
+                title="Delete">
                 <Trash2 className="w-4 h-4" />
               </motion.button>
             </div>
@@ -561,9 +591,12 @@ const ReportDashboard = () => {
     };
 
     return (
-      <div className="flex items-center justify-between bg-white px-2 py-3 border-t border-gray-100 rounded-b-xl shadow-sm mt-4   border border-gray-100 shadow-sm  ">
-        <div className="text-xs text-gray-600 flex items-center space-x-2">
-          <span>Showing <span className="font-semibold">{startIndex + 1}</span>-<span className="font-semibold">{endIndex}</span> of <span className="font-semibold">{totalReports}</span>{!hasReportPermission && <span className="text-orange-500 ml-1">(Your reports only)</span>}</span>
+      <div className="flex items-center justify-between px-2 py-3 mt-4"
+        style={{ background: bg2, border: `1px solid ${border}`, borderRadius: 4 }}>
+        <div className="flex items-center space-x-2" style={ba(11, 400, { color: text2 })}>
+          <span>Showing <span style={{ fontWeight: 600 }}>{startIndex + 1}</span>–<span style={{ fontWeight: 600 }}>{endIndex}</span> of <span style={{ fontWeight: 600 }}>{totalReports}</span>
+            {!hasReportPermission && <span style={{ color: ORG, marginLeft: 4 }}>(Your reports only)</span>}
+          </span>
         </div>
         <div className="flex items-center space-x-2">
           <motion.button
@@ -571,7 +604,7 @@ const ReportDashboard = () => {
             whileTap={{ scale: 0.95 }}
             onClick={() => setCurrentPage(1)}
             disabled={currentPage === 1}
-            className="flex items-center px-2.5 py-1.5 text-xs text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            style={{ ...ba(11, 400, { color: text2 }), background: bg3, border: `1px solid ${border}`, borderRadius: 4, padding: '4px 10px', cursor: currentPage === 1 ? 'not-allowed' : 'pointer', opacity: currentPage === 1 ? 0.4 : 1 }}
           >
             First
           </motion.button>
@@ -580,7 +613,7 @@ const ReportDashboard = () => {
             whileTap={{ scale: 0.95 }}
             onClick={() => setCurrentPage(currentPage - 1)}
             disabled={currentPage === 1}
-            className="flex items-center px-2.5 py-1.5 text-xs text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            style={{ background: bg3, border: `1px solid ${border}`, borderRadius: 4, padding: '4px 8px', cursor: currentPage === 1 ? 'not-allowed' : 'pointer', opacity: currentPage === 1 ? 0.4 : 1, color: text2, display: 'flex', alignItems: 'center' }}
           >
             <ChevronLeft className="w-3.5 h-3.5" />
           </motion.button>
@@ -591,11 +624,11 @@ const ReportDashboard = () => {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setCurrentPage(page)}
-              className={`px-3 py-1.5 text-xs rounded-md transition-colors ${currentPage === page
-                ? 'text-white font-semibold shadow-sm'
-                : 'text-gray-600 bg-white border border-gray-200 hover:bg-gray-50'
-                }`}
-              style={currentPage === page ? { backgroundColor: 'rgb(249, 115, 22)' } : {}}
+              style={
+                currentPage === page
+                  ? { background: ORG, color: '#fff', borderRadius: 4, padding: '4px 10px', border: 'none', cursor: 'pointer', ...bc(11, 600) }
+                  : { background: bg3, border: `1px solid ${border}`, borderRadius: 4, padding: '4px 10px', color: text2, cursor: 'pointer', ...ba(11, 400) }
+              }
             >
               {page}
             </motion.button>
@@ -606,7 +639,7 @@ const ReportDashboard = () => {
             whileTap={{ scale: 0.95 }}
             onClick={() => setCurrentPage(currentPage + 1)}
             disabled={currentPage === totalPages}
-            className="flex items-center px-2.5 py-1.5 text-xs text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            style={{ background: bg3, border: `1px solid ${border}`, borderRadius: 4, padding: '4px 8px', cursor: currentPage === totalPages ? 'not-allowed' : 'pointer', opacity: currentPage === totalPages ? 0.4 : 1, color: text2, display: 'flex', alignItems: 'center' }}
           >
             <ChevronRight className="w-3.5 h-3.5" />
           </motion.button>
@@ -615,7 +648,7 @@ const ReportDashboard = () => {
             whileTap={{ scale: 0.95 }}
             onClick={() => setCurrentPage(totalPages)}
             disabled={currentPage === totalPages}
-            className="flex items-center px-2.5 py-1.5 text-xs text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            style={{ ...ba(11, 400, { color: text2 }), background: bg3, border: `1px solid ${border}`, borderRadius: 4, padding: '4px 10px', cursor: currentPage === totalPages ? 'not-allowed' : 'pointer', opacity: currentPage === totalPages ? 0.4 : 1 }}
           >
             Last
           </motion.button>
@@ -629,57 +662,39 @@ const ReportDashboard = () => {
       label: 'Total Reports',
       value: stats.totalReports,
       icon: FileText,
-      color: 'rgb(249, 115, 22)',
-      bgColor: 'rgba(81, 96, 146, 0.1)',
       loading: loadingStats.total,
-      gradient: 'from-blue-500 to-indigo-600'
     },
     {
       label: "Today's Reports",
       value: stats.todayReports,
       icon: Clock,
-      color: 'rgb(34, 197, 94)',
-      bgColor: 'rgba(34, 197, 94, 0.1)',
       loading: loadingStats.today,
-      gradient: 'from-green-500 to-emerald-600'
     },
     {
       label: 'This Week',
       value: stats.weekReports,
       icon: TrendingUp,
-      color: 'rgb(168, 85, 247)',
-      bgColor: 'rgba(168, 85, 247, 0.1)',
       loading: loadingStats.week,
-      gradient: 'from-purple-500 to-violet-600'
     },
     {
       label: 'This Month',
       value: stats.monthReports,
       icon: Calendar,
-      color: 'rgb(249, 115, 22)',
-      bgColor: 'rgba(249, 115, 22, 0.1)',
       loading: loadingStats.month,
-      gradient: 'from-orange-500 to-amber-600'
     },
     {
       label: 'Total Admins',
       value: stats.uniqueAdmins,
       icon: Users,
-      color: 'rgb(239, 68, 68)',
-      bgColor: 'rgba(239, 68, 68, 0.1)',
       loading: false,
-      gradient: 'from-red-500 to-rose-600'
     },
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/30">
+    <div className="min-h-screen" style={{ background: bg }}>
       {/* Header */}
-      <div className="bg-white shadow-sm border-b border-gray-200 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-100/40 to-purple-100/40 rounded-full blur-3xl -mr-32 -mt-32" />
-        <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-indigo-100/40 to-blue-100/40 rounded-full blur-3xl -ml-24 -mb-24" />
-
-        <div className="mx-auto px-1 sm:px-6 py-6 relative">
+      <div style={{ background: bg2, borderBottom: `1px solid ${border}` }}>
+        <div className="mx-auto px-1 sm:px-6 py-6">
           <div className="flex items-center justify-between">
             <div>
               <div className="flex items-center space-x-2 mb-2">
@@ -688,13 +703,13 @@ const ReportDashboard = () => {
                   animate={{ rotate: [0, 10, -10, 0] }}
                   transition={{ duration: 2, repeat: Infinity, repeatDelay: 5 }}
                 >
-                  <Sparkles className="w-5 h-5" style={{ color: 'rgb(249, 115, 22)' }} />
+                  <Sparkles className="w-5 h-5" style={{ color: ORG }} />
                 </motion.div>
-                <h1 className="text-xl sm:text-2xl font-bold text-orange-500 bg-clip-text">
+                <h1 style={bc(20, 700, { color: ORG, letterSpacing: 1 })}>
                   Report Management
                 </h1>
               </div>
-              <p className="text-xs text-gray-600">Manage and view all system reports efficiently</p>
+              <p style={ba(11, 400, { color: text2 })}>Manage and view all system reports efficiently</p>
             </div>
             <div className="flex items-center space-x-2">
               <motion.button
@@ -702,7 +717,7 @@ const ReportDashboard = () => {
                 whileTap={{ scale: 0.95 }}
                 onClick={handleExport}
                 disabled={reports.length === 0}
-                className="flex items-center space-x-2 px-3 py-2 text-xs text-gray-600 hover:text-gray-900 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-all shadow-sm hover:shadow"
+                style={{ ...ba(11, 500, { color: text2 }), display: 'flex', alignItems: 'center', gap: 6, padding: '7px 12px', background: bg3, border: `1px solid ${border}`, borderRadius: 4, cursor: reports.length === 0 ? 'not-allowed' : 'pointer', opacity: reports.length === 0 ? 0.5 : 1 }}
               >
                 <Download className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Export</span>
@@ -712,7 +727,7 @@ const ReportDashboard = () => {
                 whileTap={{ scale: 0.95 }}
                 onClick={() => { loadData(); loadStats(); }}
                 disabled={loading}
-                className="flex items-center space-x-2 px-3 py-2 text-xs text-gray-600 hover:text-gray-900 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-all shadow-sm hover:shadow"
+                style={{ ...ba(11, 500, { color: text2 }), display: 'flex', alignItems: 'center', gap: 6, padding: '7px 12px', background: bg3, border: `1px solid ${border}`, borderRadius: 4, cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.5 : 1 }}
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
                 <span className="hidden sm:inline">Refresh</span>
@@ -722,7 +737,7 @@ const ReportDashboard = () => {
                 whileTap={{ scale: 0.95 }}
                 onClick={handleCreateReport}
                 disabled={operationLoading}
-                className="flex items-center space-x-2 text-white px-3 py-2 rounded-lg font-medium shadow-md hover:shadow-lg text-xs transition-all bg-orange-500 hover:bg-orange-600"
+                style={{ ...ba(11, 600, { color: '#fff' }), display: 'flex', alignItems: 'center', gap: 6, padding: '7px 12px', background: ORG, border: 'none', borderRadius: 4, cursor: operationLoading ? 'not-allowed' : 'pointer', opacity: operationLoading ? 0.7 : 1 }}
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Create Report</span>
@@ -732,7 +747,7 @@ const ReportDashboard = () => {
         </div>
       </div>
 
-      <div className="mx-auto px-4  sm:px-6 py-6 space-y-4">
+      <div className="mx-auto px-4 sm:px-6 py-6 space-y-4">
         {/* Stats Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
           {statCards.map((stat, index) => (
@@ -742,79 +757,70 @@ const ReportDashboard = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
               whileHover={{ y: -4, scale: 1.02 }}
-              className="relative p-4 rounded-xl shadow-sm border border-gray-100 bg-white overflow-hidden group cursor-pointer"
+              style={{ background: bg2, border: `1px solid ${border}`, borderRadius: 4, padding: 16, position: 'relative', overflow: 'hidden', cursor: 'pointer' }}
             >
-              <div className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-300`} />
-
-              <div className="relative flex items-center space-x-3">
+              <div className="flex items-center space-x-3">
                 <motion.div
                   whileHover={{ rotate: 360, scale: 1.1 }}
                   transition={{ duration: 0.5 }}
-                  className="p-2.5 rounded-lg shadow-sm"
-                  style={{ backgroundColor: stat.bgColor }}
+                  style={{ background: 'rgba(232,98,26,.1)', border: '1px solid rgba(232,98,26,.2)', borderRadius: 4, padding: 10, flexShrink: 0 }}
                 >
-                  <stat.icon className="w-4 h-4" style={{ color: stat.color }} />
+                  <stat.icon className="w-4 h-4" style={{ color: ORG }} />
                 </motion.div>
                 <div className="flex-1">
-                  <p className="text-xs font-medium text-gray-600 mb-0.5">{stat.label}</p>
-                  <p className="text-lg font-bold text-gray-900">
+                  <p style={bc(10, 700, { letterSpacing: 3, color: text2, textTransform: 'uppercase', marginBottom: 2 })}>{stat.label}</p>
+                  <p style={bb(32, { color: ORG, lineHeight: 1 })}>
                     {stat.loading ? (
-                      <span className="inline-block w-8 h-4 bg-gray-200 rounded animate-pulse" />
+                      <span className="inline-block w-8 h-4 rounded animate-pulse" style={{ background: bg3 }} />
                     ) : (
                       stat.value ?? '-'
                     )}
                   </p>
                 </div>
               </div>
-              <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br opacity-10 rounded-bl-full" style={{ background: stat.color }} />
             </motion.div>
           ))}
         </div>
-
-
-
-
 
         {/* Search & Filters */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-xl shadow-sm border border-gray-100 p-5"
+          style={{ background: bg2, border: `1px solid ${border}`, borderRadius: 4, padding: 20 }}
         >
           <div className="space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div className="relative flex-1 max-w-md">
-                <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
+                <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2" style={{ color: text3 }} />
                 <input
                   type="text"
                   placeholder="Search reports by title or admin..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 text-xs border border-gray-200 rounded-lg focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all"
-                  style={{ outline: 'none' }}
+                  className="w-full pl-10 pr-4 py-2.5"
+                  style={{ ...ba(11, 400, { color: textC }), background: bg3, border: `1px solid ${border}`, borderRadius: 4, outline: 'none' }}
                 />
                 {searchTerm && (
                   <motion.button
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     onClick={() => setSearchTerm('')}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2"
+                    style={{ color: text3, background: 'transparent', border: 'none', cursor: 'pointer' }}
                   >
                     <X className="w-4 h-4" />
                   </motion.button>
                 )}
               </div>
 
-              <div className="flex items-center space-x-2 bg-gray-50 p-1 rounded-lg">
+              <div className="flex items-center space-x-1 p-1" style={{ background: bg3, borderRadius: 4 }}>
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setViewMode('table')}
-                  className={`p-2 rounded-md transition-all ${viewMode === 'table'
-                    ? 'text-white shadow-md'
-                    : 'text-gray-500 hover:text-gray-700 hover:bg-white'
-                    }`}
-                  style={viewMode === 'table' ? { backgroundColor: 'rgb(249, 115, 22)' } : {}}
+                  style={viewMode === 'table'
+                    ? { background: ORG, color: '#fff', padding: 8, borderRadius: 4, border: 'none', cursor: 'pointer' }
+                    : { background: 'transparent', color: text2, padding: 8, borderRadius: 4, border: 'none', cursor: 'pointer' }}
                   title="Table View"
                 >
                   <Table className="w-4 h-4" />
@@ -823,11 +829,9 @@ const ReportDashboard = () => {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setViewMode('grid')}
-                  className={`p-2 rounded-md transition-all ${viewMode === 'grid'
-                    ? 'text-white shadow-md'
-                    : 'text-gray-500 hover:text-gray-700 hover:bg-white'
-                    }`}
-                  style={viewMode === 'grid' ? { backgroundColor: 'rgb(249, 115, 22)' } : {}}
+                  style={viewMode === 'grid'
+                    ? { background: ORG, color: '#fff', padding: 8, borderRadius: 4, border: 'none', cursor: 'pointer' }
+                    : { background: 'transparent', color: text2, padding: 8, borderRadius: 4, border: 'none', cursor: 'pointer' }}
                   title="Grid View"
                 >
                   <Grid3X3 className="w-4 h-4" />
@@ -836,11 +840,9 @@ const ReportDashboard = () => {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setViewMode('list')}
-                  className={`p-2 rounded-md transition-all ${viewMode === 'list'
-                    ? 'text-white shadow-md'
-                    : 'text-gray-500 hover:text-gray-700 hover:bg-white'
-                    }`}
-                  style={viewMode === 'list' ? { backgroundColor: 'rgb(249, 115, 22)' } : {}}
+                  style={viewMode === 'list'
+                    ? { background: ORG, color: '#fff', padding: 8, borderRadius: 4, border: 'none', cursor: 'pointer' }
+                    : { background: 'transparent', color: text2, padding: 8, borderRadius: 4, border: 'none', cursor: 'pointer' }}
                   title="List View"
                 >
                   <List className="w-4 h-4" />
@@ -851,13 +853,13 @@ const ReportDashboard = () => {
             <div className="flex flex-col sm:flex-row gap-3">
               <div className="relative flex-1">
                 <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                  <Filter className="w-4 h-4 text-gray-400" />
+                  <Filter className="w-4 h-4" style={{ color: text3 }} />
                 </div>
                 <select
                   value={dateFilter}
                   onChange={(e) => setDateFilter(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 text-xs border border-gray-200 rounded-lg focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all appearance-none bg-white cursor-pointer"
-                  style={{ outline: 'none' }}
+                  className="w-full pl-10 pr-4 py-2.5 appearance-none cursor-pointer"
+                  style={{ ...ba(11, 400, { color: textC }), background: bg3, border: `1px solid ${border}`, borderRadius: 4, outline: 'none' }}
                 >
                   <option value="ALL">All Dates</option>
                   <option value="TODAY">Today</option>
@@ -868,13 +870,13 @@ const ReportDashboard = () => {
               </div>
               <div className="relative flex-1">
                 <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                  <Clock className="w-4 h-4 text-gray-400" />
+                  <Clock className="w-4 h-4" style={{ color: text3 }} />
                 </div>
                 <select
                   value={itemsPerPage}
                   onChange={(e) => setItemsPerPage(parseInt(e.target.value))}
-                  className="w-full pl-10 pr-4 py-2.5 text-xs border border-gray-200 rounded-lg focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all appearance-none bg-white cursor-pointer"
-                  style={{ outline: 'none' }}
+                  className="w-full pl-10 pr-4 py-2.5 appearance-none cursor-pointer"
+                  style={{ ...ba(11, 400, { color: textC }), background: bg3, border: `1px solid ${border}`, borderRadius: 4, outline: 'none' }}
                 >
                   <option value={9}>9 per page</option>
                   <option value={15}>15 per page</option>
@@ -892,9 +894,9 @@ const ReportDashboard = () => {
                   exit={{ opacity: 0, height: 0 }}
                   className="overflow-hidden"
                 >
-                  <div className="flex flex-col sm:flex-row gap-3 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-100">
+                  <div className="flex flex-col sm:flex-row gap-3 p-4" style={{ background: bg3, borderRadius: 4, border: `1px solid ${border}` }}>
                     <div className="flex-1">
-                      <label className="block text-xs font-semibold text-gray-700 mb-2 flex items-center">
+                      <label className="flex items-center mb-2" style={bc(10, 600, { color: text2, letterSpacing: 1 })}>
                         <Calendar className="w-3 h-3 mr-1" />
                         Start Date
                       </label>
@@ -902,12 +904,12 @@ const ReportDashboard = () => {
                         type="date"
                         value={startDate}
                         onChange={(e) => setStartDate(e.target.value)}
-                        className="w-full text-xs border border-gray-200 rounded-lg px-3 py-2.5 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all"
-                        style={{ outline: 'none' }}
+                        className="w-full px-3 py-2.5"
+                        style={{ ...ba(11, 400, { color: textC }), background: bg2, border: `1px solid ${border}`, borderRadius: 4, outline: 'none' }}
                       />
                     </div>
                     <div className="flex-1">
-                      <label className="block text-xs font-semibold text-gray-700 mb-2 flex items-center">
+                      <label className="flex items-center mb-2" style={bc(10, 600, { color: text2, letterSpacing: 1 })}>
                         <Calendar className="w-3 h-3 mr-1" />
                         End Date
                       </label>
@@ -915,8 +917,8 @@ const ReportDashboard = () => {
                         type="date"
                         value={endDate}
                         onChange={(e) => setEndDate(e.target.value)}
-                        className="w-full text-xs border border-gray-200 rounded-lg px-3 py-2.5 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all"
-                        style={{ outline: 'none' }}
+                        className="w-full px-3 py-2.5"
+                        style={{ ...ba(11, 400, { color: textC }), background: bg2, border: `1px solid ${border}`, borderRadius: 4, outline: 'none' }}
                       />
                     </div>
                   </div>
@@ -933,43 +935,45 @@ const ReportDashboard = () => {
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="bg-gradient-to-r from-red-50 to-rose-50 border border-red-200 rounded-xl p-1 text-red-700 text-xs flex items-center space-x-2 shadow-sm"
+              className="flex items-center space-x-2 p-3"
+              style={{ background: 'rgba(232,64,64,.08)', border: '1px solid rgba(232,64,64,.3)', borderRadius: 4, color: '#e84040' }}
             >
               <AlertCircle className="w-4 h-4 flex-shrink-0" />
-              <span className="font-medium">{error}</span>
+              <span style={ba(11, 600, { color: '#e84040' })}>{error}</span>
             </motion.div>
           )}
         </AnimatePresence>
 
         {/* Reports Content */}
         {loading ? (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-2  text-center">
-            <div className="inline-flex flex-col items-center space-y-1">
+          <div className="text-center p-8" style={{ background: bg2, border: `1px solid ${border}`, borderRadius: 4 }}>
+            <div className="inline-flex flex-col items-center space-y-2">
               <motion.div
                 animate={{ rotate: 360 }}
                 transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                className="w-8 h-8 border-3 border-t-transparent rounded-full"
-                style={{ borderColor: 'rgb(249, 115, 22)', borderTopColor: 'transparent', borderWidth: '3px' }}
+                className="w-8 h-8 rounded-full"
+                style={{ border: `3px solid ${border}`, borderTopColor: ORG }}
               />
-              <span className="text-xs text-gray-600 font-medium">Loading reports...</span>
+              <span style={ba(11, 500, { color: text2 })}>Loading reports...</span>
             </div>
           </div>
         ) : reports.length === 0 ? (
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-xl shadow-sm w-full border border-gray-100  text-center"
+            className="text-center p-10 w-full"
+            style={{ background: bg2, border: `1px solid ${border}`, borderRadius: 4 }}
           >
             <motion.div
               animate={{ y: [0, -10, 0] }}
               transition={{ duration: 2, repeat: Infinity }}
             >
-              <FileText className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+              <FileText className="w-16 h-16 mx-auto mb-4" style={{ color: text3 }} />
             </motion.div>
-            <p className="text-base font-semibold text-gray-900 mb-2">
+            <p className="mb-2" style={bc(16, 700, { color: textC })}>
               {searchTerm || dateFilter !== 'ALL' ? 'No Reports Found' : 'No Reports Available'}
             </p>
-            <p className="text-xs text-gray-500 mb-4">
+            <p className="mb-4" style={ba(11, 400, { color: text2 })}>
               {searchTerm || dateFilter !== 'ALL' ? 'Try adjusting your search filters.' : 'Create a new report to get started.'}
             </p>
             {!searchTerm && dateFilter === 'ALL' && (
@@ -977,7 +981,7 @@ const ReportDashboard = () => {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={handleCreateReport}
-                className="inline-flex items-center space-x-2 text-white px-2 py-2 rounded-lg font-medium shadow-md text-xs bg-gradient-to-r from-[#ff5a00] to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                style={{ ...ba(11, 600, { color: '#fff' }), display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 16px', background: ORG, border: 'none', borderRadius: 4, cursor: 'pointer' }}
               >
                 <Plus className="w-4 h-4" />
                 <span>Create Your First Report</span>
@@ -1000,9 +1004,6 @@ const ReportDashboard = () => {
           </motion.div>
         }
 
-
-
-
         {/* Operation Status Toast */}
         <AnimatePresence>
           {operationStatus && (
@@ -1012,26 +1013,31 @@ const ReportDashboard = () => {
               exit={{ opacity: 0, y: -50, scale: 0.9 }}
               className="fixed top-4 right-4 z-50"
             >
-              <div className={`flex items-center space-x-3 px-1 py-3 rounded-xl shadow-2xl text-xs border-2 ${operationStatus.type === 'success'
-                ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-300 text-green-800'
-                : 'bg-gradient-to-r from-red-50 to-rose-50 border-red-300 text-red-800'
-                }`}>
+              <div
+                className="flex items-center space-x-3 px-4 py-3"
+                style={{
+                  background: operationStatus.type === 'success' ? 'rgba(34,197,94,.12)' : 'rgba(232,64,64,.12)',
+                  border: `2px solid ${operationStatus.type === 'success' ? 'rgba(34,197,94,.4)' : 'rgba(232,64,64,.4)'}`,
+                  borderRadius: 4,
+                  color: operationStatus.type === 'success' ? '#22c55e' : '#e84040',
+                }}
+              >
                 <motion.div
                   initial={{ scale: 0, rotate: -180 }}
                   animate={{ scale: 1, rotate: 0 }}
                   transition={{ type: "spring", stiffness: 200 }}
                 >
                   {operationStatus.type === 'success' ?
-                    <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" /> :
-                    <XCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
+                    <CheckCircle className="w-5 h-5 flex-shrink-0" style={{ color: '#22c55e' }} /> :
+                    <XCircle className="w-5 h-5 flex-shrink-0" style={{ color: '#e84040' }} />
                   }
                 </motion.div>
-                <span className="font-semibold">{operationStatus.message}</span>
+                <span style={ba(11, 600)}>{operationStatus.message}</span>
                 <motion.button
                   whileHover={{ scale: 1.2, rotate: 90 }}
                   whileTap={{ scale: 0.9 }}
                   onClick={() => setOperationStatus(null)}
-                  className="ml-2 hover:bg-white/50 rounded-full p-1 transition-colors"
+                  style={{ marginLeft: 8, background: 'transparent', border: 'none', cursor: 'pointer', color: 'inherit', padding: 4, borderRadius: '50%' }}
                 >
                   <X className="w-4 h-4" />
                 </motion.button>
@@ -1047,22 +1053,24 @@ const ReportDashboard = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-40"
+              className="fixed inset-0 flex items-center justify-center z-40"
+              style={{ background: 'rgba(0,0,0,.75)' }}
             >
               <motion.div
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
-                className="bg-white rounded-2xl p-8 shadow-2xl"
+                className="p-8"
+                style={{ background: bg2, border: `1px solid ${border}`, borderRadius: 4 }}
               >
                 <div className="flex flex-col items-center space-y-4">
                   <motion.div
                     animate={{ rotate: 360 }}
                     transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                    className="w-12 h-12 border-4 border-t-transparent rounded-full"
-                    style={{ borderColor: 'rgb(249, 115, 22)', borderTopColor: 'transparent' }}
+                    className="w-12 h-12 rounded-full"
+                    style={{ border: `4px solid ${border}`, borderTopColor: ORG }}
                   />
-                  <span className="text-gray-700 text-sm font-semibold">Processing...</span>
+                  <span style={ba(13, 600, { color: textC })}>Processing...</span>
                 </div>
               </motion.div>
             </motion.div>
@@ -1076,32 +1084,35 @@ const ReportDashboard = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/40 backdrop-blur-md flex items-center justify-center z-50 p-4"
+              className="fixed inset-0 flex items-center justify-center z-50 p-4"
+              style={{ background: 'rgba(0,0,0,.75)' }}
             >
               <motion.div
                 initial={{ scale: 0.9, opacity: 0, y: 20 }}
                 animate={{ scale: 1, opacity: 1, y: 0 }}
                 exit={{ scale: 0.9, opacity: 0, y: 20 }}
                 transition={{ type: "spring", duration: 0.5 }}
-                className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl"
+                className="w-full max-w-md p-6"
+                style={{ background: bg2, border: `1px solid ${border}`, borderRadius: 4 }}
               >
                 <div className="flex items-start space-x-4 mb-5">
                   <motion.div
                     initial={{ scale: 0 }}
                     animate={{ scale: 1, rotate: [0, 10, -10, 0] }}
                     transition={{ delay: 0.2 }}
-                    className="w-12 h-12 bg-gradient-to-br from-red-100 to-rose-100 rounded-xl flex items-center justify-center flex-shrink-0"
+                    className="w-12 h-12 flex items-center justify-center flex-shrink-0"
+                    style={{ background: 'rgba(232,64,64,.12)', border: '1px solid rgba(232,64,64,.3)', borderRadius: 4 }}
                   >
-                    <AlertTriangle className="w-6 h-6 text-red-600" />
+                    <AlertTriangle className="w-6 h-6" style={{ color: '#e84040' }} />
                   </motion.div>
                   <div className="flex-1">
-                    <h3 className="text-base font-bold text-gray-900 mb-1">Delete Report?</h3>
-                    <p className="text-xs text-gray-500">This action cannot be undone</p>
+                    <h3 style={bc(15, 700, { color: textC, marginBottom: 4 })}>Delete Report?</h3>
+                    <p style={ba(11, 400, { color: text2 })}>This action cannot be undone</p>
                   </div>
                 </div>
-                <div className="bg-gray-50 rounded-lg p-4 mb-6">
-                  <p className="text-xs text-gray-700">
-                    Are you sure you want to delete <span className="font-bold text-gray-900">"{deleteConfirm.title || 'N/A'}"</span>?
+                <div className="p-4 mb-6" style={{ background: bg3, borderRadius: 4 }}>
+                  <p style={ba(11, 400, { color: text2 })}>
+                    Are you sure you want to delete <span style={{ fontWeight: 700, color: textC }}>"{deleteConfirm.title || 'N/A'}"</span>?
                   </p>
                 </div>
                 <div className="flex items-center justify-end space-x-3">
@@ -1109,7 +1120,7 @@ const ReportDashboard = () => {
                     whileHover={{ scale: 1.02, y: -1 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => setDeleteConfirm(null)}
-                    className="px-5 py-2.5 text-xs font-semibold text-gray-700 border-2 border-gray-200 rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-all"
+                    style={{ ...ba(11, 600, { color: textC }), padding: '8px 20px', background: bg3, border: `1px solid ${border}`, borderRadius: 4, cursor: 'pointer' }}
                   >
                     Cancel
                   </motion.button>
@@ -1117,7 +1128,7 @@ const ReportDashboard = () => {
                     whileHover={{ scale: 1.02, y: -1 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => handleDeleteReport(deleteConfirm)}
-                    className="px-5 py-2.5 text-xs font-semibold bg-gradient-to-r from-red-600 to-rose-600 text-white rounded-lg hover:from-red-700 hover:to-rose-700 shadow-lg hover:shadow-xl transition-all"
+                    style={{ ...ba(11, 600, { color: '#fff' }), padding: '8px 20px', background: '#e84040', border: 'none', borderRadius: 4, cursor: 'pointer' }}
                   >
                     Delete Report
                   </motion.button>
@@ -1127,9 +1138,6 @@ const ReportDashboard = () => {
           )}
         </AnimatePresence>
 
-
-
-
         {/* View Report Modal */}
         <AnimatePresence>
           {showViewModal && selectedReport && (
@@ -1137,24 +1145,27 @@ const ReportDashboard = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/40 backdrop-blur-md flex items-center justify-center z-50 p-4"
+              className="fixed inset-0 flex items-center justify-center z-50 p-4"
+              style={{ background: 'rgba(0,0,0,.75)' }}
             >
               <motion.div
                 initial={{ scale: 0.9, opacity: 0, y: 20 }}
                 animate={{ scale: 1, opacity: 1, y: 0 }}
                 exit={{ scale: 0.9, opacity: 0, y: 20 }}
                 transition={{ type: "spring", duration: 0.5 }}
-                className="bg-white rounded-2xl p-6 w-full max-w-3xl shadow-2xl max-h-[90vh] overflow-hidden flex flex-col"
+                className="w-full max-w-3xl p-6 max-h-[90vh] overflow-hidden flex flex-col"
+                style={{ background: bg2, border: `1px solid ${border}`, borderRadius: 4 }}
               >
                 {/* Header */}
-                <div className="flex items-start justify-between mb-5 pb-4 border-b border-gray-200">
+                <div className="flex items-start justify-between mb-5 pb-4" style={{ borderBottom: `1px solid ${border}` }}>
                   <div className="flex items-center space-x-3 flex-1">
-                    <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-blue-100 to-purple-100">
-                      <FileText className="w-5 h-5 text-[#ff5a00]" />
+                    <div className="w-10 h-10 flex items-center justify-center flex-shrink-0"
+                      style={{ background: 'rgba(232,98,26,.1)', border: '1px solid rgba(232,98,26,.2)', borderRadius: 4 }}>
+                      <FileText className="w-5 h-5" style={{ color: ORG }} />
                     </div>
                     <div>
-                      <h3 className="text-base font-bold text-gray-900">{selectedReport.title}</h3>
-                      <p className="text-xs text-gray-500 mt-0.5">Report Details</p>
+                      <h3 style={bc(14, 700, { color: textC })}>{selectedReport.title}</h3>
+                      <p style={ba(11, 400, { color: text2, marginTop: 2 })}>Report Details</p>
                     </div>
                   </div>
                   <motion.button
@@ -1164,33 +1175,32 @@ const ReportDashboard = () => {
                       setShowViewModal(false);
                       setSelectedReport(null);
                     }}
-                    className="text-gray-400 hover:text-gray-600 p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                    style={{ color: text3, padding: 8, borderRadius: 4, background: bg3, border: 'none', cursor: 'pointer' }}
                   >
                     <X className="w-5 h-5" />
                   </motion.button>
                 </div>
 
-
-
                 {/* Content */}
                 <div className="flex-1 overflow-y-auto space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <p className="text-gray-500">Created By</p>
-                      <p className="font-medium text-gray-900">{selectedReport.admin?.adminName || 'Unknown'}</p>
+                      <p style={ba(11, 400, { color: text2, marginBottom: 4 })}>Created By</p>
+                      <p style={ba(12, 600, { color: textC })}>{selectedReport.admin?.adminName || 'Unknown'}</p>
                     </div>
                     <div>
-                      <p className="text-gray-500">Created On</p>
-                      <p className="font-medium text-gray-900">{formatDate(selectedReport.createdAt)}</p>
+                      <p style={ba(11, 400, { color: text2, marginBottom: 4 })}>Created On</p>
+                      <p style={ba(12, 600, { color: textC })}>{formatDate(selectedReport.createdAt)}</p>
                     </div>
                   </div>
 
-                  <div className="border-t pt-4">
-                    <p className="text-gray-500 mb-2">Report Content</p>
+                  <div className="pt-4" style={{ borderTop: `1px solid ${border}` }}>
+                    <p style={ba(11, 400, { color: text2, marginBottom: 8 })}>Report Content</p>
                     {selectedReport.content ? (
-                      <div className="bg-gray-50 p-4 rounded-lg max-h-96 overflow-y-auto">
+                      <div className="p-4 max-h-96 overflow-y-auto" style={{ background: bg3, borderRadius: 4 }}>
                         <div
                           className="prose prose-sm max-w-none"
+                          style={{ color: textC }}
                           dangerouslySetInnerHTML={{
                             __html: typeof selectedReport.content === 'string'
                               ? selectedReport.content
@@ -1199,30 +1209,30 @@ const ReportDashboard = () => {
                         />
                       </div>
                     ) : selectedReport.reportUrl ? (
-                      <div className="bg-blue-50 p-4 rounded-lg">
-                        <p className="text-blue-800 font-medium">External Report</p>
+                      <div className="p-4" style={{ background: bg3, borderRadius: 4 }}>
+                        <p style={ba(12, 600, { color: TEAL, marginBottom: 4 })}>External Report</p>
                         <a
                           href={handleReportUrl(selectedReport.reportUrl)}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-[#ff5a00] hover:underline text-xs"
+                          style={ba(11, 400, { color: ORG })}
                         >
                           {selectedReport.reportUrl}
                         </a>
                       </div>
                     ) : (
-                      <p className="text-gray-400 italic">No content available</p>
+                      <p style={ba(11, 400, { color: text3, fontStyle: 'italic' })}>No content available</p>
                     )}
                   </div>
                 </div>
 
                 {/* Footer */}
-                <div className="flex items-center justify-end space-x-3 pt-4 border-t border-gray-200">
+                <div className="flex items-center justify-end space-x-3 pt-4" style={{ borderTop: `1px solid ${border}` }}>
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => handleDownloadReport(selectedReport)}
-                    className="flex items-center space-x-2 px-4 py-2 text-xs font-medium text-green-700 bg-green-50 rounded-lg hover:bg-green-100 transition-colors"
+                    style={{ ...ba(11, 500, { color: TEAL }), display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', background: bg3, border: `1px solid ${border}`, borderRadius: 4, cursor: 'pointer' }}
                   >
                     <Download className="w-3.5 h-3.5" />
                     <span>Download</span>
@@ -1234,7 +1244,7 @@ const ReportDashboard = () => {
                       setShowViewModal(false);
                       setSelectedReport(null);
                     }}
-                    className="px-4 py-2 text-xs font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                    style={{ ...ba(11, 500, { color: textC }), padding: '7px 14px', background: bg3, border: `1px solid ${border}`, borderRadius: 4, cursor: 'pointer' }}
                   >
                     Close
                   </motion.button>

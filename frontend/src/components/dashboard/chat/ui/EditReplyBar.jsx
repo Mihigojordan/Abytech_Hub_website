@@ -1,49 +1,72 @@
 import React from 'react';
-import { X, Edit, Forward } from 'lucide-react';
+import { X, Edit, CornerUpLeft } from 'lucide-react';
+import { useDashboardTheme } from '../../../../utils/dashboardTheme';
+import { ORG, TEAL, bb, bc, ba } from '../../../../utils/homeConstants';
+import { motion } from 'framer-motion';
 
 /**
  * Edit/Reply bar component shown above message input
  */
 const EditReplyBar = ({ editingMessage, replyingTo, onCancel }) => {
+    const { bg, bg2, bg3, textC, text2, text3, border } = useDashboardTheme();
+
     if (!editingMessage && !replyingTo) return null;
 
     return (
-        <div className="px-6 py-3 bg-dashboard-50 border-t border-dashboard-100 flex items-center justify-between">
-            <div className="flex items-center gap-3">
+        <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            style={{ 
+                padding: '12px 24px', 
+                background: bg2, 
+                borderTop: `1px solid ${border}`, 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'between',
+                gap: 16
+            }}
+        >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>
                 {editingMessage ? (
                     <>
-                        <Edit className="w-4 h-4 text-dashboard-600" />
-                        <div>
-                            <p className="text-sm font-medium text-gray-800">Editing message</p>
-                            <p className="text-xs text-gray-600 truncate max-w-md">
+                        <Edit style={{ width: 16, height: 16, color: ORG }} />
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                            <p style={{ ...ba(13, 600, { color: textC, margin: 0 }) }}>Editing message</p>
+                            <p style={{ ...ba(11, 400, { color: text2, margin: 0 }) }} className="truncate">
                                 {editingMessage.content}
                             </p>
                         </div>
                     </>
                 ) : (
                     <>
-                        <Forward className="w-4 h-4 text-dashboard-600" />
-                        <div>
-                            <p className="text-sm font-medium text-gray-800">
-                                Replying to {replyingTo?.sender}
+                        <CornerUpLeft style={{ width: 16, height: 16, color: ORG }} />
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                            <p style={{ ...ba(13, 600, { color: textC, margin: 0 }) }}>
+                                Replying to <span style={{ color: ORG }}>{replyingTo?.sender}</span>
                             </p>
-                            <p className="text-xs text-gray-600 truncate max-w-md">
-                                {replyingTo?.type === 'image' && '📷 Image'}
-                                {replyingTo?.type === 'file' && '📎 File'}
-                                {(replyingTo?.type === 'text' || replyingTo?.type === 'combined') &&
-                                    (replyingTo?.content || 'Media')}
+                            <p style={{ ...ba(11, 400, { color: text2, margin: 0 }) }} className="truncate">
+                                {replyingTo?.content || (replyingTo?.images ? '📷 Image' : '📎 Attachment')}
                             </p>
                         </div>
                     </>
                 )}
             </div>
-            <button
+            <motion.button
+                whileHover={{ scale: 1.1, background: bg3 }}
+                whileTap={{ scale: 0.9 }}
                 onClick={onCancel}
-                className="p-1 hover:bg-dashboard-100 rounded transition-colors"
+                style={{
+                    padding: 6,
+                    borderRadius: 4,
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    color: text3
+                }}
             >
-                <X className="w-5 h-5 text-gray-600" />
-            </button>
-        </div>
+                <X style={{ width: 18, height: 18 }} />
+            </motion.button>
+        </motion.div>
     );
 };
 

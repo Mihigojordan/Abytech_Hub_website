@@ -8,6 +8,7 @@ import { SocketProvider } from './context/SocketContext.jsx';
 import { registerSW } from 'virtual:pwa-register';
 import { HelmetProvider } from 'react-helmet-async';
 import {NotificationProvider} from './context/NotificationContext.tsx'
+import { ThemeProvider } from './context/ThemeContext.jsx';
 
 const updateSW = registerSW({
   onNeedRefresh() {
@@ -40,9 +41,11 @@ createRoot(document.getElementById("root")).render(
 
       <SocketProvider serverUrl={import.meta.env.VITE_API_URL}>
         <AdminAuthContextProvider>
-      <NotificationProvider>
-          <App />
-      </NotificationProvider>
+          <NotificationProvider>
+            <ThemeProvider>
+              <App />
+            </ThemeProvider>
+          </NotificationProvider>
         </AdminAuthContextProvider>
       </SocketProvider>
     </HelmetProvider>

@@ -1,149 +1,87 @@
-import React from 'react';
+import React from "react";
+
+const checks = [
+  "Building industry-standard software with modern best practices and methodologies.",
+  "Practical understanding of software architecture, testing, and deployment strategies.",
+  "Master version control, CI/CD pipelines, and collaborative development workflows.",
+];
+
+const modules = [
+  { icon:"☀️", title:"Opening Circle",       sub:"Introductions and setting expectations" },
+  { icon:"💻", title:"Dev Environment Setup", sub:"Configuring IDEs, tools, and best practices" },
+  { icon:"📋", title:"Code Review Session",   sub:"Learning effective code review techniques" },
+  { icon:"💡", title:"Development Sprint",    sub:"Build a real-world application module" },
+  { icon:"🎯", title:"Architecture Talks",    sub:"Team presentations and technical discussions" },
+  { icon:"✅", title:"Closing Circle",        sub:"Recap, Q&A, and networking" },
+];
 
 export default function AbytechWorkshop() {
-  const scheduleItems = [
-    {
-      time: "09:00 AM",
-      title: "Opening Circle",
-      description: "Introductions and setting expectations",
-      icon: "☀️"
-    },
-    {
-      time: "09:45 AM",
-      title: "Development Environment Setup",
-      description: "Configuring IDEs, tools, and establishing best practices",
-      icon: "💻"
-    },
-    {
-      time: "10:45 AM",
-      title: "Code Review Session",
-      description: "Learning effective code review techniques",
-      icon: "📋"
-    },
-    {
-      time: "11:45 AM",
-      title: "Hands-on Development Sprint",
-      description: "Build a real-world application module",
-      icon: "💡"
-    },
-    {
-      time: "03:30 PM",
-      title: "Architecture Presentations",
-      description: "Team presentations and technical discussions",
-      icon: "🎯"
-    },
-    {
-      time: "05:00 PM",
-      title: "Closing Circle",
-      description: "Recap, Q&A, and networking",
-      icon: "✅"
-    }
-  ];
-
-  const trainingPillars = [
-    "Building industry-standard software solutions with modern best practices and methodologies.",
-    "Conveying a practical understanding of software architecture, testing, and deployment strategies.",
-    "Helping you master version control, CI/CD pipelines, and collaborative development workflows."
-  ];
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white p-8 relative overflow-hidden">
-      {/* Background decorative elements */}
-      <div className="absolute inset-0 opacity-10">
-        <div className="absolute top-20 right-20 w-96 h-96 bg-[#ff5a00] rounded-full blur-3xl"></div>
-        <div className="absolute bottom-20 left-20 w-96 h-96 bg-[#ff5a00] rounded-full blur-3xl"></div>
-      </div>
+    <section style={{ background: "#071418", position: "relative", overflow: "hidden" }}>
+      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "100px 80px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 80, alignItems: "center" }}>
 
-      <div className="max-w-8xl mx-auto relative z-10">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <span className="text-[#ff5a00]">🚀</span>
-            <span className="text-gray-400 text-sm">Abytech Developer Workshop</span>
-          </div>
-          <h1 className="text-5xl font-bold mb-4">
-            Become a Master of Software Development
-            <br />
-            As you learn to Build with <span className="text-[#ff5a00]">Excellence</span>
-          </h1>
-        </div>
-
-        {/* Main Content Grid */}
-        <div className="grid lg:grid-cols-2 gap-8">
-          {/* Left Column */}
+          {/* Left */}
           <div>
-            {/* Introduction */}
-            <div className="mb-8">
-              <p className="text-gray-300 leading-relaxed">
-                As software development continues to evolve, we all need to keep educating ourselves on modern practices, 
-                tools, and methodologies. At Abytech, we facilitate comprehensive workshops, bootcamps, and seminars to 
-                support developers and their teams to stay current as technology advances.
-              </p>
+            <div style={{
+              fontFamily: "'Barlow Condensed',sans-serif", fontSize: 11, fontWeight: 700,
+              letterSpacing: 5, textTransform: "uppercase", color: "#e8621a",
+              display: "flex", alignItems: "center", gap: 12, marginBottom: 16,
+            }}>
+              <span style={{ width: 28, height: 2, background: "#e8621a", display: "block" }}/>
+              Developer Workshop
             </div>
-
-            {/* Training Pillars */}
-            <div className="mb-8">
-              <h2 className="text-2xl font-bold mb-6 text-[#ff5a00]">
-                Our Training Focus: The core of our training consists of three pillars:
-              </h2>
-              <div className="space-y-4">
-                {trainingPillars.map((pillar, index) => (
-                  <div key={index} className="flex gap-3">
-                    <span className="text-[#ff5a00] mt-1">✓</span>
-                    <p className="text-gray-300">{pillar}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Guide Section */}
-            <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10">
-              <h3 className="text-xl font-semibold mb-3 text-[#ff5a00]">
-                Your Guide: Senior Developer
-              </h3>
-              <p className="text-gray-300 italic mb-4">
-                "Software development isn't about writing code—it's about crafting solutions that make a difference. 
-                Join me to discover how excellence in development can transform your career."
-              </p>
-              <p className="text-gray-400 text-sm">
-                Lead Software Architect and trainer at Abytech with 15+ years experience in Full-Stack Development, 
-                Cloud Architecture, and Agile Methodologies.
-              </p>
-            </div>
-          </div>
-
-          {/* Right Column - Training Modules */}
-          <div>
-            <h2 className="text-2xl font-bold mb-6 text-[#ff5a00]">
-              Training Modules
+            <h2 style={{
+              fontFamily: "'Bebas Neue',sans-serif", fontSize: "clamp(40px,5vw,64px)",
+              lineHeight: .88, letterSpacing: 2, color: "#fff", margin: 0,
+            }}>
+              BECOME A<br/>MASTER OF<br/><span style={{ color: "#e8621a" }}>SOFTWARE</span>
             </h2>
-            <div className="space-y-3">
-              {scheduleItems.map((item, index) => (
-                <div
-                  key={index}
-                  className="bg-white/5 backdrop-blur-sm rounded-xl p-5 border border-white/10 hover:border-[#ff5a00]/50 transition-all duration-300 hover:bg-white/10"
-                >
-                  <div className="flex items-start gap-4">
-                 
-                    <div className="text-2xl">{item.icon}</div>
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-white mb-1">{item.title}</h3>
-                      <p className="text-gray-400 text-sm">{item.description}</p>
-                    </div>
-                  </div>
+            <p style={{ fontSize: 15, color: "rgba(255,255,255,.55)", lineHeight: 1.8, marginTop: 18, maxWidth: 440 }}>
+              Comprehensive workshops, bootcamps, and seminars to keep developers and their teams current as technology advances.
+            </p>
+            <div style={{ marginTop: 28, display: "flex", flexDirection: "column", gap: 12 }}>
+              {checks.map((c, i) => (
+                <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 12, fontSize: 13, color: "rgba(255,255,255,.55)", lineHeight: 1.6 }}>
+                  <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#e8621a", flexShrink: 0, marginTop: 6 }}/>
+                  {c}
                 </div>
               ))}
             </div>
+            <a href="/contact" style={{
+              display: "inline-block", marginTop: 32,
+              background: "#e8621a", color: "#fff",
+              fontFamily: "'Bebas Neue',sans-serif", fontSize: 18, letterSpacing: 3,
+              padding: "15px 34px", borderRadius: 4, textDecoration: "none",
+              boxShadow: "0 8px 28px rgba(232,98,26,.35)",
+            }}>Book a Training</a>
+          </div>
+
+          {/* Right — modules grid */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}>
+            {modules.map((m, i) => <ModCard key={i} {...m} />)}
           </div>
         </div>
-
-        {/* CTA Button */}
-        <div className="text-center mt-12">
-          <button className="bg-[#ff5a00] hover:bg-[#ff6a10] text-white font-semibold px-8 py-4 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg shadow-[#ff5a00]/30">
-            Speak with us about booking a development training
-          </button>
-        </div>
       </div>
+    </section>
+  );
+}
+
+function ModCard({ icon, title, sub }) {
+  const [hover, setHover] = React.useState(false);
+  return (
+    <div
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      style={{
+        background: hover ? "#0f2636" : "#0d3040",
+        border: "1px solid rgba(255,255,255,.07)",
+        padding: "20px", transition: "background .2s",
+      }}
+    >
+      <div style={{ fontSize: 18, marginBottom: 8 }}>{icon}</div>
+      <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: 14, fontWeight: 700, letterSpacing: 1, color: "#fff", marginBottom: 4 }}>{title}</div>
+      <div style={{ fontSize: 11, color: "rgba(255,255,255,.25)", lineHeight: 1.5 }}>{sub}</div>
     </div>
   );
 }

@@ -1,71 +1,27 @@
-import React from 'react'
-import Image1 from '../../assets/sadiki.jpg';
+import { ORG, TEAL, bb, bc } from "../../utils/homeConstants";
 
-function Quote() {
+export default function Quote() {
   return (
-    <div className="relative w-full h-[450px] flex items-center justify-center overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 py-4 px-6">
-      {/* Tech Pattern Background */}
-      <div className="absolute inset-0 opacity-20">
-        <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <pattern id="tech-pattern" x="0" y="0" width="100" height="100" patternUnits="userSpaceOnUse">
-              <path d="M10 10 L30 30 M20 5 L40 25 M5 40 L15 50" stroke="currentColor" strokeWidth="0.5" fill="none" className="text-blue-400"/>
-              <circle cx="30" cy="30" r="2" fill="currentColor" className="text-blue-400"/>
-              <circle cx="70" cy="20" r="1.5" fill="currentColor" className="text-blue-400"/>
-              <path d="M60 60 L80 70 L70 85" stroke="currentColor" strokeWidth="0.5" fill="none" className="text-blue-400"/>
-            </pattern>
-          </defs>
-          <rect width="100%" height="100%" fill="url(#tech-pattern)"/>
-        </svg>
-      </div>
-
-      {/* Animated Dots */}
-      <div className="absolute top-20 left-10 w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
-      <div className="absolute top-40 right-20 w-3 h-3 bg-blue-300 rounded-full animate-pulse" style={{animationDelay: '1s'}}></div>
-      <div className="absolute bottom-32 left-1/4 w-2 h-2 bg-blue-500 rounded-full animate-pulse" style={{animationDelay: '2s'}}></div>
-
-      {/* Content Container */}
-      <div className="relative z-10 max-w-5xl mx-auto text-center">
-        {/* Quote */}
-        <blockquote className="mb-16">
-          <p className="text-3xl md:text-xl lg:text-xl font-bold text-white leading-tight mb-2">
-            "Rwanda's tech ecosystem is experiencing unprecedented growth—
-          </p>
-          <p className="text-3xl md:text-4xl lg:text-xl font-bold text-white leading-tight">
-            with innovation hubs and skilled developers, we're positioning
-          </p>
-          <p className="text-3xl md:text-4xl lg:text-xl font-bold text-white leading-tight">
-            Africa as a global technology leader."
-          </p>
-        </blockquote>
-
-        {/* Profile Section */}
-        <div className="flex flex-col items-center">
-          {/* Profile Image */}
-          <div className="w-32 h-32 mb-6 rounded-full overflow-hidden border-4 border-[#ff5a00] shadow-2xl shadow-blue-500/50">
-            <div className="w-full h-full bg-gradient-to-br from-blue-400 to-[#ff5a00] flex items-center justify-center">
-           
-            <img src={Image1} alt="" />
-            </div>
-          </div>
-
-          {/* Name and Title */}
-          <div>
-            <h3 className="text-sm md:text-xl font-bold text-white mb-2">
-              Sadiki Rukara
-            </h3>
-            <p className="text-lg md:text-sm text-[#ff5a00] font-medium tracking-wide">
-              CEO & Founder, ABYTECH HUB
+    <section id="quote" className="relative overflow-hidden" style={{ background: TEAL }}>
+      <div className="absolute inset-0" style={{ background: ORG, clipPath: "polygon(0 0,20% 0,8% 100%,0 100%)", opacity: .25 }} />
+      <div className="max-w-[1200px] mx-auto px-5 sm:px-10 lg:px-20 py-14 lg:py-20 relative z-[2]">
+        <div className="flex flex-col lg:flex-row items-start lg:items-center gap-8 lg:gap-16">
+          <div className="relative flex-1">
+            <div className="absolute pointer-events-none hidden lg:block"
+              style={{ ...bb(180, { lineHeight: .7, color: "rgba(255,255,255,.07)" }), top: 20, left: 50 }}>"</div>
+            <p className="at-reveal relative z-[2]"
+              style={{ ...bc("clamp(18px,3vw,32px)", 400, { lineHeight: 1.48, color: "#fff", fontStyle: "italic", letterSpacing: .5 }) }}>
+              "Rwanda's tech ecosystem is experiencing unprecedented growth — with innovation hubs and skilled developers, we're positioning Africa as a global technology leader."
             </p>
+          </div>
+          <div className="at-reveal at-d1 lg:text-right shrink-0">
+            <div style={{ ...bb(22, { letterSpacing: 3, color: "#fff" }) }}>Sadiki Rukara</div>
+            <div className="mt-1" style={{ ...bc(12, 600, { letterSpacing: 3, textTransform: "uppercase", color: "rgba(255,255,255,.55)", lineHeight: 1.6 }) }}>
+              CEO & Founder<br />ABYTECH HUB
+            </div>
           </div>
         </div>
       </div>
-
-      {/* Decorative Elements */}
-      <div className="absolute top-1/4 left-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl"></div>
-      <div className="absolute bottom-1/4 right-0 w-96 h-96 bg-[#ff5a00]/10 rounded-full blur-3xl"></div>
-    </div>
-  )
+    </section>
+  );
 }
-
-export default Quote

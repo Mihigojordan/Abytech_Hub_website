@@ -23,6 +23,8 @@ import useAdminAuth from '../../context/AdminAuthContext';
 import adminAuthService from '../../services/adminAuthService';
 import userAuthService from '../../services/userAuthService';
 import { API_URL } from '../../api/api';
+import { useDashboardTheme } from '../../utils/dashboardTheme';
+import { ORG, TEAL, bb, bc, ba } from '../../utils/homeConstants';
 
 function handleReportUrl(url: string | null | undefined): string | null {
   if (!url) return null;
@@ -124,33 +126,43 @@ const EmployeeAvatar = ({ employee, size = 'md' }: { employee: EmployeeRecord; s
   const imageUrl = handleReportUrl(employee.avatar);
   const [hasError, setHasError] = useState(false);
 
-  const sizeClass =
-    size === 'sm' ? 'w-8 h-8' :
-    size === 'lg' ? 'w-12 h-12' :
-    'w-10 h-10';
+  const sizePx =
+    size === 'sm' ? 32 :
+    size === 'lg' ? 48 :
+    40;
 
   const iconSize =
-    size === 'sm' ? 'w-4 h-4' :
-    size === 'lg' ? 'w-6 h-6' :
-    'w-5 h-5';
+    size === 'sm' ? 16 :
+    size === 'lg' ? 24 :
+    20;
 
   if (imageUrl && !hasError) {
     return (
       <img
         src={imageUrl}
         alt={employee.name || 'Employee'}
-        className={`${sizeClass} rounded-full object-cover border-2 border-gray-200`}
+        style={{ width: sizePx, height: sizePx, borderRadius: '50%', objectFit: 'cover', border: `2px solid ${ORG}`, flexShrink: 0 }}
         onError={() => setHasError(true)}
       />
     );
   }
 
   return (
-    <div className={`${sizeClass} rounded-full flex items-center justify-center bg-orange-50 text-orange-500 border border-orange-100`}>
+    <div style={{
+      width: sizePx,
+      height: sizePx,
+      borderRadius: '50%',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      background: ORG,
+      color: '#fff',
+      flexShrink: 0,
+    }}>
       {employee.initial ? (
-        <span className="text-xs font-semibold">{employee.initial.slice(0, 2)}</span>
+        <span style={{ fontSize: 11, fontWeight: 700 }}>{employee.initial.slice(0, 2)}</span>
       ) : (
-        <User className={iconSize} />
+        <User style={{ width: iconSize, height: iconSize }} />
       )}
     </div>
   );
@@ -158,6 +170,7 @@ const EmployeeAvatar = ({ employee, size = 'md' }: { employee: EmployeeRecord; s
 
 const EmployeeDirectoryPage = () => {
   const { isSuperAdmin } = useAdminAuth();
+  const { isDark, bg, bg2, bg3, textC, text2, text3, border } = useDashboardTheme();
   const [employees, setEmployees] = useState<EmployeeRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -307,41 +320,70 @@ const EmployeeDirectoryPage = () => {
     setCurrentPage(1);
   }, [filteredEmployees.length, activeFilter, searchTerm, dateFrom, dateTo, sortBy, sortOrder]);
 
-  const getStatusColor = (status: EmployeeStatus) => status === 'ACTIVE'
-    ? { bg: 'bg-green-100', txt: 'text-green-700', border: 'border-green-200' }
-    : { bg: 'bg-red-100', txt: 'text-red-700', border: 'border-red-200' };
+  const getStatusStyle = (status: EmployeeStatus) => status === 'ACTIVE'
+    ? { background: 'rgba(74,222,128,.15)', color: '#4ade80' }
+    : { background: 'rgba(232,64,64,.15)', color: '#e84040' };
 
-  const getTypeColor = (employee: EmployeeRecord) => {
+  const getTypeBadgeStyle = (employee: EmployeeRecord) => {
     if (employee.role === 'ADMIN') {
-      return 'bg-slate-100 text-slate-700 border-slate-200';
+      return { background: `rgba(26,92,120,.15)`, color: TEAL };
     }
-
     return employee.employeeType === 'PART_TIME'
-      ? 'bg-sky-100 text-sky-700 border-sky-200'
-      : 'bg-orange-100 text-orange-700 border-orange-200';
+      ? { background: `rgba(232,98,26,.15)`, color: ORG }
+      : { background: `rgba(26,92,120,.15)`, color: TEAL };
   };
 
   const StatusBadge = ({ status }: { status: EmployeeStatus }) => {
-    const colors = getStatusColor(status);
+    const s = getStatusStyle(status);
     return (
-      <span className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-md ${colors.bg} ${colors.txt} border ${colors.border}`}>
+      <span style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        padding: '2px 8px',
+        borderRadius: 4,
+        fontSize: 11,
+        fontWeight: 600,
+        background: s.background,
+        color: s.color,
+      }}>
         {status}
       </span>
     );
   };
 
-  const TypeBadge = ({ employee }: { employee: EmployeeRecord }) => (
-    <span className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-md border ${getTypeColor(employee)}`}>
-      {getWorkforceTypeLabel(employee)}
-    </span>
-  );
+  const TypeBadge = ({ employee }: { employee: EmployeeRecord }) => {
+    const s = getTypeBadgeStyle(employee);
+    return (
+      <span style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        padding: '2px 8px',
+        borderRadius: 4,
+        fontSize: 11,
+        fontWeight: 600,
+        background: s.background,
+        color: s.color,
+      }}>
+        {getWorkforceTypeLabel(employee)}
+      </span>
+    );
+  };
 
   const renderActions = (employee: EmployeeRecord) => (
     <div className="flex items-center justify-end space-x-1">
       <motion.button
         whileHover={{ scale: 1.1 }}
         onClick={() => setSelectedEmployee(employee)}
-        className="p-1.5 rounded-md hover:bg-gray-100 text-gray-400 hover:text-gray-600"
+        style={{
+          padding: '6px',
+          borderRadius: 4,
+          background: bg3,
+          border: `1px solid ${border}`,
+          color: textC,
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+        }}
         title="View Details"
       >
         <Eye className="w-3.5 h-3.5" />
@@ -350,7 +392,16 @@ const EmployeeDirectoryPage = () => {
         whileHover={{ scale: 1.1 }}
         onClick={() => openWhatsApp(employee.phone)}
         disabled={!employee.phone}
-        className={`p-1.5 rounded-md transition ${employee.phone ? 'text-green-600 hover:bg-green-50' : 'text-gray-400 cursor-not-allowed'}`}
+        style={{
+          padding: '6px',
+          borderRadius: 4,
+          background: employee.phone ? 'rgba(34,197,94,.12)' : bg3,
+          border: `1px solid ${employee.phone ? 'rgba(34,197,94,.3)' : border}`,
+          color: employee.phone ? '#22c55e' : text3,
+          cursor: employee.phone ? 'pointer' : 'not-allowed',
+          display: 'flex',
+          alignItems: 'center',
+        }}
         title="Message on WhatsApp"
       >
         <Phone className="w-3.5 h-3.5" />
@@ -359,36 +410,43 @@ const EmployeeDirectoryPage = () => {
   );
 
   const renderTable = () => (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <div style={{ background: bg2, border: `1px solid ${border}`, borderRadius: 4, overflow: 'hidden' }}>
       <div className="overflow-x-auto">
         <table className="w-full text-xs">
-          <thead style={{ backgroundColor: 'rgba(249, 115, 22, 0.05)' }}>
+          <thead style={{ background: bg3 }}>
             <tr>
-              <th className="text-left py-2 px-3 font-semibold text-orange-500">Employee</th>
-              <th className="text-left py-2 px-3 font-semibold text-orange-500 hidden md:table-cell">Type</th>
-              <th className="text-left py-2 px-3 font-semibold text-orange-500 hidden lg:table-cell">Email</th>
-              <th className="text-left py-2 px-3 font-semibold text-orange-500 hidden xl:table-cell">Phone</th>
-              <th className="text-left py-2 px-3 font-semibold text-orange-500 hidden xl:table-cell">Joined</th>
-              <th className="text-left py-2 px-3 font-semibold text-orange-500">Status</th>
-              <th className="text-right py-2 px-3 font-semibold text-orange-500">Actions</th>
+              <th className="text-left py-2 px-3" style={bc(10, 700, { letterSpacing: 3, textTransform: 'uppercase', color: text2 })}>Employee</th>
+              <th className="text-left py-2 px-3 hidden md:table-cell" style={bc(10, 700, { letterSpacing: 3, textTransform: 'uppercase', color: text2 })}>Type</th>
+              <th className="text-left py-2 px-3 hidden lg:table-cell" style={bc(10, 700, { letterSpacing: 3, textTransform: 'uppercase', color: text2 })}>Email</th>
+              <th className="text-left py-2 px-3 hidden xl:table-cell" style={bc(10, 700, { letterSpacing: 3, textTransform: 'uppercase', color: text2 })}>Phone</th>
+              <th className="text-left py-2 px-3 hidden xl:table-cell" style={bc(10, 700, { letterSpacing: 3, textTransform: 'uppercase', color: text2 })}>Joined</th>
+              <th className="text-left py-2 px-3" style={bc(10, 700, { letterSpacing: 3, textTransform: 'uppercase', color: text2 })}>Status</th>
+              <th className="text-right py-2 px-3" style={bc(10, 700, { letterSpacing: 3, textTransform: 'uppercase', color: text2 })}>Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody>
             {pageEmployees.map((employee) => (
-              <motion.tr key={employee.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="hover:bg-gray-50">
+              <motion.tr
+                key={employee.id}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                style={{ background: bg2, borderBottom: `1px solid ${border}` }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = bg3)}
+                onMouseLeave={(e) => (e.currentTarget.style.background = bg2)}
+              >
                 <td className="py-2 px-3">
                   <div className="flex items-center space-x-2">
                     <EmployeeAvatar employee={employee} size="sm" />
                     <div>
-                      <div className="font-medium text-gray-900">{employee.name || '—'}</div>
-                      <div className="text-xs text-gray-500 lg:hidden">{employee.email}</div>
+                      <div style={{ fontWeight: 600, color: textC }}>{employee.name || '—'}</div>
+                      <div style={{ fontSize: 11, color: text2 }} className="lg:hidden">{employee.email}</div>
                     </div>
                   </div>
                 </td>
                 <td className="py-2 px-3 hidden md:table-cell"><TypeBadge employee={employee} /></td>
-                <td className="py-2 px-3 text-gray-600 hidden lg:table-cell">{employee.email || '—'}</td>
-                <td className="py-2 px-3 text-gray-600 hidden xl:table-cell">{employee.phone || '—'}</td>
-                <td className="py-2 px-3 text-gray-600 hidden xl:table-cell">{formatDate(employee.createdAt)}</td>
+                <td className="py-2 px-3 hidden lg:table-cell" style={{ color: text2 }}>{employee.email || '—'}</td>
+                <td className="py-2 px-3 hidden xl:table-cell" style={{ color: text2 }}>{employee.phone || '—'}</td>
+                <td className="py-2 px-3 hidden xl:table-cell" style={{ color: text2 }}>{formatDate(employee.createdAt)}</td>
                 <td className="py-2 px-3"><StatusBadge status={employee.status || 'ACTIVE'} /></td>
                 <td className="py-2 px-3">{renderActions(employee)}</td>
               </motion.tr>
@@ -406,25 +464,25 @@ const EmployeeDirectoryPage = () => {
           key={employee.id}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md transition-shadow"
+          style={{ background: bg2, border: `1px solid ${border}`, borderRadius: 4, padding: 16 }}
         >
           <div className="flex items-start justify-between mb-3">
             <div className="flex items-center space-x-3 flex-1">
               <EmployeeAvatar employee={employee} size="lg" />
               <div className="flex-1 min-w-0">
-                <h3 className="text-sm font-semibold text-gray-900 truncate">{employee.name || 'Unnamed'}</h3>
-                <p className="text-xs text-gray-600 truncate">{employee.email}</p>
+                <h3 style={{ fontSize: 14, fontWeight: 600, color: textC }} className="truncate">{employee.name || 'Unnamed'}</h3>
+                <p style={{ fontSize: 12, color: text2 }} className="truncate">{employee.email}</p>
               </div>
             </div>
             <TypeBadge employee={employee} />
           </div>
 
-          <div className="flex items-center justify-between text-xs text-gray-500 mb-3">
+          <div className="flex items-center justify-between mb-3" style={{ fontSize: 12, color: text2 }}>
             <span className="flex items-center space-x-1"><Phone className="w-3 h-3" /><span>{employee.phone || 'No phone'}</span></span>
             <span className="flex items-center space-x-1"><Calendar className="w-3 h-3" /><span>{formatDate(employee.createdAt)}</span></span>
           </div>
 
-          <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+          <div className="flex items-center justify-between pt-3" style={{ borderTop: `1px solid ${border}` }}>
             <StatusBadge status={employee.status || 'ACTIVE'} />
             {renderActions(employee)}
           </div>
@@ -434,19 +492,26 @@ const EmployeeDirectoryPage = () => {
   );
 
   const renderList = () => (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 divide-y divide-gray-100">
+    <div style={{ background: bg2, border: `1px solid ${border}`, borderRadius: 4, overflow: 'hidden' }}>
       {pageEmployees.map((employee) => (
-        <motion.div key={employee.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-4 hover:bg-gray-50 transition-colors">
+        <motion.div
+          key={employee.id}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          style={{ padding: 16, borderBottom: `1px solid ${border}`, background: bg2 }}
+          onMouseEnter={(e) => (e.currentTarget.style.background = bg3)}
+          onMouseLeave={(e) => (e.currentTarget.style.background = bg2)}
+        >
           <div className="flex items-center justify-between">
             <div className="flex-1 min-w-0">
               <div className="flex items-center flex-wrap gap-2 mb-1">
                 <EmployeeAvatar employee={employee} size="sm" />
-                <h3 className="text-sm font-semibold text-gray-900">{employee.name || '—'}</h3>
+                <h3 style={{ fontSize: 14, fontWeight: 600, color: textC }}>{employee.name || '—'}</h3>
                 <TypeBadge employee={employee} />
                 <StatusBadge status={employee.status || 'ACTIVE'} />
-                <span className="text-xs text-gray-500 hidden sm:inline">{formatDate(employee.createdAt)}</span>
+                <span style={{ fontSize: 12, color: text2 }} className="hidden sm:inline">{formatDate(employee.createdAt)}</span>
               </div>
-              <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-600 ml-10">
+              <div className="flex flex-wrap gap-x-4 gap-y-1 ml-10" style={{ fontSize: 12, color: text2 }}>
                 <span className="flex items-center space-x-1"><Mail className="w-3 h-3" /><span>{employee.email || '—'}</span></span>
                 <span className="flex items-center space-x-1"><Phone className="w-3 h-3" /><span>{employee.phone || 'No phone'}</span></span>
               </div>
@@ -468,13 +533,14 @@ const EmployeeDirectoryPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/30">
-      <div className="bg-white shadow-sm border-b border-gray-200">
+    <div style={{ minHeight: '100vh', background: bg }}>
+      {/* Page header */}
+      <div style={{ background: bg2, borderBottom: `1px solid ${border}` }}>
         <div className="mx-auto px-4 sm:px-6 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-orange-500">Employee Management</h1>
-              <p className="text-xs text-gray-600 mt-1">
+              <h1 style={{ ...bb(24, { color: ORG }) }}>Employee Management</h1>
+              <p style={{ fontSize: 12, color: text2, marginTop: 4 }}>
                 {isSuperAdmin
                   ? 'Manage employees and admins in one workforce view'
                   : 'Manage employees sourced from the user directory'}
@@ -485,7 +551,19 @@ const EmployeeDirectoryPage = () => {
                 whileHover={{ scale: 1.05 }}
                 onClick={handleExport}
                 disabled={filteredEmployees.length === 0}
-                className="flex items-center space-x-2 px-3 py-2 text-xs text-gray-600 hover:text-gray-900 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  padding: '6px 12px',
+                  fontSize: 12,
+                  background: bg3,
+                  border: `1px solid ${border}`,
+                  color: textC,
+                  borderRadius: 4,
+                  cursor: filteredEmployees.length === 0 ? 'not-allowed' : 'pointer',
+                  opacity: filteredEmployees.length === 0 ? 0.5 : 1,
+                }}
               >
                 <Download className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Export</span>
@@ -494,7 +572,19 @@ const EmployeeDirectoryPage = () => {
                 whileHover={{ scale: 1.05 }}
                 onClick={loadData}
                 disabled={loading}
-                className="flex items-center space-x-2 px-3 py-2 text-xs text-gray-600 hover:text-gray-900 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  padding: '6px 12px',
+                  fontSize: 12,
+                  background: bg3,
+                  border: `1px solid ${border}`,
+                  color: textC,
+                  borderRadius: 4,
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  opacity: loading ? 0.5 : 1,
+                }}
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
                 <span className="hidden sm:inline">Refresh</span>
@@ -505,6 +595,7 @@ const EmployeeDirectoryPage = () => {
       </div>
 
       <div className="mx-auto px-4 sm:px-6 py-6 space-y-4">
+        {/* Filter cards */}
         <div className={`grid grid-cols-1 ${isSuperAdmin ? 'sm:grid-cols-4' : 'sm:grid-cols-3'} gap-3`}>
           {filterCards.map((card, index) => (
             <motion.button
@@ -515,38 +606,54 @@ const EmployeeDirectoryPage = () => {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => setActiveFilter(card.key)}
-              className={`rounded-xl shadow-sm border p-3 transition-all text-left ${
-                activeFilter === card.key
-                  ? 'border-orange-300 bg-orange-50'
-                  : 'border-gray-100 bg-white hover:border-gray-200'
-              }`}
+              style={{
+                background: activeFilter === card.key ? `rgba(232,98,26,.08)` : bg2,
+                border: `1px solid ${border}`,
+                borderLeft: activeFilter === card.key ? `3px solid ${ORG}` : `1px solid ${border}`,
+                borderRadius: 4,
+                padding: 12,
+                textAlign: 'left',
+                cursor: 'pointer',
+              }}
             >
               <div className="flex items-center space-x-2">
-                <div className="p-2 rounded-lg bg-orange-100 text-orange-500">
+                <div style={{ padding: 8, borderRadius: 6, background: `rgba(232,98,26,.15)`, color: ORG }}>
                   <User className="w-4 h-4" />
                 </div>
                 <div className="flex-1 text-left">
-                  <p className="text-xs font-medium text-gray-600">{card.label}</p>
-                  <p className="text-base font-bold text-gray-900">{card.count}</p>
+                  <p style={bc(9, 700, { letterSpacing: 3, textTransform: 'uppercase', color: text2 })}>{card.label}</p>
+                  <p style={bb(36, { color: ORG, lineHeight: 1 })}>{card.count}</p>
                 </div>
-                {activeFilter === card.key && <CheckCircle className="w-4 h-4 text-orange-500" />}
+                {activeFilter === card.key && <CheckCircle className="w-4 h-4" style={{ color: ORG }} />}
               </div>
             </motion.button>
           ))}
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+        {/* Search & controls panel */}
+        <div style={{ background: bg2, border: `1px solid ${border}`, borderRadius: 4, padding: 16 }}>
           <div className="space-y-3">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div className="relative flex-1 max-w-md">
-                <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <Search style={{ width: 16, height: 16, color: text3, position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }} />
                 <input
                   type="text"
                   placeholder={isSuperAdmin ? 'Search workforce...' : 'Search employees...'}
                   value={searchTerm}
                   onChange={(event) => setSearchTerm(event.target.value)}
-                  className="w-full pl-10 pr-4 py-2 text-xs border border-gray-200 rounded-lg focus:border-gray-300 transition-colors"
-                  style={{ outline: 'none' }}
+                  style={{
+                    width: '100%',
+                    paddingLeft: 36,
+                    paddingRight: 16,
+                    paddingTop: 8,
+                    paddingBottom: 8,
+                    fontSize: 12,
+                    background: bg3,
+                    border: `1px solid ${border}`,
+                    borderRadius: 4,
+                    color: textC,
+                    outline: 'none',
+                  }}
                 />
               </div>
 
@@ -557,7 +664,16 @@ const EmployeeDirectoryPage = () => {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => setViewMode(mode)}
-                    className={`p-2 rounded-lg transition-colors ${viewMode === mode ? 'text-white shadow-sm bg-orange-500' : 'text-gray-600 hover:bg-gray-100'}`}
+                    style={{
+                      padding: 8,
+                      borderRadius: 4,
+                      background: viewMode === mode ? ORG : bg3,
+                      color: viewMode === mode ? '#fff' : text2,
+                      border: `1px solid ${viewMode === mode ? ORG : border}`,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                    }}
                     title={`${mode.charAt(0).toUpperCase() + mode.slice(1)} View`}
                   >
                     {mode === 'table' && <Table className="w-4 h-4" />}
@@ -568,12 +684,38 @@ const EmployeeDirectoryPage = () => {
               </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 pt-3 border-t border-gray-100">
-              <span className="text-xs font-semibold text-gray-700">Filter by Date:</span>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 pt-3" style={{ borderTop: `1px solid ${border}` }}>
+              <span style={{ fontSize: 12, fontWeight: 600, color: text2, whiteSpace: 'nowrap' }}>Filter by Date:</span>
               <div className="flex items-center gap-2 flex-wrap flex-1">
-                <input type="date" value={dateFrom} onChange={(event) => setDateFrom(event.target.value)} className="text-xs border border-gray-200 rounded-lg px-3 py-2" style={{ outline: 'none' }} />
-                <span className="text-xs text-gray-500">to</span>
-                <input type="date" value={dateTo} onChange={(event) => setDateTo(event.target.value)} className="text-xs border border-gray-200 rounded-lg px-3 py-2" style={{ outline: 'none' }} />
+                <input
+                  type="date"
+                  value={dateFrom}
+                  onChange={(event) => setDateFrom(event.target.value)}
+                  style={{
+                    fontSize: 12,
+                    background: bg3,
+                    border: `1px solid ${border}`,
+                    borderRadius: 4,
+                    padding: '6px 12px',
+                    color: textC,
+                    outline: 'none',
+                  }}
+                />
+                <span style={{ fontSize: 12, color: text2 }}>to</span>
+                <input
+                  type="date"
+                  value={dateTo}
+                  onChange={(event) => setDateTo(event.target.value)}
+                  style={{
+                    fontSize: 12,
+                    background: bg3,
+                    border: `1px solid ${border}`,
+                    borderRadius: 4,
+                    padding: '6px 12px',
+                    color: textC,
+                    outline: 'none',
+                  }}
+                />
                 {(dateFrom || dateTo) && (
                   <motion.button
                     whileHover={{ scale: 1.05 }}
@@ -581,7 +723,15 @@ const EmployeeDirectoryPage = () => {
                       setDateFrom('');
                       setDateTo('');
                     }}
-                    className="text-xs text-gray-600 hover:text-gray-900 px-2 py-1 border border-gray-200 rounded-lg hover:bg-gray-50"
+                    style={{
+                      fontSize: 12,
+                      color: textC,
+                      padding: '4px 8px',
+                      background: bg3,
+                      border: `1px solid ${border}`,
+                      borderRadius: 4,
+                      cursor: 'pointer',
+                    }}
                   >
                     Clear Dates
                   </motion.button>
@@ -597,8 +747,16 @@ const EmployeeDirectoryPage = () => {
                   setSortBy(field);
                   setSortOrder(order as 'asc' | 'desc');
                 }}
-                className="text-xs border border-gray-200 rounded-lg px-3 py-2 flex-1"
-                style={{ outline: 'none' }}
+                style={{
+                  fontSize: 12,
+                  background: bg3,
+                  border: `1px solid ${border}`,
+                  borderRadius: 4,
+                  padding: '6px 12px',
+                  color: textC,
+                  outline: 'none',
+                  flex: 1,
+                }}
               >
                 <option value="name-asc">Name (A-Z)</option>
                 <option value="name-desc">Name (Z-A)</option>
@@ -612,49 +770,129 @@ const EmployeeDirectoryPage = () => {
           </div>
         </div>
 
+        {/* Active filter tags */}
         {(activeFilter !== 'ALL' || dateFrom || dateTo || searchTerm) && (
-          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center flex-wrap gap-2 bg-blue-50 border border-blue-200 rounded-lg p-3">
-            <span className="text-xs font-semibold text-blue-900">Active Filters:</span>
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex items-center flex-wrap gap-2"
+            style={{
+              background: `rgba(232,98,26,.08)`,
+              border: `1px solid rgba(232,98,26,.2)`,
+              borderRadius: 4,
+              padding: 12,
+            }}
+          >
+            <span style={{ fontSize: 12, fontWeight: 700, color: ORG }}>Active Filters:</span>
             {activeFilter !== 'ALL' && (
-              <span className="inline-flex items-center space-x-1 px-2 py-1 bg-blue-100 text-blue-700 rounded-md text-xs">
+              <span style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 4,
+                padding: '2px 8px',
+                background: `rgba(232,98,26,.1)`,
+                border: `1px solid rgba(232,98,26,.3)`,
+                borderRadius: 4,
+                fontSize: 12,
+                color: ORG,
+              }}>
                 <span>Type: {FILTER_LABELS[activeFilter]}</span>
-                <button onClick={() => setActiveFilter('ALL')} className="hover:text-blue-900"><X className="w-3 h-3" /></button>
+                <button onClick={() => setActiveFilter('ALL')} style={{ color: ORG, background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}><X className="w-3 h-3" /></button>
               </span>
             )}
             {searchTerm && (
-              <span className="inline-flex items-center space-x-1 px-2 py-1 bg-blue-100 text-blue-700 rounded-md text-xs">
+              <span style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 4,
+                padding: '2px 8px',
+                background: `rgba(232,98,26,.1)`,
+                border: `1px solid rgba(232,98,26,.3)`,
+                borderRadius: 4,
+                fontSize: 12,
+                color: ORG,
+              }}>
                 <span>Search: "{searchTerm}"</span>
-                <button onClick={() => setSearchTerm('')} className="hover:text-blue-900"><X className="w-3 h-3" /></button>
+                <button onClick={() => setSearchTerm('')} style={{ color: ORG, background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}><X className="w-3 h-3" /></button>
               </span>
             )}
-            {dateFrom && <span className="inline-flex items-center space-x-1 px-2 py-1 bg-blue-100 text-blue-700 rounded-md text-xs"><span>From: {dateFrom}</span></span>}
-            {dateTo && <span className="inline-flex items-center space-x-1 px-2 py-1 bg-blue-100 text-blue-700 rounded-md text-xs"><span>To: {dateTo}</span></span>}
+            {dateFrom && (
+              <span style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                padding: '2px 8px',
+                background: `rgba(232,98,26,.1)`,
+                border: `1px solid rgba(232,98,26,.3)`,
+                borderRadius: 4,
+                fontSize: 12,
+                color: ORG,
+              }}>
+                <span>From: {dateFrom}</span>
+              </span>
+            )}
+            {dateTo && (
+              <span style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                padding: '2px 8px',
+                background: `rgba(232,98,26,.1)`,
+                border: `1px solid rgba(232,98,26,.3)`,
+                borderRadius: 4,
+                fontSize: 12,
+                color: ORG,
+              }}>
+                <span>To: {dateTo}</span>
+              </span>
+            )}
           </motion.div>
         )}
 
+        {/* Error state */}
         {error && (
-          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="bg-red-50 border border-red-200 rounded-xl p-4 text-red-700 text-xs flex items-center space-x-2">
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            style={{
+              background: 'rgba(232,64,64,.1)',
+              border: '1px solid rgba(232,64,64,.3)',
+              borderRadius: 4,
+              padding: 16,
+              color: '#e84040',
+              fontSize: 12,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+            }}
+          >
             <AlertCircle className="w-4 h-4 flex-shrink-0" />
             <span>{error}</span>
           </motion.div>
         )}
 
+        {/* Loading / empty / content */}
         {loading ? (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12 text-center">
+          <div style={{ background: bg2, border: `1px solid ${border}`, borderRadius: 4, padding: 48, textAlign: 'center' }}>
             <div className="inline-flex items-center space-x-2">
-              <div className="w-5 h-5 border-2 rounded-full animate-spin border-orange-500 border-t-transparent"></div>
-              <span className="text-xs text-gray-600">{isSuperAdmin ? 'Loading workforce...' : 'Loading employees...'}</span>
+              <div style={{
+                width: 20,
+                height: 20,
+                borderRadius: '50%',
+                border: '2px solid transparent',
+                borderTopColor: ORG,
+                animation: 'spin 0.8s linear infinite',
+              }} className="animate-spin"></div>
+              <span style={{ fontSize: 12, color: text2 }}>{isSuperAdmin ? 'Loading workforce...' : 'Loading employees...'}</span>
             </div>
           </div>
         ) : filteredEmployees.length === 0 ? (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12 text-center">
-            <User className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-            <p className="text-base font-semibold text-gray-900 mb-2">
+          <div style={{ background: bg2, border: `1px solid ${border}`, borderRadius: 4, padding: 48, textAlign: 'center' }}>
+            <User style={{ width: 48, height: 48, margin: '0 auto 16px', color: text3 }} />
+            <p style={{ fontSize: 16, fontWeight: 600, color: textC, marginBottom: 8 }}>
               {searchTerm || activeFilter !== 'ALL' || dateFrom || dateTo
                 ? `No ${isSuperAdmin ? 'Workforce Records' : 'Employees'} Found`
                 : `No ${isSuperAdmin ? 'Workforce Records' : 'Employees'} Available`}
             </p>
-            <p className="text-xs text-gray-500">
+            <p style={{ fontSize: 12, color: text2 }}>
               {searchTerm || activeFilter !== 'ALL' || dateFrom || dateTo
                 ? 'Try adjusting your filters.'
                 : isSuperAdmin
@@ -668,8 +906,9 @@ const EmployeeDirectoryPage = () => {
             {viewMode === 'grid' && renderGrid()}
             {viewMode === 'list' && renderList()}
 
-            <div className="flex items-center justify-between bg-white px-4 py-3 border-t border-gray-100 rounded-b-xl shadow-sm mt-4">
-              <div className="text-xs text-gray-600">
+            {/* Pagination */}
+            <div className="flex items-center justify-between px-4 py-3 mt-2" style={{ background: bg2, border: `1px solid ${border}`, borderRadius: 4 }}>
+              <div style={{ fontSize: 12, color: text2 }}>
                 Showing {startIdx + 1}-{Math.min(endIdx, filteredEmployees.length)} of {filteredEmployees.length}
               </div>
               <div className="flex items-center space-x-2">
@@ -677,16 +916,38 @@ const EmployeeDirectoryPage = () => {
                   whileHover={{ scale: 1.05 }}
                   onClick={() => setCurrentPage((page) => page - 1)}
                   disabled={currentPage === 1}
-                  className="flex items-center px-2.5 py-1.5 text-xs text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    padding: '4px 8px',
+                    fontSize: 12,
+                    background: bg3,
+                    border: `1px solid ${border}`,
+                    color: text2,
+                    borderRadius: 4,
+                    cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                    opacity: currentPage === 1 ? 0.5 : 1,
+                  }}
                 >
                   <ChevronLeft className="w-3.5 h-3.5" />
                 </motion.button>
-                <span className="text-xs text-gray-600">{currentPage} / {totalPages}</span>
+                <span style={{ fontSize: 12, color: text2 }}>{currentPage} / {totalPages}</span>
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   onClick={() => setCurrentPage((page) => page + 1)}
                   disabled={currentPage === totalPages}
-                  className="flex items-center px-2.5 py-1.5 text-xs text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    padding: '4px 8px',
+                    fontSize: 12,
+                    background: bg3,
+                    border: `1px solid ${border}`,
+                    color: text2,
+                    borderRadius: 4,
+                    cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                    opacity: currentPage === totalPages ? 0.5 : 1,
+                  }}
                 >
                   <ChevronRight className="w-3.5 h-3.5" />
                 </motion.button>
@@ -695,40 +956,77 @@ const EmployeeDirectoryPage = () => {
           </div>
         )}
 
+        {/* Employee detail modal */}
         <AnimatePresence>
           {selectedEmployee && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4"
+              style={{
+                position: 'fixed',
+                inset: 0,
+                background: 'rgba(0,0,0,.75)',
+                zIndex: 50,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: 16,
+              }}
             >
               <motion.div
                 initial={{ scale: 0.96, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.96, opacity: 0 }}
-                className="w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden"
+                style={{
+                  width: '100%',
+                  maxWidth: 512,
+                  background: bg2,
+                  border: `1px solid ${border}`,
+                  borderRadius: 4,
+                  overflow: 'hidden',
+                }}
               >
-                <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                {/* Modal header */}
+                <div style={{
+                  padding: '16px 24px',
+                  background: bg3,
+                  borderBottom: `1px solid ${border}`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                }}>
                   <div>
-                    <h2 className="text-lg font-semibold text-gray-900">
+                    <h2 style={{ fontSize: 18, fontWeight: 600, color: textC }}>
                       {selectedEmployee.role === 'ADMIN' ? 'Admin Details' : 'Employee Details'}
                     </h2>
-                    <p className="text-xs text-gray-500">
+                    <p style={{ fontSize: 12, color: text2 }}>
                       {selectedEmployee.role === 'ADMIN' ? 'Admin directory profile' : 'User-backed employee profile'}
                     </p>
                   </div>
-                  <button onClick={() => setSelectedEmployee(null)} className="p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100">
+                  <button
+                    onClick={() => setSelectedEmployee(null)}
+                    style={{
+                      padding: 8,
+                      borderRadius: 4,
+                      background: bg2,
+                      border: `1px solid ${border}`,
+                      color: textC,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                    }}
+                  >
                     <X className="w-4 h-4" />
                   </button>
                 </div>
 
-                <div className="p-6 space-y-5">
+                <div style={{ padding: 24 }} className="space-y-5">
                   <div className="flex items-center gap-4">
                     <EmployeeAvatar employee={selectedEmployee} size="lg" />
                     <div>
-                      <h3 className="text-lg font-semibold text-gray-900">{selectedEmployee.name}</h3>
-                      <p className="text-sm text-gray-500">{selectedEmployee.email}</p>
+                      <h3 style={{ fontSize: 18, fontWeight: 600, color: textC }}>{selectedEmployee.name}</h3>
+                      <p style={{ fontSize: 14, color: text2 }}>{selectedEmployee.email}</p>
                     </div>
                   </div>
 
@@ -738,17 +1036,17 @@ const EmployeeDirectoryPage = () => {
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-                    <div className="rounded-xl border border-gray-100 bg-gray-50 px-4 py-3">
-                      <p className="text-xs uppercase tracking-wide text-gray-500 mb-1">Phone</p>
-                      <p className="font-medium text-gray-900">{selectedEmployee.phone || '—'}</p>
+                    <div style={{ background: bg3, border: `1px solid ${border}`, borderRadius: 4, padding: '12px 16px' }}>
+                      <p style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: text2, marginBottom: 4 }}>Phone</p>
+                      <p style={{ fontWeight: 600, color: textC }}>{selectedEmployee.phone || '—'}</p>
                     </div>
-                    <div className="rounded-xl border border-gray-100 bg-gray-50 px-4 py-3">
-                      <p className="text-xs uppercase tracking-wide text-gray-500 mb-1">Joined</p>
-                      <p className="font-medium text-gray-900">{formatDate(selectedEmployee.createdAt)}</p>
+                    <div style={{ background: bg3, border: `1px solid ${border}`, borderRadius: 4, padding: '12px 16px' }}>
+                      <p style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: text2, marginBottom: 4 }}>Joined</p>
+                      <p style={{ fontWeight: 600, color: textC }}>{formatDate(selectedEmployee.createdAt)}</p>
                     </div>
-                    <div className="rounded-xl border border-gray-100 bg-gray-50 px-4 py-3 sm:col-span-2">
-                      <p className="text-xs uppercase tracking-wide text-gray-500 mb-1">Source</p>
-                      <p className="font-medium text-gray-900">
+                    <div className="sm:col-span-2" style={{ background: bg3, border: `1px solid ${border}`, borderRadius: 4, padding: '12px 16px' }}>
+                      <p style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: text2, marginBottom: 4 }}>Source</p>
+                      <p style={{ fontWeight: 600, color: textC }}>
                         {selectedEmployee.role === 'ADMIN'
                           ? <><code>Admin</code> table via <code>/admin</code></>
                           : <><code>users</code> table via <code>user-auth/users?role=EMPLOYEE</code></>}
@@ -761,18 +1059,39 @@ const EmployeeDirectoryPage = () => {
           )}
         </AnimatePresence>
 
+        {/* Operation status toast */}
         <AnimatePresence>
           {operationStatus && (
-            <motion.div initial={{ opacity: 0, y: -20, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -20, scale: 0.95 }} className="fixed top-4 right-4 z-50">
-              <div className={`flex items-center space-x-3 px-4 py-3 rounded-xl shadow-lg text-xs ${operationStatus.type === 'success' ? 'bg-green-50 border border-green-200 text-green-800' : 'bg-red-50 border border-red-200 text-red-800'}`}>
+            <motion.div
+              initial={{ opacity: 0, y: -20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -20, scale: 0.95 }}
+              style={{ position: 'fixed', top: 16, right: 16, zIndex: 50 }}
+            >
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 12,
+                padding: '12px 16px',
+                borderRadius: 4,
+                fontSize: 12,
+                background: operationStatus.type === 'success' ? 'rgba(74,222,128,.15)' : 'rgba(232,64,64,.15)',
+                border: `1px solid ${operationStatus.type === 'success' ? 'rgba(74,222,128,.3)' : 'rgba(232,64,64,.3)'}`,
+                color: operationStatus.type === 'success' ? '#4ade80' : '#e84040',
+                boxShadow: '0 4px 24px rgba(0,0,0,.25)',
+              }}>
                 {operationStatus.type === 'success' ? (
-                  <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
+                  <CheckCircle style={{ width: 16, height: 16, flexShrink: 0 }} />
                 ) : (
-                  <XCircle className="w-4 h-4 text-red-600 flex-shrink-0" />
+                  <XCircle style={{ width: 16, height: 16, flexShrink: 0 }} />
                 )}
-                <span className="font-medium">{operationStatus.message}</span>
-                <motion.button whileHover={{ scale: 1.1 }} onClick={() => setOperationStatus(null)} className="ml-2">
-                  <X className="w-3.5 h-3.5" />
+                <span style={{ fontWeight: 600 }}>{operationStatus.message}</span>
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  onClick={() => setOperationStatus(null)}
+                  style={{ marginLeft: 8, background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', display: 'flex', alignItems: 'center' }}
+                >
+                  <X style={{ width: 14, height: 14 }} />
                 </motion.button>
               </div>
             </motion.div>

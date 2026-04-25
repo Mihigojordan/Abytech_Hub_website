@@ -1,28 +1,23 @@
 import { useState } from "react";
+import { useDashboardTheme } from "../../../utils/dashboardTheme";
+import { ORG, TEAL, bb, bc, ba } from "../../../utils/homeConstants";
+import { motion, AnimatePresence } from "framer-motion";
+import { 
+  Calendar, Clock, MapPin, Link as LinkIcon, 
+  Users, Pin, Zap, Paperclip, Check, Trash2, 
+  Edit3, ArrowLeft, ExternalLink, Globe, Laptop,
+  FileText, Download, AlertCircle, MoreVertical,
+  ChevronRight, CalendarDays, X, Layout
+} from "lucide-react";
 
-// Constants
 const STATUS_META = {
-  SCHEDULED: { bg: "bg-blue-50", text: "text-blue-700", border: "border-blue-200", dot: "bg-blue-500", label: "Scheduled" },
-  ONGOING:   { bg: "bg-amber-50", text: "text-amber-700", border: "border-amber-200", dot: "bg-amber-500", label: "Ongoing" },
-  COMPLETED: { bg: "bg-green-50", text: "text-green-700", border: "border-green-200", dot: "bg-green-500", label: "Completed" },
-  CANCELLED: { bg: "bg-red-50", text: "text-red-700", border: "border-red-200", dot: "bg-red-500", label: "Cancelled" },
+  SCHEDULED: { color: "#3b82f6", label: "Scheduled", icon: <CalendarDays size={14} /> },
+  ONGOING: { color: "#f59e0b", label: "Ongoing", icon: <Clock size={14} /> },
+  COMPLETED: { color: "#10b981", label: "Completed", icon: <Check size={14} /> },
+  CANCELLED: { color: "#ef4444", label: "Cancelled", icon: <X size={14} /> },
 };
 
-const FILE_META = {
-  pdf:  { icon: "📄", color: "bg-red-50 text-red-500 border-red-100" },
-  doc:  { icon: "📝", color: "bg-blue-50 text-blue-500 border-blue-100" },
-  docx: { icon: "📝", color: "bg-blue-50 text-blue-500 border-blue-100" },
-  xls:  { icon: "📊", color: "bg-green-50 text-green-600 border-green-100" },
-  xlsx: { icon: "📊", color: "bg-green-50 text-green-600 border-green-100" },
-  ppt:  { icon: "📑", color: "bg-orange-50 text-orange-500 border-orange-100" },
-  pptx: { icon: "📑", color: "bg-orange-50 text-orange-500 border-orange-100" },
-  png:  { icon: "🖼️", color: "bg-purple-50 text-purple-500 border-purple-100" },
-  jpg:  { icon: "🖼️", color: "bg-purple-50 text-purple-500 border-purple-100" },
-  jpeg: { icon: "🖼️", color: "bg-purple-50 text-purple-500 border-purple-100" },
-  default: { icon: "📎", color: "bg-stone-50 text-stone-500 border-stone-100" },
-};
-
-// Helpers
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 function initials(name) {
   if (!name) return "?";
   return name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
@@ -30,19 +25,12 @@ function initials(name) {
 
 function formatDate(dt) {
   if (!dt) return "—";
-  const d = new Date(dt);
-  return d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" });
+  return new Date(dt).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" });
 }
 
 function formatTime(dt) {
   if (!dt) return "—";
-  const d = new Date(dt);
-  return d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
-}
-
-function formatDateTime(dt) {
-  if (!dt) return "—";
-  return `${formatDate(dt)} · ${formatTime(dt)}`;
+  return new Date(dt).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
 }
 
 function duration(start, end) {
@@ -54,65 +42,65 @@ function duration(start, end) {
   return h > 0 ? `${h}h ${m > 0 ? m + "m" : ""}`.trim() : `${m}m`;
 }
 
-function getFileExtension(fileName) {
-  if (!fileName) return 'default';
-  const parts = fileName.split('.');
-  return parts.length > 1 ? parts.pop().toLowerCase() : 'default';
-}
-
-// Sub-components
-function Badge({ children, className = "" }) {
+// ─── Sub-components ──────────────────────────────────────────────────────────
+function StatCard({ label, value, sub, icon, color }) {
+  const { bg2, textC, text2, text3, border } = useDashboardTheme();
   return (
-    <span className={`inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full ${className}`}>
-      {children}
-    </span>
+    <motion.div 
+      whileHover={{ y: -4 }}
+      style={{ 
+        background: bg2, 
+        border: `1px solid ${border}`, 
+        borderRadius: 20, 
+        padding: '20px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 4
+      }}
+    >
+      <div style={{ width: 32, height: 32, borderRadius: 8, background: `${color}1a`, color: color, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 8 }}>
+        {icon}
+      </div>
+      <div style={{ ...bc(24, 800, { color: color, lineHeight: 1 }) }}>{value}</div>
+      <div style={{ ...bc(10, 800, { color: text3, letterSpacing: '0.05em' }) }}>{label.toUpperCase()}</div>
+      <div style={{ ...ba(11, 500, { color: text3 }) }}>{sub}</div>
+    </motion.div>
   );
 }
 
-function SectionCard({ title, count, icon, children, empty, emptyIcon, emptyText }) {
+function SectionHeader({ title, count, icon }) {
+  const { textC, text3 } = useDashboardTheme();
   return (
-    <div className="bg-white border border-stone-200 rounded-2xl overflow-hidden shadow-sm">
-      <div className="flex items-center justify-between px-6 py-4 border-b border-stone-100">
-        <div className="flex items-center gap-2.5">
-          <span className="text-base">{icon}</span>
-          <h3 className="font-bold text-stone-800 text-sm">{title}</h3>
-          {count !== undefined && (
-            <span className="text-xs font-bold bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full">{count}</span>
-          )}
-        </div>
-      </div>
-      {count === 0 ? (
-        <div className="flex flex-col items-center py-10 text-center px-6">
-          <span className="text-4xl mb-2 opacity-40">{emptyIcon || "—"}</span>
-          <p className="text-sm text-stone-400 font-medium">{emptyText || "Nothing here"}</p>
-        </div>
-      ) : (
-        <div className="divide-y divide-stone-100">{children}</div>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
+      <div style={{ color: ORG }}>{icon}</div>
+      <h3 style={{ ...bc(18, 800, { color: textC, margin: 0 }) }}>{title}</h3>
+      {count !== undefined && (
+        <span style={{ 
+          background: `${ORG}1a`, 
+          color: ORG, 
+          fontSize: 12, 
+          fontWeight: 800, 
+          padding: '2px 8px', 
+          borderRadius: 6 
+        }}>
+          {count}
+        </span>
       )}
     </div>
   );
 }
 
-// Tabs config
-const TABS = [
-  { id: "overview",      label: "Overview",     icon: "◎" },
-  { id: "participants",  label: "Participants",  icon: "👥" },
-  { id: "keypoints",     label: "Key Points",   icon: "📌" },
-  { id: "actions",       label: "Action Items", icon: "⚡" },
-  { id: "attachments",   label: "Attachments",  icon: "📎" },
-];
-
-// Main Component
+// ─── Main Component ──────────────────────────────────────────────────────────
 export default function MeetingView({ meeting, onEdit, onBack }) {
+  const { bg, bg2, textC, text2, text3, border, isDark } = useDashboardTheme();
   const [tab, setTab] = useState("overview");
 
   if (!meeting) return null;
 
   const m = meeting;
-  const status = STATUS_META[m.status] || STATUS_META.SCHEDULED;
+  const statusMeta = STATUS_META[m.status] || STATUS_META.SCHEDULED;
   const dur = duration(m.startTime, m.endTime);
 
-  // Handle different data structures from API
   const participants = m.participants || [];
   const keyPoints = m.keyPoints || [];
   const actionItems = m.actionItems || [];
@@ -129,138 +117,226 @@ export default function MeetingView({ meeting, onEdit, onBack }) {
     attachments: attachments.length,
   };
 
+  const TABS = [
+    { id: "overview", label: "Overview", icon: <Globe size={16} /> },
+    { id: "participants", label: "Participants", icon: <Users size={16} /> },
+    { id: "keypoints", label: "Key Points", icon: <Pin size={16} /> },
+    { id: "actions", label: "Actions", icon: <Zap size={16} /> },
+    { id: "attachments", label: "Attachments", icon: <Paperclip size={16} /> },
+  ];
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50/20 to-stone-50 px-4 py-10 pb-24">
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-        .mv-wrap * { font-family: 'Plus Jakarta Sans', sans-serif; }
-        .tab-scroll::-webkit-scrollbar { display: none; }
-        .progress-bar { transition: width 0.6s cubic-bezier(.4,0,.2,1); }
-      `}</style>
-
-      <div className="mv-wrap w-full  mx-auto">
-
-        {/* Back + Edit bar */}
-        <div className="flex items-center justify-between mb-6">
+    <div style={{ minHeight: '100vh', background: bg, paddingBottom: 100 }}>
+      <div className="max-w-5xl mx-auto px-4 py-8">
+        
+        {/* ── Header Actions ── */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 32 }}>
           <button
-            type="button"
             onClick={onBack}
-            className="flex items-center gap-2 text-sm font-semibold text-stone-500 hover:text-orange-600 transition-colors group"
+            style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: 8, 
+              background: 'none', 
+              border: 'none', 
+              color: text3, 
+              cursor: 'pointer',
+              ...bc(12, 700)
+            }}
           >
-            <svg className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
-            </svg>
-            All Meetings
+            <ArrowLeft size={16} /> BACK TO MEETINGS
           </button>
           <button
-            type="button"
             onClick={onEdit}
-            className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold px-4 py-2 rounded-xl shadow-sm shadow-orange-200 hover:shadow-orange-300 transition-all hover:-translate-y-0.5 active:translate-y-0"
+            style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: 10, 
+              background: ORG, 
+              color: '#fff', 
+              border: 'none', 
+              borderRadius: 12, 
+              padding: '10px 24px', 
+              cursor: 'pointer',
+              boxShadow: `0 8px 20px ${ORG}40`,
+              ...bc(13, 700)
+            }}
           >
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-            </svg>
-            Edit Meeting
+            <Edit3 size={16} /> EDIT SESSION
           </button>
         </div>
 
-        {/* Hero Card */}
-        <div className="bg-white border border-stone-200 rounded-2xl p-7 shadow-sm mb-5">
-          <div className="flex items-start justify-between gap-4 flex-wrap">
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-3 flex-wrap">
-                <Badge className={`${status.bg} ${status.text} border ${status.border}`}>
-                  <span className={`w-1.5 h-1.5 rounded-full ${status.dot}`} />
-                  {status.label}
-                </Badge>
-                {m.location && (
-                  <Badge className="bg-stone-50 text-stone-500 border border-stone-200">
-                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                    In-person
-                  </Badge>
-                )}
-                {m.meetingLink && (
-                  <Badge className="bg-blue-50 text-blue-600 border border-blue-100">
-                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
-                    Online
-                  </Badge>
-                )}
+        {/* ── Hero Section ── */}
+        <div style={{ 
+          background: bg2, 
+          border: `1px solid ${border}`, 
+          borderRadius: 32, 
+          padding: '40px', 
+          marginBottom: 32,
+          boxShadow: '0 4px 30px rgba(0,0,0,0.02)',
+          position: 'relative',
+          overflow: 'hidden'
+        }}>
+          {/* Subtle background decoration */}
+          <div style={{ 
+            position: 'absolute', 
+            top: -50, 
+            right: -50, 
+            width: 200, 
+            height: 200, 
+            borderRadius: '50%', 
+            background: `${ORG}08`, 
+            filter: 'blur(40px)' 
+          }} />
+
+          <div style={{ position: 'relative', zIndex: 1 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: 8, 
+                padding: '6px 14px', 
+                borderRadius: 100, 
+                background: `${statusMeta.color}1a`, 
+                color: statusMeta.color,
+                ...bc(11, 800)
+              }}>
+                {statusMeta.icon}
+                {statusMeta.label.toUpperCase()}
               </div>
-              <h1 className="text-2xl font-extrabold text-stone-900 tracking-tight leading-tight mb-2">
-                {m.title}
-              </h1>
-              {m.description && (
-                <p className="text-sm text-stone-500 font-medium leading-relaxed max-w-xl">{m.description}</p>
+              {(m.location || m.meetingLink) && (
+                <div style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: 8, 
+                  padding: '6px 14px', 
+                  borderRadius: 100, 
+                  background: `${TEAL}1a`, 
+                  color: TEAL,
+                  ...bc(11, 800)
+                }}>
+                  {m.meetingLink ? <Globe size={14} /> : <MapPin size={14} />}
+                  {m.meetingLink ? 'ONLINE' : 'OFFLINE'}
+                </div>
               )}
             </div>
 
-            {/* Duration pill */}
-            {dur && (
-              <div className="bg-orange-50 border border-orange-100 rounded-2xl px-5 py-4 text-center shrink-0">
-                <div className="text-2xl font-extrabold text-orange-500 leading-none">{dur}</div>
-                <div className="text-[11px] font-bold text-orange-300 uppercase tracking-widest mt-1">Duration</div>
-              </div>
+            <h1 style={{ ...bc(36, 800, { color: textC, margin: '0 0 16px' }) }}>{m.title}</h1>
+            {m.description && (
+              <p style={{ ...ba(16, 500, { color: text3, margin: '0 0 32px', maxWidth: 700, lineHeight: 1.6 }) }}>
+                {m.description}
+              </p>
             )}
-          </div>
 
-          {/* Meta row */}
-          <div className="mt-5 pt-5 border-t border-stone-100 grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <div>
-              <div className="text-[11px] font-bold text-stone-400 uppercase tracking-widest mb-1">Date</div>
-              <div className="text-sm font-semibold text-stone-700">{formatDate(m.startTime)}</div>
-            </div>
-            <div>
-              <div className="text-[11px] font-bold text-stone-400 uppercase tracking-widest mb-1">Time</div>
-              <div className="text-sm font-semibold text-stone-700">
-                {formatTime(m.startTime)}{m.endTime ? ` → ${formatTime(m.endTime)}` : ""}
+            <div style={{ height: 1, background: border, margin: '32px 0' }} />
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+              <div>
+                <div style={{ ...bc(10, 800, { color: text3, letterSpacing: '0.1em', marginBottom: 4 }) }}>SCHEDULED FOR</div>
+                <div style={{ ...bc(15, 700, { color: textC }) }}>{formatDate(m.startTime)}</div>
+                <div style={{ ...ba(13, 500, { color: text3 }) }}>{formatTime(m.startTime)}</div>
               </div>
-            </div>
-            <div>
-              <div className="text-[11px] font-bold text-stone-400 uppercase tracking-widest mb-1">Created By</div>
-              <div className="text-sm font-semibold text-stone-700">{m.createdBy?.adminName || "—"}</div>
-            </div>
-            <div>
-              <div className="text-[11px] font-bold text-stone-400 uppercase tracking-widest mb-1">Last Updated</div>
-              <div className="text-sm font-semibold text-stone-700">{formatDate(m.updatedAt)}</div>
+              {dur && (
+                <div>
+                  <div style={{ ...bc(10, 800, { color: text3, letterSpacing: '0.1em', marginBottom: 4 }) }}>DURATION</div>
+                  <div style={{ ...bc(15, 700, { color: ORG }) }}>{dur.toUpperCase()}</div>
+                  <div style={{ ...ba(13, 500, { color: text3 }) }}>Active Session</div>
+                </div>
+              )}
+              <div>
+                <div style={{ ...bc(10, 800, { color: text3, letterSpacing: '0.1em', marginBottom: 4 }) }}>ORGANIZER</div>
+                <div style={{ ...bc(15, 700, { color: textC }) }}>{m.createdBy?.adminName || "SYSTEM"}</div>
+                <div style={{ ...ba(13, 500, { color: text3 }) }}>Abytech Hub</div>
+              </div>
+              {m.location && (
+                <div>
+                  <div style={{ ...bc(10, 800, { color: text3, letterSpacing: '0.1em', marginBottom: 4 }) }}>LOCATION</div>
+                  <div style={{ ...bc(15, 700, { color: textC }) }}>{m.location}</div>
+                  <div style={{ ...ba(13, 500, { color: text3 }) }}>Physical Venue</div>
+                </div>
+              )}
             </div>
           </div>
         </div>
 
-        {/* Stats Row */}
-        <div className="grid grid-cols-4 gap-3 mb-5">
-          {[
-            { label: "Participants", value: participants.length, sub: `${attendedCount} attended`, icon: "👥", color: "text-blue-600", bg: "bg-blue-50" },
-            { label: "Key Points", value: keyPoints.length, sub: "recorded", icon: "📌", color: "text-purple-600", bg: "bg-purple-50" },
-            { label: "Action Items", value: actionItems.length, sub: `${completedAI} done`, icon: "⚡", color: "text-orange-600", bg: "bg-orange-50" },
-            { label: "Attachments", value: attachments.length, sub: "files", icon: "📎", color: "text-green-600", bg: "bg-green-50" },
-          ].map((s) => (
-            <div key={s.label} className="bg-white border border-stone-200 rounded-2xl px-4 py-4 shadow-sm flex flex-col gap-1">
-              <div className={`w-8 h-8 ${s.bg} rounded-xl flex items-center justify-center text-sm mb-1`}>{s.icon}</div>
-              <div className={`text-2xl font-extrabold ${s.color} leading-none`}>{s.value}</div>
-              <div className="text-[11px] font-bold text-stone-400 uppercase tracking-widest">{s.label}</div>
-              <div className="text-[11px] text-stone-400">{s.sub}</div>
-            </div>
-          ))}
+        {/* ── Stats ── */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-32">
+          <StatCard 
+            label="Participants" 
+            value={participants.length} 
+            sub={`${attendedCount} attended`} 
+            icon={<Users size={18} />} 
+            color={TEAL} 
+          />
+          <StatCard 
+            label="Action Items" 
+            value={actionItems.length} 
+            sub={`${completedAI} completed`} 
+            icon={<Zap size={18} />} 
+            color={ORG} 
+          />
+          <StatCard 
+            label="Key Points" 
+            value={keyPoints.length} 
+            sub="Captured notes" 
+            icon={<Pin size={18} />} 
+            color="#8b5cf6" 
+          />
+          <StatCard 
+            label="Documents" 
+            value={attachments.length} 
+            sub="Files attached" 
+            icon={<Paperclip size={18} />} 
+            color="#10b981" 
+          />
         </div>
 
-        {/* Tabs */}
-        <div className="tab-scroll flex gap-1 bg-white border border-stone-200 rounded-2xl p-1.5 mb-5 shadow-sm overflow-x-auto">
+        {/* ── Tabs ── */}
+        <div style={{ 
+          display: 'flex', 
+          gap: 4, 
+          background: bg2, 
+          border: `1px solid ${border}`, 
+          borderRadius: 16, 
+          padding: 6, 
+          marginBottom: 32,
+          overflowX: 'auto'
+        }} className="custom-scrollbar">
           {TABS.map((t) => {
             const active = tab === t.id;
             const count = tabCounts[t.id];
             return (
               <button
                 key={t.id}
-                type="button"
                 onClick={() => setTab(t.id)}
-                className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all duration-150 flex-1 justify-center uppercase tracking-wide ${
-                  active ? "bg-orange-500 text-white shadow-md shadow-orange-200" : "text-stone-400 hover:bg-stone-50 hover:text-stone-600"
-                }`}
+                style={{ 
+                  flex: 1,
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center',
+                  gap: 10, 
+                  padding: '12px 16px', 
+                  borderRadius: 12, 
+                  ...bc(11, 700), 
+                  background: active ? bg : 'transparent',
+                  color: active ? ORG : text3,
+                  border: `1px solid ${active ? border : 'transparent'}`,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  whiteSpace: 'nowrap',
+                  boxShadow: active ? '0 4px 12px rgba(0,0,0,0.05)' : 'none'
+                }}
               >
-                <span>{t.icon}</span>
-                <span className="hidden sm:inline">{t.label}</span>
-                {count !== undefined && count > 0 && (
-                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${active ? "bg-white/25 text-white" : "bg-orange-100 text-orange-600"}`}>
+                {t.icon}
+                <span className="hidden md:inline">{t.label.toUpperCase()}</span>
+                {count > 0 && (
+                  <span style={{ 
+                    background: active ? ORG : `${text3}33`, 
+                    color: '#fff', 
+                    fontSize: 9, 
+                    padding: '2px 6px', 
+                    borderRadius: 6 
+                  }}>
                     {count}
                   </span>
                 )}
@@ -269,328 +345,259 @@ export default function MeetingView({ meeting, onEdit, onBack }) {
           })}
         </div>
 
-        {/* OVERVIEW TAB */}
-        {tab === "overview" && (
-          <div className="space-y-4">
-
-            {/* Location / Link */}
-            {(m.location || m.meetingLink) && (
-              <div className="bg-white border border-stone-200 rounded-2xl p-6 shadow-sm">
-                <h3 className="text-[11px] font-bold text-stone-400 uppercase tracking-widest mb-4">Where</h3>
-                <div className="space-y-3">
-                  {m.location && (
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 bg-orange-50 rounded-xl flex items-center justify-center shrink-0">
-                        <svg className="w-4 h-4 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                      </div>
-                      <div>
-                        <div className="text-[11px] font-bold text-stone-400 uppercase tracking-widest">Location</div>
-                        <div className="text-sm font-semibold text-stone-700 mt-0.5">{m.location}</div>
-                      </div>
-                    </div>
-                  )}
+        {/* ── Tab Content ── */}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={tab}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+          >
+            {/* OVERVIEW */}
+            {tab === "overview" && (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div className="md:col-span-2 space-y-8">
                   {m.meetingLink && (
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 bg-blue-50 rounded-xl flex items-center justify-center shrink-0">
-                        <svg className="w-4 h-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+                    <div style={{ background: bg2, border: `1px solid ${border}`, borderRadius: 24, padding: '32px' }}>
+                      <SectionHeader title="CONNECT" icon={<Globe size={20} />} />
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                        <div style={{ width: 48, height: 48, borderRadius: 12, background: `${TEAL}1a`, color: TEAL, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <ExternalLink size={24} />
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ ...bc(10, 800, { color: text3, letterSpacing: '0.05em' }) }}>VIRTUAL ACCESS</div>
+                          <a href={m.meetingLink} target="_blank" rel="noreferrer" style={{ ...bc(14, 700, { color: TEAL }), display: 'block', textDecoration: 'none' }} className="truncate">
+                            {m.meetingLink}
+                          </a>
+                        </div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-[11px] font-bold text-stone-400 uppercase tracking-widest">Meeting Link</div>
-                        <a
-                          href={m.meetingLink}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-sm font-semibold text-blue-600 hover:text-blue-800 truncate block mt-0.5 transition-colors"
-                        >
-                          {m.meetingLink}
-                        </a>
+                    </div>
+                  )}
+
+                  {actionItems.length > 0 && (
+                    <div style={{ background: bg2, border: `1px solid ${border}`, borderRadius: 24, padding: '32px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+                        <SectionHeader title="ACTION PROGRESS" icon={<Zap size={20} />} />
+                        <div style={{ ...bc(16, 800, { color: ORG }) }}>{completionPct}%</div>
+                      </div>
+                      <div style={{ height: 8, background: `${ORG}1a`, borderRadius: 4, overflow: 'hidden', marginBottom: 12 }}>
+                        <motion.div 
+                          initial={{ width: 0 }}
+                          animate={{ width: `${completionPct}%` }}
+                          style={{ height: '100%', background: ORG, borderRadius: 4 }} 
+                        />
+                      </div>
+                      <div style={{ ...ba(12, 500, { color: text3 }) }}>
+                        {completedAI} OF {actionItems.length} TASKS COMPLETED
                       </div>
                     </div>
                   )}
                 </div>
+
+                <div className="space-y-8">
+                  <div style={{ background: bg2, border: `1px solid ${border}`, borderRadius: 24, padding: '24px' }}>
+                    <SectionHeader title="QUICK STATS" icon={<Layout size={18} />} />
+                    <div className="space-y-4">
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ ...ba(13, 500, { color: text3 }) }}>ATTENDANCE RATE</span>
+                        <span style={{ ...bc(13, 700, { color: textC }) }}>{participants.length ? Math.round((attendedCount/participants.length)*100) : 0}%</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ ...ba(13, 500, { color: text3 }) }}>FILE SIZE</span>
+                        <span style={{ ...bc(13, 700, { color: textC }) }}>-- MB</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ ...ba(13, 500, { color: text3 }) }}>PRIORITY</span>
+                        <span style={{ ...bc(11, 800, { color: ORG, background: `${ORG}1a`, padding: '2px 8px', borderRadius: 4 }) }}>HIGH</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
 
-            {/* Action Items Progress */}
-            {actionItems.length > 0 && (
-              <div className="bg-white border border-stone-200 rounded-2xl p-6 shadow-sm">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-[11px] font-bold text-stone-400 uppercase tracking-widest">Action Progress</h3>
-                  <span className="text-sm font-extrabold text-orange-500">{completionPct}%</span>
-                </div>
-                <div className="w-full bg-stone-100 rounded-full h-2.5 overflow-hidden">
-                  <div
-                    className="progress-bar h-full rounded-full bg-gradient-to-r from-orange-400 to-amber-400"
-                    style={{ width: `${completionPct}%` }}
-                  />
-                </div>
-                <div className="flex items-center justify-between mt-2">
-                  <span className="text-xs text-stone-400 font-medium">{completedAI} of {actionItems.length} completed</span>
-                  <span className="text-xs text-stone-400 font-medium">{actionItems.length - completedAI} remaining</span>
-                </div>
-              </div>
-            )}
-
-            {/* Participants snapshot */}
-            {participants.length > 0 && (
-              <div className="bg-white border border-stone-200 rounded-2xl p-6 shadow-sm">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-[11px] font-bold text-stone-400 uppercase tracking-widest">
-                    Participants · {attendedCount}/{participants.length} attended
-                  </h3>
-                  <button type="button" onClick={() => setTab("participants")} className="text-xs font-bold text-orange-500 hover:text-orange-700 transition-colors">
-                    View all →
-                  </button>
-                </div>
-                <div className="flex flex-wrap gap-2">
+            {/* PARTICIPANTS */}
+            {tab === "participants" && (
+              <div style={{ background: bg2, border: `1px solid ${border}`, borderRadius: 24, padding: '32px' }}>
+                <SectionHeader title="ATTENDANCE LIST" icon={<Users size={20} />} count={participants.length} />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {participants.map((p, idx) => (
-                    <div
-                      key={p.id || idx}
-                      className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all ${
-                        p.attended ? "bg-green-50 border-green-200 text-green-700" : "bg-stone-50 border-stone-200 text-stone-500"
-                      }`}
-                    >
-                      <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold text-white ${p.attended ? "bg-green-500" : "bg-stone-300"}`}>
+                    <div key={idx} style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: 16, 
+                      padding: '16px', 
+                      background: bg, 
+                      border: `1px solid ${border}`, 
+                      borderRadius: 16 
+                    }}>
+                      <div style={{ 
+                        width: 40, 
+                        height: 40, 
+                        borderRadius: 12, 
+                        background: p.attended ? `${TEAL}1a` : `${text3}1a`, 
+                        color: p.attended ? TEAL : text3,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        ...bc(14, 800)
+                      }}>
                         {initials(p.adminName || p.name)}
                       </div>
-                      {p.adminName || p.name}
-                      {p.isCustom && <span className="text-[10px] bg-amber-100 text-amber-600 px-1 rounded font-bold">EXT</span>}
-                      {p.attended ? (
-                        <svg className="w-3 h-3 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7"/></svg>
-                      ) : (
-                        <svg className="w-3 h-3 text-stone-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12"/></svg>
-                      )}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <span style={{ ...bc(14, 700, { color: textC }) }} className="truncate">{p.adminName || p.name}</span>
+                          {p.isCustom && <span style={{ ...ba(9, 700, { color: ORG, background: `${ORG}1a`, padding: '1px 6px', borderRadius: 4 }) }}>EXT</span>}
+                        </div>
+                        <div style={{ ...ba(12, 400, { color: text3 }) }} className="truncate">{p.adminEmail || p.email || 'No email provided'}</div>
+                      </div>
+                      <div style={{ color: p.attended ? TEAL : text3 }}>
+                        {p.attended ? <Check size={18} /> : <X size={18} />}
+                      </div>
                     </div>
                   ))}
                 </div>
               </div>
             )}
 
-            {/* Recent action items */}
-            {actionItems.length > 0 && (
-              <div className="bg-white border border-stone-200 rounded-2xl overflow-hidden shadow-sm">
-                <div className="flex items-center justify-between px-6 py-4 border-b border-stone-100">
-                  <h3 className="text-[11px] font-bold text-stone-400 uppercase tracking-widest">Recent Actions</h3>
-                  <button type="button" onClick={() => setTab("actions")} className="text-xs font-bold text-orange-500 hover:text-orange-700 transition-colors">
-                    View all →
-                  </button>
-                </div>
-                {actionItems.slice(0, 3).map((a, idx) => (
-                  <div key={a.id || idx} className={`flex items-center gap-3 px-6 py-3.5 border-b border-stone-50 last:border-0 ${a.completed ? "opacity-60" : ""}`}>
-                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${a.completed ? "bg-green-500 border-green-500" : "border-stone-300"}`}>
-                      {a.completed && <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7"/></svg>}
+            {/* KEY POINTS */}
+            {tab === "keypoints" && (
+              <div style={{ background: bg2, border: `1px solid ${border}`, borderRadius: 24, padding: '32px' }}>
+                <SectionHeader title="DISCUSSION HIGHLIGHTS" icon={<Pin size={20} />} count={keyPoints.length} />
+                <div className="space-y-4">
+                  {keyPoints.map((k, i) => (
+                    <div key={i} style={{ 
+                      display: 'flex', 
+                      gap: 20, 
+                      padding: '24px', 
+                      background: bg, 
+                      border: `1px solid ${border}`, 
+                      borderRadius: 16 
+                    }}>
+                      <div style={{ 
+                        width: 24, 
+                        height: 24, 
+                        borderRadius: '50%', 
+                        background: `${ORG}1a`, 
+                        color: ORG, 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center',
+                        ...bc(11, 800),
+                        shrink: 0
+                      }}>
+                        {i + 1}
+                      </div>
+                      <div>
+                        <h4 style={{ ...bc(15, 700, { color: textC, margin: '0 0 8px' }) }}>{k.content || k.title || "Untitled Point"}</h4>
+                        {k.notes && <p style={{ ...ba(14, 500, { color: text3, margin: 0, lineHeight: 1.6 }) }}>{k.notes}</p>}
+                      </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className={`text-sm font-semibold truncate ${a.completed ? "line-through text-stone-400" : "text-stone-800"}`}>{a.title || a.task}</p>
-                      {a.assignedTo && <p className="text-xs text-stone-400 mt-0.5">{typeof a.assignedTo === 'string' ? a.assignedTo : a.assignedTo.name}</p>}
-                    </div>
-                    {a.dueDate && (
-                      <span className="text-[11px] font-bold text-stone-400 shrink-0">
-                        {new Date(a.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-                      </span>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* PARTICIPANTS TAB */}
-        {tab === "participants" && (
-          <SectionCard
-            title="Participants"
-            count={participants.length}
-            icon="👥"
-            emptyIcon="👤"
-            emptyText="No participants recorded"
-          >
-            {participants.map((p, i) => (
-              <div key={p.id || i} className="flex items-center gap-4 px-6 py-4 hover:bg-stone-50 transition-colors">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white shrink-0 ${p.isCustom ? "bg-gradient-to-br from-amber-400 to-orange-400" : "bg-gradient-to-br from-orange-400 to-amber-500"}`}>
-                  {initials(p.adminName || p.name)}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-sm font-bold text-stone-800">{p.adminName || p.name}</span>
-                    {p.isCustom && <Badge className="bg-amber-50 text-amber-600 border border-amber-100">External</Badge>}
-                    {p.adminId && <Badge className="bg-blue-50 text-blue-500 border border-blue-100">Admin</Badge>}
-                    {p.role && <Badge className="bg-stone-50 text-stone-500 border border-stone-200">{p.role}</Badge>}
-                  </div>
-                  {(p.adminEmail || p.email) && <p className="text-xs text-stone-400 mt-0.5 font-medium">{p.adminEmail || p.email}</p>}
-                </div>
-                <div className={`flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full ${p.attended ? "bg-green-50 text-green-600 border border-green-200" : "bg-stone-50 text-stone-400 border border-stone-200"}`}>
-                  {p.attended ? (
-                    <>
-                      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7"/></svg>
-                      Attended
-                    </>
-                  ) : (
-                    <>
-                      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12"/></svg>
-                      Absent
-                    </>
-                  )}
-                </div>
-              </div>
-            ))}
-            {/* Attendance summary footer */}
-            <div className="px-6 py-3 bg-stone-50 flex items-center justify-between">
-              <span className="text-xs font-bold text-stone-400 uppercase tracking-widest">Attendance Rate</span>
-              <div className="flex items-center gap-3">
-                <div className="w-24 bg-stone-200 rounded-full h-1.5 overflow-hidden">
-                  <div
-                    className="h-full bg-green-500 rounded-full progress-bar"
-                    style={{ width: `${participants.length ? (attendedCount / participants.length) * 100 : 0}%` }}
-                  />
-                </div>
-                <span className="text-xs font-bold text-stone-600">{attendedCount}/{participants.length}</span>
-              </div>
-            </div>
-          </SectionCard>
-        )}
-
-        {/* KEY POINTS TAB */}
-        {tab === "keypoints" && (
-          <SectionCard
-            title="Key Points"
-            count={keyPoints.length}
-            icon="📌"
-            emptyIcon="📋"
-            emptyText="No key points recorded"
-          >
-            {keyPoints.map((k, i) => (
-              <div key={k.id || i} className="px-6 py-5 hover:bg-stone-50/50 transition-colors">
-                <div className="flex items-start gap-4">
-                  <div className="w-7 h-7 rounded-full bg-orange-100 text-orange-500 text-xs font-extrabold flex items-center justify-center shrink-0 mt-0.5">
-                    {i + 1}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1.5">
-                      <h4 className="text-sm font-bold text-stone-800">{k.content || k.title || "Untitled Point"}</h4>
-                      {k.important && <Badge className="bg-red-50 text-red-500 border border-red-100">Important</Badge>}
-                    </div>
-                    {k.notes && (
-                      <p className="text-sm text-stone-500 font-medium leading-relaxed whitespace-pre-line">{k.notes}</p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </SectionCard>
-        )}
-
-        {/* ACTION ITEMS TAB */}
-        {tab === "actions" && (
-          <div className="space-y-4">
-            {/* Progress bar card */}
-            {actionItems.length > 0 && (
-              <div className="bg-white border border-stone-200 rounded-2xl p-5 shadow-sm">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-[11px] font-bold text-stone-400 uppercase tracking-widest">Completion</span>
-                  <span className="text-sm font-extrabold text-orange-500">{completionPct}%</span>
-                </div>
-                <div className="w-full bg-stone-100 rounded-full h-3 overflow-hidden">
-                  <div
-                    className="progress-bar h-full rounded-full bg-gradient-to-r from-orange-400 to-amber-400"
-                    style={{ width: `${completionPct}%` }}
-                  />
-                </div>
-                <div className="flex items-center justify-between mt-2">
-                  <span className="text-xs text-stone-400 font-medium">{completedAI} done · {actionItems.length - completedAI} remaining</span>
+                  ))}
                 </div>
               </div>
             )}
 
-            <SectionCard
-              title="Action Items"
-              count={actionItems.length}
-              icon="⚡"
-              emptyIcon="✅"
-              emptyText="No action items assigned"
-            >
-              {actionItems.map((a, idx) => (
-                <div key={a.id || idx} className={`flex items-start gap-4 px-6 py-4 hover:bg-stone-50/50 transition-colors ${a.completed ? "opacity-70" : ""}`}>
-                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 ${a.completed ? "bg-green-500 border-green-500" : "border-stone-300"}`}>
-                    {a.completed && (
-                      <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                      </svg>
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className={`text-sm font-semibold ${a.completed ? "line-through text-stone-400" : "text-stone-800"}`}>
-                      {a.title || a.task}
-                    </p>
-                    <div className="flex items-center gap-3 mt-1.5 flex-wrap">
-                      {a.assignedTo && (
-                        <div className="flex items-center gap-1.5">
-                          <div className="w-4 h-4 rounded-full bg-gradient-to-br from-orange-400 to-amber-400 flex items-center justify-center text-[9px] font-bold text-white">
-                            {initials(typeof a.assignedTo === 'string' ? a.assignedTo : a.assignedTo.name)}
-                          </div>
-                          <span className="text-xs text-stone-500 font-medium">{typeof a.assignedTo === 'string' ? a.assignedTo : a.assignedTo.name}</span>
-                          {(typeof a.assignedTo === 'object' && a.assignedTo.isCustom) && <Badge className="bg-amber-50 text-amber-500 border border-amber-100 text-[9px] py-0">EXT</Badge>}
+            {/* ACTION ITEMS */}
+            {tab === "actions" && (
+              <div style={{ background: bg2, border: `1px solid ${border}`, borderRadius: 24, padding: '32px' }}>
+                <SectionHeader title="TASKS & ASSIGNMENTS" icon={<Zap size={20} />} count={actionItems.length} />
+                <div className="space-y-4">
+                  {actionItems.map((a, i) => (
+                    <div key={i} style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: 20, 
+                      padding: '20px', 
+                      background: a.completed ? `${TEAL}08` : bg, 
+                      border: `1px solid ${a.completed ? TEAL : border}`, 
+                      borderRadius: 16 
+                    }}>
+                      <div style={{ color: a.completed ? TEAL : text3 }}>
+                        {a.completed ? <Check size={20} strokeWidth={3} /> : <Zap size={20} />}
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ ...bc(14, 700, { color: textC, textDecoration: a.completed ? 'line-through' : 'none', opacity: a.completed ? 0.6 : 1 }) }}>
+                          {a.title || a.task}
                         </div>
-                      )}
-                      {a.dueDate && (
-                        <div className="flex items-center gap-1">
-                          <svg className="w-3 h-3 text-stone-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                          <span className="text-xs text-stone-400 font-medium">
-                            Due {new Date(a.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-                          </span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginTop: 4 }}>
+                          {a.assignedTo && (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                              <Users size={12} style={{ color: text3 }} />
+                              <span style={{ ...ba(12, 500, { color: text3 }) }}>{typeof a.assignedTo === 'string' ? a.assignedTo : a.assignedTo.name}</span>
+                            </div>
+                          )}
+                          {a.dueDate && (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                              <Calendar size={12} style={{ color: text3 }} />
+                              <span style={{ ...ba(12, 500, { color: text3 }) }}>{formatDate(a.dueDate)}</span>
+                            </div>
+                          )}
                         </div>
-                      )}
+                      </div>
+                      <div style={{ ...bc(10, 800, { color: a.completed ? TEAL : ORG, letterSpacing: '0.05em' }) }}>
+                        {a.completed ? 'DONE' : 'PENDING'}
+                      </div>
                     </div>
-                  </div>
-                  <Badge className={a.completed ? "bg-green-50 text-green-600 border border-green-200 shrink-0" : "bg-stone-50 text-stone-400 border border-stone-200 shrink-0"}>
-                    {a.completed ? "Done" : "Pending"}
-                  </Badge>
+                  ))}
                 </div>
-              ))}
-            </SectionCard>
-          </div>
-        )}
+              </div>
+            )}
 
-        {/* ATTACHMENTS TAB */}
-        {tab === "attachments" && (
-          <SectionCard
-            title="Attachments"
-            count={attachments.length}
-            icon="📎"
-            emptyIcon="📂"
-            emptyText="No files attached to this meeting"
-          >
-            {attachments.map((att, idx) => {
-              const fileType = att.fileType || getFileExtension(att.fileName);
-              const meta = FILE_META[fileType] || FILE_META.default;
-              return (
-                <div key={att.id || idx} className="flex items-center gap-4 px-6 py-4 hover:bg-stone-50 transition-colors group">
-                  <div className={`w-10 h-10 rounded-xl border flex items-center justify-center text-xl shrink-0 ${meta.color}`}>
-                    {meta.icon}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-stone-800 truncate">{att.fileName}</p>
-                    <p className="text-xs font-bold text-stone-400 uppercase tracking-wide mt-0.5">{fileType} file</p>
-                  </div>
-                  <a
-                    href={att.fileUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex items-center gap-1.5 text-xs font-bold text-orange-500 hover:text-orange-700 bg-orange-50 hover:bg-orange-100 border border-orange-100 px-3 py-1.5 rounded-xl transition-all opacity-0 group-hover:opacity-100"
-                  >
-                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                    Download
-                  </a>
+            {/* ATTACHMENTS */}
+            {tab === "attachments" && (
+              <div style={{ background: bg2, border: `1px solid ${border}`, borderRadius: 24, padding: '32px' }}>
+                <SectionHeader title="RESOURCES" icon={<Paperclip size={20} />} count={attachments.length} />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {attachments.map((att, idx) => (
+                    <div key={idx} className="group" style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: 16, 
+                      padding: '16px', 
+                      background: bg, 
+                      border: `1px solid ${border}`, 
+                      borderRadius: 16,
+                      transition: 'border-color 0.2s'
+                    }}>
+                      <div style={{ width: 40, height: 40, borderRadius: 12, background: `${ORG}1a`, color: ORG, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <FileText size={20} />
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ ...bc(14, 700, { color: textC }) }} className="truncate">{att.fileName}</div>
+                        <div style={{ ...ba(11, 500, { color: text3 }) }}>{att.fileType?.toUpperCase() || 'FILE'}</div>
+                      </div>
+                      <a 
+                        href={att.fileUrl} 
+                        target="_blank" 
+                        rel="noreferrer"
+                        style={{ 
+                          width: 32, 
+                          height: 32, 
+                          borderRadius: 8, 
+                          background: bg2, 
+                          color: text3, 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          justifyContent: 'center',
+                          transition: 'all 0.2s'
+                        }}
+                      >
+                        <Download size={16} />
+                      </a>
+                    </div>
+                  ))}
                 </div>
-              );
-            })}
-          </SectionCard>
-        )}
+              </div>
+            )}
+          </motion.div>
+        </AnimatePresence>
 
-        {/* Footer meta */}
-        <div className="mt-6 flex items-center justify-between text-xs text-stone-400 font-medium px-1">
-          <span>ID: {m.id}</span>
-          <span>Created {formatDateTime(m.createdAt)}</span>
+        {/* ── Footer ── */}
+        <div style={{ marginTop: 64, display: 'flex', justifyContent: 'space-between', alignItems: 'center', opacity: 0.5 }}>
+          <div style={{ ...ba(11, 500, { color: text3 }) }}>REF: {m.id}</div>
+          <div style={{ ...ba(11, 500, { color: text3 }) }}>LAST MODIFIED: {new Date(m.updatedAt).toLocaleString()}</div>
         </div>
       </div>
     </div>

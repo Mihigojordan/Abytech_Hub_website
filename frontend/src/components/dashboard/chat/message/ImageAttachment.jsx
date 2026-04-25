@@ -1,21 +1,36 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Image as ImageIcon } from 'lucide-react';
+import { Image as ImageIcon, Layers } from 'lucide-react';
 import { API_URL } from '../../../../api/api';
 import { handleDisplayImgUrl } from '../../../../utils/chat/messageUtils';
+import { useDashboardTheme } from '../../../../utils/dashboardTheme';
+import { ORG, TEAL, bb, bc, ba } from '../../../../utils/homeConstants';
+import { motion } from 'framer-motion';
 
 /**
  * Skeleton component for loading images
  */
-const ImageSkeleton = () => (
-    <div className="rounded-lg w-64 h-48 bg-gray-300 animate-pulse flex items-center justify-center">
-        <ImageIcon className="w-8 h-8 text-gray-400" />
-    </div>
-);
+const ImageSkeleton = () => {
+    const { bg3, border } = useDashboardTheme();
+    return (
+        <div style={{ 
+            width: 256, 
+            height: 192, 
+            background: bg3, 
+            border: `1px solid ${border}`, 
+            borderRadius: 4, 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center' 
+        }} className="animate-pulse">
+            <ImageIcon style={{ width: 32, height: 32, color: ORG, opacity: 0.2 }} />
+        </div>
+    );
+};
 
 /**
  * Lazy loaded image component with skeleton
  */
-const LazyImage = ({ src, alt, className }) => {
+const LazyImage = ({ src, alt, className, style }) => {
     const [isLoaded, setIsLoaded] = useState(false);
     const [isInView, setIsInView] = useState(false);
     const imgRef = useRef(null);
@@ -31,24 +46,26 @@ const LazyImage = ({ src, alt, className }) => {
             { threshold: 0.1, rootMargin: '100px' }
         );
 
-        if (imgRef.current) {
-            observer.observe(imgRef.current);
-        }
-
+        if (imgRef.current) observer.observe(imgRef.current);
         return () => observer.disconnect();
     }, []);
 
     return (
-        <div ref={imgRef} className="relative">
-            {/* Skeleton shown while loading */}
+        <div ref={imgRef} style={{ position: 'relative', width: 256, height: 192, ...style }}>
             {(!isInView || !isLoaded) && <ImageSkeleton />}
-
-            {/* Actual image - only load when in view */}
             {isInView && (
                 <img
                     src={src}
                     alt={alt}
-                    className={`${className} ${isLoaded ? 'opacity-100' : 'opacity-0 absolute inset-0'} transition-opacity duration-300`}
+                    style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        borderRadius: 4,
+                        opacity: isLoaded ? 1 : 0,
+                        transition: 'opacity 0.3s',
+                        ...style
+                    }}
                     onLoad={() => setIsLoaded(true)}
                     loading="lazy"
                 />
@@ -61,40 +78,54 @@ const LazyImage = ({ src, alt, className }) => {
  * Image attachment component with stack effect for multiple images
  */
 const ImageAttachment = ({ images, isSent, onClick }) => {
+    const { bg, bg2, border } = useDashboardTheme();
     if (!images || images.length === 0) return null;
 
     return (
-        <div className="relative">
-            <div
-                className={`${isSent ? 'bg-dashboard-600' : 'bg-dashboard-600'} rounded-lg p-2 cursor-pointer hover:opacity-90 transition-opacity`}
-                onClick={onClick}
-            >
-                {images.length > 1 ? (
-                    <div className="relative">
-                        {/* Stack effect for multiple images */}
-                        <div className="absolute -top-1 -right-1 w-full h-full bg-dashboard-500 rounded-lg opacity-40"></div>
-                        <div className="absolute -top-2 -right-2 w-full h-full bg-dashboard-400 rounded-lg opacity-30"></div>
-                        <div className="relative">
-                            <LazyImage
-                                src={handleDisplayImgUrl(images[0].imageUrl)}
-                                alt="Shared"
-                                className="rounded-lg w-64 h-48 object-cover"
-                            />
-                            <div className="absolute top-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
-                                <ImageIcon className="w-3 h-3" />
-                                {images.length}
-                            </div>
-                        </div>
-                    </div>
-                ) : (
+        <motion.div
+            whileHover={{ scale: 0.98 }}
+            onClick={onClick}
+            style={{
+                position: 'relative',
+                padding: 4,
+                background: bg2,
+                border: `1px solid ${border}`,
+                borderRadius: 4,
+                cursor: 'pointer',
+                overflow: 'hidden'
+            }}
+        >
+            {images.length > 1 ? (
+                <div style={{ position: 'relative' }}>
                     <LazyImage
                         src={handleDisplayImgUrl(images[0].imageUrl)}
                         alt="Shared"
-                        className="rounded-lg w-64 h-48 object-cover"
                     />
-                )}
-            </div>
-        </div>
+                    <div style={{
+                        position: 'absolute',
+                        top: 12,
+                        right: 12,
+                        background: 'rgba(0,0,0,0.6)',
+                        color: '#fff',
+                        ...bc(10, 700),
+                        padding: '4px 8px',
+                        borderRadius: 4,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 4,
+                        backdropFilter: 'blur(4px)'
+                    }}>
+                        <Layers style={{ width: 12, height: 12 }} />
+                        {images.length} PHOTOS
+                    </div>
+                </div>
+            ) : (
+                <LazyImage
+                    src={handleDisplayImgUrl(images[0].imageUrl)}
+                    alt="Shared"
+                />
+            )}
+        </motion.div>
     );
 };
 

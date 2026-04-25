@@ -11,7 +11,8 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 export const useScrollManagement = (messages, selectedChatId, onScrollToTop, hasMore = true) => {
     const [showScrollButton, setShowScrollButton] = useState(false);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
-    const [shouldScrollToBottom, setShouldScrollToBottom] = useState(true);
+    // Use ref instead of state to avoid two-render cycle on conversation switch
+    const shouldScrollToBottomRef = useRef(true);
 
     const messagesEndRef = useRef(null);
     const messagesContainerRef = useRef(null);
@@ -114,29 +115,26 @@ export const useScrollManagement = (messages, selectedChatId, onScrollToTop, has
         }
     }, [messages.length]);
 
-    // Initial scroll to bottom when conversation changes
+    // Reset trackers when conversation changes — must run before the scroll effect below
     useEffect(() => {
-        if (shouldScrollToBottom && messages.length > 0) {
-            // Reset trackers for new conversation
-            previousMessagesLength.current = messages.length;
-            lastMessageRef.current = messages[messages.length - 1];
-
-            setTimeout(() => {
-                scrollToBottomInstant();
-                setShouldScrollToBottom(false);
-            }, 100);
-        }
-    }, [selectedChatId, messages.length]);
-
-    // Reset shouldScrollToBottom when conversation changes
-    useEffect(() => {
-        setShouldScrollToBottom(true);
+        shouldScrollToBottomRef.current = true;
         setShowScrollButton(false);
         previousMessagesLength.current = 0;
         lastMessageRef.current = null;
         isLoadingRef.current = false;
         setIsLoadingMore(false);
     }, [selectedChatId]);
+
+    // Scroll to bottom on conversation switch or when initial messages arrive.
+    // Reads shouldScrollToBottomRef synchronously (set by the effect above in the same flush).
+    useEffect(() => {
+        if (shouldScrollToBottomRef.current && messages.length > 0) {
+            previousMessagesLength.current = messages.length;
+            lastMessageRef.current = messages[messages.length - 1];
+            shouldScrollToBottomRef.current = false;
+            setTimeout(scrollToBottomInstant, 50);
+        }
+    }, [selectedChatId, messages.length]);
 
     // Add scroll listener
     useEffect(() => {
