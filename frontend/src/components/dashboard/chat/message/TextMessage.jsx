@@ -1,15 +1,14 @@
-import React from 'react';
-import { Clock, MoreVertical, Check, Forward, CheckCheck } from 'lucide-react';
+import { MoreVertical, Check, Forward, CheckCheck } from 'lucide-react';
 import { formatTime } from '../../../../utils/chat/dateUtils';
 import MessageMenu from './MessageMenu';
 import { useDashboardTheme } from '../../../../utils/dashboardTheme';
-import { ORG, TEAL, bb, bc, ba } from '../../../../utils/homeConstants';
+import { ORG, ba } from '../../../../utils/homeConstants';
 
 /**
  * Text-only message component
  */
 const TextMessage = ({ message, onMenuAction, showMenu, setShowMenu, selectionMode, isGroup = false }) => {
-    const { bg, bg2, bg3, textC, text2, text3, border } = useDashboardTheme();
+    const { bg3, textC, text3, border } = useDashboardTheme();
 
     return (
         <div style={{ position: 'relative' }} className="group">
@@ -55,6 +54,7 @@ const TextMessage = ({ message, onMenuAction, showMenu, setShowMenu, selectionMo
                         e.stopPropagation();
                         setShowMenu(message.id);
                     }}
+                    onContextMenu={(e) => e.stopPropagation()}
                     style={{
                         position: 'absolute',
                         top: 0,

@@ -1,18 +1,16 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { X, MessageSquare, Search, Users, Check, UserPlus } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import Avatar from './Avatar';
 import adminAuthService from '../../../../services/adminAuthService';
 import chatService from '../../../../services/chatService';
 import useAdminAuth from '../../../../context/AdminAuthContext';
 import api from '../../../../api/api';
+import { useDashboardTheme } from '../../../../utils/dashboardTheme';
+import { ORG, bb, ba, bc } from '../../../../utils/homeConstants';
 
-/**
- * Create Conversation Modal - Allows creating 1-on-1 or group conversations
- * - Fetches both admins and users
- * - Multi-select for participants
- * - Auto-detects group vs 1-on-1 based on participant count
- * - Allows setting group name for group conversations
- */
 const CreateConversationModal = ({ isOpen, onClose, onConversationCreated }) => {
+    const { bg, bg2, bg3, textC, text2, text3, border } = useDashboardTheme();
     const [admins, setAdmins] = useState([]);
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -20,14 +18,12 @@ const CreateConversationModal = ({ isOpen, onClose, onConversationCreated }) => 
     const [selectedParticipants, setSelectedParticipants] = useState([]);
     const [groupName, setGroupName] = useState('');
     const [creating, setCreating] = useState(false);
-    const [activeTab, setActiveTab] = useState('admins'); // 'admins' or 'users'
+    const [activeTab, setActiveTab] = useState('admins');
     const { user: currentAdmin } = useAdminAuth();
 
-    // Fetch admins and users
     useEffect(() => {
         if (isOpen) {
             fetchParticipants();
-            // Reset state when opening
             setSelectedParticipants([]);
             setGroupName('');
             setSearchQuery('');
@@ -37,19 +33,11 @@ const CreateConversationModal = ({ isOpen, onClose, onConversationCreated }) => 
     const fetchParticipants = async () => {
         try {
             setLoading(true);
-
-            // Fetch admins and users in parallel
             const [adminsResponse, usersResponse] = await Promise.all([
                 adminAuthService.getAllAdmins(),
                 api.get('/user-auth/users').then(res => res.data).catch(() => [])
             ]);
-
-            // Filter out current admin
-            const filteredAdmins = (adminsResponse || []).filter(
-                admin => admin.id !== currentAdmin?.id
-            );
-
-            setAdmins(filteredAdmins);
+            setAdmins((adminsResponse || []).filter(a => a.id !== currentAdmin?.id));
             setUsers(usersResponse || []);
         } catch (error) {
             console.error('Failed to fetch participants:', error);
@@ -58,78 +46,52 @@ const CreateConversationModal = ({ isOpen, onClose, onConversationCreated }) => 
         }
     };
 
-    // Determine if this is a group conversation
     const isGroup = selectedParticipants.length > 1;
 
-    // Filter participants by search query
-    const filteredAdmins = useMemo(() => {
-        return admins.filter(admin =>
-            admin.adminName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            admin.adminEmail?.toLowerCase().includes(searchQuery.toLowerCase())
-        );
-    }, [admins, searchQuery]);
+    const filteredAdmins = useMemo(() =>
+        admins.filter(a =>
+            a.adminName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            a.adminEmail?.toLowerCase().includes(searchQuery.toLowerCase())
+        ), [admins, searchQuery]);
 
-    const filteredUsers = useMemo(() => {
-        return users.filter(user =>
-            user.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            user.email?.toLowerCase().includes(searchQuery.toLowerCase())
-        );
-    }, [users, searchQuery]);
+    const filteredUsers = useMemo(() =>
+        users.filter(u =>
+            u.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            u.email?.toLowerCase().includes(searchQuery.toLowerCase())
+        ), [users, searchQuery]);
 
-    // Toggle participant selection
     const toggleParticipant = (participant, type) => {
-        const participantKey = `${type}-${participant.id}`;
-        const isSelected = selectedParticipants.some(p => p.key === participantKey);
-
+        const key = `${type}-${participant.id}`;
+        const isSelected = selectedParticipants.some(p => p.key === key);
         if (isSelected) {
-            setSelectedParticipants(prev => prev.filter(p => p.key !== participantKey));
+            setSelectedParticipants(prev => prev.filter(p => p.key !== key));
         } else {
-            setSelectedParticipants(prev => [
-                ...prev,
-                {
-                    key: participantKey,
-                    id: participant.id,
-                    type,
-                    name: type === 'ADMIN' ? participant.adminName : participant.name,
-                    avatar: type === 'ADMIN' ? participant.profileImage : participant.avatar,
-                    email: type === 'ADMIN' ? participant.adminEmail : participant.email
-                }
-            ]);
+            setSelectedParticipants(prev => [...prev, {
+                key,
+                id: participant.id,
+                type,
+                name: type === 'ADMIN' ? participant.adminName : participant.name,
+                avatar: type === 'ADMIN' ? participant.profileImage : participant.avatar,
+                email: type === 'ADMIN' ? participant.adminEmail : participant.email,
+            }]);
         }
     };
 
-    // Check if a participant is selected
-    const isParticipantSelected = (id, type) => {
-        return selectedParticipants.some(p => p.id === id && p.type === type);
-    };
+    const isParticipantSelected = (id, type) =>
+        selectedParticipants.some(p => p.id === id && p.type === type);
 
-    // Create conversation
-    const handleCreateConversation = async () => {
+    const handleCreate = async () => {
         if (selectedParticipants.length === 0) return;
         if (isGroup && !groupName.trim()) {
             alert('Please enter a group name');
             return;
         }
-
         try {
             setCreating(true);
-
-            // Build participant arrays
             const participantIds = [currentAdmin.id, ...selectedParticipants.map(p => p.id)];
             const participantTypes = ['ADMIN', ...selectedParticipants.map(p => p.type)];
-
-            // For 1-on-1 conversations, use the other participant's name
-            const conversationName = isGroup
-                ? groupName.trim()
-                : selectedParticipants[0].name;
-
-            const conversation = await chatService.createConversation({
-                participantIds,
-                participantTypes,
-                isGroup,
-                name: conversationName
-            });
-
+            const name = isGroup ? groupName.trim() : selectedParticipants[0].name;
+            const conversation = await chatService.createConversation({ participantIds, participantTypes, isGroup, name });
             onConversationCreated(conversation);
             onClose();
         } catch (error) {
@@ -140,251 +102,266 @@ const CreateConversationModal = ({ isOpen, onClose, onConversationCreated }) => 
         }
     };
 
-    if (!isOpen) return null;
+    const inputStyle = {
+        width: '100%', boxSizing: 'border-box',
+        background: bg3, border: `1px solid ${border}`, borderRadius: 8,
+        padding: '9px 12px', color: textC, outline: 'none',
+        ...ba(14, 400),
+    };
+
+    const tabStyle = (active) => ({
+        flex: 1, padding: '10px 0', background: 'none', border: 'none', cursor: 'pointer',
+        borderBottom: active ? `2px solid ${ORG}` : '2px solid transparent',
+        color: active ? ORG : text3,
+        ...bc(13, 600),
+        transition: 'color 0.15s',
+    });
+
+    const canCreate = selectedParticipants.length > 0 && (!isGroup || groupName.trim());
 
     return (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-            <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 max-h-[90vh] flex flex-col">
-                {/* Header */}
-                <div className="flex items-center justify-between p-4 border-b border-gray-200">
-                    <div className="flex items-center gap-2">
-                        {isGroup ? (
-                            <Users className="w-5 h-5 text-dashboard-600" />
-                        ) : (
-                            <MessageSquare className="w-5 h-5 text-dashboard-600" />
-                        )}
-                        <h2 className="text-lg font-semibold text-gray-900">
-                            {isGroup ? 'Create Group' : 'New Conversation'}
-                        </h2>
-                    </div>
-                    <button
+        <AnimatePresence>
+            {isOpen && (
+                <div style={{ position: 'fixed', inset: 0, zIndex: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+                    {/* Backdrop */}
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
                         onClick={onClose}
-                        className="text-gray-400 hover:text-gray-600 transition-colors"
+                        style={{ position: 'absolute', inset: 0, background: 'rgba(7,20,24,0.75)', backdropFilter: 'blur(4px)' }}
+                    />
+
+                    {/* Modal */}
+                    <motion.div
+                        initial={{ scale: 0.92, opacity: 0, y: 16 }}
+                        animate={{ scale: 1, opacity: 1, y: 0 }}
+                        exit={{ scale: 0.92, opacity: 0, y: 16 }}
+                        transition={{ type: 'spring', damping: 26, stiffness: 320 }}
+                        style={{
+                            position: 'relative', zIndex: 1,
+                            background: bg, border: `1px solid ${border}`,
+                            borderRadius: 16, width: '100%', maxWidth: 480,
+                            maxHeight: '88vh', display: 'flex', flexDirection: 'column',
+                            boxShadow: '0 32px 64px rgba(0,0,0,0.4)',
+                            overflow: 'hidden',
+                        }}
                     >
-                        <X className="w-5 h-5" />
-                    </button>
-                </div>
+                        {/* Header gradient strip */}
+                        <div style={{ height: 3, background: `linear-gradient(90deg, ${ORG}, #6366f1)` }} />
 
-                {/* Group Name Input (shown when multiple participants selected) */}
-                {isGroup && (
-                    <div className="p-4 border-b border-gray-200 bg-dashboard-50">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Group Name
-                        </label>
-                        <input
-                            type="text"
-                            placeholder="Enter group name..."
-                            value={groupName}
-                            onChange={(e) => setGroupName(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-dashboard-500"
-                        />
-                    </div>
-                )}
-
-                {/* Selected Participants */}
-                {selectedParticipants.length > 0 && (
-                    <div className="p-3 border-b border-gray-200 bg-gray-50">
-                        <p className="text-xs text-gray-500 mb-2">
-                            Selected: {selectedParticipants.length} participant{selectedParticipants.length > 1 ? 's' : ''}
-                        </p>
-                        <div className="flex flex-wrap gap-2">
-                            {selectedParticipants.map((participant) => (
-                                <div
-                                    key={participant.key}
-                                    className="flex items-center gap-1 px-2 py-1 bg-dashboard-100 text-dashboard-700 rounded-full text-sm"
-                                >
-                                    <span>{participant.name}</span>
-                                    <button
-                                        onClick={() => toggleParticipant(
-                                            { id: participant.id },
-                                            participant.type
-                                        )}
-                                        className="w-4 h-4 flex items-center justify-center hover:bg-dashboard-200 rounded-full"
-                                    >
-                                        <X className="w-3 h-3" />
-                                    </button>
+                        {/* Header */}
+                        <div style={{
+                            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                            padding: '16px 20px', borderBottom: `1px solid ${border}`,
+                        }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                <div style={{
+                                    width: 34, height: 34, borderRadius: 8, background: bg2,
+                                    border: `1px solid ${border}`, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                }}>
+                                    {isGroup
+                                        ? <Users style={{ width: 16, height: 16, color: ORG }} />
+                                        : <MessageSquare style={{ width: 16, height: 16, color: ORG }} />}
                                 </div>
-                            ))}
+                                <h2 style={{ ...bb(16, { color: textC, margin: 0 }) }}>
+                                    {isGroup ? 'Create Group' : 'New Conversation'}
+                                </h2>
+                            </div>
+                            <button
+                                onClick={onClose}
+                                style={{ background: 'none', border: 'none', color: text3, cursor: 'pointer', padding: 4, display: 'flex', borderRadius: 6 }}
+                            >
+                                <X style={{ width: 18, height: 18 }} />
+                            </button>
                         </div>
-                    </div>
-                )}
 
-                {/* Search */}
-                <div className="p-4 border-b border-gray-200">
-                    <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                        <input
-                            type="text"
-                            placeholder="Search participants..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-dashboard-500"
-                        />
-                    </div>
-                </div>
-
-                {/* Tabs */}
-                <div className="flex border-b border-gray-200">
-                    <button
-                        onClick={() => setActiveTab('admins')}
-                        className={`flex-1 py-3 text-sm font-medium transition-colors ${activeTab === 'admins'
-                                ? 'text-dashboard-600 border-b-2 border-dashboard-600'
-                                : 'text-gray-500 hover:text-gray-700'
-                            }`}
-                    >
-                        Admins ({filteredAdmins.length})
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('users')}
-                        className={`flex-1 py-3 text-sm font-medium transition-colors ${activeTab === 'users'
-                                ? 'text-dashboard-600 border-b-2 border-dashboard-600'
-                                : 'text-gray-500 hover:text-gray-700'
-                            }`}
-                    >
-                        Users ({filteredUsers.length})
-                    </button>
-                </div>
-
-                {/* Participant List */}
-                <div className="flex-1 overflow-y-auto max-h-64">
-                    {loading ? (
-                        <div className="flex items-center justify-center py-12">
-                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-dashboard-600"></div>
-                        </div>
-                    ) : activeTab === 'admins' ? (
-                        filteredAdmins.length === 0 ? (
-                            <div className="text-center py-12 text-gray-500">
-                                <UserPlus className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                                <p>No admins found</p>
+                        {/* Group Name Input */}
+                        {isGroup && (
+                            <div style={{ padding: '12px 20px', borderBottom: `1px solid ${border}`, background: bg2 }}>
+                                <label style={{ ...bc(11, 700, { color: text3, textTransform: 'uppercase', letterSpacing: 1, display: 'block', marginBottom: 6 }) }}>
+                                    Group Name
+                                </label>
+                                <input
+                                    type="text"
+                                    placeholder="Enter group name..."
+                                    value={groupName}
+                                    onChange={e => setGroupName(e.target.value)}
+                                    style={inputStyle}
+                                    autoFocus
+                                />
                             </div>
-                        ) : (
-                            <div className="divide-y divide-gray-200">
-                                {filteredAdmins.map((admin) => {
-                                    const selected = isParticipantSelected(admin.id, 'ADMIN');
-                                    return (
-                                        <div
-                                            key={admin.id}
-                                            onClick={() => toggleParticipant(admin, 'ADMIN')}
-                                            className={`flex items-center justify-between p-4 cursor-pointer transition-colors ${selected ? 'bg-dashboard-50' : 'hover:bg-gray-50'
-                                                }`}
-                                        >
-                                            <div className="flex items-center space-x-3 flex-1 min-w-0">
-                                                {admin.profileImage ? (
-                                                    <img
-                                                        src={admin.profileImage}
-                                                        alt={admin.adminName}
-                                                        className="w-10 h-10 rounded-full object-cover"
-                                                    />
-                                                ) : (
-                                                    <div className="w-10 h-10 rounded-full bg-dashboard-100 flex items-center justify-center">
-                                                        <span className="text-dashboard-600 font-semibold">
-                                                            {admin.adminName?.charAt(0).toUpperCase()}
-                                                        </span>
-                                                    </div>
-                                                )}
-                                                <div className="flex-1 min-w-0">
-                                                    <p className="text-sm font-medium text-gray-900 truncate">
-                                                        {admin.adminName}
-                                                    </p>
-                                                    <p className="text-xs text-gray-500 truncate">
-                                                        {admin.adminEmail}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${selected
-                                                    ? 'bg-dashboard-600 border-dashboard-600'
-                                                    : 'border-gray-300'
-                                                }`}>
-                                                {selected && <Check className="w-3 h-3 text-white" />}
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        )
-                    ) : (
-                        filteredUsers.length === 0 ? (
-                            <div className="text-center py-12 text-gray-500">
-                                <UserPlus className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                                <p>No users found</p>
-                            </div>
-                        ) : (
-                            <div className="divide-y divide-gray-200">
-                                {filteredUsers.map((user) => {
-                                    const selected = isParticipantSelected(user.id, 'USER');
-                                    return (
-                                        <div
-                                            key={user.id}
-                                            onClick={() => toggleParticipant(user, 'USER')}
-                                            className={`flex items-center justify-between p-4 cursor-pointer transition-colors ${selected ? 'bg-dashboard-50' : 'hover:bg-gray-50'
-                                                }`}
-                                        >
-                                            <div className="flex items-center space-x-3 flex-1 min-w-0">
-                                                {user.avatar ? (
-                                                    <img
-                                                        src={user.avatar}
-                                                        alt={user.name}
-                                                        className="w-10 h-10 rounded-full object-cover"
-                                                    />
-                                                ) : (
-                                                    <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
-                                                        <span className="text-green-600 font-semibold">
-                                                            {user.name?.charAt(0).toUpperCase()}
-                                                        </span>
-                                                    </div>
-                                                )}
-                                                <div className="flex-1 min-w-0">
-                                                    <p className="text-sm font-medium text-gray-900 truncate">
-                                                        {user.name}
-                                                    </p>
-                                                    <p className="text-xs text-gray-500 truncate">
-                                                        {user.email}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${selected
-                                                    ? 'bg-dashboard-600 border-dashboard-600'
-                                                    : 'border-gray-300'
-                                                }`}>
-                                                {selected && <Check className="w-3 h-3 text-white" />}
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        )
-                    )}
-                </div>
-
-                {/* Footer */}
-                <div className="flex items-center justify-end gap-3 p-4 border-t border-gray-200">
-                    <button
-                        onClick={onClose}
-                        disabled={creating}
-                        className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg font-medium transition-colors disabled:opacity-50"
-                    >
-                        Cancel
-                    </button>
-                    <button
-                        onClick={handleCreateConversation}
-                        disabled={creating || selectedParticipants.length === 0 || (isGroup && !groupName.trim())}
-                        className="px-6 py-2 bg-dashboard-600 hover:bg-dashboard-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                    >
-                        {creating ? (
-                            <>
-                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                <span>Creating...</span>
-                            </>
-                        ) : (
-                            <>
-                                {isGroup ? <Users className="w-4 h-4" /> : <MessageSquare className="w-4 h-4" />}
-                                <span>{isGroup ? 'Create Group' : 'Start Chat'}</span>
-                            </>
                         )}
-                    </button>
+
+                        {/* Selected Chips */}
+                        {selectedParticipants.length > 0 && (
+                            <div style={{ padding: '10px 20px', borderBottom: `1px solid ${border}`, background: bg2 }}>
+                                <p style={{ ...ba(11, 400, { color: text3, margin: '0 0 8px' }) }}>
+                                    {selectedParticipants.length} selected
+                                </p>
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                                    {selectedParticipants.map(p => (
+                                        <div key={p.key} style={{
+                                            display: 'flex', alignItems: 'center', gap: 6,
+                                            padding: '4px 10px 4px 6px', background: bg3,
+                                            border: `1px solid ${border}`, borderRadius: 20,
+                                        }}>
+                                            <Avatar avatar={p.avatar} name={p.name} initial={p.name?.charAt(0)} size="xs" />
+                                            <span style={{ ...ba(12, 500, { color: textC }) }}>{p.name}</span>
+                                            <button
+                                                onClick={() => toggleParticipant({ id: p.id }, p.type)}
+                                                style={{ background: 'none', border: 'none', color: text3, cursor: 'pointer', display: 'flex', padding: 0, marginLeft: 2 }}
+                                            >
+                                                <X style={{ width: 12, height: 12 }} />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Search */}
+                        <div style={{ padding: '12px 20px', borderBottom: `1px solid ${border}` }}>
+                            <div style={{ position: 'relative' }}>
+                                <Search style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', width: 14, height: 14, color: text3 }} />
+                                <input
+                                    type="text"
+                                    placeholder="Search participants..."
+                                    value={searchQuery}
+                                    onChange={e => setSearchQuery(e.target.value)}
+                                    style={{ ...inputStyle, paddingLeft: 32 }}
+                                />
+                            </div>
+                        </div>
+
+                        {/* Tabs */}
+                        <div style={{ display: 'flex', borderBottom: `1px solid ${border}` }}>
+                            <button style={tabStyle(activeTab === 'admins')} onClick={() => setActiveTab('admins')}>
+                                Admins ({filteredAdmins.length})
+                            </button>
+                            <button style={tabStyle(activeTab === 'users')} onClick={() => setActiveTab('users')}>
+                                Users ({filteredUsers.length})
+                            </button>
+                        </div>
+
+                        {/* List */}
+                        <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }} className="custom-scrollbar">
+                            {loading ? (
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '48px 0' }}>
+                                    <div style={{
+                                        width: 28, height: 28, borderRadius: '50%',
+                                        border: `2px solid ${border}`, borderTopColor: ORG,
+                                        animation: 'spin 0.8s linear infinite',
+                                    }} />
+                                </div>
+                            ) : (() => {
+                                const list = activeTab === 'admins'
+                                    ? filteredAdmins.map(a => ({ ...a, _key: a.id, _type: 'ADMIN', _name: a.adminName, _email: a.adminEmail, _avatar: a.profileImage }))
+                                    : filteredUsers.map(u => ({ ...u, _key: u.id, _type: 'USER', _name: u.name, _email: u.email, _avatar: u.avatar }));
+
+                                if (list.length === 0) return (
+                                    <div style={{ textAlign: 'center', padding: '48px 0' }}>
+                                        <UserPlus style={{ width: 40, height: 40, color: text3, margin: '0 auto 12px', display: 'block' }} />
+                                        <p style={{ ...ba(13, 400, { color: text3, margin: 0 }) }}>
+                                            No {activeTab === 'admins' ? 'admins' : 'users'} found
+                                        </p>
+                                    </div>
+                                );
+
+                                return list.map(item => {
+                                    const selected = isParticipantSelected(item._key, item._type);
+                                    return (
+                                        <div
+                                            key={`${item._type}-${item._key}`}
+                                            onClick={() => toggleParticipant(
+                                                item._type === 'ADMIN'
+                                                    ? { id: item._key, adminName: item._name, adminEmail: item._email, profileImage: item._avatar }
+                                                    : { id: item._key, name: item._name, email: item._email, avatar: item._avatar },
+                                                item._type
+                                            )}
+                                            style={{
+                                                display: 'flex', alignItems: 'center', gap: 12,
+                                                padding: '10px 20px', cursor: 'pointer',
+                                                background: selected ? bg2 : 'transparent',
+                                                borderBottom: `1px solid ${border}`,
+                                                transition: 'background 0.12s',
+                                            }}
+                                            onMouseEnter={e => { if (!selected) e.currentTarget.style.background = bg2; }}
+                                            onMouseLeave={e => { if (!selected) e.currentTarget.style.background = 'transparent'; }}
+                                        >
+                                            <Avatar avatar={item._avatar} name={item._name} initial={item._name?.charAt(0)} size="sm" />
+                                            <div style={{ flex: 1, minWidth: 0 }}>
+                                                <p style={{ ...ba(13, 500, { color: textC, margin: 0 }) }} className="truncate">
+                                                    {item._name}
+                                                </p>
+                                                <p style={{ ...ba(11, 400, { color: text3, margin: 0 }) }} className="truncate">
+                                                    {item._email}
+                                                </p>
+                                            </div>
+                                            <div style={{
+                                                width: 20, height: 20, borderRadius: '50%', flexShrink: 0,
+                                                border: `2px solid ${selected ? ORG : border}`,
+                                                background: selected ? ORG : 'transparent',
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                transition: 'all 0.15s',
+                                            }}>
+                                                {selected && <Check style={{ width: 11, height: 11, color: '#fff' }} />}
+                                            </div>
+                                        </div>
+                                    );
+                                });
+                            })()}
+                        </div>
+
+                        {/* Footer */}
+                        <div style={{
+                            display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 10,
+                            padding: '14px 20px', borderTop: `1px solid ${border}`,
+                        }}>
+                            <button
+                                onClick={onClose}
+                                disabled={creating}
+                                style={{
+                                    padding: '8px 18px', background: bg2, border: `1px solid ${border}`,
+                                    borderRadius: 8, color: text2, cursor: 'pointer',
+                                    ...ba(13, 500), opacity: creating ? 0.5 : 1,
+                                }}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleCreate}
+                                disabled={creating || !canCreate}
+                                style={{
+                                    display: 'flex', alignItems: 'center', gap: 7,
+                                    padding: '8px 20px', background: canCreate && !creating ? ORG : bg3,
+                                    border: `1px solid ${canCreate && !creating ? ORG : border}`,
+                                    borderRadius: 8, color: canCreate && !creating ? '#fff' : text3,
+                                    cursor: canCreate && !creating ? 'pointer' : 'not-allowed',
+                                    ...ba(13, 600), transition: 'all 0.15s',
+                                }}
+                            >
+                                {creating ? (
+                                    <>
+                                        <div style={{
+                                            width: 14, height: 14, borderRadius: '50%',
+                                            border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff',
+                                            animation: 'spin 0.8s linear infinite',
+                                        }} />
+                                        Creating...
+                                    </>
+                                ) : (
+                                    <>
+                                        {isGroup ? <Users style={{ width: 14, height: 14 }} /> : <MessageSquare style={{ width: 14, height: 14 }} />}
+                                        {isGroup ? 'Create Group' : 'Start Chat'}
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    </motion.div>
                 </div>
-            </div>
-        </div>
+            )}
+        </AnimatePresence>
     );
 };
 

@@ -530,6 +530,57 @@ export class ChatService {
         };
     }
 
+    async removeMemberFromConversation(
+        conversationId: string,
+        participantId: string,
+        participantType: 'ADMIN' | 'USER',
+        requesterId: string,
+        requesterType: 'ADMIN' | 'USER'
+    ) {
+        const conversation = await this.prisma.conversation.findUnique({
+            where: { id: Number(conversationId) },
+            include: { participants: { where: { leftAt: null } } }
+        });
+
+        if (!conversation || !conversation.isGroup) {
+            throw new Error('Group conversation not found');
+        }
+
+        // Verify requester is an admin of the group
+        const requester = conversation.participants.find(
+            p => p.participantId === requesterId && p.participantType === requesterType
+        );
+        if (!requester || requester.role !== 'admin') {
+            throw new Error('Only group admins can remove members');
+        }
+
+        // Cannot remove yourself via this endpoint
+        if (participantId === requesterId && participantType === requesterType) {
+            throw new Error('Use leave group to remove yourself');
+        }
+
+        // Soft-delete: set leftAt
+        await this.prisma.conversationParticipant.updateMany({
+            where: {
+                conversationId: Number(conversationId),
+                participantId,
+                participantType,
+                leftAt: null,
+            },
+            data: { leftAt: new Date() }
+        });
+
+        this.cache.deleteConversation(`conversation:${conversationId}`);
+
+        // Notify remaining participants
+        const remaining = conversation.participants.filter(
+            p => !(p.participantId === participantId && p.participantType === participantType)
+        );
+        this.chatGateway.broadcastMemberRemoved(conversationId, participantId, participantType, remaining as any[]);
+
+        return { success: true };
+    }
+
     // ====================
     // MESSAGES
     // ====================

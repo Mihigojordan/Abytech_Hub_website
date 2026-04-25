@@ -475,6 +475,47 @@ const ChatApp = () => {
         return { ...conv, participants: conv.participants?.map(p => ({ ...p, isOnline: isUserOnline(p.participantId, p.participantType) })) };
     }, [selectedChatId, conversations, isUserOnline]);
 
+    useSocketEvent('member:removed', (data: any) => {
+        const { conversationId, removedParticipantId, removedParticipantType } = data;
+        const convIdStr = String(conversationId);
+        setConversations(prev => {
+            const conv = prev[convIdStr];
+            if (!conv) return prev;
+            return {
+                ...prev,
+                [convIdStr]: {
+                    ...conv,
+                    participants: (conv.participants || []).filter(
+                        (p: any) => !(p.participantId === removedParticipantId && p.participantType === removedParticipantType)
+                    )
+                }
+            };
+        });
+    });
+
+    const handleRemoveMember = useCallback(async (participantId: string, participantType: 'ADMIN' | 'USER') => {
+        if (!selectedChatId) return;
+        try {
+            await chatService.removeMember(selectedChatId, participantId, participantType);
+            // Optimistically update local state
+            setConversations(prev => {
+                const conv = prev[selectedChatId];
+                if (!conv) return prev;
+                return {
+                    ...prev,
+                    [selectedChatId]: {
+                        ...conv,
+                        participants: (conv.participants || []).filter(
+                            (p: any) => !(p.participantId === participantId && p.participantType === participantType)
+                        )
+                    }
+                };
+            });
+        } catch (err) {
+            alert('Failed to remove member');
+        }
+    }, [selectedChatId]);
+
     const handleBack = () => {
         navigate('/admin/dashboard/chat');
     };
@@ -552,11 +593,12 @@ const ChatApp = () => {
                     onToggleSelection={handleToggleSelection}
                     onMessageAction={handleMessageActionWrapper}
                     onMediaView={handleMediaView}
-                    allMessages={allMessages}
                     setMessageRef={setMessageRef}
                     onConversationUpdated={fetchMessages}
                     isSending={isSending}
                     onBack={handleBack}
+                    onRemoveMember={handleRemoveMember}
+                    currentUserRole={selectedConversation?.participantRole}
                 />
             </div>
 

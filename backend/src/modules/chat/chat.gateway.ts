@@ -233,6 +233,22 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
 
     /**
+     * Broadcasts member removal to remaining participants
+     */
+    public broadcastMemberRemoved(
+        conversationId: string,
+        removedParticipantId: string,
+        removedParticipantType: 'ADMIN' | 'USER',
+        recipients: { participantId: string; participantType: 'ADMIN' | 'USER' }[]
+    ) {
+        this.emitToUsers(
+            recipients.map(r => ({ userId: r.participantId as any, userType: r.participantType as any })),
+            'member:removed',
+            { conversationId, removedParticipantId, removedParticipantType }
+        );
+    }
+
+    /**
      * Broadcasts a read receipt
      */
     public broadcastMessageRead(

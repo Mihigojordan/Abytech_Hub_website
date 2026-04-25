@@ -39,6 +39,18 @@ class ChatService {
         }
     }
 
+    async removeMember(conversationId, participantId, participantType) {
+        try {
+            const response = await this.api.delete(`/chat/conversations/${conversationId}/members`, {
+                data: { participantId, participantType }
+            });
+            return response.data;
+        } catch (error) {
+            const msg = error.response?.data?.message || error.message || 'Failed to remove member';
+            throw new Error(msg);
+        }
+    }
+
     async addMembersToConversation(conversationId, participantIds, participantTypes) {
         try {
             const response = await this.api.post(`/chat/conversations/${conversationId}/members`, {

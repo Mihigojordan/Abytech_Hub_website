@@ -183,11 +183,12 @@ export const useMessages = (currentUser = null) => {
             const transformedNewMessage = transformMessages([newMessage])[0];
             const chatIdStr = String(selectedChatId);
 
-            // Add to local state
-            setAllMessages(prev => ({
-                ...prev,
-                [chatIdStr]: [...(prev[chatIdStr] || []), transformedNewMessage]
-            }));
+            // Add to local state (deduplicated — socket event may have arrived first)
+            setAllMessages(prev => {
+                const existing = prev[chatIdStr] || [];
+                if (existing.some(m => String(m.id) === String(transformedNewMessage.id))) return prev;
+                return { ...prev, [chatIdStr]: [...existing, transformedNewMessage] };
+            });
 
             clearFiles();
             setReplyingTo(null);
@@ -328,9 +329,6 @@ export const useMessages = (currentUser = null) => {
             if (!messageExists) {
                 return prev;
             }
-
-            // Transform updated message
-            const transformedMessage = transformMessages([updatedMessage])[0];
 
             return {
                 ...prev,

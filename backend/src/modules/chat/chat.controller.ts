@@ -52,6 +52,23 @@ export class ChatController {
         return this.chatService.createConversation(dto, creatorId, creatorType);
     }
 
+    @Delete('conversations/:id/members')
+    async removeMemberFromConversation(
+        @Param('id') conversationId: string,
+        @Body() dto: { participantId: string; participantType: 'ADMIN' | 'USER' },
+        @Req() req: RequestWithChatUser
+    ) {
+        const userId = req.user.id;
+        const userType = req.user.type;
+        return this.chatService.removeMemberFromConversation(
+            conversationId,
+            dto.participantId,
+            dto.participantType,
+            userId,
+            userType
+        );
+    }
+
     @Post('conversations/:id/members')
     async addMembersToConversation(
         @Param('id') conversationId: string,

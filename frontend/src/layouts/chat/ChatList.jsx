@@ -1,16 +1,12 @@
-import React from 'react';
-import { MessageSquare, Search } from 'lucide-react';
+import { useState } from 'react';
+import { MessageSquare } from 'lucide-react';
 import ChatListHeader from '../../components/dashboard/chat/chat-list/ChatListHeader';
 import ContactsList from '../../components/dashboard/chat/chat-list/ContactsList';
 import ConversationItem from '../../components/dashboard/chat/chat-list/ConversationItem';
 import { getLastMessage } from '../../utils/chat/messageUtils';
 import { useDashboardTheme } from '../../utils/dashboardTheme';
-import { ORG, TEAL, bb, bc, ba } from '../../utils/homeConstants';
-import { motion } from 'framer-motion';
+import { bc, ba } from '../../utils/homeConstants';
 
-/**
- * Skeleton component for conversation items while loading
- */
 const ConversationSkeleton = () => {
     const { bg2, border } = useDashboardTheme();
     return (
@@ -29,9 +25,6 @@ const ConversationSkeleton = () => {
     );
 };
 
-/**
- * ChatList layout component - middle panel with search, contacts, and conversation list
- */
 const ChatList = ({
     conversations = {},
     selectedChatId,
@@ -45,68 +38,65 @@ const ChatList = ({
     onlineUsers = new Map(),
     isLoading = false
 }) => {
-    const { bg, bg2, bg3, textC, text2, text3, border, isDark } = useDashboardTheme();
+    const { bg, bg2, text2, text3, border } = useDashboardTheme();
+    const [activeFilter, setActiveFilter] = useState('all');
 
-    // Helper function to check if a user is online
     const isUserOnline = (userId, userType) => {
         const user = onlineUsers.get(userId);
         return user && user.userType === userType;
     };
 
-    // 1. Convert to array and enrich with real-time online status
+    // 1. Enrich with online status
     const chatsArray = Object.values(conversations || {}).map(conv => {
         if (!conv) return null;
-        const enrichedParticipants = conv.participants?.map(p => ({
-            ...p,
-            isOnline: isUserOnline(p.participantId, p.participantType)
-        }));
-
         return {
             ...conv,
-            participants: enrichedParticipants
+            participants: conv.participants?.map(p => ({
+                ...p,
+                isOnline: isUserOnline(p.participantId, p.participantType)
+            }))
         };
     }).filter(Boolean);
 
-    // 2. Filter based on search query
-    const filteredChats = searchQuery?.trim()
-        ? chatsArray.filter(conv =>
-            conv.name?.toLowerCase().includes(searchQuery.toLowerCase())
-        )
+    // 2. Search filter
+    const searched = searchQuery?.trim()
+        ? chatsArray.filter(c => c.name?.toLowerCase().includes(searchQuery.toLowerCase()))
         : chatsArray;
 
-    // 3. Sort by updatedAt (descending)
-    const sortedChats = [...filteredChats].sort((a, b) => {
-        const timeA = new Date(a.updatedAt || 0).getTime();
-        const timeB = new Date(b.updatedAt || 0).getTime();
-        return timeB - timeA;
+    // 3. Tab filter
+    const tabFiltered = searched.filter(c => {
+        if (activeFilter === 'groups') return c.isGroup === true;
+        if (activeFilter === 'unread') return (unreadCounts[String(c.id)] || 0) > 0;
+        return true;
     });
 
+    // 4. Sort by updatedAt descending
+    const sortedChats = [...tabFiltered].sort((a, b) =>
+        new Date(b.updatedAt || 0).getTime() - new Date(a.updatedAt || 0).getTime()
+    );
+
+    const emptyLabel = searchQuery
+        ? 'No conversations found'
+        : activeFilter === 'groups'
+            ? 'No groups yet'
+            : activeFilter === 'unread'
+                ? 'No unread messages'
+                : 'No conversations yet';
+
     return (
-        <div
-            style={{
-                width: '100%',
-                background: bg,
-                borderRight: `1px solid ${border}`,
-                flexDirection: 'column',
-                height: '100%'
-            }}
-        >
-            {/* Header with search */}
+        <div style={{ width: '100%', background: bg, borderRight: `1px solid ${border}`, flexDirection: 'column', height: '100%' }}>
             <ChatListHeader
                 searchQuery={searchQuery}
                 onSearchChange={onSearchChange}
+                activeFilter={activeFilter}
+                onFilterChange={setActiveFilter}
             />
 
             <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }} className="custom-scrollbar">
-                {/* Online Contacts */}
-                <ContactsList
-                    contacts={contacts}
-                    onlineUsers={onlineUsers}
-                />
+                <ContactsList contacts={contacts} onlineUsers={onlineUsers} />
 
-                {/* Recent Chats Section */}
-                <div style={{ padding: '24px 20px 12px' }}>
-                    <h2 style={{ ...bc(12, 700, { color: text2, letterSpacing: 1, textTransform: 'uppercase', margin: 0 }) }}>Recent Conversations</h2>
+                <div style={{ padding: '20px 20px 10px' }}>
+                    <h2 style={{ ...bc(11, 700, { color: text2, letterSpacing: 1, textTransform: 'uppercase', margin: 0 }) }}>Recent Conversations</h2>
                 </div>
 
                 <div style={{ flex: 1 }}>
@@ -117,19 +107,14 @@ const ChatList = ({
                             {sortedChats.map((chat) => {
                                 const chatIdStr = String(chat.id);
                                 const messages = chat.messages || allMessages[chatIdStr] || [];
-                                const lastMsg = getLastMessage(messages);
-                                const unreadCount = unreadCounts[chatIdStr] || 0;
-                                const isSelected = chatIdStr === String(selectedChatId);
-                                const isUserTyping = isTyping?.[chatIdStr]?.size > 0;
-
                                 return (
                                     <ConversationItem
                                         key={chatIdStr}
                                         chat={chat}
-                                        isSelected={isSelected}
-                                        isTyping={isUserTyping}
-                                        lastMessage={lastMsg}
-                                        unreadCount={unreadCount}
+                                        isSelected={chatIdStr === String(selectedChatId)}
+                                        isTyping={isTyping?.[chatIdStr]?.size > 0}
+                                        lastMessage={getLastMessage(messages)}
+                                        unreadCount={unreadCounts[chatIdStr] || 0}
                                         onSelect={onSelectChat}
                                     />
                                 );
@@ -140,9 +125,7 @@ const ChatList = ({
                                     <div style={{ width: 48, height: 48, background: bg2, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
                                         <MessageSquare style={{ width: 20, height: 20, color: text3 }} />
                                     </div>
-                                    <p style={{ ...ba(14, 400, { color: text3, margin: 0 }) }}>
-                                        {searchQuery ? 'No conversations found' : 'No conversations yet'}
-                                    </p>
+                                    <p style={{ ...ba(14, 400, { color: text3, margin: 0 }) }}>{emptyLabel}</p>
                                 </div>
                             )}
                         </>
