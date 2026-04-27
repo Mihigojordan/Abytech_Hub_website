@@ -32,7 +32,7 @@ function NotificationSettings() {
 
     return (
         <div style={{ padding: '32px' }}>
-            <div style={{ maxWidth: 600 }}>
+            <div >
                 {/* Main Toggle Card */}
                 <div style={{ 
                     background: bg3, 
@@ -170,4 +170,4 @@ function NotificationSettings() {
     );
 }
 
-export default NotificationSettings;
+export default NotificationSettings;

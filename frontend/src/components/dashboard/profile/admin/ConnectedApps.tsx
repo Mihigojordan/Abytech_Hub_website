@@ -227,6 +227,3 @@ const ConnectedApps: React.FC = () => {
 };
 
 export default ConnectedApps;
-};
-
-export default ConnectedApps;

@@ -103,7 +103,7 @@ async function generateAllAssets() {
         console.log('📱 Generating PWA icons...');
         for (const icon of iconSpecs.pwa) {
             await sharp(sourceImage)
-                .resize(icon.size, icon.size, { fit: 'contain', background: { r: 255, g: 255, b: 255, alpha: 0 } })
+                .resize(icon.size, icon.size, { fit: 'contain', background: { r: 245, g: 222, b: 179, alpha: 1 } })
                 .png()
                 .toFile(path.join(publicDir, icon.name));
             console.log(`✓ ${icon.name}`);
@@ -113,7 +113,7 @@ async function generateAllAssets() {
         console.log('\n🍎 Generating Apple Touch Icons...');
         for (const icon of iconSpecs.apple) {
             await sharp(sourceImage)
-                .resize(icon.size, icon.size, { fit: 'contain', background: { r: 255, g: 255, b: 255, alpha: 1 } })
+                .resize(icon.size, icon.size, { fit: 'contain', background: { r: 245, g: 222, b: 179, alpha: 1 } })
                 .png()
                 .toFile(path.join(publicDir, icon.name));
             console.log(`✓ ${icon.name}`);
@@ -130,12 +130,12 @@ async function generateAllAssets() {
                     width: icon.size,
                     height: icon.size,
                     channels: 4,
-                    background: { r: 14, g: 165, b: 233, alpha: 1 } // Primary color
+                    background: { r: 245, g: 222, b: 179, alpha: 1 } // Wheat color
                 }
             })
             .composite([{
                 input: await sharp(sourceImage)
-                    .resize(iconSize, iconSize, { fit: 'contain' })
+                    .resize(iconSize, iconSize, { fit: 'contain', background: { r: 245, g: 222, b: 179, alpha: 1 } })
                     .png()
                     .toBuffer(),
                 top: padding,
@@ -152,13 +152,13 @@ async function generateAllAssets() {
             if (tile.width && tile.height) {
                 // Rectangular tile
                 await sharp(sourceImage)
-                    .resize(tile.width, tile.height, { fit: 'contain', background: { r: 14, g: 165, b: 233, alpha: 1 } })
+                    .resize(tile.width, tile.height, { fit: 'contain', background: { r: 245, g: 222, b: 179, alpha: 1 } })
                     .png()
                     .toFile(path.join(publicDir, tile.name));
             } else {
                 // Square tile
                 await sharp(sourceImage)
-                    .resize(tile.size, tile.size, { fit: 'contain', background: { r: 14, g: 165, b: 233, alpha: 1 } })
+                    .resize(tile.size, tile.size, { fit: 'contain', background: { r: 245, g: 222, b: 179, alpha: 1 } })
                     .png()
                     .toFile(path.join(publicDir, tile.name));
             }
@@ -169,7 +169,7 @@ async function generateAllAssets() {
         console.log('\n🔖 Generating Favicons...');
         for (const favicon of iconSpecs.favicons) {
             await sharp(sourceImage)
-                .resize(favicon.size, favicon.size, { fit: 'contain', background: { r: 255, g: 255, b: 255, alpha: 0 } })
+                .resize(favicon.size, favicon.size, { fit: 'contain', background: { r: 245, g: 222, b: 179, alpha: 1 } })
                 .png()
                 .toFile(path.join(publicDir, favicon.name));
             console.log(`✓ ${favicon.name}`);
@@ -192,7 +192,7 @@ async function generateAllAssets() {
                     width: splash.width,
                     height: splash.height,
                     channels: 4,
-                    background: { r: 240, g: 249, b: 255, alpha: 1 } // Primary-50 background
+                    background: { r: 245, g: 222, b: 179, alpha: 1 } // Wheat background
                 }
             })
             .composite([{

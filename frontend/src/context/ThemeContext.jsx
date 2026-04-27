@@ -9,10 +9,16 @@ export function ThemeProvider({ children }) {
   const isDark = theme === "dark";
   const toggleTheme = () => setTheme(isDark ? "light" : "dark");
 
-  // persist + keep Tailwind dark-mode class in sync
+  // persist + keep Tailwind dark-mode class in sync + update PWA theme meta tags
   useEffect(() => {
     localStorage.setItem("abytech-theme", theme);
     document.documentElement.classList.toggle("dark", isDark);
+
+    const themeColor = isDark ? "#071418" : "#e8621a";
+    ["theme-color", "msapplication-TileColor", "msapplication-navbutton-color"].forEach((name) => {
+      const meta = document.querySelector(`meta[name="${name}"]`);
+      if (meta) meta.setAttribute("content", themeColor);
+    });
   }, [theme, isDark]);
 
   useEffect(() => {

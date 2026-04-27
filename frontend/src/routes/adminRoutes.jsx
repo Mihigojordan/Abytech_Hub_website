@@ -10,7 +10,7 @@ const EmployeeeDashboard = lazy(() => import("../pages/dashboard/EmployeeManagem
 const ReportDashboard = lazy(() => import("../pages/dashboard/ReportManagement"));
 const UpsertReportPage = lazy(() => import("../components/dashboard/report/UpsertReportPage"));
 const ReportViewPage = lazy(() => import("../components/dashboard/report/ReportViewPage"));
-const AdminProfilePage = lazy(() => import("../components/dashboard/profile/admin/ProfileSettings"));
+const AdminProfilePage = lazy(() => import("../pages/dashboard/AdminProfile"));
 const AdminProfileEdit = lazy(() => import("../pages/EditProfilePage"));
 const PermissionManagement = lazy(() => import("../pages/dashboard/PermissionManagement"));
 const ChatApp = lazy(() => import("../pages/dashboard/ChatAppPage"));
