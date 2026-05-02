@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>New Contact Message — AbyTech Hub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Barlow:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --ink:    #0E1A24;
+      --ink-2:  #132332;
+      --orange: #E85A1C;
+      --teal:   #2C6C86;
+      --grey:   #5A6670;
+      --grey-2: #8A949E;
+      --line:   #E3E6EA;
+      --paper:  #F4F2EE;
+      --card:   #FFFFFF;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--paper);
+      font-family: 'Barlow', system-ui, sans-serif;
+      font-weight: 400;
+      color: var(--ink);
+      padding: 24px 16px;
+      -webkit-font-smoothing: antialiased;
+    }
+    .page {
+      max-width: 620px;
+      margin: 0 auto;
+      background: var(--card);
+      box-shadow: 0 24px 64px -20px rgba(14,26,36,.22), 0 2px 6px rgba(14,26,36,.06);
+      overflow: hidden;
+    }
+
+    /* ── LETTERHEAD ── */
+    .letterhead {
+      position: relative;
+      background: var(--ink);
+      color: #fff;
+      padding: 28px 40px 22px;
+      overflow: hidden;
+      isolation: isolate;
+    }
+    .stripes {
+      position: absolute;
+      top: -40px; right: 100px; bottom: -40px;
+      width: 280px;
+      transform: skewX(-22deg);
+      z-index: 0;
+      pointer-events: none;
+    }
+    .stripes span { position: absolute; top: 0; bottom: 0; display: block; }
+    .stripes .s1 { left: 0;    width: 38px; background: var(--orange); }
+    .stripes .s2 { left: 60px; width: 32px; background: var(--orange); opacity: .88; }
+    .stripes .s3 { left: 112px; width: 26px; background: var(--grey); opacity: .7; }
+    .big-A {
+      position: absolute; right: -40px; top: 50%;
+      transform: translateY(-50%);
+      width: 220px; height: 200px;
+      z-index: 0; opacity: .12;
+    }
+    .head-row {
+      position: relative; z-index: 2;
+      display: flex; align-items: flex-start;
+      justify-content: space-between; gap: 24px;
+    }
+    .brand { display: flex; align-items: center; gap: 14px; }
+    .logo-mark { width: 48px; height: 48px; flex: none; }
+    .brand-text .name {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 800; font-size: 26px;
+      letter-spacing: .02em; line-height: 1; margin: 0;
+    }
+    .brand-text .name .hub { color: var(--orange); }
+    .brand-text .tag {
+      margin-top: 5px; font-size: 9px;
+      letter-spacing: .42em; color: var(--grey-2);
+      text-transform: uppercase; font-weight: 500;
+    }
+    .brand-text .tag b { color: var(--orange); font-weight: 700; }
+    .contact-info {
+      text-align: right; font-size: 11px;
+      line-height: 1.7; color: #C8CDD3;
+    }
+    .contact-info .lbl {
+      font-size: 9px; letter-spacing: .3em;
+      text-transform: uppercase; color: var(--orange);
+      font-weight: 700; display: block; margin-bottom: 3px;
+    }
+    .contact-info a { color: #fff; text-decoration: none; }
+    .contact-info strong { color: #fff; font-weight: 600; }
+
+    /* strip under letterhead */
+    .strip {
+      position: relative; z-index: 2;
+      margin-top: 20px;
+      display: flex; align-items: flex-end;
+      justify-content: space-between;
+      border-top: 1px solid rgba(255,255,255,.08);
+      padding-top: 16px;
+    }
+    .doc-word {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 800; font-size: 52px;
+      line-height: .85; letter-spacing: .01em; margin: 0;
+    }
+    .doc-word .acc { color: var(--orange); }
+    .sub-label {
+      font-size: 9px; letter-spacing: .38em;
+      color: var(--grey-2); text-transform: uppercase;
+      font-weight: 600; margin-bottom: 5px;
+    }
+    .meta-grid {
+      display: grid; grid-template-columns: auto auto;
+      gap: 3px 18px; font-size: 11px; color: #DDE0E4;
+    }
+    .meta-grid dt {
+      color: var(--grey-2); text-transform: uppercase;
+      letter-spacing: .2em; font-size: 9px;
+    }
+    .meta-grid dd { margin: 0; color: #fff; font-weight: 600; }
+
+    /* ── BODY ── */
+    .body { padding: 32px 40px 28px; }
+
+    .eyebrow {
+      font-size: 9px; letter-spacing: .4em;
+      text-transform: uppercase; color: var(--orange);
+      font-weight: 700; padding-bottom: 8px;
+      margin-bottom: 12px;
+      border-bottom: 2px solid var(--ink);
+      display: inline-block; padding-right: 24px;
+    }
+
+    .sender-block { margin-bottom: 24px; }
+    .sender-name {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700; font-size: 22px;
+      letter-spacing: .01em; margin: 0 0 4px;
+    }
+    .sender-meta {
+      font-size: 12.5px; color: var(--grey); line-height: 1.55;
+    }
+    .sender-meta a {
+      color: var(--ink); text-decoration: none;
+      border-bottom: 1px dotted var(--grey-2);
+    }
+
+    /* message card */
+    .message-card {
+      background: #F8F6F2;
+      border-left: 4px solid var(--orange);
+      padding: 20px 22px;
+      margin: 20px 0;
+    }
+    .message-card .k {
+      font-size: 9px; letter-spacing: .32em;
+      color: var(--grey); text-transform: uppercase;
+      font-weight: 600; margin-bottom: 10px;
+    }
+    .message-card .v {
+      font-size: 13.5px; color: var(--ink);
+      line-height: 1.65; white-space: pre-wrap;
+    }
+
+    /* info row */
+    .info-row {
+      display: flex; justify-content: space-between;
+      padding: 9px 2px;
+      border-bottom: 1px solid var(--line);
+      font-size: 12.5px;
+    }
+    .info-row .k {
+      color: var(--grey); text-transform: uppercase;
+      font-size: 10px; letter-spacing: .22em; padding-top: 2px;
+    }
+    .info-row .v { color: var(--ink); font-weight: 600; }
+
+    /* CTA */
+    .cta-wrap { text-align: center; margin: 28px 0 8px; }
+    .cta-btn {
+      display: inline-block;
+      background: var(--orange); color: #fff;
+      text-decoration: none;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700; font-size: 14px;
+      letter-spacing: .22em; text-transform: uppercase;
+      padding: 13px 32px;
+    }
+
+    /* ── FOOTER ── */
+    .footer {
+      background: var(--ink); color: #fff;
+      padding: 18px 40px;
+      display: flex; justify-content: space-between;
+      align-items: center;
+      font-size: 10px; letter-spacing: .24em;
+      text-transform: uppercase;
+      position: relative; overflow: hidden;
+    }
+    .footer::before {
+      content: "";
+      position: absolute; right: -30px; top: -30px; bottom: -30px;
+      width: 70px; background: var(--orange);
+      transform: skewX(-22deg); opacity: .9;
+    }
+    .footer .thanks {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700; font-size: 20px;
+      letter-spacing: .1em; color: #fff;
+      position: relative; z-index: 1;
+    }
+    .footer .thanks .o { color: var(--orange); }
+    .footer .right {
+      color: var(--grey-2); font-weight: 500;
+      position: relative; z-index: 1;
+    }
+    .footer .right b { color: #fff; }
+
+    @media only screen and (max-width: 640px) {
+      .letterhead, .body { padding-left: 20px; padding-right: 20px; }
+      .footer { padding-left: 20px; padding-right: 20px; flex-direction: column; gap: 8px; text-align: center; }
+      .head-row { flex-direction: column; gap: 16px; }
+      .contact-info { text-align: left; }
+      .strip { flex-direction: column; gap: 12px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- SVG defs -->
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <symbol id="ath-logo" viewBox="0 0 120 120">
+      <path d="M8 98 L42 18 L56 18 L22 98 Z" fill="#2C6C86"/>
+      <rect x="22" y="68" width="26" height="9" fill="#2C6C86"/>
+      <rect x="52" y="18" width="60" height="12" fill="#E85A1C"/>
+      <rect x="76" y="18" width="12" height="80" fill="#E85A1C"/>
+    </symbol>
+    <symbol id="big-A-outline" viewBox="0 0 200 200">
+      <path d="M20 190 L100 10 L180 190 L160 190 L100 55 L40 190 Z M62 140 L138 140 L138 155 L62 155 Z" fill="#fff"/>
+    </symbol>
+  </defs>
+</svg>
+
+<div class="page">
+
+  <!-- LETTERHEAD -->
+  <header class="letterhead">
+    <div class="stripes" aria-hidden="true">
+      <span class="s1"></span><span class="s2"></span><span class="s3"></span>
+    </div>
+    <svg class="big-A" aria-hidden="true"><use href="#big-A-outline"/></svg>
+
+    <div class="head-row">
+      <div class="brand">
+        <svg class="logo-mark" viewBox="0 0 120 120" aria-label="AbyTech Hub logo">
+          <use href="#ath-logo"/>
+        </svg>
+        <div class="brand-text">
+          <h1 class="name">ABY<span style="color:#fff">TECH</span> <span class="hub">HUB</span></h1>
+          <div class="tag">Technology <b>·</b> Innovation</div>
+        </div>
+      </div>
+      <div class="contact-info">
+        <span class="lbl">Studio</span>
+        <strong>AbyTech Hub Ltd.</strong><br/>
+        KN 3 Rd, Kigali, Rwanda<br/>
+        <a href="mailto:info@abytechhub.com">info@abytechhub.com</a><br/>
+        +250 792 888 980
+      </div>
+    </div>
+
+    <div class="strip">
+      <div>
+        <div class="sub-label">Inbound inquiry</div>
+        <h2 class="doc-word">CON<span class="acc">TACT</span></h2>
+      </div>
+      <dl class="meta-grid">
+        <dt>Received</dt>  <dd>{{date}}</dd>
+        <dt>From</dt>      <dd>{{name}}</dd>
+        <dt>Channel</dt>   <dd>Website Form</dd>
+      </dl>
+    </div>
+  </header>
+
+  <!-- BODY -->
+  <main class="body">
+
+    <div class="sender-block">
+      <div class="eyebrow">Sender Details</div>
+      <h3 class="sender-name">{{name}}</h3>
+      <div class="sender-meta">
+        <a href="mailto:{{email}}">{{email}}</a>
+      </div>
+    </div>
+
+    <div class="info-row">
+      <span class="k">Email</span>
+      <span class="v"><a href="mailto:{{email}}" style="color:#0E1A24;text-decoration:none;border-bottom:1px dotted #8A949E;">{{email}}</a></span>
+    </div>
+    <div class="info-row">
+      <span class="k">Submitted</span>
+      <span class="v">{{date}}</span>
+    </div>
+
+    <div class="message-card" style="margin-top:24px;">
+      <div class="k">Message</div>
+      <div class="v">{{message}}</div>
+    </div>
+
+    <div class="cta-wrap">
+      <a href="mailto:{{email}}" class="cta-btn">Reply to {{name}}</a>
+    </div>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="thanks">ABYTECH <span class="o">HUB</span></div>
+    <div class="right">
+      &copy; {{year}} AbyTech Hub &nbsp;·&nbsp; <b>Kigali, Rwanda</b>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

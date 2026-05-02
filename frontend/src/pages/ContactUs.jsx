@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState } from "react";
-import emailjs from "@emailjs/browser";
+import { useEffect, useState } from "react";
 import { Mail, Phone, MapPin, Clock, Send, ArrowRight } from "lucide-react";
 import Header from "../components/header";
 import { useTheme } from "../context/ThemeContext";
-import { ORG, TEAL, bb, bc, ba, GLOBAL_CSS } from "../utils/homeConstants";
+import { ORG, TEAL, bb, bc, ba } from "../utils/homeConstants";
+import api from "../api/api";
 
 const CONTACT_INFO = [
   { Icon: Phone,   title: "Phone",         detail: "+250 792 888 980",      link: "tel:+250792888980" },
@@ -14,9 +14,8 @@ const CONTACT_INFO = [
 
 export default function ContactUs() {
   const { isDark } = useTheme();
-  const form = useRef();
 
-  const [formData, setFormData] = useState({ from_name: "", user_email: "", message: "" });
+  const [formData, setFormData] = useState({ name: "", email: "", message: "" });
   const [loading, setLoading]   = useState(false);
 
   /* colours */
@@ -41,20 +40,15 @@ export default function ContactUs() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const sendEmail = async (e) => {
+  const sendMessage = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
-      await emailjs.sendForm(
-        import.meta.env.VITE_EMAILJS_SERVICE_ID,
-        import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
-        form.current,
-        import.meta.env.VITE_EMAILJS_PUBLIC_KEY
-      );
+      await api.post("/contact", formData);
       alert("Message sent successfully!");
-      setFormData({ from_name: "", user_email: "", message: "" });
+      setFormData({ name: "", email: "", message: "" });
     } catch (err) {
-      alert("Failed to send message. Please try again.");
+      alert(err.response?.data?.message || "Failed to send message. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -66,7 +60,7 @@ export default function ContactUs() {
 
       {/* ── INFO CARDS ─────────────────────────────────────── */}
       <div style={{ background: bg2 }}  >
-        <div className="max-w-[1200px] mx-auto px-5 sm:px-10 lg:px-20 py-16 lg:py-20">
+        <div className=" mx-auto px-5 sm:px-10 lg:px-20 py-16 lg:py-20">
 
           {/* label + heading */}
           <div className="flex items-center gap-3 mb-4"
@@ -119,7 +113,7 @@ export default function ContactUs() {
 
       {/* ── FORM + MAP ─────────────────────────────────────── */}
       <div style={{ background: bg }}>
-        <div className="max-w-[1200px] mx-auto px-5 sm:px-10 lg:px-20 py-16 lg:py-24">
+        <div className="max-w-[1500px] mx-auto px-5 sm:px-10 lg:px-20 py-16 lg:py-24">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-0.5 items-stretch">
 
             {/* Map */}
@@ -159,9 +153,7 @@ export default function ContactUs() {
                 Fill out the form below and we'll get back to you as soon as possible.
               </p>
 
-              <form ref={form} onSubmit={sendEmail} className="flex flex-col gap-5">
-                <input name="subject" type="hidden" />
-                <input name="year" type="hidden" value={new Date().getFullYear()} />
+              <form onSubmit={sendMessage} className="flex flex-col gap-5">
 
                 {/* Full Name */}
                 <div>
@@ -169,8 +161,8 @@ export default function ContactUs() {
                     Full Name
                   </label>
                   <input
-                    type="text" name="from_name"
-                    value={formData.from_name} onChange={handleChange}
+                    type="text" name="name"
+                    value={formData.name} onChange={handleChange}
                     placeholder="John Doe" required
                     className="w-full px-4 py-3 outline-none transition-colors duration-200"
                     style={{
@@ -188,8 +180,8 @@ export default function ContactUs() {
                     Email Address
                   </label>
                   <input
-                    type="email" name="user_email"
-                    value={formData.user_email} onChange={handleChange}
+                    type="email" name="email"
+                    value={formData.email} onChange={handleChange}
                     placeholder="you@example.com" required
                     className="w-full px-4 py-3 outline-none transition-colors duration-200"
                     style={{
@@ -250,7 +242,7 @@ export default function ContactUs() {
       <div className="relative overflow-hidden" style={{ background: TEAL }}>
         <div className="absolute inset-0 pointer-events-none"
           style={{ background: ORG, clipPath: "polygon(0 0,18% 0,6% 100%,0 100%)", opacity: .25 }} />
-        <div className="max-w-[1200px] mx-auto px-5 sm:px-10 lg:px-20 py-14 relative z-[2]">
+        <div className=" mx-auto px-5 sm:px-10 lg:px-20 py-14 relative z-[2]">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
             <div>
               <h3 style={{ ...bb("clamp(28px,4vw,48px)", { letterSpacing: 2, color: "#fff", lineHeight: .9 }) }}>

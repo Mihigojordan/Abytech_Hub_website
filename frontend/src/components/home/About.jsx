@@ -15,7 +15,7 @@ export default function About() {
 
   return (
     <section id="about" className="overflow-hidden" style={{ background: bg3 }}>
-      <div className="max-w-[1200px] mx-auto px-5 sm:px-10 lg:px-20 py-16 lg:py-24">
+      <div className=" mx-auto px-5 sm:px-10 lg:px-20 py-16 lg:py-24">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
 
           {/* Left */}

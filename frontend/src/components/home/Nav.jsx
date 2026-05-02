@@ -10,6 +10,7 @@ const NAV_LINKS = [
   ["Our Services", "#services"],
   ["Solutions",    "#solutions"],
   ["Training",     "#workshop"],
+  ["Team",         "/team"],
   ["News",         "#news"],
   ["Contact",      "/contact-us"],
 ];

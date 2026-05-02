@@ -11,7 +11,7 @@ export default function Hire() {
     <section id="hire" className="relative overflow-hidden" style={{ background: TEAL }}>
       <div className="absolute pointer-events-none rounded-full"
         style={{ width: 500, height: 500, border: "100px solid rgba(255,255,255,.06)", right: -120, top: -120 }} />
-      <div className="max-w-[1200px] mx-auto px-5 sm:px-10 lg:px-20 py-16 lg:py-24">
+      <div className=" mx-auto px-5 sm:px-10 lg:px-20 py-16 lg:py-24">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 relative z-[2]">
 
           {/* Left */}

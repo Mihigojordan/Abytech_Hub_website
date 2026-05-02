@@ -13,7 +13,7 @@ export default function Testimonials() {
 
   return (
     <section id="testimonials" className="overflow-hidden" style={{ background: bg2 }}>
-      <div className="max-w-[1200px] mx-auto px-5 sm:px-10 lg:px-20 py-16 lg:py-24">
+      <div className=" mx-auto px-5 sm:px-10 lg:px-20 py-16 lg:py-24">
         <SecLabel>What Our Clients Say</SecLabel>
         <h2 className="at-reveal at-d1" style={{ ...bb("clamp(44px,7vw,76px)", { lineHeight: .88, letterSpacing: 2, color: textC }) }}>
           REAL<br /><span style={{ color: ORG }}>STORIES</span>

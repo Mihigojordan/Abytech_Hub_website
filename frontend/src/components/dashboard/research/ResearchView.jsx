@@ -100,7 +100,7 @@ const ResearchView = ({ research, onEdit, onBack }) => {
 
   return (
     <div style={{ background: bg, minHeight: '100vh', paddingBottom: 80 }}>
-      <div className="max-w-[1200px] mx-auto px-6 py-10">
+      <div className=" mx-auto px-6 py-10">
         
         {/* Navigation */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 40 }}>

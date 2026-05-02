@@ -429,7 +429,7 @@ const HostedWebsiteManagement = () => {
                         </td>
                         <td style={{ padding: '12px 16px' }}>
                           <a
-                            href={`https://${website.domain}`}
+                            href={/^https?:\/\//i.test(website.domain) ? website.domain : `https://${website.domain}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             style={{ color: TEAL, textDecoration: 'none', fontSize: 12 }}

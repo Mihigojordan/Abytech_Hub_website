@@ -37,7 +37,7 @@ export default function Header({ title, path }) {
         style={{ background: "repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(255,255,255,.005) 3px,rgba(255,255,255,.005) 4px)" }} />
 
       {/* Content */}
-      <div className="relative z-10 max-w-[1200px] mx-auto w-full px-5 sm:px-10 lg:px-20 pb-10 pt-8">
+      <div className="relative z-10  mx-auto w-full px-5 sm:px-10 lg:px-20 pb-10 pt-8">
         {/* Section label */}
         <div className="flex items-center gap-3 mb-4"
           style={{ ...bc(10, 700, { letterSpacing: 5, textTransform: "uppercase", color: ORG }) }}>

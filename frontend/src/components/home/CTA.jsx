@@ -18,7 +18,7 @@ export default function CTA() {
       </div>
       <div className="absolute inset-0" style={{ background: ORG, clipPath: "polygon(0 0,28% 0,22% 100%,0 100%)", opacity: isDark ? .16 : .22 }} />
 
-      <div className="max-w-[1200px] mx-auto px-5 sm:px-10 lg:px-20 py-16 lg:py-24 relative z-[2]">
+      <div className=" mx-auto px-5 sm:px-10 lg:px-20 py-16 lg:py-24 relative z-[2]">
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-10">
           <div>
             <h2 className="at-reveal" style={{ ...bb("clamp(52px,8vw,96px)", { lineHeight: .87, letterSpacing: 2, color: textC }) }}>

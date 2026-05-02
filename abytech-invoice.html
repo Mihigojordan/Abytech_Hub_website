@@ -1,0 +1,966 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <title>AbyTech Hub — Invoice #ATH-2026-0417</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Barlow:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+         :root {
+            --ink: #0E1A24;
+            /* dark navy */
+            --ink-2: #132332;
+            /* slightly lighter navy */
+            --ink-3: #1B2C3D;
+            --orange: #E85A1C;
+            --orange-2: #D04E16;
+            --teal: #2C6C86;
+            /* the blue/teal "A" in logo */
+            --grey: #5A6670;
+            --grey-2: #8A949E;
+            --line: #E3E6EA;
+            --paper: #F4F2EE;
+            /* warm off-white page bg */
+            --card: #FFFFFF;
+        }
+        
+        * {
+            box-sizing: border-box;
+        }
+        
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            background: var(--paper);
+            color: var(--ink);
+            font-family: 'Barlow', system-ui, sans-serif;
+            font-weight: 400;
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        .page {
+            width: 850px;
+            margin: 32px auto;
+            background: var(--card);
+            box-shadow: 0 30px 80px -30px rgba(14, 26, 36, .25), 0 2px 6px rgba(14, 26, 36, .06);
+            position: relative;
+            overflow: hidden;
+        }
+        /* ===== LETTERHEAD ===== */
+        
+        .letterhead {
+            position: relative;
+            background: var(--ink);
+            color: #fff;
+            padding: 28px 48px 22px;
+            overflow: hidden;
+            isolation: isolate;
+        }
+        /* big outlined A watermark */
+        
+        .letterhead::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: /* big faint A shape (triangle outline) */
+            radial-gradient(circle at 78% 50%, rgba(255, 255, 255, .025) 0 140px, transparent 141px);
+            z-index: 0;
+        }
+        
+        .stripes {
+            position: absolute;
+            top: -40px;
+            right: 180px;
+            bottom: -40px;
+            width: 360px;
+            transform: skewX(-22deg);
+            z-index: 0;
+            pointer-events: none;
+        }
+        
+        .stripes span {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 42px;
+            display: block;
+        }
+        
+        .stripes .s1 {
+            left: 0;
+            background: var(--orange);
+        }
+        
+        .stripes .s2 {
+            left: 70px;
+            background: var(--orange);
+            opacity: .92;
+            width: 38px;
+        }
+        
+        .stripes .s3 {
+            left: 130px;
+            background: var(--grey);
+            width: 30px;
+            opacity: .75;
+        }
+        
+        .big-A {
+            position: absolute;
+            right: -60px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 320px;
+            height: 280px;
+            z-index: 0;
+            opacity: .18;
+        }
+        
+        .head-row {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 32px;
+        }
+        
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+        }
+        
+        .logo-mark {
+            width: 58px;
+            height: 58px;
+            flex: none;
+            position: relative;
+        }
+        
+        .brand-text .name {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-weight: 800;
+            font-size: 30px;
+            letter-spacing: .02em;
+            line-height: 1;
+            margin: 0;
+        }
+        
+        .brand-text .name .hub {
+            color: var(--orange);
+        }
+        
+        .brand-text .tag {
+            margin-top: 6px;
+            font-size: 9.5px;
+            letter-spacing: .42em;
+            color: var(--grey-2);
+            text-transform: uppercase;
+            font-weight: 500;
+        }
+        
+        .brand-text .tag b {
+            color: var(--orange);
+            font-weight: 700;
+        }
+        
+        .contact {
+            text-align: right;
+            font-size: 11px;
+            line-height: 1.7;
+            color: #C8CDD3;
+        }
+        
+        .contact .lbl {
+            font-size: 9px;
+            letter-spacing: .3em;
+            text-transform: uppercase;
+            color: var(--orange);
+            font-weight: 700;
+            display: block;
+            margin-bottom: 4px;
+        }
+        
+        .contact a {
+            color: #fff;
+            text-decoration: none;
+        }
+        
+        .contact strong {
+            color: #fff;
+            font-weight: 600;
+        }
+        /* invoice strip under letterhead */
+        
+        .strip {
+            position: relative;
+            z-index: 2;
+            margin-top: 22px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            border-top: 1px solid rgba(255, 255, 255, .08);
+            padding-top: 18px;
+        }
+        
+        .invoice-word {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-weight: 800;
+            font-size: 62px;
+            line-height: .85;
+            letter-spacing: .01em;
+            margin: 0;
+        }
+        
+        .invoice-word .acc {
+            color: var(--orange);
+        }
+        
+        .sub-label {
+            font-size: 10px;
+            letter-spacing: .38em;
+            color: var(--grey-2);
+            text-transform: uppercase;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+        
+        .meta-grid {
+            display: grid;
+            grid-template-columns: auto auto;
+            gap: 4px 22px;
+            font-size: 12px;
+            color: #DDE0E4;
+        }
+        
+        .meta-grid dt {
+            color: var(--grey-2);
+            text-transform: uppercase;
+            letter-spacing: .2em;
+            font-size: 10px;
+        }
+        
+        .meta-grid dd {
+            margin: 0;
+            color: #fff;
+            font-weight: 600;
+        }
+        /* ===== BODY ===== */
+        
+        .body {
+            padding: 34px 48px 28px;
+        }
+        
+        .parties {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 28px;
+            margin-bottom: 28px;
+        }
+        
+        .party .eyebrow {
+            font-size: 9.5px;
+            letter-spacing: .4em;
+            text-transform: uppercase;
+            color: var(--orange);
+            font-weight: 700;
+            padding-bottom: 8px;
+            margin-bottom: 10px;
+            border-bottom: 2px solid var(--ink);
+            display: inline-block;
+            padding-right: 28px;
+        }
+        
+        .party .who {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-weight: 700;
+            font-size: 22px;
+            letter-spacing: .01em;
+            margin: 0 0 6px;
+        }
+        
+        .party .lines {
+            font-size: 12.5px;
+            color: var(--grey);
+            line-height: 1.55;
+        }
+        
+        .party .lines .k {
+            color: var(--ink);
+            font-weight: 600;
+        }
+        
+        .party .lines a {
+            color: var(--ink);
+            text-decoration: none;
+            border-bottom: 1px dotted var(--grey-2);
+        }
+        /* Project summary pill */
+        
+        .project-card {
+            background: #F8F6F2;
+            border-left: 4px solid var(--orange);
+            padding: 14px 18px;
+            margin-bottom: 26px;
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 14px 20px;
+            font-size: 12.5px;
+        }
+        
+        .project-card .k {
+            font-size: 9.5px;
+            letter-spacing: .32em;
+            color: var(--grey);
+            text-transform: uppercase;
+            font-weight: 600;
+            padding-top: 2px;
+        }
+        
+        .project-card .v {
+            color: var(--ink);
+        }
+        
+        .project-card .v a {
+            color: var(--ink);
+            font-weight: 600;
+            text-decoration: none;
+            border-bottom: 1px solid var(--orange);
+            padding-bottom: 1px;
+        }
+        
+        .project-card .v .arrow {
+            color: var(--orange);
+            font-weight: 700;
+            margin: 0 8px;
+        }
+        /* ===== TABLE ===== */
+        
+        table.items {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12.5px;
+        }
+        
+        table.items thead th {
+            background: var(--ink);
+            color: #fff;
+            font-family: 'Barlow Condensed', sans-serif;
+            font-weight: 600;
+            letter-spacing: .22em;
+            text-transform: uppercase;
+            font-size: 11px;
+            padding: 11px 14px;
+            text-align: left;
+            border: none;
+        }
+        
+        table.items thead th.num {
+            text-align: right;
+        }
+        
+        table.items tbody td {
+            padding: 14px 14px;
+            vertical-align: top;
+            border-bottom: 1px solid var(--line);
+        }
+        
+        table.items tbody tr:nth-child(even) td {
+            background: #FAFAF8;
+        }
+        
+        table.items .idx {
+            color: var(--orange);
+            font-weight: 700;
+            width: 34px;
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 14px;
+        }
+        
+        table.items .item-title {
+            font-weight: 600;
+            color: var(--ink);
+            margin-bottom: 3px;
+            font-size: 13.5px;
+        }
+        
+        table.items .item-desc {
+            color: var(--grey);
+            font-size: 11.5px;
+            line-height: 1.5;
+        }
+        
+        table.items .num {
+            text-align: right;
+            white-space: nowrap;
+            font-variant-numeric: tabular-nums;
+        }
+        
+        table.items .qty {
+            width: 60px;
+            text-align: right;
+        }
+        
+        table.items .rate {
+            width: 110px;
+        }
+        
+        table.items .amt {
+            width: 110px;
+            font-weight: 600;
+            color: var(--ink);
+        }
+        /* ===== TOTALS ===== */
+        
+        .totals-row {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 28px;
+            margin-top: 22px;
+        }
+        
+        .notes {
+            font-size: 11.5px;
+            color: var(--grey);
+            line-height: 1.6;
+        }
+        
+        .notes .h {
+            font-size: 9.5px;
+            letter-spacing: .4em;
+            text-transform: uppercase;
+            color: var(--ink);
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        
+        .totals {
+            font-size: 12.5px;
+        }
+        
+        .totals .line {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 2px;
+            border-bottom: 1px solid var(--line);
+            color: var(--grey);
+        }
+        
+        .totals .line .v {
+            color: var(--ink);
+            font-weight: 500;
+            font-variant-numeric: tabular-nums;
+        }
+        
+        .totals .grand {
+            margin-top: 10px;
+            background: var(--ink);
+            color: #fff;
+            padding: 14px 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .totals .grand::after {
+            content: "";
+            position: absolute;
+            right: -30px;
+            top: -30px;
+            bottom: -30px;
+            width: 80px;
+            background: var(--orange);
+            transform: skewX(-22deg);
+            opacity: .95;
+        }
+        
+        .totals .grand .lbl {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-weight: 700;
+            font-size: 13px;
+            letter-spacing: .28em;
+            text-transform: uppercase;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .totals .grand .val {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-weight: 800;
+            font-size: 28px;
+            letter-spacing: .01em;
+            position: relative;
+            z-index: 1;
+        }
+        /* ===== PAYMENT ===== */
+        
+        .payment {
+            margin-top: 28px;
+            border: 1px solid var(--line);
+        }
+        
+        .payment-head {
+            background: var(--ink-2);
+            color: #fff;
+            padding: 10px 18px;
+            font-family: 'Barlow Condensed', sans-serif;
+            font-weight: 700;
+            font-size: 13px;
+            letter-spacing: .28em;
+            text-transform: uppercase;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .payment-head .due-chip {
+            background: var(--orange);
+            color: #fff;
+            font-size: 10px;
+            padding: 4px 10px;
+            letter-spacing: .22em;
+        }
+        
+        .payment-body {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+        }
+        
+        .pay-col {
+            padding: 18px 20px;
+        }
+        
+        .pay-col+.pay-col {
+            border-left: 1px solid var(--line);
+        }
+        
+        .pay-col .mode {
+            font-size: 9.5px;
+            letter-spacing: .38em;
+            text-transform: uppercase;
+            color: var(--orange);
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+        
+        .pay-col .net {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--ink);
+            margin-bottom: 10px;
+            letter-spacing: .01em;
+        }
+        
+        .pay-col .row {
+            display: flex;
+            justify-content: space-between;
+            gap: 18px;
+            font-size: 12.5px;
+            padding: 5px 0;
+            border-top: 1px dashed var(--line);
+        }
+        
+        .pay-col .row:first-of-type {
+            border-top: 0;
+        }
+        
+        .pay-col .row .k {
+            color: var(--grey);
+            text-transform: uppercase;
+            font-size: 10px;
+            letter-spacing: .22em;
+            padding-top: 2px;
+        }
+        
+        .pay-col .row .v {
+            color: var(--ink);
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+            text-align: right;
+        }
+        
+        .pay-col .row .v .big {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 20px;
+            letter-spacing: .06em;
+            color: var(--ink);
+            display: block;
+        }
+        /* ===== FOOTER ===== */
+        
+        .sign-row {
+            margin-top: 30px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            align-items: end;
+        }
+        
+        .sign .line {
+            border-top: 1px solid var(--ink);
+            padding-top: 6px;
+            font-size: 10px;
+            letter-spacing: .3em;
+            text-transform: uppercase;
+            color: var(--grey);
+            font-weight: 600;
+        }
+        
+        .sign .sig {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-style: italic;
+            font-weight: 500;
+            font-size: 22px;
+            color: var(--ink);
+            padding: 4px 0 2px;
+        }
+        
+        .footer {
+            margin-top: 28px;
+            background: var(--ink);
+            color: #fff;
+            padding: 18px 48px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 10.5px;
+            letter-spacing: .28em;
+            text-transform: uppercase;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .footer .thanks {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-weight: 700;
+            font-size: 22px;
+            letter-spacing: .12em;
+            color: #fff;
+        }
+        
+        .footer .thanks .o {
+            color: var(--orange);
+        }
+        
+        .footer .right {
+            color: var(--grey-2);
+            font-weight: 500;
+        }
+        
+        .footer .right b {
+            color: #fff;
+        }
+        /* print */
+        
+        @media print {
+            body {
+                background: #fff;
+            }
+            .page {
+                box-shadow: none;
+                margin: 0 auto;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Reusable logo SVG (used twice: letterhead + footer watermark) -->
+    <svg width="0" height="0" style="position:absolute">
+  <defs>
+    <symbol id="ath-logo" viewBox="0 0 120 120">
+      <!-- A (teal) -->
+      <path d="M8 98 L42 18 L56 18 L22 98 Z" fill="#2C6C86"/>
+      <!-- crossbar of A -->
+      <rect x="22" y="68" width="26" height="9" fill="#2C6C86"/>
+      <!-- T (orange) top bar -->
+      <rect x="52" y="18" width="60" height="12" fill="#E85A1C"/>
+      <!-- T stem -->
+      <rect x="76" y="18" width="12" height="80" fill="#E85A1C"/>
+    </symbol>
+    <symbol id="big-A-outline" viewBox="0 0 200 200">
+      <path d="M20 190 L100 10 L180 190 L160 190 L100 55 L40 190 Z
+               M62 140 L138 140 L138 155 L62 155 Z"
+            fill="#fff"/>
+    </symbol>
+  </defs>
+</svg>
+
+    <div class="page">
+
+        <!-- ============ LETTERHEAD ============ -->
+        <header class="letterhead">
+            <!-- decorative diagonal stripes -->
+            <div class="stripes" aria-hidden="true">
+                <span class="s1"></span>
+                <span class="s2"></span>
+                <span class="s3"></span>
+            </div>
+            <!-- giant outlined A watermark -->
+            <svg class="big-A" aria-hidden="true"><use href="#big-A-outline"/></svg>
+
+            <div class="head-row">
+                <div class="brand">
+                    <svg class="logo-mark" viewBox="0 0 120 120" aria-label="AbyTech Hub logo">
+          <use href="#ath-logo"/>
+        </svg>
+                    <div class="brand-text">
+                        <h1 class="name">ABY<span style="color:#fff">TECH</span> <span class="hub">HUB</span></h1>
+                        <div class="tag">Technology <b>·</b> Innovation</div>
+                    </div>
+                </div>
+
+                <div class="contact">
+                    <span class="lbl">Studio</span>
+                    <strong>AbyTech Hub Ltd.</strong><br/>1 KN 78 St, Norrsken House Kigali <br/> Kigali, Rwanda<br/>
+                    <span style="display:inline-block; margin-top:6px;">
+          <a href="mail:info@abytechhub.com"><span class="__cf_email__" data-cfemail="e088858c8c8fa081829994858388889582ce838f8d">info@abytechhub.com</span></a>
+                    <br/> +250 792 888 980
+                    </span>
+                </div>
+            </div>
+
+            <div class="strip">
+                <div>
+                    <div class="sub-label">Billing document</div>
+                    <h2 class="invoice-word">IN<span class="acc">VOICE</span></h2>
+                </div>
+                <dl class="meta-grid">
+                    <dt>Invoice №</dt>
+                    <dd>ATH-2026-0417</dd>
+                    <dt>Issued</dt>
+                    <dd>22 Apr 2026</dd>
+                    <dt>Due</dt>
+                    <dd>06 May 2026</dd>
+                    <dt>Currency</dt>
+                    <dd>USD ($)</dd>
+                </dl>
+            </div>
+        </header>
+
+        <!-- ============ BODY ============ -->
+        <main class="body">
+
+            <!-- parties -->
+            <section class="parties">
+                <div class="party">
+                    <div class="eyebrow">Billed To</div>
+                    <h3 class="who">Eric Kamanzi</h3>
+                    <div class="lines">
+                        <span class="k">Engineers 4 Humanity</span><br/> Project Lead &amp; Founder<br/> Kigali, Rwanda<br/>
+                        <a href="mail:eric.kamanzi21@gmail.com"><span class="__cf_email__" data-cfemail="4623342f25682d272b27283c2f062328212f2823233435722e332b27282f323f68293421">eric.kamanzi21@gmail.com</span></a>
+                    </div>
+                </div>
+                <div class="party">
+                    <div class="eyebrow">From</div>
+                    <h3 class="who">AbyTech Hub</h3>
+                    <div class="lines">
+                        <span class="k">Web &amp; Data Engineering Studio</span><br/> TIN: 120&nbsp;456&nbsp;789<br/> Registered in Kigali, Rwanda<br/>
+                        <a href="https://abytechhub.com">abytechhub.com</a>
+                    </div>
+                </div>
+            </section>
+
+            <!-- project summary -->
+            <section class="project-card">
+                <div class="k">Project</div>
+                <div class="v">Website redesign, rebuild &amp; data engineering — <b>Engineers 4 Humanity</b></div>
+
+                <div class="k">Domain Transfer</div>
+                <div class="v">
+                    <a href="https://engineers-4-humanity.onrender.com/">engineers-4-humanity.onrender.com</a>
+                    <span class="arrow">→</span>
+                    <a href="https://engineers4humanity.org">engineers4humanity.org</a>
+                </div>
+
+                <div class="k">Scope</div>
+                <div class="v">Full redesign · rebuild · custom domain · DNS &amp; hosting migration · 12 months maintenance &amp; technical support · data engineering services</div>
+            </section>
+
+            <!-- items -->
+            <table class="items">
+                <thead>
+                    <tr>
+                        <th style="width:34px;">#</th>
+                        <th>Description</th>
+                        <th class="num qty">Qty</th>
+                        <th class="num rate">Rate</th>
+                        <th class="num amt">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="idx">01</td>
+                        <td>
+                            <div class="item-title">Website Redesign — UI/UX</div>
+                            <div class="item-desc">
+                                Full visual &amp; UX redesign of the current Engineers 4 Humanity site (engineers-4-humanity.onrender.com). Wireframes, brand-aligned visual system, responsive page designs, and component library.
+                            </div>
+                        </td>
+                        <td class="num qty">1</td>
+                        <td class="num rate">$150.00</td>
+                        <td class="num amt">$150.00</td>
+                    </tr>
+                    <tr>
+                        <td class="idx">02</td>
+                        <td>
+                            <div class="item-title">Website Rebuild &amp; Deployment</div>
+                            <div class="item-desc">
+                                Rebuild the site from the redesign — clean codebase, optimised performance, CMS-driven content, SEO essentials, and production deployment.
+                            </div>
+                        </td>
+                        <td class="num qty">1</td>
+                        <td class="num rate">$130.00</td>
+                        <td class="num amt">$130.00</td>
+                    </tr>
+                    <tr>
+                        <td class="idx">03</td>
+                        <td>
+                            <div class="item-title">Custom Domain Registration</div>
+                            <div class="item-desc">
+                                Registration of engineers4humanity.org (1 year) including WHOIS privacy and DNS setup.
+                            </div>
+                        </td>
+                        <td class="num qty">1</td>
+                        <td class="num rate">$25.00</td>
+                        <td class="num amt">$25.00</td>
+                    </tr>
+                    <tr>
+                        <td class="idx">04</td>
+                        <td>
+                            <div class="item-title">Domain Migration &amp; Hosting Transfer</div>
+                            <div class="item-desc">
+                                Transfer from engineers-4-humanity.onrender.com to the new custom domain. Includes DNS configuration, SSL, email routing, and zero-downtime cutover.
+                            </div>
+                        </td>
+                        <td class="num qty">1</td>
+                        <td class="num rate">$45.00</td>
+                        <td class="num amt">$45.00</td>
+                    </tr>
+                    <tr>
+                        <td class="idx">05</td>
+                        <td>
+                            <div class="item-title">Maintenance &amp; Technical Support — 12 months</div>
+                            <div class="item-desc">
+                                Monthly updates, security patches, uptime monitoring, backups, and priority email / phone support from 01 May 2026 – 30 Apr 2027.
+                            </div>
+                        </td>
+                        <td class="num qty">12 mo</td>
+                        <td class="num rate">$8.33</td>
+                        <td class="num amt">$100.00</td>
+                    </tr>
+                    <tr>
+                        <td class="idx">06</td>
+                        <td>
+                            <div class="item-title">Data Engineering Services</div>
+                            <div class="item-desc">
+                                Data pipeline setup, analytics integration, and a lightweight reporting dashboard for programme and donation tracking.
+                            </div>
+                        </td>
+                        <td class="num qty">1</td>
+                        <td class="num rate">$50.00</td>
+                        <td class="num amt">$50.00</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- totals -->
+            <section class="totals-row">
+                <div class="notes">
+                    <div class="h">Notes</div>
+                    Thank you for choosing AbyTech Hub. All deliverables are handed over with source files and documentation. The 12-month maintenance window begins the day after the new domain goes live. Late payment may incur a 2% monthly fee after 14 days past due.
+                </div>
+
+                <div class="totals">
+                    <div class="line"><span>Subtotal</span><span class="v">$500.00</span></div>
+                    <div class="line"><span>Discount</span><span class="v">— $0.00</span></div>
+                    <div class="line"><span>VAT (0%)</span><span class="v">$0.00</span></div>
+                    <div class="grand">
+                        <span class="lbl">Total Due</span>
+                        <span class="val">$500.00</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- payment -->
+            <section class="payment">
+                <div class="payment-head">
+                    <span>Payment Methods</span>
+                    <span class="due-chip">Due 06 May 2026</span>
+                </div>
+                <div class="payment-body">
+
+                    <div class="pay-col">
+                        <div class="mode">Mobile Money · MoMo</div>
+                        <div class="net">MTN Mobile Money — Rwanda</div>
+                        <div class="row">
+                            <span class="k">MoMo Code</span>
+                            <span class="v"><span class="big">*182*8*1*485920#</span></span>
+                        </div>
+                        <div class="row">
+                            <span class="k">Merchant ID</span>
+                            <span class="v">485&nbsp;920</span>
+                        </div>
+                        <div class="row">
+                            <span class="k">Registered Name</span>
+                            <span class="v">ABYTECH HUB LTD</span>
+                        </div>
+                    </div>
+
+                    <div class="pay-col">
+                        <div class="mode">Bank Transfer</div>
+                        <div class="net">Bank of Kigali (BK)</div>
+                        <div class="row">
+                            <span class="k">Account Name</span>
+                            <span class="v">AbyTech Hub Ltd</span>
+                        </div>
+                        <div class="row">
+                            <span class="k">Account №</span>
+                            <span class="v"><span class="big">00040-07881234-56</span></span>
+                        </div>
+                        <div class="row">
+                            <span class="k">SWIFT / Ref</span>
+                            <span class="v">BKIGRWRW · INV ATH-2026-0417</span>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- sign -->
+            <section class="sign-row">
+                <div class="sign">
+                    <div class="sig">Aby. N</div>
+                    <div class="line">Authorised Signature — AbyTech Hub</div>
+                </div>
+                <div class="sign">
+                    <div class="sig" style="color: var(--grey-2)">&nbsp;</div>
+                    <div class="line">Client Acceptance — Eric Kamanzi</div>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- ============ FOOTER ============ -->
+        <footer class="footer">
+            <span class="thanks">THANK<span class="o">.</span>YOU</span>
+            <span class="right">
+      abytechhub.com &nbsp;·&nbsp; <b><a href="mail:info@abytechhub.com" class="__cf_email__" data-cfemail="81e9e4ededeec1e0e3f8f5e4e2e9e9f4e3afe2eeec">info@abytechhub.com</a></b> &nbsp;·&nbsp;  +250 792 888 980
+    </span>
+        </footer>
+
+    </div>
+
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
+</body>
+
+</html>

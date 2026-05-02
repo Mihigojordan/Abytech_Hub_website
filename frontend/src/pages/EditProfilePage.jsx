@@ -251,7 +251,7 @@ export default function AdminProfileEdit() {
     <div style={{ minHeight: '100vh', background: bg, paddingBottom: 60 }}>
       {/* Header Bar */}
       <div style={{ background: `${bg2}80`, backdropFilter: 'blur(10px)', borderBottom: `1px solid ${border}`, position: 'sticky', top: 0, zIndex: 50 }}>
-        <div className="max-w-[1200px] mx-auto px-6 py-4 flex items-center justify-between">
+        <div className=" mx-auto px-6 py-4 flex items-center justify-between">
           <button
             onClick={() => navigate(-1)}
             style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', color: text3, cursor: 'pointer', ...bc(12, 700), transition: 'all 0.2s' }}
@@ -266,7 +266,7 @@ export default function AdminProfileEdit() {
         </div>
       </div>
 
-      <div className="max-w-[1200px] mx-auto px-4 mt-8">
+      <div className=" mx-auto px-4 mt-8">
         {/* Profile Hero Card */}
         <div style={{ background: bg2, border: `1px solid ${border}`, borderRadius: 24, padding: '32px', marginBottom: 24, position: 'relative', overflow: 'hidden' }}>
           <div style={{ position: 'absolute', top: 0, right: 0, width: '40%', height: '100%', background: `linear-gradient(225deg, ${ORG}05 0%, transparent 70%)` }}></div>

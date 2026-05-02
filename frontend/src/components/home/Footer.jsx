@@ -54,7 +54,7 @@ export default function Footer() {
         </div>
       </div>
 
-      <div className="max-w-[1200px] mx-auto px-5 sm:px-10 lg:px-20 mt-14 py-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
+      <div className=" mx-auto px-5 sm:px-10 lg:px-20 mt-14 py-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
         style={{ borderTop: `1px solid ${divider}` }}>
         <div style={{ ...ba(11, 400, { color: metaColor, letterSpacing: 1 }) }}>
           © 2026 Abytech Hub LTD — All Rights Reserved by Abytech Hub Team

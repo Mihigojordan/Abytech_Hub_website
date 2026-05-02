@@ -19,6 +19,7 @@ import { PushNotificationsModule } from './modules/push-notification/push-notifi
 import { ResearchModule } from './modules/research-management/research.module';
 import { SalaryModule } from './modules/salary-management/salary.module';
 import { PermissionModule } from './modules/permission-management/permission.module';
+import { ContactModule } from './modules/contact/contact.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { PermissionModule } from './modules/permission-management/permission.mod
     PushNotificationsModule,
     SalaryModule,
     PermissionModule,
+    ContactModule,
   ],
   controllers: [AppController],
 })

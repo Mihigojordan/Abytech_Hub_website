@@ -4,7 +4,7 @@ export default function Quote() {
   return (
     <section id="quote" className="relative overflow-hidden" style={{ background: TEAL }}>
       <div className="absolute inset-0" style={{ background: ORG, clipPath: "polygon(0 0,20% 0,8% 100%,0 100%)", opacity: .25 }} />
-      <div className="max-w-[1200px] mx-auto px-5 sm:px-10 lg:px-20 py-14 lg:py-20 relative z-[2]">
+      <div className=" mx-auto px-5 sm:px-10 lg:px-20 py-14 lg:py-20 relative z-[2]">
         <div className="flex flex-col lg:flex-row items-start lg:items-center gap-8 lg:gap-16">
           <div className="relative flex-1">
             <div className="absolute pointer-events-none hidden lg:block"

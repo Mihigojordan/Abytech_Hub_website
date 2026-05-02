@@ -46,7 +46,7 @@ export default function Services() {
 
   return (
     <section id="services" className="overflow-hidden" style={{ background: bg }}>
-      <div className="max-w-[1200px] mx-auto px-5 sm:px-10 lg:px-20 py-16 lg:py-24">
+      <div className=" mx-auto px-5 sm:px-10 lg:px-20 py-16 lg:py-24">
         <SecLabel>What We Do</SecLabel>
         <h2 className="at-reveal at-d1" style={{ ...bb("clamp(44px,7vw,76px)", { lineHeight: .88, letterSpacing: 2, color: textC }) }}>
           OUR<br /><span style={{ color: ORG }}>SERVICES</span><br /><span style={{ color: text3 }}>FOR YOU</span>

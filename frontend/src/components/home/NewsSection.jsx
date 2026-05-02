@@ -13,7 +13,7 @@ export default function NewsSection() {
 
   return (
     <section id="news" className="overflow-hidden" style={{ background: bg3 }}>
-      <div className="max-w-[1200px] mx-auto px-5 sm:px-10 lg:px-20 py-16 lg:py-24">
+      <div className=" mx-auto px-5 sm:px-10 lg:px-20 py-16 lg:py-24">
         <SecLabel>Daily News</SecLabel>
         <h2 className="at-reveal at-d1" style={{ ...bb("clamp(44px,7vw,76px)", { lineHeight: .88, letterSpacing: 2, color: textC }) }}>
           NEWS &<br /><span style={{ color: ORG }}>INSIGHTS</span>

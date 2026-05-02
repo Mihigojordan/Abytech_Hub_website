@@ -125,7 +125,7 @@ const UpsertReportPage = () => {
 
   return (
     <div style={{ minHeight: '100vh', background: bg, paddingBottom: 100 }}>
-      <div className="max-w-[1000px] mx-auto px-4 py-12">
+      <div className=" mx-auto px-4 py-12">
         
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 40 }}>
@@ -219,7 +219,6 @@ const UpsertReportPage = () => {
                     value={content}
                     onChange={setContent}
                     placeholder="Capture your achievements, challenges, and next steps..."
-                    style={{ height: 400 }}
                     modules={{
                       toolbar: [
                         [{ header: [1, 2, false] }],
@@ -295,7 +294,7 @@ const UpsertReportPage = () => {
       <style>{`
         .ql-toolbar.ql-snow { border: none !important; border-bottom: 1px solid ${border} !important; padding: 12px 20px !important; background: ${isDark ? '#f8f9fa' : '#fff'} !important; }
         .ql-container.ql-snow { border: none !important; }
-        .ql-editor { padding: 24px !important; font-family: 'Barlow', sans-serif !important; font-size: 15px !important; color: #1a1a1a !important; line-height: 1.7 !important; }
+        .ql-editor { min-height: 400px !important; padding: 24px !important; font-family: 'Barlow', sans-serif !important; font-size: 15px !important; color: #1a1a1a !important; line-height: 1.7 !important; }
         .ql-editor.ql-blank::before { color: #999 !important; font-style: normal !important; }
       `}</style>
     </div>
