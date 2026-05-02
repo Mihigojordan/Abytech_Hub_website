@@ -208,7 +208,11 @@ const ReportDashboard = () => {
       setOperationLoading(true);
 
       if (report.content) {
-        const content = typeof report.content === 'string' ? report.content : JSON.stringify(report.content, null, 2);
+        const content = (() => {
+          let c = typeof report.content === 'string' ? report.content : JSON.stringify(report.content, null, 2);
+          try { const p = JSON.parse(c); if (typeof p === 'string') c = p; } catch {}
+          return c;
+        })();
         const htmlContent = `
       <!DOCTYPE html>
       <html lang="en">

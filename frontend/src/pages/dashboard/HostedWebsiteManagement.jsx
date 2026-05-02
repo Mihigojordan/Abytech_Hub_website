@@ -429,7 +429,12 @@ const HostedWebsiteManagement = () => {
                         </td>
                         <td style={{ padding: '12px 16px' }}>
                           <a
-                            href={/^https?:\/\//i.test(website.domain) ? website.domain : `https://${website.domain}`}
+                            href={(() => {
+                              const d = (website.domain || '').trim();
+                              // strip any accidental duplicate protocol like "https://https//" or "https//..."
+                              const clean = d.replace(/^(https?:\/\/)+/i, '').replace(/^(https?\/\/)+/i, '');
+                              return `https://${clean}`;
+                            })()}
                             target="_blank"
                             rel="noopener noreferrer"
                             style={{ color: TEAL, textDecoration: 'none', fontSize: 12 }}

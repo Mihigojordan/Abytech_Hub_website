@@ -415,7 +415,11 @@ const ReportViewPage = () => {
                     >
                       <h4 style={{ ...bc(14, 700, { color: isActive ? ORG : textC, margin: '0 0 4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }) }}>{report.title}</h4>
                       <p style={{ ...ba(12, 500, { color: text3, margin: '0 0 10px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }) }}>
-                        {report.reportUrl ? `Resource Attached` : stripHtml(typeof report.content === 'string' ? report.content : '')}
+                        {report.reportUrl ? `Resource Attached` : (() => {
+                          let c = typeof report.content === 'string' ? report.content : '';
+                          try { const p = JSON.parse(c); if (typeof p === 'string') c = p; } catch {}
+                          return stripHtml(c);
+                        })()}
                       </p>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <span style={{ ...bc(10, 800, { color: text3 }) }}>{getRelativeTime(report.createdAt)}</span>
@@ -524,9 +528,19 @@ const ReportViewPage = () => {
                           className="ql-editor"
                           style={{ color: textC, lineHeight: 1.8, fontSize: 16 }}
                           dangerouslySetInnerHTML={{
-                            __html: typeof selectedReport.content === "string"
-                              ? selectedReport.content
-                              : JSON.stringify(selectedReport.content)
+                            __html: (() => {
+                              let c = selectedReport.content;
+                              // unwrap double-serialised JSON strings
+                              if (typeof c !== 'string') {
+                                try { c = JSON.stringify(c); } catch { c = String(c); }
+                              }
+                              // strip surrounding JSON quotes if stored as a JSON string value
+                              try {
+                                const parsed = JSON.parse(c);
+                                if (typeof parsed === 'string') c = parsed;
+                              } catch { /* not JSON, use as-is */ }
+                              return c;
+                            })()
                           }}
                         />
                       ) : (

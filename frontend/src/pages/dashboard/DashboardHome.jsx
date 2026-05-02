@@ -79,7 +79,11 @@ const DashboardHome = ({ role }) => {
   // Handle report download as PDF
   const handleDownloadReport = (report) => {
     if (!report.id) return Swal.fire('Error', 'Invalid report ID', 'error');
-    const content = typeof report.content === 'string' ? report.content : JSON.stringify(report.content);
+    const content = (() => {
+      let c = typeof report.content === 'string' ? report.content : JSON.stringify(report.content);
+      try { const p = JSON.parse(c); if (typeof p === 'string') c = p; } catch {}
+      return c;
+    })();
     const htmlContent = `
       <!DOCTYPE html>
       <html lang="en">

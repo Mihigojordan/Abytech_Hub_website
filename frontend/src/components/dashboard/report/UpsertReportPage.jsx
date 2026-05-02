@@ -34,7 +34,16 @@ const UpsertReportPage = () => {
       try {
         const report = await reportService.getReportById(id);
         setTitle(report.title || '');
-        setContent(report.content || '');
+        // unwrap double-serialised content (stored as JSON string of HTML)
+        let rawContent = report.content || '';
+        if (typeof rawContent !== 'string') {
+          try { rawContent = JSON.stringify(rawContent); } catch { rawContent = ''; }
+        }
+        try {
+          const parsed = JSON.parse(rawContent);
+          if (typeof parsed === 'string') rawContent = parsed;
+        } catch { /* not JSON, use as-is */ }
+        setContent(rawContent);
         if (report.createdAt) {
           const date = new Date(report.createdAt);
           setCreatedAt(date.toISOString().slice(0, 16));
