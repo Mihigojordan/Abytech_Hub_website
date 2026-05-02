@@ -41,6 +41,7 @@
     "googleapis": "^162.0.0",
     "handlebars": "^4.7.8",
     "ioredis": "^5.7.0",
+    "juice": "^11.0.1",
     "multer": "^2.0.2",
     "nodemailer": "^7.0.5",
     "passport": "^0.7.0",
