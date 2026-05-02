@@ -3,6 +3,7 @@ import { formatTime } from '../../../../utils/chat/dateUtils';
 import MessageMenu from './MessageMenu';
 import { useDashboardTheme } from '../../../../utils/dashboardTheme';
 import { ORG, ba } from '../../../../utils/homeConstants';
+import { parseLinks } from '../../../../utils/chat/parseLinks';
 
 /**
  * Text-only message component
@@ -31,7 +32,28 @@ const TextMessage = ({ message, onMenuAction, showMenu, setShowMenu, selectionMo
                 )}
                 
                 <p style={{ ...ba(14, 400, { margin: 0, lineHeight: 1.5, wordBreak: 'break-word' }) }}>
-                    {message.content}
+                    {parseLinks(message.content).map((seg, i) =>
+                        seg.type === 'url' ? (
+                            <a
+                                key={i}
+                                href={seg.href}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                style={{
+                                    color: message.isSent ? ORG : 'rgba(255,255,255,0.92)',
+                                    textDecoration: 'underline',
+                                    textUnderlineOffset: 3,
+                                    wordBreak: 'break-all',
+                                    cursor: 'pointer',
+                                }}
+                            >
+                                {seg.value}
+                            </a>
+                        ) : (
+                            <span key={i}>{seg.value}</span>
+                        )
+                    )}
                 </p>
 
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 6, marginTop: 4, opacity: 0.7 }}>

@@ -5,6 +5,7 @@ import FileAttachment from './FileAttachment';
 import MessageMenu from './MessageMenu';
 import { useDashboardTheme } from '../../../../utils/dashboardTheme';
 import { ORG, ba } from '../../../../utils/homeConstants';
+import { parseLinks } from '../../../../utils/chat/parseLinks';
 
 /**
  * Combined message component (text + images + files)
@@ -73,7 +74,28 @@ const CombinedMessage = ({ message, onMenuAction, showMenu, setShowMenu, onMedia
                     boxShadow: message.isSent ? 'none' : '0 10px 20px rgba(232,98,26,0.2)'
                 }}>
                     <p style={{ ...ba(14, 400, { margin: 0, lineHeight: 1.5, wordBreak: 'break-word' }) }}>
-                        {message.content}
+                        {parseLinks(message.content).map((seg, i) =>
+                            seg.type === 'url' ? (
+                                <a
+                                    key={i}
+                                    href={seg.href}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onClick={(e) => e.stopPropagation()}
+                                    style={{
+                                        color: message.isSent ? ORG : 'rgba(255,255,255,0.92)',
+                                        textDecoration: 'underline',
+                                        textUnderlineOffset: 3,
+                                        wordBreak: 'break-all',
+                                        cursor: 'pointer',
+                                    }}
+                                >
+                                    {seg.value}
+                                </a>
+                            ) : (
+                                <span key={i}>{seg.value}</span>
+                            )
+                        )}
                     </p>
                 </div>
             )}
