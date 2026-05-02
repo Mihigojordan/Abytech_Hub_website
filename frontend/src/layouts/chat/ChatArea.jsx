@@ -176,6 +176,7 @@ const ChatArea = ({
                 onClose={() => setShowAddMemberModal(false)}
                 conversation={selectedConversation}
                 onMembersAdded={handleMembersAdded}
+                currentUserRole={currentUserRole}
             />
 
             <ReadByModal

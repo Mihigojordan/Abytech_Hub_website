@@ -581,6 +581,90 @@ export class ChatService {
         return { success: true };
     }
 
+    async updateMemberRole(
+        conversationId: string,
+        participantId: string,
+        participantType: 'ADMIN' | 'USER',
+        newRole: 'admin' | 'member',
+        requesterId: string,
+        requesterType: 'ADMIN' | 'USER'
+    ) {
+        const conversation = await this.prisma.conversation.findUnique({
+            where: { id: Number(conversationId) },
+            include: { participants: { where: { leftAt: null } } }
+        });
+
+        if (!conversation || !conversation.isGroup) {
+            throw new Error('Group conversation not found');
+        }
+
+        const requester = conversation.participants.find(
+            p => p.participantId === requesterId && p.participantType === requesterType
+        );
+        if (!requester || requester.role !== 'admin') {
+            throw new Error('Only group admins can change member roles');
+        }
+
+        await this.prisma.conversationParticipant.updateMany({
+            where: {
+                conversationId: Number(conversationId),
+                participantId,
+                participantType,
+                leftAt: null,
+            },
+            data: { role: newRole }
+        });
+
+        this.cache.deleteConversation(`conversation:${conversationId}`);
+        return { success: true, role: newRole };
+    }
+
+    async leaveGroup(
+        conversationId: string,
+        requesterId: string,
+        requesterType: 'ADMIN' | 'USER'
+    ) {
+        const conversation = await this.prisma.conversation.findUnique({
+            where: { id: Number(conversationId) },
+            include: { participants: { where: { leftAt: null } } }
+        });
+
+        if (!conversation || !conversation.isGroup) {
+            throw new Error('Group conversation not found');
+        }
+
+        const participant = conversation.participants.find(
+            p => p.participantId === requesterId && p.participantType === requesterType
+        );
+
+        if (!participant) {
+            throw new Error('You are not a member of this group');
+        }
+
+        if (participant.role === 'admin') {
+            throw new Error('Group admins cannot leave the group');
+        }
+
+        await this.prisma.conversationParticipant.updateMany({
+            where: {
+                conversationId: Number(conversationId),
+                participantId: requesterId,
+                participantType: requesterType,
+                leftAt: null,
+            },
+            data: { leftAt: new Date() }
+        });
+
+        this.cache.deleteConversation(`conversation:${conversationId}`);
+
+        const remaining = conversation.participants.filter(
+            p => !(p.participantId === requesterId && p.participantType === requesterType)
+        );
+        this.chatGateway.broadcastMemberRemoved(conversationId, requesterId, requesterType, remaining as any[]);
+
+        return { success: true };
+    }
+
     // ====================
     // MESSAGES
     // ====================

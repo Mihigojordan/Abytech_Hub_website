@@ -69,6 +69,34 @@ export class ChatController {
         );
     }
 
+    @Patch('conversations/:id/members/role')
+    async updateMemberRole(
+        @Param('id') conversationId: string,
+        @Body() dto: { participantId: string; participantType: 'ADMIN' | 'USER'; role: 'admin' | 'member' },
+        @Req() req: RequestWithChatUser
+    ) {
+        const userId = req.user.id;
+        const userType = req.user.type;
+        return this.chatService.updateMemberRole(
+            conversationId,
+            dto.participantId,
+            dto.participantType,
+            dto.role,
+            userId,
+            userType
+        );
+    }
+
+    @Delete('conversations/:id/leave')
+    async leaveGroup(
+        @Param('id') conversationId: string,
+        @Req() req: RequestWithChatUser
+    ) {
+        const userId = req.user.id;
+        const userType = req.user.type;
+        return this.chatService.leaveGroup(conversationId, userId, userType);
+    }
+
     @Post('conversations/:id/members')
     async addMembersToConversation(
         @Param('id') conversationId: string,

@@ -51,6 +51,28 @@ class ChatService {
         }
     }
 
+    async updateMemberRole(conversationId, participantId, participantType, role) {
+        try {
+            const response = await this.api.patch(`/chat/conversations/${conversationId}/members/role`, {
+                participantId, participantType, role
+            });
+            return response.data;
+        } catch (error) {
+            const msg = error.response?.data?.message || error.message || 'Failed to update member role';
+            throw new Error(msg);
+        }
+    }
+
+    async leaveGroup(conversationId) {
+        try {
+            const response = await this.api.delete(`/chat/conversations/${conversationId}/leave`);
+            return response.data;
+        } catch (error) {
+            const msg = error.response?.data?.message || error.message || 'Failed to leave group';
+            throw new Error(msg);
+        }
+    }
+
     async addMembersToConversation(conversationId, participantIds, participantTypes) {
         try {
             const response = await this.api.post(`/chat/conversations/${conversationId}/members`, {
@@ -262,5 +284,7 @@ export const {
     getUnreadMessageCounts,
     getContacts,
     addContact,
+    updateMemberRole,
+    leaveGroup,
 } = chatService;
 
