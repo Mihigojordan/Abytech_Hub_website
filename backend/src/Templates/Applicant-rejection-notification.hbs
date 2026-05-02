@@ -1,145 +1,129 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Application Update – {{jobTitle}}</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Barlow:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-  <style>
-    :root { --ink:#0E1A24; --ink-2:#132332; --orange:#E85A1C; --teal:#2C6C86; --grey:#5A6670; --grey-2:#8A949E; --line:#E3E6EA; --paper:#F4F2EE; --card:#FFFFFF; }
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: var(--paper); font-family: 'Barlow', system-ui, sans-serif; font-weight: 400; color: var(--ink); padding: 24px 16px; -webkit-font-smoothing: antialiased; }
-    .page { max-width: 620px; margin: 0 auto; background: var(--card); box-shadow: 0 24px 64px -20px rgba(14,26,36,.22), 0 2px 6px rgba(14,26,36,.06); overflow: hidden; }
-    .letterhead { position: relative; background: var(--ink); color: #fff; padding: 28px 40px 22px; overflow: hidden; isolation: isolate; }
-    .stripes { position: absolute; top: -40px; right: 100px; bottom: -40px; width: 280px; transform: skewX(-22deg); z-index: 0; pointer-events: none; }
-    .stripes span { position: absolute; top: 0; bottom: 0; display: block; }
-    .stripes .s1 { left: 0; width: 38px; background: var(--orange); }
-    .stripes .s2 { left: 60px; width: 32px; background: var(--orange); opacity: .88; }
-    .stripes .s3 { left: 112px; width: 26px; background: var(--grey); opacity: .7; }
-    .big-A { position: absolute; right: -40px; top: 50%; transform: translateY(-50%); width: 220px; height: 200px; z-index: 0; opacity: .12; }
-    .head-row { position: relative; z-index: 2; display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; }
-    .brand { display: flex; align-items: center; gap: 14px; }
-    .logo-mark { width: 48px; height: 48px; flex: none; }
-    .brand-text .name { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 26px; letter-spacing: .02em; line-height: 1; margin: 0; }
-    .brand-text .name .hub { color: var(--orange); }
-    .brand-text .tag { margin-top: 5px; font-size: 9px; letter-spacing: .42em; color: var(--grey-2); text-transform: uppercase; font-weight: 500; }
-    .brand-text .tag b { color: var(--orange); font-weight: 700; }
-    .contact-info { text-align: right; font-size: 11px; line-height: 1.7; color: #C8CDD3; }
-    .contact-info .lbl { font-size: 9px; letter-spacing: .3em; text-transform: uppercase; color: var(--orange); font-weight: 700; display: block; margin-bottom: 3px; }
-    .contact-info a { color: #fff; text-decoration: none; }
-    .contact-info strong { color: #fff; font-weight: 600; }
-    .strip { position: relative; z-index: 2; margin-top: 20px; display: flex; align-items: flex-end; justify-content: space-between; border-top: 1px solid rgba(255,255,255,.08); padding-top: 16px; }
-    .doc-word { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 52px; line-height: .85; letter-spacing: .01em; margin: 0; }
-    .doc-word .acc { color: var(--orange); }
-    .sub-label { font-size: 9px; letter-spacing: .38em; color: var(--grey-2); text-transform: uppercase; font-weight: 600; margin-bottom: 5px; }
-    .meta-grid { display: grid; grid-template-columns: auto auto; gap: 3px 18px; font-size: 11px; color: #DDE0E4; }
-    .meta-grid dt { color: var(--grey-2); text-transform: uppercase; letter-spacing: .2em; font-size: 9px; }
-    .meta-grid dd { margin: 0; color: #fff; font-weight: 600; }
-    .body { padding: 32px 40px 28px; }
-    .eyebrow { font-size: 9px; letter-spacing: .4em; text-transform: uppercase; color: var(--orange); font-weight: 700; padding-bottom: 8px; margin-bottom: 12px; border-bottom: 2px solid var(--ink); display: inline-block; padding-right: 24px; }
-    .greeting { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 28px; letter-spacing: .01em; color: var(--ink); margin: 0 0 16px; }
-    .message { font-size: 13.5px; color: var(--grey); line-height: 1.65; margin-bottom: 16px; }
-    .message strong { color: var(--ink); }
-    .info-card { background: #F8F6F2; border-left: 4px solid var(--teal); padding: 18px 22px; margin: 20px 0; }
-    .info-card .k { font-size: 9px; letter-spacing: .32em; color: var(--grey); text-transform: uppercase; font-weight: 600; margin-bottom: 8px; }
-    .info-card .v { font-size: 13px; color: var(--ink); line-height: 1.6; }
-    .footer { background: var(--ink); color: #fff; padding: 18px 40px; display: flex; justify-content: space-between; align-items: center; font-size: 10px; letter-spacing: .24em; text-transform: uppercase; position: relative; overflow: hidden; }
-    .footer::before { content: ""; position: absolute; right: -30px; top: -30px; bottom: -30px; width: 70px; background: var(--orange); transform: skewX(-22deg); opacity: .9; }
-    .footer .thanks { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 20px; letter-spacing: .1em; color: #fff; position: relative; z-index: 1; }
-    .footer .thanks .o { color: var(--orange); }
-    .footer .right { color: var(--grey-2); font-weight: 500; position: relative; z-index: 1; }
-    .footer .right b { color: #fff; }
-    @media only screen and (max-width: 640px) {
-      .letterhead, .body { padding-left: 20px; padding-right: 20px; }
-      .footer { padding-left: 20px; padding-right: 20px; flex-direction: column; gap: 8px; text-align: center; }
-      .head-row { flex-direction: column; gap: 16px; }
-      .contact-info { text-align: left; }
-      .strip { flex-direction: column; gap: 12px; }
-    }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<title>Application Update – {{jobTitle}}</title>
+<!--[if mso]><style type="text/css">body,table,td,a{font-family:Arial,sans-serif!important;}</style><![endif]-->
 </head>
-<body>
-<svg width="0" height="0" style="position:absolute">
-  <defs>
-    <symbol id="ath-logo" viewBox="0 0 120 120">
-      <path d="M8 98 L42 18 L56 18 L22 98 Z" fill="#2C6C86"/>
-      <rect x="22" y="68" width="26" height="9" fill="#2C6C86"/>
-      <rect x="52" y="18" width="60" height="12" fill="#E85A1C"/>
-      <rect x="76" y="18" width="12" height="80" fill="#E85A1C"/>
-    </symbol>
-    <symbol id="big-A-outline" viewBox="0 0 200 200">
-      <path d="M20 190 L100 10 L180 190 L160 190 L100 55 L40 190 Z M62 140 L138 140 L138 155 L62 155 Z" fill="#fff"/>
-    </symbol>
-  </defs>
-</svg>
+<body style="margin:0;padding:0;background-color:#F4F2EE;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;-webkit-font-smoothing:antialiased;">
+<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color:#F4F2EE;">
+<tr><td style="padding:40px 20px;">
+<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="max-width:640px;margin:0 auto;background-color:#FFFFFF;box-shadow:0 4px 24px rgba(14,26,36,0.12);border-radius:2px;overflow:hidden;">
 
-<div class="page">
-  <header class="letterhead">
-    <div class="stripes" aria-hidden="true"><span class="s1"></span><span class="s2"></span><span class="s3"></span></div>
-    <svg class="big-A" aria-hidden="true"><use href="#big-A-outline"/></svg>
-    <div class="head-row">
-      <div class="brand">
-        <svg class="logo-mark" viewBox="0 0 120 120" aria-label="AbyTech Hub logo"><use href="#ath-logo"/></svg>
-        <div class="brand-text">
-          <h1 class="name">ABY<span style="color:#fff">TECH</span> <span class="hub">HUB</span></h1>
-          <div class="tag">Technology <b>·</b> Innovation</div>
+  <!-- TOP ACCENT BAR -->
+  <tr><td style="height:6px;background:linear-gradient(90deg,#2C6C86 0%,#3a8aaa 100%);"></td></tr>
+
+  <!-- HEADER -->
+  <tr><td style="background:linear-gradient(135deg,#0E1A24 0%,#1a2a38 100%);padding:36px 40px 0;">
+    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+      <tr>
+        <td valign="top" style="width:60%;">
+          <div style="font-size:28px;font-weight:800;color:#FFFFFF;line-height:1;letter-spacing:0.5px;font-family:Arial,sans-serif;">ABYTECH <span style="color:#E85A1C;">HUB</span></div>
+          <div style="font-size:9px;color:#8A949E;text-transform:uppercase;letter-spacing:3px;margin-top:6px;font-weight:600;">TECHNOLOGY <span style="color:#E85A1C;">·</span> INNOVATION</div>
+        </td>
+        <td valign="top" style="width:40%;text-align:right;">
+          <div style="font-size:8px;color:#E85A1C;text-transform:uppercase;letter-spacing:2px;font-weight:700;margin-bottom:6px;">STUDIO</div>
+          <div style="font-size:11px;color:#C8CDD3;line-height:1.7;">
+            <strong style="color:#FFFFFF;font-weight:600;">AbyTech Hub Ltd.</strong><br/>
+            KN 3 Rd, Kigali, Rwanda<br/>
+            <a href="mailto:info@abytechhub.com" style="color:#E85A1C;text-decoration:none;">info@abytechhub.com</a><br/>
+            +250 792 888 980
+          </div>
+        </td>
+      </tr>
+    </table>
+  </td></tr>
+
+  <!-- HEADER TITLE STRIP -->
+  <tr><td style="background:linear-gradient(135deg,#0E1A24 0%,#1a2a38 100%);padding:20px 40px 32px;border-top:1px solid rgba(255,255,255,0.08);">
+    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+      <tr>
+        <td valign="bottom" style="width:55%;">
+          <div style="font-size:8px;color:#8A949E;text-transform:uppercase;letter-spacing:3px;font-weight:600;margin-bottom:8px;">APPLICATION UPDATE</div>
+          <div style="font-size:48px;font-weight:800;color:#FFFFFF;line-height:0.9;letter-spacing:0.5px;font-family:Arial,sans-serif;">APP<br/><span style="color:#E85A1C;">LICATION</span></div>
+        </td>
+        <td valign="bottom" style="width:45%;text-align:right;padding-bottom:4px;">
+          <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin-left:auto;">
+            <tr>
+              <td style="font-size:9px;color:#8A949E;text-transform:uppercase;letter-spacing:2px;padding:0 12px 0 0;text-align:right;">CANDIDATE</td>
+              <td style="font-size:11px;color:#FFFFFF;font-weight:700;">{{firstname}}</td>
+            </tr>
+            <tr>
+              <td style="font-size:9px;color:#8A949E;text-transform:uppercase;letter-spacing:2px;padding:6px 12px 0 0;text-align:right;">ROLE</td>
+              <td style="font-size:11px;color:#FFFFFF;font-weight:700;padding-top:6px;">{{jobTitle}}</td>
+            </tr>
+            <tr>
+              <td style="font-size:9px;color:#8A949E;text-transform:uppercase;letter-spacing:2px;padding:6px 12px 0 0;text-align:right;">YEAR</td>
+              <td style="font-size:11px;color:#FFFFFF;font-weight:700;padding-top:6px;">{{year}}</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </td></tr>
+
+  <!-- BODY -->
+  <tr><td style="padding:40px 40px 36px;background-color:#FFFFFF;">
+
+    <div style="display:inline-block;font-size:9px;color:#E85A1C;text-transform:uppercase;letter-spacing:3px;font-weight:700;border-bottom:3px solid #0E1A24;padding-bottom:8px;margin-bottom:20px;">APPLICATION STATUS</div>
+
+    <div style="font-size:26px;font-weight:700;color:#0E1A24;font-family:Arial,sans-serif;margin-bottom:16px;">Hello, {{firstname}}</div>
+
+    <p style="font-size:14px;color:#5A6670;line-height:1.7;margin:0 0 20px;">
+      Thank you for taking the time to apply for the <strong style="color:#0E1A24;">{{jobTitle}}</strong> role at <strong style="color:#0E1A24;">{{companyName}}</strong>. We received many strong applications for this position.
+    </p>
+
+    <!-- Decision Card -->
+    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background:#F8F6F2;border-left:4px solid #2C6C86;border-radius:2px;margin-bottom:24px;">
+      <tr><td style="padding:20px 24px;">
+        <div style="font-size:9px;color:#8A949E;text-transform:uppercase;letter-spacing:2px;font-weight:600;margin-bottom:10px;">DECISION</div>
+        <div style="font-size:14px;color:#0E1A24;line-height:1.7;">
+          After careful consideration, we regret to inform you that we will not be moving forward with your candidacy at this time. This was a difficult decision — we truly appreciated the skills and experience you shared with us.
         </div>
-      </div>
-      <div class="contact-info">
-        <span class="lbl">Studio</span>
-        <strong>AbyTech Hub Ltd.</strong><br/>
-        KN 3 Rd, Kigali, Rwanda<br/>
-        <a href="mailto:info@abytechhub.com">info@abytechhub.com</a><br/>
-        +250 792 888 980
-      </div>
-    </div>
-    <div class="strip">
-      <div>
-        <div class="sub-label">Application update</div>
-        <h2 class="doc-word">APP<span class="acc">LICATION</span></h2>
-      </div>
-      <dl class="meta-grid">
-        <dt>Candidate</dt> <dd>{{firstname}}</dd>
-        <dt>Role</dt>      <dd>{{jobTitle}}</dd>
-        <dt>Year</dt>      <dd>{{year}}</dd>
-      </dl>
-    </div>
-  </header>
+      </td></tr>
+    </table>
 
-  <main class="body">
-    <div class="eyebrow">Application Status</div>
-    <h2 class="greeting">Hello, {{firstname}}</h2>
-
-    <p class="message">
-      Thank you for taking the time to apply for the <strong>{{jobTitle}}</strong> role at <strong>{{companyName}}</strong>.
-      We received many strong applications for this position.
+    <p style="font-size:14px;color:#5A6670;line-height:1.7;margin:0 0 20px;">
+      We encourage you to keep an eye on our career page and apply for future opportunities that match your profile. We wish you the very best in your job search and future professional endeavors.
+    </p>
+    <p style="font-size:14px;color:#5A6670;line-height:1.7;margin:0;">
+      Sincerely,<br/><strong style="color:#0E1A24;">The {{companyName}} Team</strong>
     </p>
 
-    <div class="info-card">
-      <div class="k">Decision</div>
-      <div class="v">
-        After careful consideration, we regret to inform you that we will not be moving forward with your candidacy at this time.
-        This was a difficult decision — we truly appreciated the skills and experience you shared with us.
-      </div>
-    </div>
+  </td></tr>
 
-    <p class="message">
-      We encourage you to keep an eye on our career page and apply for future opportunities that match your profile.
-      We wish you the very best in your job search and future professional endeavors.
-    </p>
+  <!-- FOOTER -->
+  <tr><td style="background:linear-gradient(135deg,#0E1A24 0%,#1a2a38 100%);padding:24px 40px;">
+    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+      <tr>
+        <td valign="middle" style="width:60%;">
+          <div style="font-size:22px;font-weight:800;color:#FFFFFF;letter-spacing:1px;font-family:Arial,sans-serif;">ABYTECH <span style="color:#E85A1C;">HUB</span></div>
+          <div style="font-size:10px;color:#8A949E;text-transform:uppercase;letter-spacing:2px;margin-top:6px;font-weight:500;">Innovation Starts Here</div>
+        </td>
+        <td valign="middle" style="width:40%;text-align:right;">
+          <div style="font-size:10px;color:#8A949E;text-transform:uppercase;letter-spacing:2px;font-weight:500;">&copy; {{year}} AbyTech Hub<br/><strong style="color:#FFFFFF;font-weight:600;">Kigali, Rwanda</strong></div>
+        </td>
+      </tr>
+    </table>
+    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin-top:20px;padding-top:20px;border-top:1px solid rgba(255,255,255,0.08);">
+      <tr><td style="text-align:center;">
+        <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin:0 auto;">
+          <tr>
+            <td style="padding:0 8px;"><a href="https://www.abytechhub.com" style="color:#8A949E;text-decoration:none;font-size:11px;font-weight:500;">Website</a></td>
+            <td style="color:#5A6670;">·</td>
+            <td style="padding:0 8px;"><a href="mailto:info@abytechhub.com" style="color:#8A949E;text-decoration:none;font-size:11px;font-weight:500;">Email</a></td>
+            <td style="color:#5A6670;">·</td>
+            <td style="padding:0 8px;"><a href="tel:+250792888980" style="color:#8A949E;text-decoration:none;font-size:11px;font-weight:500;">Call Us</a></td>
+          </tr>
+        </table>
+      </td></tr>
+    </table>
+  </td></tr>
 
-    <p class="message" style="margin-top:20px;">
-      Sincerely,<br/>
-      <strong style="color:var(--ink);">The {{companyName}} Team</strong>
-    </p>
-  </main>
-
-  <footer class="footer">
-    <div class="thanks">ABYTECH <span class="o">HUB</span></div>
-    <div class="right">&copy; {{year}} AbyTech Hub &nbsp;·&nbsp; <b>Kigali, Rwanda</b></div>
-  </footer>
-</div>
+</table>
+</td></tr>
+</table>
 </body>
 </html>
