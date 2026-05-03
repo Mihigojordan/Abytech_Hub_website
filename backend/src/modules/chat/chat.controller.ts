@@ -97,6 +97,29 @@ export class ChatController {
         return this.chatService.leaveGroup(conversationId, userId, userType);
     }
 
+    @Patch('conversations/:id')
+    @UseInterceptors(FileFieldsInterceptor([{ name: 'avatar', maxCount: 1 }], ChatUploadConfig))
+    async updateGroup(
+        @Param('id') conversationId: string,
+        @Body() dto: { name?: string },
+        @UploadedFiles() files: { avatar?: Express.Multer.File[] },
+        @Req() req: RequestWithChatUser
+    ) {
+        const userId = req.user.id;
+        const userType = req.user.type;
+
+        let avatarUrl: string | undefined;
+        if (files?.avatar && files.avatar.length > 0) {
+            const result = await this.cloudinaryService.uploadChatImage(files.avatar[0].path);
+            avatarUrl = result.secure_url;
+        }
+
+        return this.chatService.updateGroup(conversationId, userId, userType, {
+            name: dto.name,
+            avatar: avatarUrl,
+        });
+    }
+
     @Post('conversations/:id/members')
     async addMembersToConversation(
         @Param('id') conversationId: string,

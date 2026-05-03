@@ -39,6 +39,21 @@ class ChatService {
         }
     }
 
+    async updateGroup(conversationId, name, avatarFile) {
+        try {
+            const formData = new FormData();
+            if (name !== undefined) formData.append('name', name);
+            if (avatarFile) formData.append('avatar', avatarFile);
+            const response = await this.api.patch(`/chat/conversations/${conversationId}`, formData, {
+                headers: { 'Content-Type': 'multipart/form-data' },
+            });
+            return response.data;
+        } catch (error) {
+            const msg = error.response?.data?.message || error.message || 'Failed to update group';
+            throw new Error(msg);
+        }
+    }
+
     async removeMember(conversationId, participantId, participantType) {
         try {
             const response = await this.api.delete(`/chat/conversations/${conversationId}/members`, {

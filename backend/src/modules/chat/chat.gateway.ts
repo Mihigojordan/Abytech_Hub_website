@@ -249,6 +249,21 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
 
     /**
+     * Broadcasts group name/avatar update to all participants
+     */
+    public broadcastGroupUpdated(
+        conversationId: string,
+        updates: { name?: string | null; avatar?: string | null },
+        recipients: { participantId: string; participantType: 'ADMIN' | 'USER' }[]
+    ) {
+        this.emitToUsers(
+            recipients.map(r => ({ userId: r.participantId as any, userType: r.participantType as any })),
+            'group:updated',
+            { conversationId, ...updates }
+        );
+    }
+
+    /**
      * Broadcasts a read receipt
      */
     public broadcastMessageRead(

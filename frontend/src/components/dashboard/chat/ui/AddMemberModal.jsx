@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { X, Search, Check, UserPlus, Users, Shield, ShieldOff, UserMinus, LogOut } from 'lucide-react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { X, Search, Check, UserPlus, Users, Shield, ShieldOff, UserMinus, LogOut, Camera, Edit3 } from 'lucide-react';
 import adminAuthService from '../../../../services/adminAuthService';
 import chatService from '../../../../services/chatService';
 import useAdminAuth from '../../../../context/AdminAuthContext';
@@ -22,6 +22,14 @@ const AddMemberModal = ({ isOpen, onClose, conversation, onMembersAdded, current
     const [actionLoading, setActionLoading] = useState(null);
     const [leavingGroup, setLeavingGroup] = useState(false);
 
+    // ── Group settings state ──
+    const avatarInputRef = useRef(null);
+    const [groupName, setGroupName] = useState('');
+    const [avatarFile, setAvatarFile] = useState(null);
+    const [avatarPreview, setAvatarPreview] = useState(null);
+    const [savingSettings, setSavingSettings] = useState(false);
+    const [settingsSaved, setSettingsSaved] = useState(false);
+
     const isGroupAdmin = currentUserRole === 'admin';
 
     const existingMemberIds = useMemo(() => {
@@ -39,6 +47,11 @@ const AddMemberModal = ({ isOpen, onClose, conversation, onMembersAdded, current
             setManageSearch('');
             setMainTab('add');
             setActiveTab('admins');
+            // seed group settings
+            setGroupName(conversation?.name || '');
+            setAvatarFile(null);
+            setAvatarPreview(conversation?.avatar || null);
+            setSettingsSaved(false);
         }
     }, [isOpen]);
 
@@ -181,6 +194,28 @@ const AddMemberModal = ({ isOpen, onClose, conversation, onMembersAdded, current
         }
     };
 
+    const handleAvatarChange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        setAvatarFile(file);
+        setAvatarPreview(URL.createObjectURL(file));
+    };
+
+    const handleUpdateGroup = async () => {
+        if (!groupName.trim() && !avatarFile) return;
+        try {
+            setSavingSettings(true);
+            await chatService.updateGroup(conversation.id, groupName.trim() || undefined, avatarFile || undefined);
+            onMembersAdded?.();          // refresh conversation in parent
+            setSettingsSaved(true);
+            setTimeout(() => setSettingsSaved(false), 2500);
+        } catch (error) {
+            alert(error.message || 'Failed to update group');
+        } finally {
+            setSavingSettings(false);
+        }
+    };
+
     const getMemberInfo = (participant) => {
         if (participant.participantType === 'ADMIN') {
             const admin = admins.find(a => a.id === participant.participantId);
@@ -303,6 +338,17 @@ const AddMemberModal = ({ isOpen, onClose, conversation, onMembersAdded, current
                             icon={<Shield style={{ width: 14, height: 14 }} />}
                             active={mainTab === 'manage'}
                             onClick={() => setMainTab('manage')}
+                            accentColor={accentColor}
+                            textC={textC}
+                            text2={text2}
+                        />
+                    )}
+                    {isGroupAdmin && (
+                        <MainTabBtn
+                            label="Settings"
+                            icon={<Edit3 style={{ width: 14, height: 14 }} />}
+                            active={mainTab === 'settings'}
+                            onClick={() => setMainTab('settings')}
                             accentColor={accentColor}
                             textC={textC}
                             text2={text2}
@@ -713,6 +759,150 @@ const AddMemberModal = ({ isOpen, onClose, conversation, onMembersAdded, current
                                 }}
                             >
                                 Done
+                            </button>
+                        </div>
+                    </>
+                )}
+
+                {/* ── SETTINGS PANEL ── */}
+                {mainTab === 'settings' && isGroupAdmin && (
+                    <>
+                        <div style={{ flex: 1, overflowY: 'auto', padding: '28px 24px' }}>
+
+                            {/* Avatar picker */}
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 32 }}>
+                                <div style={{ position: 'relative', marginBottom: 10 }}>
+                                    <div style={{
+                                        width: 90, height: 90, borderRadius: '50%',
+                                        background: avatarPreview ? 'transparent' : accentLight,
+                                        border: `2px solid ${border}`,
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        overflow: 'hidden', fontSize: 34, fontWeight: 700, color: accentText,
+                                    }}>
+                                        {avatarPreview
+                                            ? <img src={avatarPreview} alt="group" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                            : (groupName || conversation?.name || 'G').charAt(0).toUpperCase()
+                                        }
+                                    </div>
+                                    <button
+                                        onClick={() => avatarInputRef.current?.click()}
+                                        style={{
+                                            position: 'absolute', bottom: 2, right: 2,
+                                            width: 28, height: 28, borderRadius: '50%',
+                                            background: accentColor, border: `2px solid ${modalBg}`,
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            cursor: 'pointer', color: '#fff',
+                                        }}
+                                    >
+                                        <Camera style={{ width: 13, height: 13 }} />
+                                    </button>
+                                    <input
+                                        ref={avatarInputRef}
+                                        type="file"
+                                        accept="image/*"
+                                        style={{ display: 'none' }}
+                                        onChange={handleAvatarChange}
+                                    />
+                                </div>
+                                <p style={{ margin: 0, fontSize: 11, color: text3 }}>
+                                    Click the camera icon to change group photo
+                                </p>
+                                {avatarFile && (
+                                    <button
+                                        onClick={() => { setAvatarFile(null); setAvatarPreview(conversation?.avatar || null); }}
+                                        style={{
+                                            marginTop: 6, fontSize: 11, color: dangerColor,
+                                            background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+                                        }}
+                                    >
+                                        Remove new photo
+                                    </button>
+                                )}
+                            </div>
+
+                            {/* Group name */}
+                            <div style={{ marginBottom: 24 }}>
+                                <label style={{
+                                    display: 'block', marginBottom: 6,
+                                    fontSize: 11, fontWeight: 600, color: text3,
+                                    textTransform: 'uppercase', letterSpacing: '0.05em',
+                                }}>
+                                    Group Name
+                                </label>
+                                <input
+                                    type="text"
+                                    value={groupName}
+                                    onChange={e => setGroupName(e.target.value)}
+                                    placeholder="Enter group name…"
+                                    maxLength={60}
+                                    style={{
+                                        width: '100%', boxSizing: 'border-box',
+                                        padding: '10px 14px',
+                                        background: inputBg,
+                                        border: `1px solid ${inputBorderColor}`,
+                                        borderRadius: 8,
+                                        fontSize: 14, color: textC,
+                                        outline: 'none',
+                                    }}
+                                    onFocus={e => e.target.style.borderColor = inputFocusRing}
+                                    onBlur={e => e.target.style.borderColor = inputBorderColor}
+                                />
+                                <p style={{ margin: '4px 0 0', fontSize: 11, color: text3, textAlign: 'right' }}>
+                                    {groupName.length}/60
+                                </p>
+                            </div>
+
+                            {/* Save */}
+                            <button
+                                onClick={handleUpdateGroup}
+                                disabled={savingSettings || (!groupName.trim() && !avatarFile)}
+                                style={{
+                                    width: '100%', padding: '10px 0',
+                                    borderRadius: 8, border: 'none',
+                                    background: settingsSaved ? '#22c55e' : accentColor,
+                                    color: '#fff', fontSize: 13, fontWeight: 600,
+                                    cursor: savingSettings || (!groupName.trim() && !avatarFile) ? 'not-allowed' : 'pointer',
+                                    opacity: savingSettings || (!groupName.trim() && !avatarFile) ? 0.55 : 1,
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                                    transition: 'background 0.2s, opacity 0.15s',
+                                }}
+                            >
+                                {savingSettings ? (
+                                    <>
+                                        <div style={{
+                                            width: 14, height: 14, borderRadius: '50%',
+                                            border: '2px solid rgba(255,255,255,0.4)',
+                                            borderTopColor: '#fff',
+                                            animation: 'spin 0.7s linear infinite',
+                                        }} />
+                                        Saving…
+                                    </>
+                                ) : settingsSaved ? (
+                                    <>
+                                        <Check style={{ width: 15, height: 15 }} />
+                                        Saved!
+                                    </>
+                                ) : (
+                                    'Save Changes'
+                                )}
+                            </button>
+                        </div>
+
+                        <div style={{
+                            padding: '14px 16px',
+                            borderTop: `1px solid ${headerBorderColor}`,
+                            display: 'flex', justifyContent: 'flex-end',
+                        }}>
+                            <button
+                                onClick={onClose}
+                                style={{
+                                    padding: '7px 18px',
+                                    border: `1px solid ${inputBorderColor}`,
+                                    borderRadius: 8, background: 'transparent',
+                                    color: text2, fontSize: 13, fontWeight: 500, cursor: 'pointer',
+                                }}
+                            >
+                                Close
                             </button>
                         </div>
                     </>

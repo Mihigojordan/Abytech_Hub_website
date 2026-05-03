@@ -619,6 +619,48 @@ export class ChatService {
         return { success: true, role: newRole };
     }
 
+    async updateGroup(
+        conversationId: string,
+        requesterId: string,
+        requesterType: 'ADMIN' | 'USER',
+        data: { name?: string; avatar?: string }
+    ) {
+        const conversation = await this.prisma.conversation.findUnique({
+            where: { id: Number(conversationId) },
+            include: { participants: { where: { leftAt: null } } }
+        });
+
+        if (!conversation || !conversation.isGroup) {
+            throw new Error('Group conversation not found');
+        }
+
+        const requester = conversation.participants.find(
+            p => p.participantId === requesterId && p.participantType === requesterType
+        );
+        if (!requester || requester.role !== 'admin') {
+            throw new Error('Only group admins can update group details');
+        }
+
+        const updated = await this.prisma.conversation.update({
+            where: { id: Number(conversationId) },
+            data: {
+                ...(data.name !== undefined && { name: data.name }),
+                ...(data.avatar !== undefined && { avatar: data.avatar }),
+            },
+            include: { participants: { where: { leftAt: null } } }
+        });
+
+        this.cache.deleteConversation(`conversation:${conversationId}`);
+
+        // Broadcast update to all participants
+        this.chatGateway.broadcastGroupUpdated(conversationId, {
+            name: updated.name,
+            avatar: updated.avatar,
+        }, conversation.participants as any[]);
+
+        return updated;
+    }
+
     async leaveGroup(
         conversationId: string,
         requesterId: string,
