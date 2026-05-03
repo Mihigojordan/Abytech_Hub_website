@@ -491,6 +491,58 @@ const ChatApp = () => {
                 }
             };
         });
+        // If the current user was removed, navigate away from the conversation
+        if (removedParticipantId === admin?.id && String(selectedChatId) === convIdStr) {
+            setConversations(prev => {
+                const updated = { ...prev };
+                delete updated[convIdStr];
+                return updated;
+            });
+            navigate('/admin/dashboard/chat');
+        }
+    });
+
+    // Real-time group name / avatar update
+    useSocketEvent('group:updated', (data: any) => {
+        const { conversationId, name, avatar } = data;
+        const convIdStr = String(conversationId);
+        setConversations(prev => {
+            const conv = prev[convIdStr];
+            if (!conv) return prev;
+            return {
+                ...prev,
+                [convIdStr]: {
+                    ...conv,
+                    ...(name !== undefined && { name }),
+                    ...(avatar !== undefined && { avatar }),
+                }
+            };
+        });
+    });
+
+    // Real-time role promotion / demotion
+    useSocketEvent('member:role', (data: any) => {
+        const { conversationId, participantId, participantType, role } = data;
+        const convIdStr = String(conversationId);
+        setConversations(prev => {
+            const conv = prev[convIdStr];
+            if (!conv) return prev;
+            return {
+                ...prev,
+                [convIdStr]: {
+                    ...conv,
+                    participants: (conv.participants || []).map((p: any) =>
+                        p.participantId === participantId && p.participantType === participantType
+                            ? { ...p, role }
+                            : p
+                    ),
+                    // Update current user's own role so admin tabs appear/disappear immediately
+                    participantRole: (participantId === admin?.id && participantType === 'ADMIN')
+                        ? role
+                        : conv.participantRole,
+                }
+            };
+        });
     });
 
     const handleRemoveMember = useCallback(async (participantId: string, participantType: 'ADMIN' | 'USER') => {
@@ -588,7 +640,21 @@ const ChatApp = () => {
                     onMessageAction={handleMessageActionWrapper}
                     onMediaView={handleMediaView}
                     setMessageRef={setMessageRef}
-                    onConversationUpdated={fetchMessages}
+                    onConversationUpdated={async (convId) => {
+                        // Re-fetch the full conversation to get updated participants/roles
+                        if (convId) {
+                            try {
+                                const updated = await chatService.getConversation(String(convId));
+                                if (updated) {
+                                    setConversations(prev => ({
+                                        ...prev,
+                                        [String(convId)]: { ...prev[String(convId)], ...updated }
+                                    }));
+                                }
+                            } catch { /* ignore */ }
+                        }
+                        fetchMessages(convId);
+                    }}
                     isSending={isSending}
                     onBack={handleBack}
                     onRemoveMember={handleRemoveMember}

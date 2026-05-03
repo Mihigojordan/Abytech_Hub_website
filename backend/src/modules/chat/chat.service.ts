@@ -644,6 +644,16 @@ export class ChatService {
         });
 
         this.cache.deleteConversation(`conversation:${conversationId}`);
+
+        // Broadcast role change to all participants in real-time
+        this.chatGateway.broadcastMemberRoleUpdated(
+            conversationId,
+            participantId,
+            participantType,
+            newRole,
+            conversation.participants as any[]
+        );
+
         return { success: true, role: newRole };
     }
 

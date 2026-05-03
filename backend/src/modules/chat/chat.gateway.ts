@@ -264,6 +264,23 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
 
     /**
+     * Broadcasts a member role change (admin ↔ member) to all participants
+     */
+    public broadcastMemberRoleUpdated(
+        conversationId: string,
+        participantId: string,
+        participantType: 'ADMIN' | 'USER',
+        newRole: 'admin' | 'member',
+        recipients: { participantId: string; participantType: 'ADMIN' | 'USER' }[]
+    ) {
+        this.emitToUsers(
+            recipients.map(r => ({ userId: r.participantId as any, userType: r.participantType as any })),
+            'member:role',
+            { conversationId, participantId, participantType, role: newRole }
+        );
+    }
+
+    /**
      * Broadcasts a read receipt
      */
     public broadcastMessageRead(
