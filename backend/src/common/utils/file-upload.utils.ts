@@ -29,6 +29,9 @@ export const createUnifiedUploadConfig = (): MulterOptions => ({
       else if (file.fieldname === 'chatFiles') {
         subFolder = 'chat_files';
       }
+      else if (file.fieldname === 'avatar') {
+        subFolder = 'chat_images';
+      }
       else if (file.fieldname === 'attachments') {
         subFolder = 'attachments';
       }

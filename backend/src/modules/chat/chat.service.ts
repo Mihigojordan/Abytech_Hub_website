@@ -437,36 +437,64 @@ export class ChatService {
             throw new Error('You are not a member of this conversation');
         }
 
-        // Get existing participant keys
-        const existingKeys = new Set(
+        // Get existing participant keys — include ALL rows (even soft-deleted leftAt != null)
+        // so we can decide whether to re-activate or insert fresh
+        const allExistingRows = await this.prisma.conversationParticipant.findMany({
+            where: { conversationId: Number(conversationId) }
+        });
+        const activeKeys = new Set(
             conversation.participants.map(p => `${p.participantType}-${p.participantId}`)
         );
+        const allKeys = new Map(
+            allExistingRows.map(p => [`${p.participantType}-${p.participantId}`, p])
+        );
 
-        // Filter out already existing participants
-        const newParticipants: { participantId: string; participantType: 'ADMIN' | 'USER' }[] = [];
+        // Separate into: truly new (no row at all) vs re-joins (had a row but left)
+        const toInsert: { participantId: string; participantType: 'ADMIN' | 'USER' }[] = [];
+        const toReactivate: { participantId: string; participantType: 'ADMIN' | 'USER' }[] = [];
+
         for (let i = 0; i < participantIds.length; i++) {
             const key = `${participantTypes[i]}-${participantIds[i]}`;
-            if (!existingKeys.has(key)) {
-                newParticipants.push({
-                    participantId: participantIds[i],
-                    participantType: participantTypes[i]
-                });
+            if (activeKeys.has(key)) continue; // already active member, skip
+            const existing = allKeys.get(key);
+            if (existing) {
+                // Row exists but member had left — re-activate
+                toReactivate.push({ participantId: participantIds[i], participantType: participantTypes[i] });
+            } else {
+                // No row at all — insert fresh
+                toInsert.push({ participantId: participantIds[i], participantType: participantTypes[i] });
             }
         }
+
+        const newParticipants = [...toInsert, ...toReactivate];
 
         if (newParticipants.length === 0) {
             return { addedCount: 0, message: 'All selected participants are already in the group' };
         }
 
-        // Add new participants
-        await this.prisma.conversationParticipant.createMany({
-            data: newParticipants.map(p => ({
-                conversationId: Number(conversationId),
-                participantId: p.participantId,
-                participantType: p.participantType,
-                role: 'member'
-            }))
-        });
+        // Re-activate previously-left members
+        for (const p of toReactivate) {
+            await this.prisma.conversationParticipant.updateMany({
+                where: {
+                    conversationId: Number(conversationId),
+                    participantId: p.participantId,
+                    participantType: p.participantType,
+                },
+                data: { leftAt: null, role: 'member' }
+            });
+        }
+
+        // Insert brand-new members
+        if (toInsert.length > 0) {
+            await this.prisma.conversationParticipant.createMany({
+                data: toInsert.map(p => ({
+                    conversationId: Number(conversationId),
+                    participantId: p.participantId,
+                    participantType: p.participantType,
+                    role: 'member'
+                }))
+            });
+        }
 
         // Invalidate cache
         this.cache.deleteConversation(`conversation:${conversationId}`);
