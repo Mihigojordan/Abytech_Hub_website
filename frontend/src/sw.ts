@@ -228,6 +228,37 @@ self.addEventListener('push', (event: PushEvent) => {
 
       const title = data.title || 'Abytech Hub';
 
+      // ── Handle incoming call push separately ──
+      if (data.data?.type === 'incoming_call') {
+        const callData = data.data;
+        try {
+          await self.registration.showNotification(title, {
+            body: data.body || 'Incoming voice call',
+            icon: '/pwa-192x192.png',
+            badge: '/pwa-72x72.png',
+            tag: `call-${callData.callId}`,
+            renotify: true,
+            requireInteraction: true,
+            silent: false,
+            vibrate: [500, 300, 500, 300, 500],
+            data: {
+              type: 'incoming_call',
+              callId: callData.callId,
+              conversationId: callData.conversationId,
+              callerName: callData.callerName,
+              url: callData.url || `/admin/dashboard/chat/${callData.conversationId}?call=${callData.callId}`,
+            },
+            actions: [
+              { action: 'decline', title: '❌ Decline' },
+              { action: 'accept',  title: '✅ Accept'  },
+            ],
+          } as ExtendedNotificationOptions);
+        } catch (err) {
+          console.error('❌ [SW] Failed to show call notification:', err);
+        }
+        return;
+      }
+
       const options: ExtendedNotificationOptions = {
         body: data.body || data.message || 'You have a new notification',
         icon: data.icon || '/pwa-192x192.png',
@@ -273,7 +304,39 @@ self.addEventListener('push', (event: PushEvent) => {
 self.addEventListener('notificationclick', (event: NotificationEvent) => {
   event.notification.close();
 
-  const { url, notificationId } = event.notification.data ?? {};
+  const { url, notificationId, type: notifType, callId, conversationId } = event.notification.data ?? {};
+
+  // ── Handle call notification actions ──
+  if (notifType === 'incoming_call') {
+    if (event.action === 'decline') {
+      event.waitUntil(
+        (async () => {
+          const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+          clients.forEach(c => c.postMessage({ type: 'DECLINE_CALL', callId }));
+        })()
+      );
+      return;
+    }
+    // 'accept' or body tap
+    const callUrl = url || `/admin/dashboard/chat/${conversationId}?call=${callId}`;
+    event.waitUntil(
+      (async () => {
+        const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+        for (const client of clients) {
+          if ('focus' in client) {
+            await client.focus();
+            client.postMessage({ type: 'ACCEPT_CALL', callId });
+            return;
+          }
+        }
+        const newClient = await self.clients.openWindow(callUrl);
+        if (newClient) {
+          setTimeout(() => newClient.postMessage({ type: 'ACCEPT_CALL', callId }), 1500);
+        }
+      })()
+    );
+    return;
+  }
 
   // Append notificationId as query param so the app can auto-mark it read
   const destination = notificationId

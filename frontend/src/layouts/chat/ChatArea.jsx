@@ -55,6 +55,10 @@ const ChatArea = ({
     onBack,
     onRemoveMember,
     currentUserRole,
+    onCallStart,
+    callState,
+    onCallBack,
+    onCallSendMessage,
 }) => {
     const { bg, bg2, bg3, textC, text2, text3, border } = useDashboardTheme();
     const [showAddMemberModal, setShowAddMemberModal] = useState(false);
@@ -118,6 +122,8 @@ const ChatArea = ({
                 onInfoClick={() => setShowInfoPanel(true)}
                 onRemoveMember={onRemoveMember}
                 currentUserRole={currentUserRole}
+                onCallStart={onCallStart}
+                callState={callState}
             />
 
             <MessagesContainer
@@ -142,6 +148,8 @@ const ChatArea = ({
                 showScrollButton={showScrollButton}
                 scrollToBottom={scrollToBottom}
                 unreadCount={unreadCount}
+                onCallBack={onCallBack}
+                onSendMessage={onCallSendMessage}
             />
 
             {/* Floating overlays above input */}

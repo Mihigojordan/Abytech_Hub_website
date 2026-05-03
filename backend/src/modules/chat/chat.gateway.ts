@@ -12,10 +12,24 @@ import { JwtService } from '@nestjs/jwt';
 import { Inject, forwardRef } from '@nestjs/common';
 import { ChatService, SendMessageDto, ReplyMessageDto, ForwardMessagesDto } from './chat.service';
 import { CacheService } from './cache.service';
+import { CallService } from '../call/call.service';
+import { PushNotificationsService } from '../push-notification/push-notification.service';
 
 interface AuthenticatedSocket extends Socket {
     userId?: string;
     userType?: 'ADMIN' | 'USER';
+}
+
+interface ActiveCall {
+    callId: string;
+    conversationId: string;
+    callType: 'audio' | 'video';
+    hostId: string;
+    hostType: 'ADMIN' | 'USER';
+    hostSocketId: string;
+    callerName: string;
+    /** socketId → { userId, userType, name } */
+    participants: Map<string, { userId: string; userType: 'ADMIN' | 'USER'; name: string }>;
 }
 
 @WebSocketGateway({
@@ -28,11 +42,16 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @WebSocketServer()
     server: Server;
 
+    /** In-memory call state — callId → ActiveCall */
+    private calls = new Map<string, ActiveCall>();
+
     constructor(
         @Inject(forwardRef(() => ChatService))
         private chatService: ChatService,
         private cache: CacheService,
         private jwtService: JwtService,
+        private callService: CallService,
+        private pushService: PushNotificationsService,
     ) { }
 
     // ====================
@@ -50,6 +69,13 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
             this.cache.removeOnlineUser(client.userId);
 
             const lastSeenTime = new Date();
+
+            // Clean up any active calls this socket was part of
+            this.calls.forEach((call, callId) => {
+                if (call.participants.has(client.id)) {
+                    this.handleCallLeave(client.id, callId);
+                }
+            });
 
             // Update database status
             try {
@@ -324,6 +350,421 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     private emitToUsers(users: { userId: string; userType: 'ADMIN' | 'USER' }[], event: string, data: any) {
         users.forEach(u => this.emitToUser(u.userId, u.userType, event, data));
+    }
+
+    // ====================
+    // CALL SIGNALING
+    // ====================
+
+    /**
+     * Caller initiates a call in a conversation.
+     * Creates DB record, stores in memory, notifies all other participants.
+     * Fires push notification for offline participants.
+     */
+    @SubscribeMessage('call:initiate')
+    async handleCallInitiate(
+        @ConnectedSocket() client: AuthenticatedSocket,
+        @MessageBody() data: { conversationId: string; callType: 'audio' | 'video'; callerName: string },
+    ) {
+        try {
+            const { conversationId, callType, callerName } = data;
+            const callerId = client.userId!;
+            const callerType = client.userType!;
+
+            // Create DB record
+            const callId = await this.callService.createCallRecord(
+                Number(conversationId),
+                callerId,
+                callerType,
+                callType,
+            );
+
+            // Store in memory
+            const call: ActiveCall = {
+                callId,
+                conversationId,
+                callType,
+                hostId: callerId,
+                hostType: callerType,
+                hostSocketId: client.id,
+                callerName,
+                participants: new Map(),
+            };
+            this.calls.set(callId, call);
+
+            // Get conversation participants to notify
+            const conversation = await this.chatService.getConversation(
+                conversationId,
+                callerId,
+                callerType,
+            );
+
+            if (conversation?.participants) {
+                const others = conversation.participants.filter(
+                    p => !(p.participantId === callerId && p.participantType === callerType)
+                );
+
+                for (const p of others) {
+                    const isOnline = this.cache.isUserOnline(p.participantId);
+                    const payload = {
+                        callId,
+                        conversationId,
+                        callerId,
+                        callerType,
+                        callerName,
+                        callType,
+                    };
+
+                    if (isOnline) {
+                        // Socket notification for online users
+                        this.emitToUser(p.participantId, p.participantType as 'ADMIN' | 'USER', 'call:incoming', payload);
+                    } else {
+                        // Push notification for offline users
+                        try {
+                            await this.pushService.sendToUser(
+                                p.participantId,
+                                p.participantType as any,
+                                {
+                                    title: `📞 ${callerName} is calling...`,
+                                    body: callType === 'video' ? 'Incoming video call' : 'Incoming voice call',
+                                    data: {
+                                        type: 'incoming_call',
+                                        callId,
+                                        conversationId,
+                                        callerName,
+                                        callType,
+                                        url: `/admin/dashboard/chat/${conversationId}?call=${callId}`,
+                                    },
+                                    requireInteraction: true,
+                                    tag: `call-${callId}`,
+                                    actions: [
+                                        { action: 'decline', title: '❌ Decline' },
+                                        { action: 'accept', title: '✅ Accept' },
+                                    ],
+                                },
+                            );
+                        } catch (pushErr) {
+                            console.error('Push notification failed:', pushErr);
+                        }
+                    }
+                }
+            }
+
+            // Confirm to caller
+            client.emit('call:initiated', { callId, conversationId, callType });
+            return { success: true, callId };
+        } catch (error) {
+            console.error('call:initiate error:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    /**
+     * A participant answers the call.
+     * Adds them to the participants map, sends them the existing participant list,
+     * and notifies everyone else.
+     */
+    @SubscribeMessage('call:answer')
+    async handleCallAnswer(
+        @ConnectedSocket() client: AuthenticatedSocket,
+        @MessageBody() data: { callId: string },
+    ) {
+        try {
+            const { callId } = data;
+            const call = this.calls.get(callId);
+            if (!call) return { success: false, error: 'Call not found' };
+
+            const userId = client.userId!;
+            const userType = client.userType!;
+
+            // Resolve the answerer's display name from DB
+            let answererName = 'Unknown';
+            try {
+                if (userType === 'ADMIN') {
+                    const admin = await this.chatService['prisma'].admin.findUnique({ where: { id: userId }, select: { adminName: true } });
+                    answererName = admin?.adminName || 'Admin';
+                } else {
+                    const user = await this.chatService['prisma'].user.findUnique({ where: { id: userId }, select: { name: true } });
+                    answererName = user?.name || 'User';
+                }
+            } catch { /* keep default */ }
+
+            // Build list of existing participants with names (before adding this one)
+            const existingParticipants = Array.from(call.participants.entries())
+                .filter(([socketId]) => socketId !== client.id)
+                .map(([socketId, p]) => ({
+                    socketId,
+                    userId: p.userId,
+                    userType: p.userType,
+                    name: p.name,
+                }));
+
+            // Add this participant with their name
+            call.participants.set(client.id, { userId, userType, name: answererName });
+
+            // Update DB to active on first answer
+            if (call.participants.size === 1) {
+                await this.callService.updateCallStatus(callId, 'active', new Date());
+            }
+
+            // Tell the answerer who is already in the call
+            client.emit('call:joined', {
+                callId,
+                conversationId: call.conversationId,
+                callType: call.callType,
+                callerName: call.callerName,
+                existingParticipants,
+            });
+
+            // Tell everyone else a new participant joined (include name)
+            call.participants.forEach((p, socketId) => {
+                if (socketId !== client.id) {
+                    this.server.to(socketId).emit('call:participant-joined', {
+                        callId,
+                        participantSocketId: client.id,
+                        userId,
+                        userType,
+                        name: answererName,
+                    });
+                }
+            });
+
+            // Also notify the host socket if they haven't joined yet
+            if (!call.participants.has(call.hostSocketId)) {
+                this.server.to(call.hostSocketId).emit('call:participant-joined', {
+                    callId,
+                    participantSocketId: client.id,
+                    userId,
+                    userType,
+                    name: answererName,
+                });
+            }
+
+            return { success: true };
+        } catch (error) {
+            console.error('call:answer error:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    /**
+     * A participant declines the call.
+     * Posts a "declined" call message into the conversation.
+     */
+    @SubscribeMessage('call:decline')
+    async handleCallDecline(
+        @ConnectedSocket() client: AuthenticatedSocket,
+        @MessageBody() data: { callId: string },
+    ) {
+        try {
+            const { callId } = data;
+            const call = this.calls.get(callId);
+            if (!call) return { success: false };
+
+            await this.callService.updateCallStatus(callId, 'declined');
+
+            // Post call message into conversation
+            try {
+                const msg = await this.callService.postCallMessage(
+                    Number(call.conversationId),
+                    call.hostId,
+                    call.hostType,
+                    { callId, callType: call.callType, status: 'declined' },
+                );
+                // Broadcast to all conversation participants
+                this.broadcastCallMessageToConversation(call.conversationId, msg);
+            } catch (e) {
+                console.error('Failed to post declined call message:', e);
+            }
+
+            // Notify the host
+            this.server.to(call.hostSocketId).emit('call:declined', {
+                callId,
+                userId: client.userId,
+                userType: client.userType,
+            });
+
+            // Clean up
+            this.calls.delete(callId);
+
+            return { success: true };
+        } catch (error) {
+            console.error('call:decline error:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    /**
+     * A participant ends / leaves the call.
+     */
+    @SubscribeMessage('call:end')
+    async handleCallEnd(
+        @ConnectedSocket() client: AuthenticatedSocket,
+        @MessageBody() data: { callId: string },
+    ) {
+        this.handleCallLeave(client.id, data.callId);
+        return { success: true };
+    }
+
+    /**
+     * Relay WebRTC offer SDP to target peer.
+     */
+    @SubscribeMessage('call:offer')
+    handleCallOffer(
+        @ConnectedSocket() client: AuthenticatedSocket,
+        @MessageBody() data: { targetSocketId: string; offer: RTCSessionDescriptionInit; callId: string },
+    ) {
+        this.server.to(data.targetSocketId).emit('call:offer', {
+            callId: data.callId,
+            offer: data.offer,
+            callerSocketId: client.id,
+            callerId: client.userId,
+            callerType: client.userType,
+        });
+    }
+
+    /**
+     * Relay WebRTC answer SDP to target peer.
+     */
+    @SubscribeMessage('call:answer-sdp')
+    handleCallAnswerSdp(
+        @ConnectedSocket() client: AuthenticatedSocket,
+        @MessageBody() data: { targetSocketId: string; answer: RTCSessionDescriptionInit; callId: string },
+    ) {
+        this.server.to(data.targetSocketId).emit('call:answer-sdp', {
+            callId: data.callId,
+            answer: data.answer,
+            answererSocketId: client.id,
+        });
+    }
+
+    /**
+     * Relay ICE candidate to target peer.
+     */
+    @SubscribeMessage('call:ice-candidate')
+    handleIceCandidate(
+        @ConnectedSocket() client: AuthenticatedSocket,
+        @MessageBody() data: { targetSocketId: string; candidate: RTCIceCandidateInit; callId: string },
+    ) {
+        this.server.to(data.targetSocketId).emit('call:ice-candidate', {
+            callId: data.callId,
+            candidate: data.candidate,
+            senderSocketId: client.id,
+        });
+    }
+
+    /**
+     * Invite a new person into an existing call (mid-call add participant).
+     */
+    @SubscribeMessage('call:invite')
+    async handleCallInvite(
+        @ConnectedSocket() client: AuthenticatedSocket,
+        @MessageBody() data: { callId: string; targetUserId: string; targetUserType: 'ADMIN' | 'USER' },
+    ) {
+        const call = this.calls.get(data.callId);
+        if (!call) return { success: false };
+
+        const payload = {
+            callId: data.callId,
+            conversationId: call.conversationId,
+            callerId: client.userId,
+            callerType: client.userType,
+            callerName: call.callerName,
+            callType: call.callType,
+        };
+
+        const isOnline = this.cache.isUserOnline(data.targetUserId);
+        if (isOnline) {
+            this.emitToUser(data.targetUserId, data.targetUserType, 'call:incoming', payload);
+        } else {
+            try {
+                await this.pushService.sendToUser(data.targetUserId, data.targetUserType as any, {
+                    title: `📞 ${call.callerName} is calling...`,
+                    body: 'Incoming voice call',
+                    data: { type: 'incoming_call', ...payload, url: `/admin/dashboard/chat/${call.conversationId}?call=${data.callId}` },
+                    requireInteraction: true,
+                    tag: `call-${data.callId}`,
+                    actions: [
+                        { action: 'decline', title: '❌ Decline' },
+                        { action: 'accept', title: '✅ Accept' },
+                    ],
+                });
+            } catch (e) {
+                console.error('Push invite failed:', e);
+            }
+        }
+
+        return { success: true };
+    }
+
+    // ── Internal helper: remove a socket from a call ──────────────────────────
+    private async handleCallLeave(socketId: string, callId: string) {
+        const call = this.calls.get(callId);
+        if (!call) return;
+
+        call.participants.delete(socketId);
+
+        // Notify remaining participants
+        call.participants.forEach((_, sid) => {
+            this.server.to(sid).emit('call:participant-left', { callId, participantSocketId: socketId });
+        });
+
+        // Also notify host if they're not in participants map
+        if (socketId !== call.hostSocketId) {
+            this.server.to(call.hostSocketId).emit('call:participant-left', { callId, participantSocketId: socketId });
+        }
+
+        // If no one left, end the call and post a call message
+        if (call.participants.size === 0) {
+            // Capture all socket IDs that should receive the call message
+            // BEFORE deleting the call from the map
+            const allSocketIds = new Set<string>([call.hostSocketId]);
+            call.participants.forEach((_, sid) => allSocketIds.add(sid));
+
+            this.calls.delete(callId);
+            try {
+                const endedAt = new Date();
+                const callRecord = await this.callService.updateCallStatus(callId, 'ended', undefined, endedAt);
+
+                // Determine status: if call was never active (no startedAt), it was missed
+                const status = (callRecord as any).startedAt ? 'ended' : 'missed';
+                const msg = await this.callService.postCallMessage(
+                    Number(call.conversationId),
+                    call.hostId,
+                    call.hostType,
+                    {
+                        callId,
+                        callType: call.callType,
+                        status,
+                        startedAt: (callRecord as any).startedAt ?? null,
+                        endedAt,
+                    },
+                );
+
+                // Broadcast to all conversation participants via userId lookup
+                // (more reliable than socket IDs which may have changed)
+                this.broadcastCallMessageToConversation(call.conversationId, msg);
+            } catch (e) {
+                console.error('Failed to finalize call:', e);
+            }
+        }
+    }
+
+    // ── Broadcast a call message to all online conversation participants ───────
+    private broadcastCallMessageToConversation(conversationId: string, message: any) {
+        const payload = {
+            conversationId,
+            message: { ...message, type: 'call' },
+        };
+        // Look up all active participants in the conversation and emit to each
+        this.chatService.getConversation(conversationId, message.senderId, message.senderType as 'ADMIN' | 'USER')
+            .then(conv => {
+                if (!conv?.participants) return;
+                conv.participants.forEach((p: any) => {
+                    this.emitToUser(p.participantId, p.participantType as 'ADMIN' | 'USER', 'message:new', payload);
+                });
+            })
+            .catch(err => console.error('broadcastCallMessage lookup failed:', err));
     }
 
     // ====================

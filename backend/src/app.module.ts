@@ -21,6 +21,8 @@ import { SalaryModule } from './modules/salary-management/salary.module';
 import { PermissionModule } from './modules/permission-management/permission.module';
 import { ContactModule } from './modules/contact/contact.module';
 
+import { CallModule } from './modules/call/call.module';
+
 @Module({
   imports: [
     AdminModule,
@@ -41,6 +43,7 @@ import { ContactModule } from './modules/contact/contact.module';
     SalaryModule,
     PermissionModule,
     ContactModule,
+    CallModule,
   ],
   controllers: [AppController],
 })

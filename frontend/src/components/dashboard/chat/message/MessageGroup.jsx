@@ -18,7 +18,9 @@ const MessageGroup = ({
     onMediaView,
     conversation,
     setMessageRef,
-    scrollToMessage
+    scrollToMessage,
+    onCallBack,
+    onSendMessage,
 }) => {
     const { bg2, text3, border } = useDashboardTheme();
 
@@ -75,6 +77,8 @@ const MessageGroup = ({
                             showSenderName={showSenderName}
                             showAvatar={showAvatar}
                             isSequenced={!!sameAsPrev}
+                            onCallBack={onCallBack}
+                            onSendMessage={onSendMessage}
                         />
                     );
                 })}

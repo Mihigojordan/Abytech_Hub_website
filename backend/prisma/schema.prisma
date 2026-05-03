@@ -14,6 +14,21 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Call {
+  id             String    @id @default(cuid())
+  conversationId Int
+  callerId       String
+  callerType     String    // ADMIN | USER
+  callType       String    // audio | video
+  status         String    // ringing | active | ended | missed | declined
+  startedAt      DateTime?
+  endedAt        DateTime?
+  createdAt      DateTime  @default(now())
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
+
+  @@map("calls")
+}
+
 model Admin {
   id                   String      @id @unique @default(uuid())
   adminName            String?
@@ -465,6 +480,7 @@ model Conversation {
   // Relations - NO foreign key constraints for polymorphic fields
   participants ConversationParticipant[]
   messages     Message[]
+  calls        Call[]
 
   @@index([createdBy])
   @@index([isGroup])
@@ -507,6 +523,7 @@ model Message {
   
   type             MessageType @default(text)
   content          String?     @db.Text
+  callData         Json?       // { callId, callType, status, duration, startedAt, endedAt }
   replyToMessageId Int?     @map("reply_to_message_id")
   edited           Boolean     @default(false)
   isForwarded      Boolean     @default(false) @map("is_forwarded")
@@ -619,6 +636,7 @@ enum MessageType {
   image
   file
   combined
+  call
 }
 
 enum ParticipantType {

@@ -7,6 +7,8 @@ import ChatArea from '../../layouts/chat/ChatArea';
 import DragDropOverlay from '../../components/dashboard/chat/ui/DragDropOverlay';
 import MediaViewer from '../../components/dashboard/chat/ui/MediaViewer';
 import ForwardModal from '../../components/dashboard/chat/ui/ForwardModal';
+import IncomingCallModal from '../../components/dashboard/chat/ui/IncomingCallModal';
+import ActiveCallModal from '../../components/dashboard/chat/ui/ActiveCallModal';
 import { API_URL } from '../../api/api';
 import { useDashboardTheme } from '../../utils/dashboardTheme';
 import { ORG, TEAL, bb, bc, ba } from '../../utils/homeConstants';
@@ -19,6 +21,7 @@ import { useScrollManagement } from '../../hooks/chat/useScrollManagement';
 import { useTypingIndicator } from '../../hooks/chat/useTypingIndicator';
 import { useMessageRead } from '../../hooks/chat/useMessageRead';
 import { useAutoRead } from '../../hooks/chat/useAutoRead';
+import { useCall } from '../../hooks/chat/useCall';
 
 // Services and Context
 import chatService from '../../services/chatService';
@@ -282,6 +285,21 @@ const ChatApp = () => {
     }, []);
 
     useAutoRead(selectedChatId, admin?.id, 'ADMIN', handleConversationRead);
+
+    // ── Voice / Video calling ──────────────────────────────────────────────────
+    const {
+        callState,
+        callInfo,
+        participants: callParticipants,
+        isMuted,
+        speakingPeers,
+        initiateCall,
+        answerCall,
+        declineCall,
+        endCall,
+        toggleMute,
+        inviteToCall,
+    } = useCall();
 
     useEffect(() => {
         if (selectedChatId && admin?.id) {
@@ -659,6 +677,14 @@ const ChatApp = () => {
                     onBack={handleBack}
                     onRemoveMember={handleRemoveMember}
                     currentUserRole={selectedConversation?.participantRole}
+                    onCallStart={() => initiateCall(selectedChatId)}
+                    callState={callState}
+                    onCallBack={() => initiateCall(selectedChatId)}
+                    onCallSendMessage={(text: string) => {
+                        setMessageInput(text);
+                        // Focus the textarea after a tick
+                        setTimeout(() => textareaRef.current?.focus(), 50);
+                    }}
                 />
             </div>
 
@@ -683,6 +709,29 @@ const ChatApp = () => {
                 onForward={handleForward}
                 onClose={() => setForwardModal({ isOpen: false, messages: [], loading: false })}
             />
+
+            {/* ── Incoming call overlay ── */}
+            {callState === 'ringing-in' && callInfo && (
+                <IncomingCallModal
+                    callInfo={callInfo}
+                    onAnswer={answerCall}
+                    onDecline={declineCall}
+                />
+            )}
+
+            {/* ── Active call overlay ── */}
+            {callState === 'active' && callInfo && (
+                <ActiveCallModal
+                    callInfo={callInfo}
+                    participants={callParticipants}
+                    isMuted={isMuted}
+                    speakingPeers={speakingPeers}
+                    conversationMembers={selectedConversation?.participants || []}
+                    onEnd={endCall}
+                    onToggleMute={toggleMute}
+                    onInvite={inviteToCall}
+                />
+            )}
         </div>
     );
 };

@@ -98,7 +98,9 @@ const MessagesContainer = ({
     isTyping,
     showScrollButton,
     scrollToBottom,
-    unreadCount
+    unreadCount,
+    onCallBack,
+    onSendMessage,
 }) => {
     const { bg, bg2, bg3, textC, text2, text3, border } = useDashboardTheme();
     const groupedMessages = groupMessagesByDate(messages);
@@ -141,6 +143,8 @@ const MessagesContainer = ({
                         conversation={conversation}
                         setMessageRef={setMessageRef}
                         scrollToMessage={scrollToMessage}
+                        onCallBack={onCallBack}
+                        onSendMessage={onSendMessage}
                     />
                 ))}
 

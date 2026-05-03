@@ -2,6 +2,7 @@ import { Check, CornerUpLeft } from 'lucide-react';
 import Avatar from '../ui/Avatar';
 import TextMessage from './TextMessage';
 import CombinedMessage from './CombinedMessage';
+import CallMessage from './CallMessage';
 import useAdminAuth from '../../../../context/AdminAuthContext';
 import { useDashboardTheme } from '../../../../utils/dashboardTheme';
 import { ORG, ba } from '../../../../utils/homeConstants';
@@ -27,6 +28,8 @@ const Message = ({
     showSenderName = true,
     showAvatar = true,
     isSequenced = false,
+    onCallBack,
+    onSendMessage,
 }) => {
     const { user: currentUser } = useAdminAuth();
     const { bg2, text2, text3, border } = useDashboardTheme();
@@ -40,8 +43,9 @@ const Message = ({
         if (!selectionMode) onToggleSelection(message.id, true);
     };
 
+    const isCall     = message.type === 'call';
     const isTextOnly = message.type === 'text';
-    const isCombined = message.type === 'combined' || message.images || message.files;
+    const isCombined = !isCall && (message.type === 'combined' || (message.images && message.images.length > 0) || (message.files && message.files.length > 0));
 
     // Avatar placeholder preserves layout when avatar is hidden in a sequence
     const avatarSize = 28; // xs avatar width
@@ -146,6 +150,13 @@ const Message = ({
                             setShowMenu={setShowMenu}
                             selectionMode={selectionMode}
                             isGroup={conversation?.isGroup || false}
+                        />
+                    ) : isCall ? (
+                        <CallMessage
+                            message={message}
+                            selectionMode={selectionMode}
+                            onCallBack={onCallBack}
+                            onSendMessage={onSendMessage}
                         />
                     ) : null}
                 </div>
