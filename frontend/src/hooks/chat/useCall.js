@@ -2,6 +2,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { useSocket, useSocketEvent } from '../../context/SocketContext';
 import useAdminAuth from '../../context/AdminAuthContext';
 import { useWebRTC } from './useWebRTC';
+import chatService from '../../services/chatService';
 
 /**
  * Call states:
@@ -21,17 +22,31 @@ export function useCall() {
   const [participants, setParticipants] = useState(new Map());
   const [isMuted, setIsMuted] = useState(false);
   const [speakingPeers, setSpeakingPeers] = useState(new Set());
+  // Conversation members for the add-to-call panel
+  const [conversationMembers, setConversationMembers] = useState([]);
 
   // Pending accept from service worker push notification
   const pendingSwAcceptRef = useRef(null);
   // 30-second no-answer timeout ref
   const noAnswerTimerRef = useRef(null);
+  // Ref to always have latest callInfo in callbacks
+  const callInfoRef = useRef(null);
+  useEffect(() => { callInfoRef.current = callInfo; }, [callInfo]);
 
   const webrtc = useWebRTC({
     socket,
     callId: callInfo?.callId,
     onSpeakingChange: setSpeakingPeers,
   });
+
+  // ── Fetch conversation members for the add-to-call panel ───────────────────
+  const fetchConversationMembers = useCallback(async (conversationId) => {
+    if (!conversationId) return;
+    try {
+      const conv = await chatService.getConversation(conversationId);
+      if (conv?.participants) setConversationMembers(conv.participants);
+    } catch { /* non-critical */ }
+  }, []);
 
   // ── Ringtone via AudioContext oscillator ────────────────────────────────────
   const ringtoneRef = useRef(null);
@@ -83,7 +98,6 @@ export function useCall() {
   const resetCall = useCallback(() => {
     stopRingtone();
     stopVibration();
-    // Clear no-answer timer
     if (noAnswerTimerRef.current) {
       clearTimeout(noAnswerTimerRef.current);
       noAnswerTimerRef.current = null;
@@ -94,6 +108,7 @@ export function useCall() {
     setParticipants(new Map());
     setIsMuted(false);
     setSpeakingPeers(new Set());
+    setConversationMembers([]);
   }, [stopRingtone, stopVibration, webrtc]);
 
   // ── Initiate a call ─────────────────────────────────────────────────────────
@@ -105,20 +120,12 @@ export function useCall() {
       emit('call:initiate', { conversationId: String(conversationId), callType: 'audio', callerName });
       setCallState('ringing-out');
       playRingtone();
+      // Pre-fetch members for the add panel
+      fetchConversationMembers(conversationId);
 
       // Auto-cancel after 30 seconds if nobody answers
       noAnswerTimerRef.current = setTimeout(() => {
         noAnswerTimerRef.current = null;
-        // Only cancel if still ringing out (nobody answered yet)
-        setCallState(prev => {
-          if (prev === 'ringing-out') {
-            // Emit end so server marks it missed and posts the call message
-            emit('call:end', { callId: null }); // callId will be set by then via callInfo ref
-            return prev; // resetCall handles the state
-          }
-          return prev;
-        });
-        // Use a ref-based approach to get the latest callId
         setCallInfo(prev => {
           if (prev?.callId) emit('call:end', { callId: prev.callId });
           return prev;
@@ -130,37 +137,41 @@ export function useCall() {
       alert('Could not access microphone. Please grant permission.');
       webrtc.cleanup();
     }
-  }, [callState, webrtc, admin, emit, playRingtone, resetCall]);
+  }, [callState, webrtc, admin, emit, playRingtone, resetCall, fetchConversationMembers]);
 
   // ── Answer an incoming call ─────────────────────────────────────────────────
   const answerCall = useCallback(async () => {
-    if (callState !== 'ringing-in' || !callInfo) return;
+    // Use ref so this works even when called from SW message handler on fresh load
+    const info = callInfoRef.current;
+    if (!info?.callId) return;
     stopRingtone();
     stopVibration();
     try {
       await webrtc.getLocalStream();
-      emit('call:answer', { callId: callInfo.callId });
+      emit('call:answer', { callId: info.callId });
     } catch (err) {
       console.error('Failed to get mic:', err);
       alert('Could not access microphone.');
       resetCall();
     }
-  }, [callState, callInfo, stopRingtone, stopVibration, webrtc, emit, resetCall]);
+  }, [stopRingtone, stopVibration, webrtc, emit, resetCall]);
 
   // ── Decline an incoming call ────────────────────────────────────────────────
   const declineCall = useCallback(() => {
-    if (!callInfo) return;
+    const info = callInfoRef.current;
+    if (!info?.callId) return;
     stopRingtone();
     stopVibration();
-    emit('call:decline', { callId: callInfo.callId });
+    emit('call:decline', { callId: info.callId });
     resetCall();
-  }, [callInfo, stopRingtone, stopVibration, emit, resetCall]);
+  }, [stopRingtone, stopVibration, emit, resetCall]);
 
   // ── End / leave an active call ──────────────────────────────────────────────
   const endCall = useCallback(() => {
-    if (callInfo) emit('call:end', { callId: callInfo.callId });
+    const info = callInfoRef.current;
+    if (info?.callId) emit('call:end', { callId: info.callId });
     resetCall();
-  }, [callInfo, emit, resetCall]);
+  }, [emit, resetCall]);
 
   // ── Toggle mute ─────────────────────────────────────────────────────────────
   const toggleMute = useCallback(() => {
@@ -171,13 +182,14 @@ export function useCall() {
 
   // ── Invite someone mid-call ─────────────────────────────────────────────────
   const inviteToCall = useCallback((targetUserId, targetUserType) => {
-    if (!callInfo?.callId) return;
+    const info = callInfoRef.current;
+    if (!info?.callId) return;
     emit('call:invite', {
-      callId: callInfo.callId,
+      callId: info.callId,
       targetUserId,
       targetUserType,
     });
-  }, [callInfo, emit]);
+  }, [emit]);
 
   // ── Socket event: call confirmed initiated ──────────────────────────────────
   useSocketEvent('call:initiated', (data) => {
@@ -188,20 +200,25 @@ export function useCall() {
 
   // ── Socket event: incoming call ─────────────────────────────────────────────
   useSocketEvent('call:incoming', (data) => {
-    if (callState !== 'idle') return;
-    setCallInfo({
+    // Allow receiving even if we have a pending SW accept (fresh page load scenario)
+    if (callState !== 'idle' && !pendingSwAcceptRef.current) return;
+
+    const info = {
       callId: data.callId,
       conversationId: data.conversationId,
       callerId: data.callerId,
       callerType: data.callerType,
       callerName: data.callerName,
       callType: data.callType,
-    });
+    };
+    setCallInfo(info);
     setCallState('ringing-in');
     playRingtone();
     startVibration();
+    // Pre-fetch members for the add panel
+    fetchConversationMembers(data.conversationId);
 
-    // Auto-answer if push notification was tapped while app was closed
+    // Auto-answer if push notification was tapped (pendingSwAccept set before socket connected)
     if (pendingSwAcceptRef.current?.callId === data.callId) {
       pendingSwAcceptRef.current = null;
       setTimeout(() => answerCall(), 400);
@@ -212,15 +229,15 @@ export function useCall() {
   useSocketEvent('call:joined', async (data) => {
     stopRingtone();
     stopVibration();
-    // Someone answered — clear the no-answer timer
     if (noAnswerTimerRef.current) {
       clearTimeout(noAnswerTimerRef.current);
       noAnswerTimerRef.current = null;
     }
     setCallInfo(prev => ({ ...prev, ...data }));
     setCallState('active');
+    // Fetch members if not already loaded
+    if (data.conversationId) fetchConversationMembers(data.conversationId);
 
-    // Seed participants map with existing members (with names from server)
     const initialMap = new Map();
     for (const p of (data.existingParticipants || [])) {
       initialMap.set(p.socketId, {
@@ -231,7 +248,6 @@ export function useCall() {
     }
     setParticipants(initialMap);
 
-    // Create WebRTC offers to everyone already in the call
     for (const p of (data.existingParticipants || [])) {
       await webrtc.createOfferTo(p.socketId);
     }
@@ -244,7 +260,7 @@ export function useCall() {
       next.set(data.participantSocketId, {
         userId: data.userId,
         userType: data.userType,
-        name: data.name || data.userId,   // name now comes from server
+        name: data.name || data.userId,
       });
       return next;
     });
@@ -256,13 +272,9 @@ export function useCall() {
     setParticipants(prev => {
       const next = new Map(prev);
       next.delete(data.participantSocketId);
-
-      // If no one is left in the call with us, end it automatically
-      if (next.size === 0 && callState === 'active') {
-        // Use setTimeout to avoid calling endCall inside a state updater
+      if (next.size === 0) {
         setTimeout(() => endCall(), 0);
       }
-
       return next;
     });
   });
@@ -286,30 +298,50 @@ export function useCall() {
     webrtc.addIceCandidate({ senderSocketId: data.senderSocketId, candidate: data.candidate });
   });
 
+  // ── Handle ?call=<callId> URL param on fresh page load ─────────────────────
+  // When the user opens the app from a push notification, the URL contains
+  // ?call=<callId>. We store it as a pending accept so when call:incoming
+  // fires (after socket connects), we auto-answer.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const callIdFromUrl = params.get('call');
+    if (callIdFromUrl) {
+      pendingSwAcceptRef.current = { callId: callIdFromUrl };
+      // Clean the URL so it doesn't re-trigger on navigation
+      const cleanUrl = window.location.pathname;
+      window.history.replaceState({}, '', cleanUrl);
+    }
+  }, []);
+
   // ── Service worker messages (push notification Accept/Decline) ──────────────
   useEffect(() => {
     if (!('serviceWorker' in navigator)) return;
     const handler = (e) => {
       const { type, callId } = e.data || {};
       if (type === 'ACCEPT_CALL') {
-        if (callState === 'ringing-in' && callInfo?.callId === callId) {
+        const currentInfo = callInfoRef.current;
+        if (currentInfo?.callId === callId) {
+          // Call is already ringing — answer immediately
           answerCall();
         } else {
+          // Page just opened — store pending accept, call:incoming will trigger it
           pendingSwAcceptRef.current = { callId };
         }
       }
       if (type === 'DECLINE_CALL') {
-        if (callInfo?.callId === callId) declineCall();
+        const currentInfo = callInfoRef.current;
+        if (currentInfo?.callId === callId) declineCall();
       }
     };
     navigator.serviceWorker.addEventListener('message', handler);
     return () => navigator.serviceWorker.removeEventListener('message', handler);
-  }, [callState, callInfo, answerCall, declineCall]);
+  }, [answerCall, declineCall]);
 
   return {
     callState,
     callInfo,
     participants,
+    conversationMembers,
     isMuted,
     speakingPeers,
     initiateCall,
