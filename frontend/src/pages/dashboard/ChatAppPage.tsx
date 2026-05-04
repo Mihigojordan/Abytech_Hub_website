@@ -7,8 +7,6 @@ import ChatArea from '../../layouts/chat/ChatArea';
 import DragDropOverlay from '../../components/dashboard/chat/ui/DragDropOverlay';
 import MediaViewer from '../../components/dashboard/chat/ui/MediaViewer';
 import ForwardModal from '../../components/dashboard/chat/ui/ForwardModal';
-import IncomingCallModal from '../../components/dashboard/chat/ui/IncomingCallModal';
-import ActiveCallModal from '../../components/dashboard/chat/ui/ActiveCallModal';
 import { API_URL } from '../../api/api';
 import { useDashboardTheme } from '../../utils/dashboardTheme';
 import { ORG, TEAL, bb, bc, ba } from '../../utils/homeConstants';
@@ -21,7 +19,7 @@ import { useScrollManagement } from '../../hooks/chat/useScrollManagement';
 import { useTypingIndicator } from '../../hooks/chat/useTypingIndicator';
 import { useMessageRead } from '../../hooks/chat/useMessageRead';
 import { useAutoRead } from '../../hooks/chat/useAutoRead';
-import { useCall } from '../../hooks/chat/useCall';
+import { useCallContext } from '../../context/CallContext';
 
 // Services and Context
 import chatService from '../../services/chatService';
@@ -37,7 +35,7 @@ const ChatApp = () => {
     const { bg, bg2, bg3, textC, border } = useDashboardTheme();
 
     // Socket Context
-    const { socket, isConnected, emit, on, off, emitUserOnline } = useSocket();
+    const { socket, isConnected, emit, on, off } = useSocket();
 
     // Auth Context
     const { user: admin } = useAdminAuth();
@@ -102,12 +100,6 @@ const ChatApp = () => {
 
         fetchData();
     }, [admin?.id]);
-
-    useEffect(() => {
-        if (isConnected && admin?.id) {
-            emitUserOnline(admin.id, 'ADMIN');
-        }
-    }, [isConnected, admin?.id, emitUserOnline]);
 
     useSocketEvent('user:status', (data: any) => {
         const { userId, userType, status, lastSeen } = data;
@@ -286,7 +278,7 @@ const ChatApp = () => {
 
     useAutoRead(selectedChatId, admin?.id, 'ADMIN', handleConversationRead);
 
-    // ── Voice / Video calling ──────────────────────────────────────────────────
+    // ── Voice / Video calling — provided by DashboardLayout via CallContext ──────
     const {
         callState,
         callInfo,
@@ -299,7 +291,7 @@ const ChatApp = () => {
         endCall,
         toggleMute,
         inviteToCall,
-    } = useCall();
+    } = useCallContext();
 
     useEffect(() => {
         if (selectedChatId && admin?.id) {
@@ -709,29 +701,6 @@ const ChatApp = () => {
                 onForward={handleForward}
                 onClose={() => setForwardModal({ isOpen: false, messages: [], loading: false })}
             />
-
-            {/* ── Incoming call overlay ── */}
-            {callState === 'ringing-in' && callInfo && (
-                <IncomingCallModal
-                    callInfo={callInfo}
-                    onAnswer={answerCall}
-                    onDecline={declineCall}
-                />
-            )}
-
-            {/* ── Active call overlay ── */}
-            {callState === 'active' && callInfo && (
-                <ActiveCallModal
-                    callInfo={callInfo}
-                    participants={callParticipants}
-                    isMuted={isMuted}
-                    speakingPeers={speakingPeers}
-                    conversationMembers={selectedConversation?.participants || []}
-                    onEnd={endCall}
-                    onToggleMute={toggleMute}
-                    onInvite={inviteToCall}
-                />
-            )}
         </div>
     );
 };
