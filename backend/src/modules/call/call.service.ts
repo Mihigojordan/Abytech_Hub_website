@@ -40,13 +40,42 @@ export class CallService {
     }
 
     /**
-     * Post a call-type message into the conversation so it appears in the chat timeline.
-     * Called after a call ends, is missed, or is declined.
+     * Create the initial "ringing" call message when a call starts.
+     * Returns the message ID so it can be updated later.
      */
-    async postCallMessage(
+    async createInitialCallMessage(
         conversationId: number,
         callerId: string,
         callerType: string,
+        callId: string,
+        callType: string,
+    ): Promise<number> {
+        const msg = await this.prisma.message.create({
+            data: {
+                conversationId,
+                senderId: callerId,
+                senderType: callerType as any,
+                type: 'call' as any,
+                content: '📞 Calling...',
+                callData: {
+                    callId,
+                    callType,
+                    status: 'ringing',
+                    duration: null,
+                    startedAt: null,
+                    endedAt: null,
+                },
+            },
+        });
+        return msg.id;
+    }
+
+    /**
+     * Update the existing call message in-place when the call ends/is missed/declined.
+     * This makes the bubble transition from "Calling..." to the final state.
+     */
+    async updateCallMessage(
+        messageId: number,
         callData: {
             callId: string;
             callType: string;
@@ -65,12 +94,9 @@ export class CallService {
                 ? '📞 Missed voice call'
                 : '📞 Declined voice call';
 
-        return this.prisma.message.create({
+        return this.prisma.message.update({
+            where: { id: messageId },
             data: {
-                conversationId,
-                senderId: callerId,
-                senderType: callerType as any,
-                type: 'call' as any,
                 content,
                 callData: {
                     callId: callData.callId,

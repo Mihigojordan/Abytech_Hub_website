@@ -333,7 +333,9 @@ export const useMessages = (currentUser = null) => {
             return {
                 ...prev,
                 [conversationId]: existing.map(msg =>
-                    String(msg.id) === updatedIdStr ? { ...msg, ...updatedMessage, timestamp: new Date().toISOString(), edited: true } : msg
+                    String(msg.id) === updatedIdStr
+                        ? { ...msg, ...updatedMessage, timestamp: new Date().toISOString(), edited: msg.type !== 'call' }
+                        : msg
                 )
             };
         });

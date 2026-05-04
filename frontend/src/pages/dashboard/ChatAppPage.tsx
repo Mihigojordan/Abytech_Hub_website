@@ -180,6 +180,26 @@ const ChatApp = () => {
         });
     });
 
+    // ── Call message updated in-place (ringing → ended/missed/declined) ───────
+    useSocketEvent('call:message-updated', (data: any) => {
+        const { conversationId, messageId, callData, content } = data;
+        const convIdStr = String(conversationId);
+        // Update in the messages list
+        if (String(selectedChatId) === convIdStr) {
+            updateMessageFromSocket({ id: messageId, content, callData }, convIdStr);
+        }
+        // Update in the conversation's last-message preview
+        setConversations((prev: any) => {
+            const conv = prev[convIdStr];
+            if (!conv || !conv.messages?.length) return prev;
+            const lastMessage = conv.messages[0];
+            if (String(lastMessage.id) === String(messageId)) {
+                return { ...prev, [convIdStr]: { ...conv, messages: [{ ...lastMessage, content, callData }] } };
+            }
+            return prev;
+        });
+    });
+
     useSocketEvent('message:deleted', (data: any) => {
         const { conversationId, messageId } = data;
         const convIdStr = String(conversationId);

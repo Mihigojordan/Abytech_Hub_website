@@ -28,6 +28,7 @@ interface ActiveCall {
     hostType: 'ADMIN' | 'USER';
     hostSocketId: string;
     callerName: string;
+    callMessageId: number | null;   // ID of the "Calling..." message to update later
     /** socketId → { userId, userType, name } */
     participants: Map<string, { userId: string; userType: 'ADMIN' | 'USER'; name: string }>;
 }
@@ -388,9 +389,37 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
                 hostType: callerType,
                 hostSocketId: client.id,
                 callerName,
+                callMessageId: null,
                 participants: new Map(),
             };
             this.calls.set(callId, call);
+
+            // Create the initial "Calling..." message immediately
+            try {
+                const msgId = await this.callService.createInitialCallMessage(
+                    Number(conversationId),
+                    callerId,
+                    callerType,
+                    callId,
+                    callType,
+                );
+                call.callMessageId = msgId;
+                // Broadcast the initial message to all conversation participants
+                const initialMsg = {
+                    id: msgId,
+                    conversationId: Number(conversationId),
+                    senderId: callerId,
+                    senderType: callerType,
+                    type: 'call',
+                    content: '📞 Calling...',
+                    callData: { callId, callType, status: 'ringing', duration: null, startedAt: null, endedAt: null },
+                    timestamp: new Date().toISOString(),
+                    createdAt: new Date().toISOString(),
+                };
+                this.broadcastCallMessageToConversation(conversationId, initialMsg);
+            } catch (e) {
+                console.error('Failed to create initial call message:', e);
+            }
 
             // Get conversation participants to notify
             const conversation = await this.chatService.getConversation(
@@ -563,18 +592,18 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
             await this.callService.updateCallStatus(callId, 'declined');
 
-            // Post call message into conversation
+            // Update the call message in-place
             try {
-                const msg = await this.callService.postCallMessage(
-                    Number(call.conversationId),
-                    call.hostId,
-                    call.hostType,
-                    { callId, callType: call.callType, status: 'declined' },
-                );
-                // Broadcast to all conversation participants
-                this.broadcastCallMessageToConversation(call.conversationId, msg);
+                if (call.callMessageId) {
+                    const updatedMsg = await this.callService.updateCallMessage(
+                        call.callMessageId,
+                        { callId, callType: call.callType, status: 'declined' },
+                    );
+                    // Broadcast as message:edited so the bubble updates in-place
+                    this.broadcastCallMessageUpdate(call.conversationId, updatedMsg);
+                }
             } catch (e) {
-                console.error('Failed to post declined call message:', e);
+                console.error('Failed to update declined call message:', e);
             }
 
             // Notify the host
@@ -728,22 +757,21 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
                 // Determine status: if call was never active (no startedAt), it was missed
                 const status = (callRecord as any).startedAt ? 'ended' : 'missed';
-                const msg = await this.callService.postCallMessage(
-                    Number(call.conversationId),
-                    call.hostId,
-                    call.hostType,
-                    {
-                        callId,
-                        callType: call.callType,
-                        status,
-                        startedAt: (callRecord as any).startedAt ?? null,
-                        endedAt,
-                    },
-                );
 
-                // Broadcast to all conversation participants via userId lookup
-                // (more reliable than socket IDs which may have changed)
-                this.broadcastCallMessageToConversation(call.conversationId, msg);
+                if (call.callMessageId) {
+                    // Update the existing "Calling..." message in-place
+                    const updatedMsg = await this.callService.updateCallMessage(
+                        call.callMessageId,
+                        {
+                            callId,
+                            callType: call.callType,
+                            status,
+                            startedAt: (callRecord as any).startedAt ?? null,
+                            endedAt,
+                        },
+                    );
+                    this.broadcastCallMessageUpdate(call.conversationId, updatedMsg);
+                }
             } catch (e) {
                 console.error('Failed to finalize call:', e);
             }
@@ -765,6 +793,25 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
                 });
             })
             .catch(err => console.error('broadcastCallMessage lookup failed:', err));
+    }
+
+    // ── Broadcast an in-place update to an existing call message ─────────────
+    private broadcastCallMessageUpdate(conversationId: string, message: any) {
+        const payload = {
+            conversationId,
+            messageId: message.id,
+            // Pass the full updated message so the frontend can replace callData
+            callData: message.callData,
+            content: message.content,
+        };
+        this.chatService.getConversation(conversationId, message.senderId, message.senderType as 'ADMIN' | 'USER')
+            .then(conv => {
+                if (!conv?.participants) return;
+                conv.participants.forEach((p: any) => {
+                    this.emitToUser(p.participantId, p.participantType as 'ADMIN' | 'USER', 'call:message-updated', payload);
+                });
+            })
+            .catch(err => console.error('broadcastCallMessageUpdate failed:', err));
     }
 
     // ====================

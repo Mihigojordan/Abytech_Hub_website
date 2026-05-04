@@ -32,37 +32,48 @@ const CallMessage = ({
 
   // ── Appearance per status ──────────────────────────────────────────────────
   const config = {
+    ringing: {
+      Icon: Phone,
+      label: isSent ? 'Calling...' : 'Incoming call...',
+      color: '#f59e0b',
+      bg: isDark ? 'rgba(245,158,11,0.12)' : 'rgba(245,158,11,0.08)',
+      pulse: true,
+    },
     ended: {
       Icon: isSent ? Phone : PhoneIncoming,
       label: isSent ? 'Voice call' : 'Incoming call',
       color: '#22c55e',
       bg: isDark ? 'rgba(34,197,94,0.12)' : 'rgba(34,197,94,0.08)',
+      pulse: false,
     },
     missed: {
       Icon: PhoneMissed,
       label: 'Missed call',
       color: '#ef4444',
       bg: isDark ? 'rgba(239,68,68,0.12)' : 'rgba(239,68,68,0.08)',
+      pulse: false,
     },
     declined: {
       Icon: PhoneOff,
       label: 'Declined call',
       color: '#ef4444',
       bg: isDark ? 'rgba(239,68,68,0.12)' : 'rgba(239,68,68,0.08)',
+      pulse: false,
     },
   }[status] || {
     Icon: Phone,
     label: 'Voice call',
     color: '#22c55e',
     bg: isDark ? 'rgba(34,197,94,0.12)' : 'rgba(34,197,94,0.08)',
+    pulse: false,
   };
 
-  const { Icon, label, color, bg } = config;
+  const { Icon, label, color, bg, pulse } = config;
 
   const duration = callData.duration != null ? formatDuration(callData.duration) : null;
 
   const handleClick = () => {
-    if (selectionMode) return;
+    if (selectionMode || status === 'ringing') return;
     setShowModal(true);
   };
 
@@ -77,12 +88,13 @@ const CallMessage = ({
           background: bg,
           border: `1px solid ${color}30`,
           borderRadius: isSent ? '12px 12px 0 12px' : '12px 12px 12px 0',
-          cursor: selectionMode ? 'default' : 'pointer',
+          cursor: (selectionMode || status === 'ringing') ? 'default' : 'pointer',
           minWidth: 180, maxWidth: 280,
           transition: 'opacity 0.15s',
           userSelect: 'none',
+          animation: pulse ? 'callPulse 1.5s ease-in-out infinite' : 'none',
         }}
-        onMouseEnter={e => { if (!selectionMode) e.currentTarget.style.opacity = '0.85'; }}
+        onMouseEnter={e => { if (!selectionMode && status !== 'ringing') e.currentTarget.style.opacity = '0.85'; }}
         onMouseLeave={e => { e.currentTarget.style.opacity = '1'; }}
       >
         {/* Icon circle */}
@@ -99,7 +111,11 @@ const CallMessage = ({
         <div style={{ flex: 1, minWidth: 0 }}>
           <p style={{ ...ba(13, 600, { color: textC, margin: 0 }) }}>{label}</p>
           <p style={{ ...ba(11, 400, { color: text3, margin: '2px 0 0' }) }}>
-            {duration ? duration : status === 'ended' ? 'Tap to call back' : 'Tap to call back'}
+            {status === 'ringing'
+              ? 'Ringing...'
+              : duration
+                ? duration
+                : 'Tap to call back'}
           </p>
         </div>
 
@@ -218,6 +234,19 @@ function formatDuration(seconds) {
   const m = Math.floor(seconds / 60);
   const s = seconds % 60;
   return s > 0 ? `${m}m ${s}s` : `${m}m`;
+}
+
+// Inject pulse keyframe once
+if (typeof document !== 'undefined' && !document.getElementById('call-pulse-style')) {
+  const style = document.createElement('style');
+  style.id = 'call-pulse-style';
+  style.textContent = `
+    @keyframes callPulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+  `;
+  document.head.appendChild(style);
 }
 
 export default CallMessage;
