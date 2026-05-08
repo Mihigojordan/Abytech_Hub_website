@@ -311,6 +311,7 @@ const ChatApp = () => {
         endCall,
         toggleMute,
         inviteToCall,
+        joinCallDirectly,
     } = useCallContext();
 
     useEffect(() => {
@@ -692,6 +693,7 @@ const ChatApp = () => {
                     onCallStart={() => initiateCall(selectedChatId)}
                     callState={callState}
                     onCallBack={() => initiateCall(selectedChatId)}
+                    onJoinCall={(callId: string) => joinCallDirectly(callId, selectedChatId)}
                     onCallSendMessage={(text: string) => {
                         setMessageInput(text);
                         // Focus the textarea after a tick

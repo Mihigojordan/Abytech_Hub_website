@@ -191,6 +191,33 @@ export function useCall() {
     });
   }, [emit]);
 
+  // ── Join an active call directly from a ringing call message bubble ─────────
+  // Called when a user clicks "Join call" on a ringing message in chat.
+  // Unlike answerCall() which requires call:incoming to have fired first,
+  // this works on any active callId (e.g. joining from history after a page reload).
+  const joinCallDirectly = useCallback(async (callId, conversationId) => {
+    if (callState !== 'idle') {
+      alert('You are already in a call.');
+      return;
+    }
+    try {
+      await webrtc.getLocalStream();
+      setCallInfo({ callId, conversationId });
+      emit('call:answer', { callId }, (response) => {
+        if (response && !response.success) {
+          webrtc.cleanup();
+          setCallState('idle');
+          setCallInfo(null);
+          alert('This call has already ended.');
+        }
+      });
+    } catch (err) {
+      console.error('Failed to get mic:', err);
+      alert('Could not access microphone. Please grant permission.');
+      webrtc.cleanup();
+    }
+  }, [callState, webrtc, emit]);
+
   // ── Socket event: call confirmed initiated ──────────────────────────────────
   useSocketEvent('call:initiated', (data) => {
     setCallInfo(prev => ({ ...prev, callId: data.callId, conversationId: data.conversationId }));
@@ -350,5 +377,6 @@ export function useCall() {
     endCall,
     toggleMute,
     inviteToCall,
+    joinCallDirectly,
   };
 }

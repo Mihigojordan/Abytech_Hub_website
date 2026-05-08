@@ -123,16 +123,20 @@ export function useWebRTC({ socket, callId, onSpeakingChange }) {
 
     // Remote audio track
     pc.ontrack = (e) => {
+      // Fallback: Firefox sometimes delivers an empty streams array
+      const stream = e.streams[0] ?? new MediaStream([e.track]);
       let audio = remoteAudiosRef.current.get(remoteSocketId);
       if (!audio) {
         audio = document.createElement('audio');
-        audio.autoplay = true;
         audio.style.display = 'none';
         document.body.appendChild(audio);
         remoteAudiosRef.current.set(remoteSocketId, audio);
       }
-      audio.srcObject = e.streams[0];
-      attachAnalyser(remoteSocketId, e.streams[0]);
+      audio.srcObject = stream;
+      // Explicit play() is required — setting srcObject alone does not reliably
+      // trigger playback after the element is already attached to the DOM.
+      audio.play().catch(err => console.warn('Remote audio play blocked:', err));
+      attachAnalyser(remoteSocketId, stream);
       startSpeakingDetection();
     };
 

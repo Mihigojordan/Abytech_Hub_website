@@ -20,7 +20,8 @@ import { ORG, ba, bc } from '../../../../utils/homeConstants';
 const CallMessage = ({
   message,
   selectionMode,
-  onCallBack,       // (conversationId) => void
+  onCallBack,       // () => void  — starts a new call back
+  onJoinCall,       // (callId) => void  — joins the currently active ringing call
   onSendMessage,    // (text) => void  — pre-fills the input
 }) => {
   const { bg2, bg3, textC, text2, text3, border, isDark } = useDashboardTheme();
@@ -31,10 +32,14 @@ const CallMessage = ({
   const isSent   = message.isSent;
 
   // ── Appearance per status ──────────────────────────────────────────────────
+  // ringing + not sent = someone else started the call; user can join it
+  const canJoin = status === 'ringing' && !isSent && !!onJoinCall;
+
   const config = {
     ringing: {
       Icon: Phone,
-      label: isSent ? 'Calling...' : 'Incoming call...',
+      label: isSent ? 'Calling...' : 'Active call',
+      subLabel: canJoin ? 'Tap to join' : 'Ringing...',
       color: '#f59e0b',
       bg: isDark ? 'rgba(245,158,11,0.12)' : 'rgba(245,158,11,0.08)',
       pulse: true,
@@ -42,6 +47,7 @@ const CallMessage = ({
     ended: {
       Icon: isSent ? Phone : PhoneIncoming,
       label: isSent ? 'Voice call' : 'Incoming call',
+      subLabel: null,
       color: '#22c55e',
       bg: isDark ? 'rgba(34,197,94,0.12)' : 'rgba(34,197,94,0.08)',
       pulse: false,
@@ -49,6 +55,7 @@ const CallMessage = ({
     missed: {
       Icon: PhoneMissed,
       label: 'Missed call',
+      subLabel: null,
       color: '#ef4444',
       bg: isDark ? 'rgba(239,68,68,0.12)' : 'rgba(239,68,68,0.08)',
       pulse: false,
@@ -56,6 +63,7 @@ const CallMessage = ({
     declined: {
       Icon: PhoneOff,
       label: 'Declined call',
+      subLabel: null,
       color: '#ef4444',
       bg: isDark ? 'rgba(239,68,68,0.12)' : 'rgba(239,68,68,0.08)',
       pulse: false,
@@ -63,17 +71,23 @@ const CallMessage = ({
   }[status] || {
     Icon: Phone,
     label: 'Voice call',
+    subLabel: null,
     color: '#22c55e',
     bg: isDark ? 'rgba(34,197,94,0.12)' : 'rgba(34,197,94,0.08)',
     pulse: false,
   };
 
-  const { Icon, label, color, bg, pulse } = config;
+  const { Icon, label, subLabel, color, bg, pulse } = config;
 
   const duration = callData.duration != null ? formatDuration(callData.duration) : null;
 
   const handleClick = () => {
-    if (selectionMode || status === 'ringing') return;
+    if (selectionMode) return;
+    if (canJoin) {
+      onJoinCall(callData.callId);
+      return;
+    }
+    if (status === 'ringing') return; // outgoing ringing — not interactive
     setShowModal(true);
   };
 
@@ -86,15 +100,16 @@ const CallMessage = ({
           display: 'inline-flex', alignItems: 'center', gap: 12,
           padding: '10px 16px',
           background: bg,
-          border: `1px solid ${color}30`,
+          border: `1px solid ${canJoin ? color : `${color}30`}`,
           borderRadius: isSent ? '12px 12px 0 12px' : '12px 12px 12px 0',
-          cursor: (selectionMode || status === 'ringing') ? 'default' : 'pointer',
+          cursor: (selectionMode || (status === 'ringing' && !canJoin)) ? 'default' : 'pointer',
           minWidth: 180, maxWidth: 280,
           transition: 'opacity 0.15s',
           userSelect: 'none',
           animation: pulse ? 'callPulse 1.5s ease-in-out infinite' : 'none',
+          boxShadow: canJoin ? `0 0 0 2px ${color}40` : 'none',
         }}
-        onMouseEnter={e => { if (!selectionMode && status !== 'ringing') e.currentTarget.style.opacity = '0.85'; }}
+        onMouseEnter={e => { if (!selectionMode && !(status === 'ringing' && !canJoin)) e.currentTarget.style.opacity = '0.85'; }}
         onMouseLeave={e => { e.currentTarget.style.opacity = '1'; }}
       >
         {/* Icon circle */}
@@ -110,12 +125,8 @@ const CallMessage = ({
         {/* Text */}
         <div style={{ flex: 1, minWidth: 0 }}>
           <p style={{ ...ba(13, 600, { color: textC, margin: 0 }) }}>{label}</p>
-          <p style={{ ...ba(11, 400, { color: text3, margin: '2px 0 0' }) }}>
-            {status === 'ringing'
-              ? 'Ringing...'
-              : duration
-                ? duration
-                : 'Tap to call back'}
+          <p style={{ ...ba(11, 400, { color: canJoin ? color : text3, margin: '2px 0 0', fontWeight: canJoin ? 600 : 400 }) }}>
+            {subLabel || (duration ? duration : 'Tap to call back')}
           </p>
         </div>
 

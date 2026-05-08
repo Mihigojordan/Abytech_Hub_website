@@ -20,6 +20,7 @@ const MessageGroup = ({
     setMessageRef,
     scrollToMessage,
     onCallBack,
+    onJoinCall,
     onSendMessage,
 }) => {
     const { bg2, text3, border } = useDashboardTheme();
@@ -78,6 +79,7 @@ const MessageGroup = ({
                             showAvatar={showAvatar}
                             isSequenced={!!sameAsPrev}
                             onCallBack={onCallBack}
+                            onJoinCall={onJoinCall}
                             onSendMessage={onSendMessage}
                         />
                     );

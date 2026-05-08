@@ -29,6 +29,7 @@ const Message = ({
     showAvatar = true,
     isSequenced = false,
     onCallBack,
+    onJoinCall,
     onSendMessage,
 }) => {
     const { user: currentUser } = useAdminAuth();
@@ -156,6 +157,7 @@ const Message = ({
                             message={message}
                             selectionMode={selectionMode}
                             onCallBack={onCallBack}
+                            onJoinCall={onJoinCall}
                             onSendMessage={onSendMessage}
                         />
                     ) : null}

@@ -202,16 +202,21 @@ export const useSocket = () => {
   return context;
 };
 
-// Custom hook for socket event listeners with automatic cleanup
-export const useSocketEvent = (event, handler, dependencies = []) => {
+// Custom hook for socket event listeners with automatic cleanup.
+// Uses a stable ref wrapper so the effect only re-registers when the socket
+// itself changes, not on every render where the handler is an inline function.
+export const useSocketEvent = (event, handler) => {
   const { on, socket } = useSocket();
 
-  useEffect(() => {
-    if (!event || !handler) return;
+  // Always keep the ref current without triggering re-registration
+  const handlerRef = useRef(handler);
+  useEffect(() => { handlerRef.current = handler; });
 
-    const cleanup = on(event, handler);
-    return cleanup;
-  }, [event, socket, handler, on, ...dependencies]);
+  useEffect(() => {
+    if (!event) return;
+    const stable = (...args) => handlerRef.current(...args);
+    return on(event, stable);
+  }, [event, socket, on]);
 };
 
 // Example usage component

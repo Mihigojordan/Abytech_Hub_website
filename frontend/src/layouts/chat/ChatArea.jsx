@@ -58,6 +58,7 @@ const ChatArea = ({
     onCallStart,
     callState,
     onCallBack,
+    onJoinCall,
     onCallSendMessage,
 }) => {
     const { bg, bg2, bg3, textC, text2, text3, border } = useDashboardTheme();
@@ -149,6 +150,7 @@ const ChatArea = ({
                 scrollToBottom={scrollToBottom}
                 unreadCount={unreadCount}
                 onCallBack={onCallBack}
+                onJoinCall={onJoinCall}
                 onSendMessage={onCallSendMessage}
             />
 

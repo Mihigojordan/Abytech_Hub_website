@@ -9,7 +9,7 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { JwtService } from '@nestjs/jwt';
-import { Inject, forwardRef } from '@nestjs/common';
+import { Inject, forwardRef, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { ChatService, SendMessageDto, ReplyMessageDto, ForwardMessagesDto } from './chat.service';
 import { CacheService } from './cache.service';
 import { CallService } from '../call/call.service';
@@ -29,6 +29,7 @@ interface ActiveCall {
     hostSocketId: string;
     callerName: string;
     callMessageId: number | null;   // ID of the "Calling..." message to update later
+    createdAt: Date;                // Used to sweep abandoned calls
     /** socketId → { userId, userType, name } */
     participants: Map<string, { userId: string; userType: 'ADMIN' | 'USER'; name: string }>;
 }
@@ -39,12 +40,14 @@ interface ActiveCall {
         credentials: true,
     },
 })
-export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
+export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, OnModuleInit, OnModuleDestroy {
     @WebSocketServer()
     server: Server;
 
     /** In-memory call state — callId → ActiveCall */
     private calls = new Map<string, ActiveCall>();
+
+    private staleCallSweeperRef: ReturnType<typeof setInterval> | null = null;
 
     constructor(
         @Inject(forwardRef(() => ChatService))
@@ -54,6 +57,24 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         private callService: CallService,
         private pushService: PushNotificationsService,
     ) { }
+
+    onModuleInit() {
+        // Sweep abandoned calls every 5 minutes — cleans up calls where a
+        // participant's browser crashed without sending call:end.
+        const STALE_MS = 30 * 60 * 1000;
+        this.staleCallSweeperRef = setInterval(() => {
+            const now = Date.now();
+            this.calls.forEach((call, callId) => {
+                if (now - call.createdAt.getTime() > STALE_MS) {
+                    this.calls.delete(callId);
+                }
+            });
+        }, 5 * 60 * 1000);
+    }
+
+    onModuleDestroy() {
+        if (this.staleCallSweeperRef) clearInterval(this.staleCallSweeperRef);
+    }
 
     // ====================
     // CONNECTION/DISCONNECTION
@@ -390,6 +411,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
                 hostSocketId: client.id,
                 callerName,
                 callMessageId: null,
+                createdAt: new Date(),
                 participants: new Map(),
             };
             this.calls.set(callId, call);
@@ -643,6 +665,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         @ConnectedSocket() client: AuthenticatedSocket,
         @MessageBody() data: { targetSocketId: string; offer: RTCSessionDescriptionInit; callId: string },
     ) {
+        if (!client.userId || !client.userType) return { success: false };
         this.server.to(data.targetSocketId).emit('call:offer', {
             callId: data.callId,
             offer: data.offer,
@@ -660,6 +683,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         @ConnectedSocket() client: AuthenticatedSocket,
         @MessageBody() data: { targetSocketId: string; answer: RTCSessionDescriptionInit; callId: string },
     ) {
+        if (!client.userId || !client.userType) return { success: false };
         this.server.to(data.targetSocketId).emit('call:answer-sdp', {
             callId: data.callId,
             answer: data.answer,
@@ -675,6 +699,13 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         @ConnectedSocket() client: AuthenticatedSocket,
         @MessageBody() data: { targetSocketId: string; candidate: RTCIceCandidateInit; callId: string },
     ) {
+        if (!client.userId || !client.userType) return { success: false };
+        // Only relay to peers that are in the same call
+        const call = this.calls.get(data.callId);
+        if (!call) return { success: false };
+        if (!call.participants.has(data.targetSocketId) && call.hostSocketId !== data.targetSocketId) {
+            return { success: false };
+        }
         this.server.to(data.targetSocketId).emit('call:ice-candidate', {
             callId: data.callId,
             candidate: data.candidate,

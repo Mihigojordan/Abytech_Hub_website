@@ -100,6 +100,7 @@ const MessagesContainer = ({
     scrollToBottom,
     unreadCount,
     onCallBack,
+    onJoinCall,
     onSendMessage,
 }) => {
     const { bg, bg2, bg3, textC, text2, text3, border } = useDashboardTheme();
@@ -144,6 +145,7 @@ const MessagesContainer = ({
                         setMessageRef={setMessageRef}
                         scrollToMessage={scrollToMessage}
                         onCallBack={onCallBack}
+                        onJoinCall={onJoinCall}
                         onSendMessage={onSendMessage}
                     />
                 ))}
