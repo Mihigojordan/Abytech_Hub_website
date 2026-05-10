@@ -1,11 +1,16 @@
 /// <reference lib="webworker" />
+import { clientsClaim } from 'workbox-core';
+import { precacheAndRoute, cleanupOutdatedCaches } from 'workbox-precaching';
 
 declare let self: ServiceWorkerGlobalScope;
 
-// vite-plugin-pwa injectManifest requires this token to exist in the compiled output.
-// globPatterns: [] in vite.config.js means the injected list is [] — no offline caching.
-// @ts-ignore
-self.__WB_MANIFEST;
+// With globPatterns: [] in vite.config.js the injected manifest is [] — nothing is precached.
+// precacheAndRoute([]) is a no-op but the call MUST remain so vite-plugin-pwa can inject
+// the self.__WB_MANIFEST token into the compiled output (a bare `self.__WB_MANIFEST;`
+// statement gets tree-shaken by esbuild in production mode).
+clientsClaim();
+cleanupOutdatedCaches();
+precacheAndRoute(self.__WB_MANIFEST);
 
 // ==========================================
 // TYPES
@@ -46,7 +51,6 @@ const DB_VERSION = 2; // ← bumped to force onupgradeneeded on stale installs
 const STORE_NAME = 'meta';
 const UNREAD_KEY = 'unreadCount';
 
-// Always open a fresh connection — never cache the IDBDatabase instance
 function openDB(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, DB_VERSION);
@@ -57,19 +61,16 @@ function openDB(): Promise<IDBDatabase> {
     request.onupgradeneeded = (event: IDBVersionChangeEvent) => {
       const db = (event.target as IDBOpenDBRequest).result;
 
-      // Delete old store if it exists under a different name (e.g. old 'unreadCount' store)
       if (db.objectStoreNames.contains('unreadCount')) {
         db.deleteObjectStore('unreadCount');
       }
 
-      // Create the correct store if missing
       if (!db.objectStoreNames.contains(STORE_NAME)) {
         db.createObjectStore(STORE_NAME);
         console.log('✅ [DB] Object store created:', STORE_NAME);
       }
     };
 
-    // Handle blocked (another tab has an older version open)
     request.onblocked = () => {
       console.warn('⚠️ [DB] Database upgrade blocked by another tab');
     };
@@ -80,7 +81,6 @@ async function getUnreadCount(): Promise<number> {
   try {
     const db = await openDB();
     return await new Promise((resolve, reject) => {
-      // Guard: verify store exists before transacting
       if (!db.objectStoreNames.contains(STORE_NAME)) {
         db.close();
         resolve(0);
@@ -90,7 +90,7 @@ async function getUnreadCount(): Promise<number> {
       const store = tx.objectStore(STORE_NAME);
       const req = store.get(UNREAD_KEY);
       req.onsuccess = () => {
-        db.close(); // always close after use
+        db.close();
         resolve(req.result ?? 0);
       };
       req.onerror = () => {
@@ -179,14 +179,12 @@ async function broadcastToClients(message: object): Promise<void> {
 self.addEventListener('push', (event: PushEvent) => {
   event.waitUntil(
     (async () => {
-      // ── Parse payload ──
       let data: PushPayload = {};
 
       if (event.data) {
         try {
           data = event.data.json();
         } catch {
-          // Firefox sometimes sends plain text
           data = { title: 'Notification', body: event.data.text() };
         }
       }
@@ -234,7 +232,6 @@ self.addEventListener('push', (event: PushEvent) => {
         silent: false,
         vibrate: data.vibrate || [300, 100, 300],
         timestamp: Date.now(),
-        // Everything the click handler needs lives here
         data: {
           url: data.data?.url || data.url || '/',
           notificationId: data.data?.notificationId || data.notificationId || null,
@@ -249,10 +246,7 @@ self.addEventListener('push', (event: PushEvent) => {
         await self.registration.showNotification(title, options);
         const newCount = await incrementUnreadCount();
         await syncBadge(newCount);
-
-        // Let the open tab know a push arrived so it can refresh notifications
         await broadcastToClients({ type: 'PUSH_RECEIVED', notificationId: options.data?.notificationId });
-
         console.log('✅ [SW] Notification shown, badge =', newCount);
       } catch (err) {
         console.error('❌ [SW] Failed to show notification:', err);
@@ -270,7 +264,6 @@ self.addEventListener('notificationclick', (event: NotificationEvent) => {
 
   const { url, notificationId, type: notifType, callId, conversationId } = event.notification.data ?? {};
 
-  // ── Handle call notification actions ──
   if (notifType === 'incoming_call') {
     if (event.action === 'decline') {
       event.waitUntil(
@@ -281,7 +274,6 @@ self.addEventListener('notificationclick', (event: NotificationEvent) => {
       );
       return;
     }
-    // 'accept' or body tap
     const callUrl = url || `/admin/dashboard/chat/${conversationId}?call=${callId}`;
     event.waitUntil(
       (async () => {
@@ -302,7 +294,6 @@ self.addEventListener('notificationclick', (event: NotificationEvent) => {
     return;
   }
 
-  // Append notificationId as query param so the app can auto-mark it read
   const destination = notificationId
     ? `${url || '/'}?notificationId=${notificationId}`
     : url || '/';
@@ -312,24 +303,20 @@ self.addEventListener('notificationclick', (event: NotificationEvent) => {
   event.waitUntil(
     (async () => {
       try {
-        // Decrement badge
         const newCount = await decrementUnreadCount();
         await syncBadge(newCount);
 
-        // Try to focus an existing tab at the same path
         const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
         const targetPath = new URL(destination, self.location.origin).pathname;
 
         for (const client of clients) {
           if (new URL(client.url).pathname === targetPath && 'focus' in client) {
             await client.focus();
-            // Tell the focused tab to navigate if needed
             client.postMessage({ type: 'NAVIGATE', url: destination });
             return;
           }
         }
 
-        // No matching tab — open a new one
         await self.clients.openWindow(destination);
       } catch (err) {
         console.error('❌ [SW] notificationclick error:', err);
@@ -366,7 +353,6 @@ self.addEventListener('message', (event: ExtendableMessageEvent) => {
       self.skipWaiting();
       break;
 
-    // App sends current unread count → sync badge
     case 'UPDATE_BADGE':
       event.waitUntil(
         (async () => {
@@ -376,7 +362,6 @@ self.addEventListener('message', (event: ExtendableMessageEvent) => {
       );
       break;
 
-    // App marks a single notification read
     case 'NOTIFICATION_READ':
       event.waitUntil(
         (async () => {
@@ -386,7 +371,6 @@ self.addEventListener('message', (event: ExtendableMessageEvent) => {
       );
       break;
 
-    // App marks all notifications read
     case 'NOTIFICATIONS_ALL_READ':
       event.waitUntil(
         (async () => {
@@ -410,7 +394,6 @@ self.addEventListener('sync', (event: any) => {
     event.waitUntil(
       (async () => {
         console.log('🔄 [SW] Background sync: sync-notifications');
-        // Re-broadcast so open tabs can refetch
         await broadcastToClients({ type: 'SYNC_NOTIFICATIONS' });
       })(),
     );
