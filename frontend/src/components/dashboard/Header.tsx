@@ -10,6 +10,8 @@ import {
   Maximize,
   Moon,
   Sun,
+  Download,
+  RefreshCw,
 } from "lucide-react";
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
@@ -20,6 +22,7 @@ import { API_URL } from "../../api/api";
 import ReactCountryFlag from "react-country-flag";
 import { useDashboardTheme } from "../../utils/dashboardTheme";
 import { ORG, TEAL, bc, ba } from "../../utils/homeConstants";
+import { usePWA } from "../../context/PWAContext";
 
 interface HeaderProps {
   onToggle: () => void;
@@ -50,6 +53,9 @@ const Header: React.FC<HeaderProps> = ({ onToggle }) => {
   const { unreadCount } = useNotifications();
   const { isDark, toggleTheme, bg2, bg3, textC, text2, text3, border } = useDashboardTheme();
 
+  const { isInstallable, updateAvailable, install, update } = usePWA();
+  const [installing, setInstalling] = useState(false);
+
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isCountryOpen, setIsCountryOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
@@ -57,6 +63,12 @@ const Header: React.FC<HeaderProps> = ({ onToggle }) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState(countryOptions[0]);
   const [searchQuery, setSearchQuery] = useState("");
+
+  const handleInstall = async () => {
+    setInstalling(true);
+    await install();
+    setInstalling(false);
+  };
 
   const dropdownRef = useRef<HTMLDivElement | null>(null);
   const countryRef = useRef<HTMLDivElement | null>(null);
@@ -186,6 +198,48 @@ const Header: React.FC<HeaderProps> = ({ onToggle }) => {
                 {isDark ? <Sun size={15} color={ORG} /> : <Moon size={15} color={TEAL} />}
               </button>
 
+              {/* PWA Install button — glows when browser has captured the install prompt */}
+              {isInstallable && (
+                <button
+                  onClick={handleInstall}
+                  disabled={installing}
+                  title="Install Abytech Hub as an app"
+                  style={{
+                    display: "flex", alignItems: "center", gap: 6,
+                    padding: "5px 12px", borderRadius: 4,
+                    background: ORG, color: "#fff",
+                    border: "none", cursor: "pointer", fontSize: 12, fontWeight: 600,
+                    boxShadow: `0 0 0 3px ${ORG}35`,
+                    opacity: installing ? 0.7 : 1,
+                    animation: "pwa-install-glow 2s ease-in-out infinite",
+                    transition: "opacity 0.15s",
+                  }}
+                >
+                  <Download size={13} />
+                  <span className="pwa-install-label">
+                    {installing ? "Installing…" : "Install App"}
+                  </span>
+                </button>
+              )}
+
+              {/* Update-ready pill — navigates to profile PWA tab */}
+              {updateAvailable && (
+                <button
+                  onClick={update}
+                  title="App update ready — click to apply"
+                  style={{
+                    display: "flex", alignItems: "center", gap: 5,
+                    padding: "5px 10px", borderRadius: 4,
+                    background: "rgba(245,158,11,.12)", color: "#f59e0b",
+                    border: "1px solid #f59e0b", fontSize: 11, fontWeight: 700,
+                    cursor: "pointer",
+                  }}
+                >
+                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#f59e0b", animation: "pwa-blink 1.2s ease-in-out infinite" }} />
+                  Update ready
+                </button>
+              )}
+
               {/* Notifications */}
               <button
                 onClick={() => setIsNotificationOpen(true)}
@@ -291,6 +345,18 @@ const Header: React.FC<HeaderProps> = ({ onToggle }) => {
       </header>
 
       <NotificationPanel isOpen={isNotificationOpen} onClose={() => setIsNotificationOpen(false)} />
+
+      <style>{`
+        @keyframes pwa-install-glow {
+          0%, 100% { box-shadow: 0 0 0 3px ${ORG}35; }
+          50%       { box-shadow: 0 0 0 6px ${ORG}20; }
+        }
+        @keyframes pwa-blink {
+          0%, 100% { opacity: 1; }
+          50%       { opacity: 0.3; }
+        }
+        @media (max-width: 640px) { .pwa-install-label { display: none; } }
+      `}</style>
     </>
   );
 };

@@ -1,16 +1,11 @@
 /// <reference lib="webworker" />
-import { clientsClaim } from 'workbox-core';
-import { precacheAndRoute, cleanupOutdatedCaches } from 'workbox-precaching';
-import { registerRoute } from 'workbox-routing';
-import { NetworkFirst, CacheFirst } from 'workbox-strategies';
-import { ExpirationPlugin } from 'workbox-expiration';
 
 declare let self: ServiceWorkerGlobalScope;
 
-clientsClaim();
-cleanupOutdatedCaches();
-precacheAndRoute(self.__WB_MANIFEST);
-self.skipWaiting();
+// vite-plugin-pwa injectManifest requires this token to exist in the compiled output.
+// globPatterns: [] in vite.config.js means the injected list is [] — no offline caching.
+// @ts-ignore
+self.__WB_MANIFEST;
 
 // ==========================================
 // TYPES
@@ -45,8 +40,6 @@ interface ExtendedNotificationOptions extends NotificationOptions {
 // ==========================================
 // INDEXEDDB — BADGE PERSISTENCE
 // ==========================================
-
-
 
 const DB_NAME = 'NotificationDB';
 const DB_VERSION = 2; // ← bumped to force onupgradeneeded on stale installs
@@ -180,34 +173,6 @@ async function broadcastToClients(message: object): Promise<void> {
 }
 
 // ==========================================
-// CACHING STRATEGIES
-// ==========================================
-
-registerRoute(
-  ({ request }) => request.destination === 'image',
-  new CacheFirst({
-    cacheName: 'images-cache',
-    plugins: [new ExpirationPlugin({ maxEntries: 60, maxAgeSeconds: 30 * 24 * 60 * 60 })],
-  }),
-);
-
-registerRoute(
-  ({ request }) => request.destination === 'font',
-  new CacheFirst({
-    cacheName: 'fonts-cache',
-    plugins: [new ExpirationPlugin({ maxEntries: 20, maxAgeSeconds: 365 * 24 * 60 * 60 })],
-  }),
-);
-
-registerRoute(
-  ({ url }) => url.pathname.startsWith('/api/'),
-  new NetworkFirst({
-    cacheName: 'api-cache',
-    plugins: [new ExpirationPlugin({ maxEntries: 50, maxAgeSeconds: 5 * 60 })],
-  }),
-);
-
-// ==========================================
 // PUSH HANDLER
 // ==========================================
 
@@ -279,7 +244,6 @@ self.addEventListener('push', (event: PushEvent) => {
       if (data.actions?.length) {
         options.actions = data.actions;
       }
-      console.warn('NIFAD_+<+> :',options)
 
       try {
         await self.registration.showNotification(title, options);

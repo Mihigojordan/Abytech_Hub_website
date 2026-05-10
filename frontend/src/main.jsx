@@ -7,47 +7,39 @@ import { AdminAuthContextProvider } from './context/AdminAuthContext.jsx';
 import { SocketProvider } from './context/SocketContext.jsx';
 import { registerSW } from 'virtual:pwa-register';
 import { HelmetProvider } from 'react-helmet-async';
-import {NotificationProvider} from './context/NotificationContext.tsx'
+import { NotificationProvider } from './context/NotificationContext.tsx';
 import { ThemeProvider } from './context/ThemeContext.jsx';
+import { PWAProvider } from './context/PWAContext.jsx';
+import OfflineBanner from './components/OfflineBanner.jsx';
 
-const updateSW = registerSW({
+registerSW({
   onNeedRefresh() {
-    // Check if it's a background tab
-    if (document.hidden) {
-      // Auto-refresh background tabs (user won't notice)
-      console.log('Background tab, auto-updating...');
-      updateSW(true);
-    } else {
-      // Active tab - ask user
-      const shouldUpdate = confirm(
-        'New version available! Update now?\n\n' +
-        '(You can also update later by refreshing the page)'
-      );
-
-      if (shouldUpdate) {
-        updateSW(true);
-      }
-    }
+    // Dispatch event so PWAContext and the profile PWA panel can show a non-blocking update banner
+    window.dispatchEvent(new CustomEvent('pwa-update-available'));
   },
-
   onOfflineReady() {
-    console.log('App ready to work offline');
+    console.log('[PWA] Service worker installed');
+  },
+  onRegisterError(err) {
+    console.error('[PWA] SW registration failed:', err);
   },
 });
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
-    <HelmetProvider>
-
-      <SocketProvider serverUrl={import.meta.env.VITE_API_URL}>
-        <AdminAuthContextProvider>
-          <NotificationProvider>
-            <ThemeProvider>
-              <App />
-            </ThemeProvider>
-          </NotificationProvider>
-        </AdminAuthContextProvider>
-      </SocketProvider>
-    </HelmetProvider>
+    <PWAProvider>
+      <HelmetProvider>
+        <OfflineBanner />
+        <SocketProvider serverUrl={import.meta.env.VITE_API_URL}>
+          <AdminAuthContextProvider>
+            <NotificationProvider>
+              <ThemeProvider>
+                <App />
+              </ThemeProvider>
+            </NotificationProvider>
+          </AdminAuthContextProvider>
+        </SocketProvider>
+      </HelmetProvider>
+    </PWAProvider>
   </StrictMode>
 );
