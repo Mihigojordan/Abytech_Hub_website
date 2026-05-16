@@ -10,6 +10,7 @@ import { useDashboardTheme } from '../utils/dashboardTheme';
 import { CallProvider, useCallContext } from '../context/CallContext';
 import IncomingCallModal from '../components/dashboard/chat/ui/IncomingCallModal';
 import ActiveCallModal from '../components/dashboard/chat/ui/ActiveCallModal';
+import CallingOutModal from '../components/dashboard/chat/ui/CallingOutModal';
 
 export type RoleType = 'admin';
 
@@ -28,6 +29,8 @@ const DashboardInner = ({ role, isOpen, onToggle }) => {
     isMuted,
     speakingPeers,
     busyCallToast,
+    onlineUsers,
+    pendingInvites,
     answerCall,
     declineCall,
     endCall,
@@ -44,6 +47,14 @@ const DashboardInner = ({ role, isOpen, onToggle }) => {
           <Outlet context={{ role }} />
         </main>
       </div>
+
+      {/* ── Outgoing call overlay — waiting for someone to answer ── */}
+      {callState === 'ringing-out' && callInfo && (
+        <CallingOutModal
+          callInfo={callInfo}
+          onCancel={endCall}
+        />
+      )}
 
       {/* ── Incoming / Rejoin call overlay — visible on any dashboard page ── */}
       {callState === 'ringing-in' && callInfo && (
@@ -96,6 +107,8 @@ const DashboardInner = ({ role, isOpen, onToggle }) => {
           isMuted={isMuted}
           speakingPeers={speakingPeers}
           conversationMembers={conversationMembers}
+          onlineUsers={onlineUsers}
+          pendingInvites={pendingInvites}
           onEnd={endCall}
           onToggleMute={toggleMute}
           onInvite={inviteToCall}

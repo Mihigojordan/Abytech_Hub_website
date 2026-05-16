@@ -1,5 +1,19 @@
 import { useRef, useCallback, useEffect } from 'react';
 
+// Lazily creates a single off-screen container for all remote <audio> elements.
+// Off-screen (not display:none) prevents Android Chrome from leaking media
+// pipeline rendering artifacts through the page layout.
+const getAudioContainer = () => {
+  let el = document.getElementById('__webrtc_audio_sink__');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = '__webrtc_audio_sink__';
+    el.style.cssText = 'position:fixed;left:-9999px;top:-9999px;width:0;height:0;overflow:hidden;pointer-events:none;';
+    document.body.appendChild(el);
+  }
+  return el;
+};
+
 /**
  * ICE servers — Google STUN (free, no account) + OpenRelay public TURN (no account, no keys).
  * OpenRelay is a community TURN server maintained by Metered — the public credentials
@@ -130,13 +144,14 @@ export function useWebRTC({ socket, callId, onSpeakingChange }) {
       let audio = remoteAudiosRef.current.get(remoteSocketId);
       if (!audio) {
         audio = document.createElement('audio');
-        audio.style.display = 'none';
-        document.body.appendChild(audio);
+        // Use off-screen positioning instead of display:none — on Android Chrome,
+        // display:none on a live MediaStream element causes rendering glitches where
+        // the media pipeline bleeds through the page layout.
+        audio.style.cssText = 'position:fixed;left:-9999px;top:-9999px;width:1px;height:1px;pointer-events:none;';
+        getAudioContainer().appendChild(audio);
         remoteAudiosRef.current.set(remoteSocketId, audio);
       }
       audio.srcObject = stream;
-      // Explicit play() is required — setting srcObject alone does not reliably
-      // trigger playback after the element is already attached to the DOM.
       audio.play().catch(err => console.warn('Remote audio play blocked:', err));
       attachAnalyser(remoteSocketId, stream);
       startSpeakingDetection();

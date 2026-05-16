@@ -4,26 +4,14 @@ import { useDashboardTheme } from '../../../../utils/dashboardTheme';
 import { ORG } from '../../../../utils/homeConstants';
 import useAdminAuth from '../../../../context/AdminAuthContext';
 
-/**
- * Full-screen active call UI.
- * Shown when callState === 'active'.
- *
- * Props:
- *   callInfo            — { callId, conversationId, callerName, callType }
- *   participants        — Map<socketId, { userId, userType, name }>
- *   isMuted             — boolean
- *   speakingPeers       — Set<id>  ('self' | socketId)
- *   conversationMembers — array of conversation participants (for add-to-call panel)
- *   onEnd               — () => void
- *   onToggleMute        — () => void
- *   onInvite            — (userId, userType) => void
- */
 const ActiveCallModal = ({
   callInfo,
   participants,
   isMuted,
   speakingPeers,
   conversationMembers = [],
+  onlineUsers = new Map(),   // Map<userId, { userType }>
+  pendingInvites = new Map(), // Map<"userId:userType", { name, invitedAt, timerId }>
   onEnd,
   onToggleMute,
   onInvite,
@@ -52,17 +40,34 @@ const ActiveCallModal = ({
   // ── Add-to-call panel ───────────────────────────────────────────────────────
   const [showAddPanel, setShowAddPanel] = useState(false);
 
-  // IDs already in the call (self + remote participants)
+  // IDs already in the call (self + remote participants) — use String() to avoid type mismatches
   const inCallUserIds = new Set([
-    admin?.id,
-    ...Array.from(participants.values()).map(p => p.userId),
+    String(admin?.id || ''),
+    ...Array.from(participants.values()).map(p => String(p.userId)),
   ]);
 
-  // Conversation members not yet in the call
-  const availableToAdd = conversationMembers.filter(m => {
-    const id = m.participantId || m.id;
-    return !inCallUserIds.has(id);
-  });
+  // Conversation members not yet in the call and not pending
+  const availableToAdd = conversationMembers
+    .filter(m => {
+      const id = String(m.participantId || m.id || '');
+      if (!id) return false;
+      if (inCallUserIds.has(id)) return false;
+      return true;
+    })
+    .sort((a, b) => {
+      // Online members first
+      const aOnline = onlineUsers.has(String(a.participantId || a.id || ''));
+      const bOnline = onlineUsers.has(String(b.participantId || b.id || ''));
+      return bOnline - aOnline;
+    });
+
+  // Countdown state — ticks every second to update invite countdowns
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    if (pendingInvites.size === 0) return;
+    const t = setInterval(() => setTick(n => n + 1), 1000);
+    return () => clearInterval(t);
+  }, [pendingInvites.size]);
 
   // ── Participant tile ────────────────────────────────────────────────────────
   const Tile = ({ id, name, isSpeaking, isSelf = false }) => {
@@ -228,43 +233,91 @@ const ActiveCallModal = ({
             </button>
           </div>
 
-          {availableToAdd.length === 0 ? (
+          {conversationMembers.length === 0 ? (
             <p style={{ color: text3, fontSize: 13, textAlign: 'center', padding: '16px 0' }}>
-              No available participants to add
+              Loading participants...
+            </p>
+          ) : availableToAdd.length === 0 ? (
+            <p style={{ color: text3, fontSize: 13, textAlign: 'center', padding: '16px 0' }}>
+              Everyone in this conversation is already in the call
             </p>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {availableToAdd.map((member) => {
-                const id = member.participantId || member.id;
+                const id = String(member.participantId || member.id || '');
                 const type = member.participantType || 'ADMIN';
                 const name = member.name || member.adminName || id;
                 const initial = (name || '?').charAt(0).toUpperCase();
+                const isOnline = onlineUsers.has(id);
+                const pendingKey = `${id}:${type}`;
+                const pending = pendingInvites.get(pendingKey);
+                const countdown = pending
+                  ? Math.max(0, 25 - Math.floor((Date.now() - pending.invitedAt) / 1000))
+                  : null;
+
                 return (
                   <div key={`${type}-${id}`} style={{
                     display: 'flex', alignItems: 'center', gap: 12,
                     padding: '10px 14px',
                     background: bg3, borderRadius: 10,
+                    opacity: pending ? 0.75 : 1,
+                    transition: 'opacity 0.2s',
                   }}>
-                    <div style={{
-                      width: 38, height: 38, borderRadius: '50%',
-                      background: '#1a5c78',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: 15, fontWeight: 700, color: '#fff', flexShrink: 0,
-                    }}>
-                      {initial}
-                    </div>
-                    <span style={{ flex: 1, color: textC, fontSize: 14, fontWeight: 500 }}>{name}</span>
-                    <button
-                      onClick={() => { onInvite?.(id, type); setShowAddPanel(false); }}
-                      style={{
-                        width: 34, height: 34, borderRadius: '50%',
-                        background: '#22c55e', border: 'none', cursor: 'pointer',
+                    {/* Avatar with online dot */}
+                    <div style={{ position: 'relative', flexShrink: 0 }}>
+                      <div style={{
+                        width: 38, height: 38, borderRadius: '50%',
+                        background: '#1a5c78',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        flexShrink: 0,
-                      }}
-                    >
-                      <Phone size={15} color="#fff" />
-                    </button>
+                        fontSize: 15, fontWeight: 700, color: '#fff',
+                      }}>
+                        {initial}
+                      </div>
+                      <div style={{
+                        position: 'absolute', bottom: 0, right: 0,
+                        width: 11, height: 11, borderRadius: '50%',
+                        background: isOnline ? '#22c55e' : '#6b7280',
+                        border: `2px solid ${bg3}`,
+                      }} />
+                    </div>
+
+                    {/* Name + status */}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <span style={{ color: textC, fontSize: 14, fontWeight: 500, display: 'block' }}>
+                        {name}
+                      </span>
+                      <span style={{ fontSize: 11, color: pending ? ORG : (isOnline ? '#22c55e' : text3) }}>
+                        {pending ? `Calling... ${countdown}s` : (isOnline ? 'Online' : 'Offline')}
+                      </span>
+                    </div>
+
+                    {/* Invite / pending button */}
+                    {pending ? (
+                      <div style={{
+                        width: 34, height: 34, borderRadius: '50%',
+                        background: 'rgba(232,98,26,0.2)',
+                        border: `2px solid ${ORG}`,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        flexShrink: 0, fontSize: 11, color: ORG, fontWeight: 700,
+                      }}>
+                        {countdown}
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => { onInvite?.(id, type, name); }}
+                        style={{
+                          width: 34, height: 34, borderRadius: '50%',
+                          background: isOnline ? '#22c55e' : 'rgba(255,255,255,0.15)',
+                          border: 'none', cursor: 'pointer',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          flexShrink: 0,
+                          transition: 'background 0.2s',
+                        }}
+                        title={isOnline ? 'Invite to call' : 'Send push notification'}
+                      >
+                        <Phone size={15} color="#fff" />
+                      </button>
+                    )}
                   </div>
                 );
               })}

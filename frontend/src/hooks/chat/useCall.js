@@ -26,6 +26,10 @@ export function useCall() {
   const [conversationMembers, setConversationMembers] = useState([]);
   // Toast shown when someone calls while we're already in a call
   const [busyCallToast, setBusyCallToast] = useState(null);
+  // Online users — tracked here so ActiveCallModal can show who's online
+  const [onlineUsers, setOnlineUsers] = useState(new Map()); // userId → { userType }
+  // Pending invites — Map<"userId:userType", { name, invitedAt, timerId }>
+  const [pendingInvites, setPendingInvites] = useState(new Map());
 
   // Pending accept from service worker push notification
   const pendingSwAcceptRef = useRef(null);
@@ -106,6 +110,11 @@ export function useCall() {
       clearTimeout(noAnswerTimerRef.current);
       noAnswerTimerRef.current = null;
     }
+    // Clear all pending invite timers
+    setPendingInvites(prev => {
+      prev.forEach(invite => clearTimeout(invite.timerId));
+      return new Map();
+    });
     webrtc.cleanup();
     setCallState('idle');
     setCallInfo(null);
@@ -127,7 +136,7 @@ export function useCall() {
       // Pre-fetch members for the add panel
       fetchConversationMembers(conversationId);
 
-      // Auto-cancel after 30 seconds if nobody answers
+      // Auto-cancel after 25 seconds if nobody answers
       noAnswerTimerRef.current = setTimeout(() => {
         noAnswerTimerRef.current = null;
         setCallInfo(prev => {
@@ -135,7 +144,7 @@ export function useCall() {
           return prev;
         });
         resetCall();
-      }, 30000);
+      }, 25000);
     } catch (err) {
       console.error('Failed to get mic:', err);
       alert('Could not access microphone. Please grant permission.');
@@ -185,13 +194,24 @@ export function useCall() {
   }, [isMuted, webrtc]);
 
   // ── Invite someone mid-call ─────────────────────────────────────────────────
-  const inviteToCall = useCallback((targetUserId, targetUserType) => {
+  const inviteToCall = useCallback((targetUserId, targetUserType, targetName = '') => {
     const info = callInfoRef.current;
     if (!info?.callId) return;
-    emit('call:invite', {
-      callId: info.callId,
-      targetUserId,
-      targetUserType,
+    emit('call:invite', { callId: info.callId, targetUserId, targetUserType });
+
+    // Track the invite with a 25-second timeout
+    const key = `${targetUserId}:${targetUserType}`;
+    const timerId = setTimeout(() => {
+      setPendingInvites(prev => {
+        const next = new Map(prev);
+        next.delete(key);
+        return next;
+      });
+    }, 25000);
+    setPendingInvites(prev => {
+      const next = new Map(prev);
+      next.set(key, { name: targetName || targetUserId, invitedAt: Date.now(), timerId });
+      return next;
     });
   }, [emit]);
 
@@ -315,6 +335,15 @@ export function useCall() {
 
   // ── Socket event: someone else joined ──────────────────────────────────────
   useSocketEvent('call:participant-joined', (data) => {
+    // Clear any pending invite for this person
+    const inviteKey = `${data.userId}:${data.userType}`;
+    setPendingInvites(prev => {
+      const invite = prev.get(inviteKey);
+      if (invite) clearTimeout(invite.timerId);
+      const next = new Map(prev);
+      next.delete(inviteKey);
+      return next;
+    });
     setParticipants(prev => {
       const next = new Map(prev);
       next.set(data.participantSocketId, {
@@ -397,6 +426,21 @@ export function useCall() {
     return () => navigator.serviceWorker.removeEventListener('message', handler);
   }, [answerCall, declineCall]);
 
+  // ── Online users — track who's online so ActiveCallModal can show status ────
+  useSocketEvent('online:users', (data) => {
+    setOnlineUsers(new Map((data.users || []).map(u => [u.userId, { userType: u.userType }])));
+  });
+
+  useSocketEvent('user:status', (data) => {
+    const { userId, userType, status } = data;
+    setOnlineUsers(prev => {
+      const next = new Map(prev);
+      if (status === 'online') next.set(userId, { userType });
+      else next.delete(userId);
+      return next;
+    });
+  });
+
   // ── Socket reconnect watchdog ────────────────────────────────────────────────
   // When the socket reconnects, the backend will send call:rejoin-needed if the call
   // still exists. If it doesn't send anything within 5 seconds (e.g. server restarted
@@ -440,6 +484,8 @@ export function useCall() {
     isMuted,
     speakingPeers,
     busyCallToast,
+    onlineUsers,
+    pendingInvites,
     initiateCall,
     answerCall,
     declineCall,

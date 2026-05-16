@@ -1,7 +1,14 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { WifiOff } from 'lucide-react';
 
-const CHECK_URL = (import.meta.env.VITE_API_URL || '') + '/api/health';
+// Try these in order — first reachable one wins.
+// All return quickly with a tiny response and have near-100% uptime.
+const PROBE_URLS = [
+  'https://www.gstatic.com/generate_204',   // Google — returns HTTP 204, zero body
+  'https://one.one.one.one/cdn-cgi/trace',  // Cloudflare 1.1.1.1
+  'https://httpbin.org/get',                // fallback
+];
+
 const CHECK_INTERVAL = 10_000; // 10 s while offline
 
 export default function OfflineBanner() {
@@ -9,16 +16,21 @@ export default function OfflineBanner() {
   const timerRef = useRef(null);
 
   const checkConnectivity = useCallback(async () => {
-    try {
-      await fetch(CHECK_URL, {
-        method: 'HEAD',
-        cache: 'no-store',
-        signal: AbortSignal.timeout(5000),
-      });
-      setOffline(false);
-    } catch {
-      setOffline(true);
+    for (const url of PROBE_URLS) {
+      try {
+        await fetch(url, {
+          method: 'HEAD',
+          mode: 'no-cors',  // avoids CORS errors — we only care that the request completes
+          cache: 'no-store',
+          signal: AbortSignal.timeout(5000),
+        });
+        setOffline(false);
+        return;
+      } catch {
+        // try next probe
+      }
     }
+    setOffline(true);
   }, []);
 
   useEffect(() => {
