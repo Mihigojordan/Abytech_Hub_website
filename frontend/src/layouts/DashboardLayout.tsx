@@ -25,7 +25,7 @@ const DashboardInner = ({ role, isOpen, onToggle }) => {
     callState,
     callInfo,
     participants: callParticipants,
-    conversationMembers,
+    allAdmins,
     isMuted,
     speakingPeers,
     busyCallToast,
@@ -110,7 +110,7 @@ const DashboardInner = ({ role, isOpen, onToggle }) => {
           participants={callParticipants}
           isMuted={isMuted}
           speakingPeers={speakingPeers}
-          conversationMembers={conversationMembers}
+          allAdmins={allAdmins}
           onlineUsers={onlineUsers}
           pendingInvites={pendingInvites}
           isVideoEnabled={isVideoEnabled}

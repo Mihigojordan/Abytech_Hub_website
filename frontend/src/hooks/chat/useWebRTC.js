@@ -26,7 +26,7 @@ const ICE_SERVERS = [
   },
 ];
 
-export function useWebRTC({ socket, callId, onSpeakingChange, onRemoteVideoStream }) {
+export function useWebRTC({ socket, callId, onSpeakingChange, onRemoteVideoStream, onVideoTrackEnded }) {
   const peersRef              = useRef(new Map()); // socketId → RTCPeerConnection
   const localStreamRef        = useRef(null);      // mic-only MediaStream
   const localVideoStreamRef   = useRef(null);      // camera MediaStream (null when off)
@@ -260,12 +260,24 @@ export function useWebRTC({ socket, callId, onSpeakingChange, onRemoteVideoStrea
     });
     localVideoStreamRef.current = stream;
     const [videoTrack] = stream.getTracks();
+
+    // If the OS/browser force-stops the camera (permission revoked, device unplugged),
+    // tell all remote peers the video is gone and notify the app to update UI state.
+    videoTrack.onended = () => {
+      peersRef.current.forEach((pc) => {
+        const sender = pc.getSenders().find(s => s.track?.kind === 'video');
+        if (sender) sender.replaceTrack(null).catch(() => {});
+      });
+      localVideoStreamRef.current = null;
+      onVideoTrackEnded?.();
+    };
+
     // Add video track to every existing peer connection — onnegotiationneeded fires and renegotiates
     peersRef.current.forEach((pc) => {
       pc.addTrack(videoTrack, stream);
     });
     return stream;
-  }, []);
+  }, [onVideoTrackEnded]);
 
   // ── Disable camera — replaces video sender track with null (no renegotiation) ─
   const disableVideo = useCallback(() => {

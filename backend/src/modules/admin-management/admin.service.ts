@@ -120,10 +120,11 @@ export class AdminService {
 
   async findAll() {
     try {
-      return await this.prisma.admin.findMany({
-
+      const admins = await this.prisma.admin.findMany({
         orderBy: { createdAt: 'desc' },
       });
+      // Strip password hash and internal Cloudinary public IDs before sending to client
+      return admins.map(({ password, identityCardPublicId, passportPublicId, cvPublicId, profileImagePublicId, google_id, ...safe }) => safe);
     } catch (error) {
       throw new BadRequestException('Failed to fetch all admins : ' + error.message);
     }

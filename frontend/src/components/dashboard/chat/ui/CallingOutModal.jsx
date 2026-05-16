@@ -1,22 +1,12 @@
-import { useEffect, useState } from 'react';
 import { PhoneOff } from 'lucide-react';
 import { ORG } from '../../../../utils/homeConstants';
-
-const TIMEOUT_S = 25;
 
 /**
  * Full-screen overlay shown when the local user initiated a call
  * and is waiting for someone to answer (callState === 'ringing-out').
+ * No countdown — the caller decides when to cancel.
  */
 const CallingOutModal = ({ callInfo, onCancel }) => {
-  const [elapsed, setElapsed] = useState(0);
-  const remaining = TIMEOUT_S - elapsed;
-
-  useEffect(() => {
-    const t = setInterval(() => setElapsed(s => s + 1), 1000);
-    return () => clearInterval(t);
-  }, []);
-
   const bg    = '#0E1A24';
   const textC = '#ffffff';
   const text2 = 'rgba(255,255,255,0.65)';
@@ -64,32 +54,9 @@ const CallingOutModal = ({ callInfo, onCancel }) => {
         {callInfo?.callerName || 'Group Call'}
       </h1>
 
-      <p style={{ color: text2, fontSize: 14, margin: '0 0 16px' }}>
+      <p style={{ color: text2, fontSize: 14, margin: '0 0 48px' }}>
         Calling... Waiting for someone to answer
       </p>
-
-      {/* Countdown ring */}
-      <div style={{ position: 'relative', width: 64, height: 64, marginBottom: 48 }}>
-        <svg width="64" height="64" style={{ transform: 'rotate(-90deg)' }}>
-          <circle cx="32" cy="32" r="28" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="4" />
-          <circle
-            cx="32" cy="32" r="28" fill="none"
-            stroke={ORG} strokeWidth="4"
-            strokeDasharray={`${2 * Math.PI * 28}`}
-            strokeDashoffset={`${2 * Math.PI * 28 * (1 - remaining / TIMEOUT_S)}`}
-            strokeLinecap="round"
-            style={{ transition: 'stroke-dashoffset 1s linear' }}
-          />
-        </svg>
-        <span style={{
-          position: 'absolute', inset: 0,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          color: remaining <= 5 ? '#ef4444' : textC,
-          fontSize: 18, fontWeight: 700,
-        }}>
-          {remaining > 0 ? remaining : 0}
-        </span>
-      </div>
 
       {/* Cancel button */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
@@ -111,7 +78,7 @@ const CallingOutModal = ({ callInfo, onCancel }) => {
       </div>
 
       <p style={{ color: text3, fontSize: 11, marginTop: 24 }}>
-        Call will end automatically if no one answers
+        You can end the call at any time
       </p>
 
       <style>{`

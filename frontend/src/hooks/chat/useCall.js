@@ -2,14 +2,13 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { useSocket, useSocketEvent } from '../../context/SocketContext';
 import useAdminAuth from '../../context/AdminAuthContext';
 import { useWebRTC } from './useWebRTC';
-import chatService from '../../services/chatService';
+import adminAuthService from '../../services/adminAuthService';
 
 /**
  * Call states:
- *   idle         — no call activity
- *   ringing-out  — we initiated, waiting for someone to answer
- *   ringing-in   — someone is calling us
- *   active       — call is live
+ *   idle       — no call activity
+ *   ringing-in — someone is calling us (incoming call banner)
+ *   active     — call is live (initiator enters this immediately on call start)
  */
 
 export function useCall() {
@@ -22,8 +21,8 @@ export function useCall() {
   const [participants, setParticipants] = useState(new Map());
   const [isMuted, setIsMuted] = useState(false);
   const [speakingPeers, setSpeakingPeers] = useState(new Set());
-  // Conversation members for the add-to-call panel
-  const [conversationMembers, setConversationMembers] = useState([]);
+  // All admins for the add-to-call panel (fetched once on mount)
+  const [allAdmins, setAllAdmins] = useState([]);
   // Toast shown when someone calls while we're already in a call
   const [busyCallToast, setBusyCallToast] = useState(null);
   // Online users — tracked here so ActiveCallModal can show who's online
@@ -44,10 +43,14 @@ export function useCall() {
     });
   }, []);
 
+  // Called by useWebRTC when the camera track is force-stopped by the OS/browser
+  const onVideoTrackEnded = useCallback(() => {
+    setIsVideoEnabled(false);
+    setLocalVideoStream(null);
+  }, []);
+
   // Pending accept from service worker push notification
   const pendingSwAcceptRef = useRef(null);
-  // 30-second no-answer timeout ref
-  const noAnswerTimerRef = useRef(null);
   // Refs to always have latest values in async callbacks
   const callInfoRef = useRef(null);
   const callStateRef = useRef('idle');
@@ -59,14 +62,14 @@ export function useCall() {
     callId: callInfo?.callId,
     onSpeakingChange: setSpeakingPeers,
     onRemoteVideoStream,
+    onVideoTrackEnded,
   });
 
-  // ── Fetch conversation members for the add-to-call panel ───────────────────
-  const fetchConversationMembers = useCallback(async (conversationId) => {
-    if (!conversationId) return;
+  // ── Fetch all admins for the add-to-call panel ─────────────────────────────
+  const fetchAllAdmins = useCallback(async () => {
     try {
-      const conv = await chatService.getConversation(conversationId);
-      if (conv?.participants) setConversationMembers(conv.participants);
+      const admins = await adminAuthService.getAllAdmins();
+      if (admins) setAllAdmins(admins);
     } catch { /* non-critical */ }
   }, []);
 
@@ -120,10 +123,6 @@ export function useCall() {
   const resetCall = useCallback(() => {
     stopRingtone();
     stopVibration();
-    if (noAnswerTimerRef.current) {
-      clearTimeout(noAnswerTimerRef.current);
-      noAnswerTimerRef.current = null;
-    }
     // Clear all pending invite timers
     setPendingInvites(prev => {
       prev.forEach(invite => clearTimeout(invite.timerId));
@@ -135,7 +134,6 @@ export function useCall() {
     setParticipants(new Map());
     setIsMuted(false);
     setSpeakingPeers(new Set());
-    setConversationMembers([]);
     setIsVideoEnabled(false);
     setLocalVideoStream(null);
     setRemoteVideoStreams(new Map());
@@ -147,27 +145,17 @@ export function useCall() {
     try {
       await webrtc.getLocalStream();
       const callerName = admin?.adminName || admin?.name || 'Unknown';
+      // Go straight to active — the caller is in the call immediately.
+      // Others who accept will join them; no "waiting" screen is shown.
+      setCallInfo({ callerName, conversationId: String(conversationId) });
+      setCallState('active');
       emit('call:initiate', { conversationId: String(conversationId), callType: 'audio', callerName });
-      setCallState('ringing-out');
-      playRingtone();
-      // Pre-fetch members for the add panel
-      fetchConversationMembers(conversationId);
-
-      // Auto-cancel after 25 seconds if nobody answers
-      noAnswerTimerRef.current = setTimeout(() => {
-        noAnswerTimerRef.current = null;
-        setCallInfo(prev => {
-          if (prev?.callId) emit('call:end', { callId: prev.callId });
-          return prev;
-        });
-        resetCall();
-      }, 25000);
     } catch (err) {
       console.error('Failed to get mic:', err);
       alert('Could not access microphone. Please grant permission.');
       webrtc.cleanup();
     }
-  }, [callState, webrtc, admin, emit, playRingtone, resetCall, fetchConversationMembers]);
+  }, [callState, webrtc, admin, emit]);
 
   // ── Answer an incoming call ─────────────────────────────────────────────────
   const answerCall = useCallback(async () => {
@@ -279,7 +267,8 @@ export function useCall() {
 
   // ── Socket event: call confirmed initiated ──────────────────────────────────
   useSocketEvent('call:initiated', (data) => {
-    setCallInfo(prev => ({ ...prev, callId: data.callId, conversationId: data.conversationId }));
+    // Merge in callId only — callerName and conversationId already set in initiateCall
+    setCallInfo(prev => ({ ...prev, callId: data.callId }));
     // Host joins their own call immediately
     emit('call:answer', { callId: data.callId });
   });
@@ -306,8 +295,6 @@ export function useCall() {
     setCallState('ringing-in');
     playRingtone();
     startVibration();
-    // Pre-fetch members for the add panel
-    fetchConversationMembers(data.conversationId);
 
     // Auto-answer if push notification was tapped (pendingSwAccept set before socket connected)
     if (pendingSwAcceptRef.current?.callId === data.callId) {
@@ -336,7 +323,6 @@ export function useCall() {
       setCallState('ringing-in');
       playRingtone();
       startVibration();
-      fetchConversationMembers(data.conversationId);
     }
   });
 
@@ -344,14 +330,8 @@ export function useCall() {
   useSocketEvent('call:joined', async (data) => {
     stopRingtone();
     stopVibration();
-    if (noAnswerTimerRef.current) {
-      clearTimeout(noAnswerTimerRef.current);
-      noAnswerTimerRef.current = null;
-    }
     setCallInfo(prev => ({ ...prev, ...data }));
     setCallState('active');
-    // Fetch members if not already loaded
-    if (data.conversationId) fetchConversationMembers(data.conversationId);
 
     const initialMap = new Map();
     for (const p of (data.existingParticipants || [])) {
@@ -397,7 +377,8 @@ export function useCall() {
       const next = new Map(prev);
       next.delete(data.participantSocketId);
       if (next.size === 0) {
-        setTimeout(() => endCall(), 0);
+        // Backend already ended the call when last participant left — just clean up locally
+        setTimeout(() => resetCall(), 0);
       }
       return next;
     });
@@ -421,6 +402,9 @@ export function useCall() {
   useSocketEvent('call:ice-candidate', (data) => {
     webrtc.addIceCandidate({ senderSocketId: data.senderSocketId, candidate: data.candidate });
   });
+
+  // ── Load all admins once on mount for the add-to-call panel ────────────────
+  useEffect(() => { fetchAllAdmins(); }, [fetchAllAdmins]);
 
   // ── Handle ?call=<callId> URL param on fresh page load ─────────────────────
   // When the user opens the app from a push notification, the URL contains
@@ -515,7 +499,7 @@ export function useCall() {
     callState,
     callInfo,
     participants,
-    conversationMembers,
+    allAdmins,
     isMuted,
     speakingPeers,
     busyCallToast,

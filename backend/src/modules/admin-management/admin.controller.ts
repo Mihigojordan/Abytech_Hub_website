@@ -46,6 +46,7 @@ export class AdminController {
   }
 
     @Get()
+    @UseGuards(AdminJwtAuthGuard)
     async findAll() {
         try {
      return this.adminServices.findAll();

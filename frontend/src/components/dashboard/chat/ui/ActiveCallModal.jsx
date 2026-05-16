@@ -166,7 +166,7 @@ const ActiveCallModal = ({
   participants,
   isMuted,
   speakingPeers,
-  conversationMembers = [],
+  allAdmins      = [],
   onlineUsers    = new Map(),
   pendingInvites = new Map(),
   isVideoEnabled = false,
@@ -199,6 +199,7 @@ const ActiveCallModal = ({
 
   // ── Add-to-call panel ───────────────────────────────────────────────────────
   const [showAddPanel, setShowAddPanel] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Countdown tick for pending invite display
   const [, setTick] = useState(0);
@@ -213,15 +214,22 @@ const ActiveCallModal = ({
     ...Array.from(participants.values()).map(p => String(p.userId)),
   ]);
 
-  const availableToAdd = conversationMembers
+  const availableToAdd = allAdmins
     .filter(m => {
-      const id = String(m.participantId || m.id || '');
+      const id = String(m.id || '');
       return id && !inCallUserIds.has(id);
     })
+    .filter(m => {
+      if (!searchQuery.trim()) return true;
+      const q = searchQuery.toLowerCase();
+      return (m.adminName || '').toLowerCase().includes(q) ||
+             (m.adminEmail || '').toLowerCase().includes(q);
+    })
     .sort((a, b) => {
-      const aOnline = onlineUsers.has(String(a.participantId || a.id || ''));
-      const bOnline = onlineUsers.has(String(b.participantId || b.id || ''));
-      return bOnline - aOnline;
+      // Real-time online map takes priority; fall back to DB isOnline field
+      const aOnline = onlineUsers.has(String(a.id)) || !!a.isOnline;
+      const bOnline = onlineUsers.has(String(b.id)) || !!b.isOnline;
+      return Number(bOnline) - Number(aOnline);
     });
 
   // ── Responsive grid columns ─────────────────────────────────────────────────
@@ -252,6 +260,11 @@ const ActiveCallModal = ({
           <p style={{ color: textC, fontSize: 16, fontWeight: 800, margin: '2px 0 0' }}>
             {callInfo?.callerName || 'Group Call'}
           </p>
+          {totalRemote === 0 && (
+            <p style={{ color: text3, fontSize: 11, margin: '4px 0 0', fontStyle: 'italic' }}>
+              Waiting for others to join…
+            </p>
+          )}
         </div>
         <div style={{ textAlign: 'right' }}>
           <p style={{ color: ORG, fontSize: 22, fontWeight: 800, margin: 0, fontVariantNumeric: 'tabular-nums' }}>
@@ -349,27 +362,42 @@ const ActiveCallModal = ({
           maxHeight: '55vh', overflowY: 'auto',
           zIndex: 10,
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
             <h3 style={{ color: textC, fontSize: 14, fontWeight: 700, margin: 0 }}>Add to call</h3>
             <button onClick={() => setShowAddPanel(false)} style={{ background: 'none', border: 'none', color: text2, cursor: 'pointer', padding: 4 }}>
               <X size={16} />
             </button>
           </div>
 
-          {conversationMembers.length === 0 ? (
-            <p style={{ color: text3, fontSize: 13, textAlign: 'center', padding: '12px 0' }}>Loading participants...</p>
+          {/* Search box */}
+          <input
+            type="text"
+            placeholder="Search admins..."
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            style={{
+              width: '100%', boxSizing: 'border-box',
+              padding: '8px 12px', marginBottom: 12,
+              background: bg3, border: `1px solid rgba(255,255,255,0.1)`,
+              borderRadius: 8, color: textC, fontSize: 13, outline: 'none',
+            }}
+          />
+
+          {allAdmins.length === 0 ? (
+            <p style={{ color: text3, fontSize: 13, textAlign: 'center', padding: '12px 0' }}>Loading admins...</p>
           ) : availableToAdd.length === 0 ? (
             <p style={{ color: text3, fontSize: 13, textAlign: 'center', padding: '12px 0' }}>
-              Everyone in this conversation is already in the call
+              {searchQuery.trim() ? 'No admins match your search' : 'Everyone is already in the call'}
             </p>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {availableToAdd.map((member) => {
-                const id      = String(member.participantId || member.id || '');
-                const type    = member.participantType || 'ADMIN';
-                const name    = member.name || member.adminName || id;
+                const id      = String(member.id || '');
+                const type    = 'ADMIN';
+                const name    = member.adminName || member.adminEmail || id;
                 const initial = (name || '?').charAt(0).toUpperCase();
-                const isOnline   = onlineUsers.has(id);
+                // Real-time online map first, then DB isOnline as fallback
+                const isOnline   = onlineUsers.has(id) || !!member.isOnline;
                 const pendingKey = `${id}:${type}`;
                 const pending    = pendingInvites.get(pendingKey);
                 const countdown  = pending ? Math.max(0, 25 - Math.floor((Date.now() - pending.invitedAt) / 1000)) : null;
