@@ -30,6 +30,19 @@ export function useCall() {
   const [onlineUsers, setOnlineUsers] = useState(new Map()); // userId → { userType }
   // Pending invites — Map<"userId:userType", { name, invitedAt, timerId }>
   const [pendingInvites, setPendingInvites] = useState(new Map());
+  // Video state
+  const [isVideoEnabled, setIsVideoEnabled] = useState(false);
+  const [localVideoStream, setLocalVideoStream] = useState(null);
+  const [remoteVideoStreams, setRemoteVideoStreams] = useState(new Map()); // socketId → MediaStream
+
+  const onRemoteVideoStream = useCallback((socketId, stream) => {
+    setRemoteVideoStreams(prev => {
+      const next = new Map(prev);
+      if (stream) next.set(socketId, stream);
+      else next.delete(socketId);
+      return next;
+    });
+  }, []);
 
   // Pending accept from service worker push notification
   const pendingSwAcceptRef = useRef(null);
@@ -45,6 +58,7 @@ export function useCall() {
     socket,
     callId: callInfo?.callId,
     onSpeakingChange: setSpeakingPeers,
+    onRemoteVideoStream,
   });
 
   // ── Fetch conversation members for the add-to-call panel ───────────────────
@@ -122,6 +136,9 @@ export function useCall() {
     setIsMuted(false);
     setSpeakingPeers(new Set());
     setConversationMembers([]);
+    setIsVideoEnabled(false);
+    setLocalVideoStream(null);
+    setRemoteVideoStreams(new Map());
   }, [stopRingtone, stopVibration, webrtc]);
 
   // ── Initiate a call ─────────────────────────────────────────────────────────
@@ -192,6 +209,24 @@ export function useCall() {
     setIsMuted(next);
     webrtc.setMuted(next);
   }, [isMuted, webrtc]);
+
+  // ── Toggle camera ────────────────────────────────────────────────────────────
+  const toggleVideo = useCallback(async () => {
+    if (isVideoEnabled) {
+      webrtc.disableVideo();
+      setIsVideoEnabled(false);
+      setLocalVideoStream(null);
+    } else {
+      try {
+        const stream = await webrtc.enableVideo();
+        setIsVideoEnabled(true);
+        setLocalVideoStream(stream);
+      } catch (err) {
+        console.error('Camera access failed:', err);
+        alert('Could not access camera. Please grant camera permission.');
+      }
+    }
+  }, [isVideoEnabled, webrtc]);
 
   // ── Invite someone mid-call ─────────────────────────────────────────────────
   const inviteToCall = useCallback((targetUserId, targetUserType, targetName = '') => {
@@ -486,11 +521,15 @@ export function useCall() {
     busyCallToast,
     onlineUsers,
     pendingInvites,
+    isVideoEnabled,
+    localVideoStream,
+    remoteVideoStreams,
     initiateCall,
     answerCall,
     declineCall,
     endCall,
     toggleMute,
+    toggleVideo,
     inviteToCall,
     joinCallDirectly,
   };

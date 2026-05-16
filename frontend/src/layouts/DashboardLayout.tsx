@@ -31,10 +31,14 @@ const DashboardInner = ({ role, isOpen, onToggle }) => {
     busyCallToast,
     onlineUsers,
     pendingInvites,
+    isVideoEnabled,
+    localVideoStream,
+    remoteVideoStreams,
     answerCall,
     declineCall,
     endCall,
     toggleMute,
+    toggleVideo,
     inviteToCall,
   } = useCallContext();
 
@@ -109,8 +113,12 @@ const DashboardInner = ({ role, isOpen, onToggle }) => {
           conversationMembers={conversationMembers}
           onlineUsers={onlineUsers}
           pendingInvites={pendingInvites}
+          isVideoEnabled={isVideoEnabled}
+          localVideoStream={localVideoStream}
+          remoteVideoStreams={remoteVideoStreams}
           onEnd={endCall}
           onToggleMute={toggleMute}
+          onToggleVideo={toggleVideo}
           onInvite={inviteToCall}
         />
       )}

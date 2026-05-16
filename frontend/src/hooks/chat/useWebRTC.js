@@ -1,8 +1,5 @@
 import { useRef, useCallback, useEffect } from 'react';
 
-// Lazily creates a single off-screen container for all remote <audio> elements.
-// Off-screen (not display:none) prevents Android Chrome from leaking media
-// pipeline rendering artifacts through the page layout.
 const getAudioContainer = () => {
   let el = document.getElementById('__webrtc_audio_sink__');
   if (!el) {
@@ -14,11 +11,6 @@ const getAudioContainer = () => {
   return el;
 };
 
-/**
- * ICE servers — Google STUN (free, no account) + OpenRelay public TURN (no account, no keys).
- * OpenRelay is a community TURN server maintained by Metered — the public credentials
- * below are intentionally public and require no sign-up.
- */
 const ICE_SERVERS = [
   { urls: 'stun:stun.l.google.com:19302' },
   { urls: 'stun:stun1.l.google.com:19302' },
@@ -34,31 +26,17 @@ const ICE_SERVERS = [
   },
 ];
 
-/**
- * useWebRTC — manages the WebRTC mesh for audio calls.
- *
- * Exposes:
- *   peers            Map<socketId, RTCPeerConnection>
- *   localStreamRef   ref to the local MediaStream
- *   remoteAudios     Map<socketId, HTMLAudioElement>
- *   analysers        Map<id, AnalyserNode>  ('self' + socketId per peer)
- *   speakingRef      ref to Set<id> of currently speaking participants
- *   createOfferTo    (socketId) → creates PC + offer → emits call:offer
- *   handleOffer      (data)     → creates PC + answer → emits call:answer-sdp
- *   handleAnswer     (data)     → sets remote description
- *   addIceCandidate  (socketId, candidate)
- *   cleanup          ()         → closes everything
- */
-export function useWebRTC({ socket, callId, onSpeakingChange }) {
-  const peersRef = useRef(new Map());               // socketId → RTCPeerConnection
-  const localStreamRef = useRef(null);
-  const remoteAudiosRef = useRef(new Map());        // socketId → HTMLAudioElement
-  const audioCtxRef = useRef(null);
-  const analysersRef = useRef(new Map());           // 'self' | socketId → AnalyserNode
-  const speakingRef = useRef(new Set());
-  const rafRef = useRef(null);
-  // ICE candidates that arrive before setRemoteDescription completes are queued here
-  const pendingCandidatesRef = useRef(new Map());  // socketId → RTCIceCandidateInit[]
+export function useWebRTC({ socket, callId, onSpeakingChange, onRemoteVideoStream }) {
+  const peersRef              = useRef(new Map()); // socketId → RTCPeerConnection
+  const localStreamRef        = useRef(null);      // mic-only MediaStream
+  const localVideoStreamRef   = useRef(null);      // camera MediaStream (null when off)
+  const remoteAudiosRef       = useRef(new Map()); // socketId → HTMLAudioElement
+  const remoteVideoStreamsRef = useRef(new Map()); // socketId → MediaStream (video)
+  const audioCtxRef           = useRef(null);
+  const analysersRef          = useRef(new Map()); // 'self' | socketId → AnalyserNode
+  const speakingRef           = useRef(new Set());
+  const rafRef                = useRef(null);
+  const pendingCandidatesRef  = useRef(new Map()); // socketId → RTCIceCandidateInit[]
 
   // ── AudioContext helpers ────────────────────────────────────────────────────
   const ensureAudioCtx = useCallback(() => {
@@ -76,16 +54,14 @@ export function useWebRTC({ socket, callId, onSpeakingChange }) {
     analyser.fftSize = 512;
     analyser.smoothingTimeConstant = 0.3;
     source.connect(analyser);
-    // Do NOT connect to destination — avoids echo
     analysersRef.current.set(id, analyser);
   }, [ensureAudioCtx]);
 
-  // ── Speaking detection RAF loop ─────────────────────────────────────────────
+  // ── Speaking detection ──────────────────────────────────────────────────────
   const startSpeakingDetection = useCallback(() => {
     if (rafRef.current) return;
     const data = new Uint8Array(512);
     const THRESHOLD = 18;
-
     const tick = () => {
       rafRef.current = requestAnimationFrame(tick);
       const nowSpeaking = new Set();
@@ -96,11 +72,8 @@ export function useWebRTC({ socket, callId, onSpeakingChange }) {
         for (let i = 0; i < bins; i++) sum += data[i];
         if (sum / bins > THRESHOLD) nowSpeaking.add(id);
       });
-      // Only call back if the set changed
       const prev = speakingRef.current;
-      const changed =
-        nowSpeaking.size !== prev.size ||
-        [...nowSpeaking].some(id => !prev.has(id));
+      const changed = nowSpeaking.size !== prev.size || [...nowSpeaking].some(id => !prev.has(id));
       if (changed) {
         speakingRef.current = nowSpeaking;
         onSpeakingChange?.(new Set(nowSpeaking));
@@ -119,47 +92,77 @@ export function useWebRTC({ socket, callId, onSpeakingChange }) {
   const createPeerConnection = useCallback((remoteSocketId) => {
     const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
 
-    // Add local tracks
+    // Add local audio tracks
     if (localStreamRef.current) {
       localStreamRef.current.getTracks().forEach(track =>
         pc.addTrack(track, localStreamRef.current)
       );
     }
 
-    // ICE candidates → relay via server
-    pc.onicecandidate = (e) => {
-      if (e.candidate && socket) {
-        socket.emit('call:ice-candidate', {
-          targetSocketId: remoteSocketId,
-          candidate: e.candidate,
-          callId,
-        });
+    // Add local video tracks if camera is already on
+    if (localVideoStreamRef.current) {
+      localVideoStreamRef.current.getTracks().forEach(track =>
+        pc.addTrack(track, localVideoStreamRef.current)
+      );
+    }
+
+    // Auto-renegotiate when a video track is added mid-call.
+    // Guard: only fire after the initial handshake (currentRemoteDescription is set).
+    let isNegotiating = false;
+    pc.onnegotiationneeded = async () => {
+      if (!pc.currentRemoteDescription || isNegotiating) return;
+      if (pc.signalingState !== 'stable') return;
+      isNegotiating = true;
+      try {
+        const offer = await pc.createOffer();
+        if (pc.signalingState !== 'stable') return;
+        await pc.setLocalDescription(offer);
+        socket?.emit('call:offer', { targetSocketId: remoteSocketId, offer, callId });
+      } catch (e) {
+        console.error('Renegotiation error:', e);
+      } finally {
+        isNegotiating = false;
       }
     };
 
-    // Remote audio track
-    pc.ontrack = (e) => {
-      // Fallback: Firefox sometimes delivers an empty streams array
-      const stream = e.streams[0] ?? new MediaStream([e.track]);
-      let audio = remoteAudiosRef.current.get(remoteSocketId);
-      if (!audio) {
-        audio = document.createElement('audio');
-        // Use off-screen positioning instead of display:none — on Android Chrome,
-        // display:none on a live MediaStream element causes rendering glitches where
-        // the media pipeline bleeds through the page layout.
-        audio.style.cssText = 'position:fixed;left:-9999px;top:-9999px;width:1px;height:1px;pointer-events:none;';
-        getAudioContainer().appendChild(audio);
-        remoteAudiosRef.current.set(remoteSocketId, audio);
+    // ICE candidates
+    pc.onicecandidate = (e) => {
+      if (e.candidate && socket) {
+        socket.emit('call:ice-candidate', { targetSocketId: remoteSocketId, candidate: e.candidate, callId });
       }
-      audio.srcObject = stream;
-      audio.play().catch(err => console.warn('Remote audio play blocked:', err));
-      attachAnalyser(remoteSocketId, stream);
-      startSpeakingDetection();
+    };
+
+    // Incoming tracks — handle audio and video separately
+    pc.ontrack = (e) => {
+      const stream = e.streams[0] ?? new MediaStream([e.track]);
+
+      if (e.track.kind === 'audio') {
+        let audio = remoteAudiosRef.current.get(remoteSocketId);
+        if (!audio) {
+          audio = document.createElement('audio');
+          audio.style.cssText = 'position:fixed;left:-9999px;top:-9999px;width:1px;height:1px;pointer-events:none;';
+          getAudioContainer().appendChild(audio);
+          remoteAudiosRef.current.set(remoteSocketId, audio);
+        }
+        audio.srcObject = stream;
+        audio.play().catch(err => console.warn('Remote audio play blocked:', err));
+        attachAnalyser(remoteSocketId, stream);
+        startSpeakingDetection();
+      } else if (e.track.kind === 'video') {
+        remoteVideoStreamsRef.current.set(remoteSocketId, stream);
+        onRemoteVideoStream?.(remoteSocketId, stream);
+
+        // When the remote turns their camera off (replaceTrack(null) → track mutes)
+        e.track.onmute = () => {
+          onRemoteVideoStream?.(remoteSocketId, null);
+        };
+        e.track.onunmute = () => {
+          onRemoteVideoStream?.(remoteSocketId, stream);
+        };
+      }
     };
 
     pc.onconnectionstatechange = () => {
-      // 'disconnected' is transient (wifi blip) — browser can self-recover.
-      // Only remove on terminal states.
       if (pc.connectionState === 'failed' || pc.connectionState === 'closed') {
         removePeer(remoteSocketId);
       }
@@ -167,7 +170,7 @@ export function useWebRTC({ socket, callId, onSpeakingChange }) {
 
     peersRef.current.set(remoteSocketId, pc);
     return pc;
-  }, [socket, callId, attachAnalyser, startSpeakingDetection]);
+  }, [socket, callId, attachAnalyser, startSpeakingDetection, onRemoteVideoStream]);
 
   // ── Remove a peer ───────────────────────────────────────────────────────────
   const removePeer = useCallback((socketId) => {
@@ -177,9 +180,11 @@ export function useWebRTC({ socket, callId, onSpeakingChange }) {
     if (audio) { audio.srcObject = null; audio.remove(); remoteAudiosRef.current.delete(socketId); }
     analysersRef.current.delete(socketId);
     pendingCandidatesRef.current.delete(socketId);
-  }, []);
+    remoteVideoStreamsRef.current.delete(socketId);
+    onRemoteVideoStream?.(socketId, null);
+  }, [onRemoteVideoStream]);
 
-  // ── Drain queued ICE candidates after setRemoteDescription completes ────────
+  // ── Drain queued ICE candidates ─────────────────────────────────────────────
   const drainPendingCandidates = useCallback(async (socketId) => {
     const pc = peersRef.current.get(socketId);
     const queue = pendingCandidatesRef.current.get(socketId);
@@ -191,7 +196,7 @@ export function useWebRTC({ socket, callId, onSpeakingChange }) {
     }
   }, []);
 
-  // ── Create offer (we initiate to an existing participant) ───────────────────
+  // ── Create offer ────────────────────────────────────────────────────────────
   const createOfferTo = useCallback(async (remoteSocketId) => {
     const pc = createPeerConnection(remoteSocketId);
     const offer = await pc.createOffer();
@@ -199,9 +204,11 @@ export function useWebRTC({ socket, callId, onSpeakingChange }) {
     socket?.emit('call:offer', { targetSocketId: remoteSocketId, offer, callId });
   }, [createPeerConnection, socket, callId]);
 
-  // ── Handle incoming offer (they initiated to us) ────────────────────────────
+  // ── Handle incoming offer (initial + renegotiation) ─────────────────────────
   const handleOffer = useCallback(async ({ callerSocketId, offer }) => {
-    const pc = createPeerConnection(callerSocketId);
+    // If PC already exists this is a renegotiation offer, otherwise initial
+    let pc = peersRef.current.get(callerSocketId);
+    if (!pc) pc = createPeerConnection(callerSocketId);
     await pc.setRemoteDescription(new RTCSessionDescription(offer));
     await drainPendingCandidates(callerSocketId);
     const answer = await pc.createAnswer();
@@ -218,10 +225,7 @@ export function useWebRTC({ socket, callId, onSpeakingChange }) {
     }
   }, [drainPendingCandidates]);
 
-  // ── Handle ICE candidate ────────────────────────────────────────────────────
-  // If the remote description isn't set yet (setRemoteDescription still in progress),
-  // queue the candidate and apply it once the description is ready. This mirrors
-  // what PeerJS does internally and is the fix for "connected but no audio."
+  // ── ICE candidate (queue if remote description not ready) ───────────────────
   const addIceCandidate = useCallback(async ({ senderSocketId, candidate }) => {
     const pc = peersRef.current.get(senderSocketId);
     if (!pc || !candidate) return;
@@ -238,11 +242,7 @@ export function useWebRTC({ socket, callId, onSpeakingChange }) {
   // ── Get local mic stream ────────────────────────────────────────────────────
   const getLocalStream = useCallback(async () => {
     const stream = await navigator.mediaDevices.getUserMedia({
-      audio: {
-        echoCancellation: true,
-        noiseSuppression: true,
-        autoGainControl: true,
-      },
+      audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
       video: false,
     });
     localStreamRef.current = stream;
@@ -251,25 +251,53 @@ export function useWebRTC({ socket, callId, onSpeakingChange }) {
     return stream;
   }, [attachAnalyser, startSpeakingDetection]);
 
-  // ── Mute / unmute ───────────────────────────────────────────────────────────
+  // ── Enable camera — adds video track to all existing peer connections ────────
+  const enableVideo = useCallback(async () => {
+    if (localVideoStreamRef.current) return localVideoStreamRef.current;
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: 'user' },
+      audio: false,
+    });
+    localVideoStreamRef.current = stream;
+    const [videoTrack] = stream.getTracks();
+    // Add video track to every existing peer connection — onnegotiationneeded fires and renegotiates
+    peersRef.current.forEach((pc) => {
+      pc.addTrack(videoTrack, stream);
+    });
+    return stream;
+  }, []);
+
+  // ── Disable camera — replaces video sender track with null (no renegotiation) ─
+  const disableVideo = useCallback(() => {
+    if (!localVideoStreamRef.current) return;
+    // replaceTrack(null) pauses the sender without renegotiation;
+    // remote peer's track fires onmute → their UI shows avatar tile.
+    peersRef.current.forEach((pc) => {
+      const sender = pc.getSenders().find(s => s.track?.kind === 'video');
+      if (sender) sender.replaceTrack(null).catch(() => {});
+    });
+    localVideoStreamRef.current.getTracks().forEach(t => t.stop());
+    localVideoStreamRef.current = null;
+  }, []);
+
+  // ── Mute / unmute mic ────────────────────────────────────────────────────────
   const setMuted = useCallback((muted) => {
     if (localStreamRef.current) {
       localStreamRef.current.getAudioTracks().forEach(t => { t.enabled = !muted; });
     }
   }, []);
 
-  // ── Cleanup peers only (keep local stream) — used for seamless call rejoin ──
+  // ── Cleanup peers only (keep local stream + camera) — used for rejoin ───────
   const cleanupPeers = useCallback(() => {
     peersRef.current.forEach(pc => pc.close());
     peersRef.current.clear();
     pendingCandidatesRef.current.clear();
     remoteAudiosRef.current.forEach(audio => { audio.srcObject = null; audio.remove(); });
     remoteAudiosRef.current.clear();
-    // Remove all analysers except 'self' (local stream stays connected)
-    analysersRef.current.forEach((_, id) => {
-      if (id !== 'self') analysersRef.current.delete(id);
-    });
-  }, []);
+    remoteVideoStreamsRef.current.forEach((_, sid) => onRemoteVideoStream?.(sid, null));
+    remoteVideoStreamsRef.current.clear();
+    analysersRef.current.forEach((_, id) => { if (id !== 'self') analysersRef.current.delete(id); });
+  }, [onRemoteVideoStream]);
 
   // ── Full cleanup ────────────────────────────────────────────────────────────
   const cleanup = useCallback(() => {
@@ -279,26 +307,34 @@ export function useWebRTC({ socket, callId, onSpeakingChange }) {
     pendingCandidatesRef.current.clear();
     remoteAudiosRef.current.forEach(audio => { audio.srcObject = null; audio.remove(); });
     remoteAudiosRef.current.clear();
+    remoteVideoStreamsRef.current.forEach((_, sid) => onRemoteVideoStream?.(sid, null));
+    remoteVideoStreamsRef.current.clear();
     if (localStreamRef.current) {
       localStreamRef.current.getTracks().forEach(t => t.stop());
       localStreamRef.current = null;
+    }
+    if (localVideoStreamRef.current) {
+      localVideoStreamRef.current.getTracks().forEach(t => t.stop());
+      localVideoStreamRef.current = null;
     }
     if (audioCtxRef.current && audioCtxRef.current.state !== 'closed') {
       audioCtxRef.current.close();
       audioCtxRef.current = null;
     }
-  }, [stopSpeakingDetection]);
+  }, [stopSpeakingDetection, onRemoteVideoStream]);
 
-  // Cleanup on unmount
   useEffect(() => () => cleanup(), [cleanup]);
 
   return {
     peersRef,
     localStreamRef,
+    localVideoStreamRef,
     remoteAudiosRef,
     analysersRef,
     speakingRef,
     getLocalStream,
+    enableVideo,
+    disableVideo,
     createOfferTo,
     handleOffer,
     handleAnswer,

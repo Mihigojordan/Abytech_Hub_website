@@ -1,22 +1,182 @@
-import { useState, useEffect, useRef } from 'react';
-import { PhoneOff, Mic, MicOff, UserPlus, X, Phone } from 'lucide-react';
-import { useDashboardTheme } from '../../../../utils/dashboardTheme';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { PhoneOff, Mic, MicOff, UserPlus, X, Phone, Video, VideoOff } from 'lucide-react';
 import { ORG } from '../../../../utils/homeConstants';
 import useAdminAuth from '../../../../context/AdminAuthContext';
 
+// ── Video tile — handles its own <video> ref ───────────────────────────────────
+const VideoTile = ({ videoStream, name, isSpeaking, isSelf, isMuted, isVideoEnabled }) => {
+  const videoRef = useRef(null);
+  const initial  = (name || '?').charAt(0).toUpperCase();
+
+  useEffect(() => {
+    if (videoRef.current) videoRef.current.srcObject = videoStream || null;
+  }, [videoStream]);
+
+  const bg2     = '#132332';
+  const textC   = '#ffffff';
+  const text2   = 'rgba(255,255,255,0.6)';
+  const hasVideo = !!videoStream && isVideoEnabled !== false;
+
+  return (
+    <div style={{
+      position: 'relative',
+      background: bg2,
+      borderRadius: 12,
+      border: `2px solid ${isSpeaking ? ORG : 'rgba(255,255,255,0.06)'}`,
+      overflow: 'hidden',
+      aspectRatio: '16/9',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      transition: 'border-color 0.2s, box-shadow 0.2s',
+      boxShadow: isSpeaking ? `0 0 20px ${ORG}50` : 'none',
+      minHeight: 0,
+    }}>
+      {/* Video element — always rendered, srcObject drives visibility */}
+      <video
+        ref={videoRef}
+        autoPlay
+        playsInline
+        muted={isSelf}
+        style={{
+          width: '100%',
+          height: '100%',
+          objectFit: 'cover',
+          display: hasVideo ? 'block' : 'none',
+          background: '#000',
+        }}
+      />
+
+      {/* Avatar shown when camera is off */}
+      {!hasVideo && (
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, padding: 16 }}>
+          <div style={{
+            width: 56, height: 56, borderRadius: '50%',
+            background: isSelf ? ORG : '#1a5c78',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 22, fontWeight: 800, color: '#fff',
+            border: `3px solid ${isSpeaking ? ORG : 'transparent'}`,
+            transition: 'border-color 0.2s',
+            flexShrink: 0,
+          }}>
+            {initial}
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <VideoOff size={12} color="rgba(255,255,255,0.4)" />
+            <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)' }}>Camera off</span>
+          </div>
+        </div>
+      )}
+
+      {/* Bottom name bar */}
+      <div style={{
+        position: 'absolute', bottom: 0, left: 0, right: 0,
+        background: 'linear-gradient(transparent, rgba(0,0,0,0.7))',
+        padding: '20px 10px 8px',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      }}>
+        <span style={{ color: textC, fontSize: 12, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {name}{isSelf ? ' (You)' : ''}
+        </span>
+        <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
+          {isSelf && isMuted && <MicOff size={12} color="#ef4444" />}
+          {isSpeaking && !isSelf && (
+            <div style={{ width: 8, height: 8, borderRadius: '50%', background: ORG, animation: 'pulse 1s infinite' }} />
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ── Self video PIP (picture-in-picture overlay) ────────────────────────────────
+const SelfPIP = ({ videoStream, name, isMuted, isVideoEnabled }) => {
+  const videoRef = useRef(null);
+  const [collapsed, setCollapsed] = useState(false);
+  const initial  = (name || '?').charAt(0).toUpperCase();
+  const hasVideo = !!videoStream && isVideoEnabled;
+
+  useEffect(() => {
+    if (videoRef.current) videoRef.current.srcObject = videoStream || null;
+  }, [videoStream]);
+
+  return (
+    <div
+      onClick={() => setCollapsed(c => !c)}
+      style={{
+        position: 'absolute',
+        bottom: 96, right: 16,
+        width: collapsed ? 48 : 140,
+        height: collapsed ? 48 : 79,
+        borderRadius: collapsed ? '50%' : 10,
+        overflow: 'hidden',
+        background: '#0a1929',
+        border: `2px solid rgba(255,255,255,0.15)`,
+        cursor: 'pointer',
+        zIndex: 20,
+        transition: 'width 0.25s, height 0.25s, border-radius 0.25s',
+        boxShadow: '0 4px 20px rgba(0,0,0,0.5)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}
+      title={collapsed ? 'Show your camera' : 'Minimise'}
+    >
+      <video
+        ref={videoRef}
+        autoPlay
+        playsInline
+        muted
+        style={{
+          width: '100%', height: '100%', objectFit: 'cover',
+          display: hasVideo ? 'block' : 'none',
+        }}
+      />
+      {(!hasVideo || collapsed) && (
+        <div style={{
+          position: 'absolute', inset: 0,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          background: hasVideo && collapsed ? 'transparent' : '#132332',
+        }}>
+          {!collapsed && (
+            <span style={{ color: '#fff', fontSize: 20, fontWeight: 800 }}>{initial}</span>
+          )}
+          {collapsed && (
+            <div style={{
+              width: 44, height: 44, borderRadius: '50%',
+              background: ORG,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 16, fontWeight: 800, color: '#fff',
+            }}>
+              {initial}
+            </div>
+          )}
+        </div>
+      )}
+      {!collapsed && isMuted && (
+        <div style={{ position: 'absolute', top: 4, right: 4, background: 'rgba(239,68,68,0.9)', borderRadius: '50%', padding: 2 }}>
+          <MicOff size={8} color="#fff" />
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ── Main component ─────────────────────────────────────────────────────────────
 const ActiveCallModal = ({
   callInfo,
   participants,
   isMuted,
   speakingPeers,
   conversationMembers = [],
-  onlineUsers = new Map(),   // Map<userId, { userType }>
-  pendingInvites = new Map(), // Map<"userId:userType", { name, invitedAt, timerId }>
+  onlineUsers    = new Map(),
+  pendingInvites = new Map(),
+  isVideoEnabled = false,
+  localVideoStream = null,
+  remoteVideoStreams = new Map(),
   onEnd,
   onToggleMute,
+  onToggleVideo,
   onInvite,
 }) => {
-  const { isDark } = useDashboardTheme();
   const { user: admin } = useAdminAuth();
 
   const bg    = '#0E1A24';
@@ -40,28 +200,7 @@ const ActiveCallModal = ({
   // ── Add-to-call panel ───────────────────────────────────────────────────────
   const [showAddPanel, setShowAddPanel] = useState(false);
 
-  // IDs already in the call (self + remote participants) — use String() to avoid type mismatches
-  const inCallUserIds = new Set([
-    String(admin?.id || ''),
-    ...Array.from(participants.values()).map(p => String(p.userId)),
-  ]);
-
-  // Conversation members not yet in the call and not pending
-  const availableToAdd = conversationMembers
-    .filter(m => {
-      const id = String(m.participantId || m.id || '');
-      if (!id) return false;
-      if (inCallUserIds.has(id)) return false;
-      return true;
-    })
-    .sort((a, b) => {
-      // Online members first
-      const aOnline = onlineUsers.has(String(a.participantId || a.id || ''));
-      const bOnline = onlineUsers.has(String(b.participantId || b.id || ''));
-      return bOnline - aOnline;
-    });
-
-  // Countdown state — ticks every second to update invite countdowns
+  // Countdown tick for pending invite display
   const [, setTick] = useState(0);
   useEffect(() => {
     if (pendingInvites.size === 0) return;
@@ -69,253 +208,221 @@ const ActiveCallModal = ({
     return () => clearInterval(t);
   }, [pendingInvites.size]);
 
-  // ── Participant tile ────────────────────────────────────────────────────────
-  const Tile = ({ id, name, isSpeaking, isSelf = false }) => {
-    const initial = (name || '?').charAt(0).toUpperCase();
-    return (
-      <div style={{
-        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10,
-        padding: '20px 16px',
-        background: bg2,
-        borderRadius: 16,
-        border: `2px solid ${isSpeaking ? ORG : 'transparent'}`,
-        transition: 'border-color 0.2s, box-shadow 0.2s',
-        minWidth: 120, maxWidth: 160,
-        boxShadow: isSpeaking ? `0 0 24px ${ORG}50` : 'none',
-      }}>
-        <div style={{
-          width: 60, height: 60, borderRadius: '50%',
-          background: isSelf ? ORG : '#1a5c78',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 24, fontWeight: 800, color: '#fff',
-          border: `3px solid ${isSpeaking ? ORG : 'transparent'}`,
-          transition: 'border-color 0.2s',
-          boxShadow: isSpeaking ? `0 0 12px ${ORG}80` : 'none',
-        }}>
-          {initial}
-        </div>
-        <span style={{
-          color: textC, fontSize: 13, fontWeight: 600,
-          textAlign: 'center', maxWidth: 120,
-          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-        }}>
-          {name}{isSelf ? ' (You)' : ''}
-        </span>
-        {isSelf && isMuted && (
-          <span style={{ color: '#ef4444', fontSize: 11 }}>🔇 Muted</span>
-        )}
-        {isSpeaking && !isSelf && (
-          <span style={{ color: ORG, fontSize: 11 }}>🎙 Speaking</span>
-        )}
-      </div>
-    );
-  };
+  const inCallUserIds = new Set([
+    String(admin?.id || ''),
+    ...Array.from(participants.values()).map(p => String(p.userId)),
+  ]);
 
-  const selfName = admin?.adminName || admin?.name || 'You';
-  const isSelfSpeaking = speakingPeers.has('self');
+  const availableToAdd = conversationMembers
+    .filter(m => {
+      const id = String(m.participantId || m.id || '');
+      return id && !inCallUserIds.has(id);
+    })
+    .sort((a, b) => {
+      const aOnline = onlineUsers.has(String(a.participantId || a.id || ''));
+      const bOnline = onlineUsers.has(String(b.participantId || b.id || ''));
+      return bOnline - aOnline;
+    });
+
+  // ── Responsive grid columns ─────────────────────────────────────────────────
   const participantArray = Array.from(participants.entries());
-  const totalCount = participantArray.length + 1; // +1 for self
+  const totalRemote      = participantArray.length;
+  const cols = totalRemote === 0 ? 1 : totalRemote === 1 ? 1 : totalRemote <= 4 ? 2 : 3;
+
+  const selfName     = admin?.adminName || admin?.name || 'You';
+  const isSelfSpeak  = speakingPeers.has('self');
 
   return (
     <div style={{
       position: 'fixed', inset: 0, zIndex: 9999,
       background: bg,
       display: 'flex', flexDirection: 'column',
-      alignItems: 'center',
     }}>
-
       {/* ── Header ── */}
       <div style={{
-        width: '100%', padding: '24px 32px',
+        padding: '16px 20px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         borderBottom: `1px solid rgba(255,255,255,0.06)`,
+        flexShrink: 0,
       }}>
         <div>
-          <p style={{ color: text3, fontSize: 11, letterSpacing: 2, textTransform: 'uppercase', margin: 0 }}>
-            Voice Call
+          <p style={{ color: text3, fontSize: 10, letterSpacing: 2, textTransform: 'uppercase', margin: 0 }}>
+            {isVideoEnabled ? 'Video Call' : 'Voice Call'}
           </p>
-          <p style={{ color: textC, fontSize: 20, fontWeight: 800, margin: '4px 0 0', letterSpacing: 0.5 }}>
+          <p style={{ color: textC, fontSize: 16, fontWeight: 800, margin: '2px 0 0' }}>
             {callInfo?.callerName || 'Group Call'}
           </p>
         </div>
         <div style={{ textAlign: 'right' }}>
-          <p style={{ color: ORG, fontSize: 26, fontWeight: 800, margin: 0, fontVariantNumeric: 'tabular-nums' }}>
+          <p style={{ color: ORG, fontSize: 22, fontWeight: 800, margin: 0, fontVariantNumeric: 'tabular-nums' }}>
             {formatTime(elapsed)}
           </p>
-          <p style={{ color: text2, fontSize: 12, margin: '4px 0 0' }}>
-            {totalCount} participant{totalCount !== 1 ? 's' : ''}
+          <p style={{ color: text2, fontSize: 11, margin: '2px 0 0' }}>
+            {totalRemote + 1} participant{totalRemote !== 0 ? 's' : ''}
           </p>
         </div>
       </div>
 
-      {/* ── Participant grid ── */}
+      {/* ── Video / Participant grid ── */}
       <div style={{
-        flex: 1, width: '100%', padding: '24px 32px',
-        display: 'flex', flexWrap: 'wrap', gap: 16,
-        alignContent: 'flex-start', justifyContent: 'center',
+        flex: 1,
+        padding: 12,
         overflowY: 'auto',
+        display: 'grid',
+        gridTemplateColumns: `repeat(${cols}, 1fr)`,
+        gap: 8,
+        alignContent: 'start',
+        position: 'relative',
       }}>
-        {/* Self */}
-        <Tile id="self" name={selfName} isSpeaking={isSelfSpeaking} isSelf />
-
-        {/* Remote participants — show real names */}
+        {/* Remote participants */}
         {participantArray.map(([socketId, p]) => (
-          <Tile
+          <VideoTile
             key={socketId}
-            id={socketId}
+            videoStream={remoteVideoStreams.get(socketId) || null}
             name={p.name || 'Participant'}
             isSpeaking={speakingPeers.has(socketId)}
+            isSelf={false}
+            isMuted={false}
           />
         ))}
+
+        {/* Self tile (only shown when no remote participants yet — otherwise use PIP) */}
+        {totalRemote === 0 && (
+          <VideoTile
+            videoStream={localVideoStream}
+            name={selfName}
+            isSpeaking={isSelfSpeak}
+            isSelf
+            isMuted={isMuted}
+            isVideoEnabled={isVideoEnabled}
+          />
+        )}
       </div>
+
+      {/* Self PIP — shown when there are remote participants */}
+      {totalRemote > 0 && (
+        <SelfPIP
+          videoStream={localVideoStream}
+          name={selfName}
+          isMuted={isMuted}
+          isVideoEnabled={isVideoEnabled}
+        />
+      )}
 
       {/* ── Controls ── */}
       <div style={{
-        padding: '24px 32px 32px',
-        display: 'flex', alignItems: 'center', gap: 20,
+        padding: '16px 20px 24px',
+        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16,
         borderTop: `1px solid rgba(255,255,255,0.06)`,
+        flexShrink: 0,
+        flexWrap: 'wrap',
       }}>
-
         {/* Mute */}
-        <ControlBtn
-          onClick={onToggleMute}
-          active={isMuted}
-          activeColor="#ef4444"
-          label={isMuted ? 'UNMUTE' : 'MUTE'}
-          text2={text2}
-        >
-          {isMuted ? <MicOff size={22} color="#fff" /> : <Mic size={22} color="#fff" />}
+        <ControlBtn onClick={onToggleMute} active={isMuted} activeColor="#ef4444" label={isMuted ? 'UNMUTE' : 'MUTE'} text2={text2}>
+          {isMuted ? <MicOff size={20} color="#fff" /> : <Mic size={20} color="#fff" />}
         </ControlBtn>
 
-        {/* Add participant */}
-        <ControlBtn
-          onClick={() => setShowAddPanel(p => !p)}
-          active={showAddPanel}
-          activeColor={ORG}
-          label="ADD"
-          text2={text2}
-        >
-          <UserPlus size={22} color="#fff" />
+        {/* Camera toggle */}
+        <ControlBtn onClick={onToggleVideo} active={!isVideoEnabled} activeColor="#374151" label={isVideoEnabled ? 'CAM OFF' : 'CAM ON'} text2={text2}>
+          {isVideoEnabled ? <Video size={20} color="#fff" /> : <VideoOff size={20} color="#fff" />}
         </ControlBtn>
 
         {/* End call */}
-        <ControlBtn
-          onClick={onEnd}
-          active
-          activeColor="#ef4444"
-          label="END"
-          text2={text2}
-          size={72}
-          shadow="0 8px 24px rgba(239,68,68,0.5)"
-        >
-          <PhoneOff size={28} color="#fff" />
+        <ControlBtn onClick={onEnd} active activeColor="#ef4444" label="END" text2={text2} size={68} shadow="0 8px 24px rgba(239,68,68,0.5)">
+          <PhoneOff size={26} color="#fff" />
+        </ControlBtn>
+
+        {/* Add participant */}
+        <ControlBtn onClick={() => setShowAddPanel(p => !p)} active={showAddPanel} activeColor={ORG} label="ADD" text2={text2}>
+          <UserPlus size={20} color="#fff" />
         </ControlBtn>
       </div>
 
-      {/* ── Add-to-call slide-up panel ── */}
+      {/* ── Add-to-call panel (slide up) ── */}
       {showAddPanel && (
         <div style={{
           position: 'absolute', bottom: 0, left: 0, right: 0,
           background: bg2,
           borderTop: `1px solid rgba(255,255,255,0.1)`,
-          borderRadius: '20px 20px 0 0',
-          padding: '20px 24px 32px',
-          maxHeight: '50vh', overflowY: 'auto',
+          borderRadius: '16px 16px 0 0',
+          padding: '16px 20px 32px',
+          maxHeight: '55vh', overflowY: 'auto',
           zIndex: 10,
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-            <h3 style={{ color: textC, fontSize: 15, fontWeight: 700, margin: 0 }}>Add to call</h3>
-            <button
-              onClick={() => setShowAddPanel(false)}
-              style={{ background: 'none', border: 'none', color: text2, cursor: 'pointer', padding: 4 }}
-            >
-              <X size={18} />
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+            <h3 style={{ color: textC, fontSize: 14, fontWeight: 700, margin: 0 }}>Add to call</h3>
+            <button onClick={() => setShowAddPanel(false)} style={{ background: 'none', border: 'none', color: text2, cursor: 'pointer', padding: 4 }}>
+              <X size={16} />
             </button>
           </div>
 
           {conversationMembers.length === 0 ? (
-            <p style={{ color: text3, fontSize: 13, textAlign: 'center', padding: '16px 0' }}>
-              Loading participants...
-            </p>
+            <p style={{ color: text3, fontSize: 13, textAlign: 'center', padding: '12px 0' }}>Loading participants...</p>
           ) : availableToAdd.length === 0 ? (
-            <p style={{ color: text3, fontSize: 13, textAlign: 'center', padding: '16px 0' }}>
+            <p style={{ color: text3, fontSize: 13, textAlign: 'center', padding: '12px 0' }}>
               Everyone in this conversation is already in the call
             </p>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {availableToAdd.map((member) => {
-                const id = String(member.participantId || member.id || '');
-                const type = member.participantType || 'ADMIN';
-                const name = member.name || member.adminName || id;
+                const id      = String(member.participantId || member.id || '');
+                const type    = member.participantType || 'ADMIN';
+                const name    = member.name || member.adminName || id;
                 const initial = (name || '?').charAt(0).toUpperCase();
-                const isOnline = onlineUsers.has(id);
+                const isOnline   = onlineUsers.has(id);
                 const pendingKey = `${id}:${type}`;
-                const pending = pendingInvites.get(pendingKey);
-                const countdown = pending
-                  ? Math.max(0, 25 - Math.floor((Date.now() - pending.invitedAt) / 1000))
-                  : null;
+                const pending    = pendingInvites.get(pendingKey);
+                const countdown  = pending ? Math.max(0, 25 - Math.floor((Date.now() - pending.invitedAt) / 1000)) : null;
 
                 return (
                   <div key={`${type}-${id}`} style={{
                     display: 'flex', alignItems: 'center', gap: 12,
-                    padding: '10px 14px',
+                    padding: '10px 12px',
                     background: bg3, borderRadius: 10,
                     opacity: pending ? 0.75 : 1,
-                    transition: 'opacity 0.2s',
                   }}>
-                    {/* Avatar with online dot */}
                     <div style={{ position: 'relative', flexShrink: 0 }}>
                       <div style={{
-                        width: 38, height: 38, borderRadius: '50%',
+                        width: 36, height: 36, borderRadius: '50%',
                         background: '#1a5c78',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: 15, fontWeight: 700, color: '#fff',
+                        fontSize: 14, fontWeight: 700, color: '#fff',
                       }}>
                         {initial}
                       </div>
                       <div style={{
                         position: 'absolute', bottom: 0, right: 0,
-                        width: 11, height: 11, borderRadius: '50%',
+                        width: 10, height: 10, borderRadius: '50%',
                         background: isOnline ? '#22c55e' : '#6b7280',
                         border: `2px solid ${bg3}`,
                       }} />
                     </div>
-
-                    {/* Name + status */}
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <span style={{ color: textC, fontSize: 14, fontWeight: 500, display: 'block' }}>
-                        {name}
-                      </span>
-                      <span style={{ fontSize: 11, color: pending ? ORG : (isOnline ? '#22c55e' : text3) }}>
+                      <span style={{ color: textC, fontSize: 13, fontWeight: 500, display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</span>
+                      <span style={{ fontSize: 10, color: pending ? ORG : (isOnline ? '#22c55e' : text3) }}>
                         {pending ? `Calling... ${countdown}s` : (isOnline ? 'Online' : 'Offline')}
                       </span>
                     </div>
-
-                    {/* Invite / pending button */}
                     {pending ? (
                       <div style={{
-                        width: 34, height: 34, borderRadius: '50%',
-                        background: 'rgba(232,98,26,0.2)',
-                        border: `2px solid ${ORG}`,
+                        width: 32, height: 32, borderRadius: '50%',
+                        background: 'rgba(232,98,26,0.2)', border: `2px solid ${ORG}`,
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        flexShrink: 0, fontSize: 11, color: ORG, fontWeight: 700,
-                      }}>
-                        {countdown}
-                      </div>
+                        fontSize: 10, color: ORG, fontWeight: 700, flexShrink: 0,
+                      }}>{countdown}</div>
                     ) : (
                       <button
-                        onClick={() => { onInvite?.(id, type, name); }}
+                        onClick={() => onInvite?.(id, type, name)}
                         style={{
-                          width: 34, height: 34, borderRadius: '50%',
-                          background: isOnline ? '#22c55e' : 'rgba(255,255,255,0.15)',
+                          width: 32, height: 32, borderRadius: '50%',
+                          background: isOnline ? '#22c55e' : 'rgba(255,255,255,0.12)',
                           border: 'none', cursor: 'pointer',
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
                           flexShrink: 0,
-                          transition: 'background 0.2s',
                         }}
                         title={isOnline ? 'Invite to call' : 'Send push notification'}
                       >
-                        <Phone size={15} color="#fff" />
+                        <Phone size={14} color="#fff" />
                       </button>
                     )}
                   </div>
@@ -325,13 +432,19 @@ const ActiveCallModal = ({
           )}
         </div>
       )}
+
+      <style>{`
+        @keyframes pulse {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50%       { opacity: 0.5; transform: scale(1.3); }
+        }
+      `}</style>
     </div>
   );
 };
 
-/* ── Reusable control button ─────────────────────────────────────────────── */
-const ControlBtn = ({ onClick, active, activeColor, label, text2, size = 60, shadow, children }) => (
-  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+const ControlBtn = ({ onClick, active, activeColor, label, text2, size = 56, shadow, children }) => (
+  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
     <button
       onClick={onClick}
       style={{
@@ -347,7 +460,7 @@ const ControlBtn = ({ onClick, active, activeColor, label, text2, size = 60, sha
     >
       {children}
     </button>
-    <span style={{ color: text2, fontSize: 11, letterSpacing: 1 }}>{label}</span>
+    <span style={{ color: text2, fontSize: 10, letterSpacing: 0.8 }}>{label}</span>
   </div>
 );
 
