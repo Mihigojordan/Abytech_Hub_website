@@ -9,7 +9,11 @@ const VideoTile = ({ videoStream, name, isSpeaking, isSelf, isMuted, isVideoEnab
   const initial  = (name || '?').charAt(0).toUpperCase();
 
   useEffect(() => {
-    if (videoRef.current) videoRef.current.srcObject = videoStream || null;
+    if (!videoRef.current) return;
+    videoRef.current.srcObject = videoStream || null;
+    // Calling load() after clearing srcObject forces the browser to discard
+    // the last decoded frame — without it the frozen image stays visible.
+    if (!videoStream) videoRef.current.load();
   }, [videoStream]);
 
   const bg2     = '#132332';
@@ -97,7 +101,9 @@ const SelfPIP = ({ videoStream, name, isMuted, isVideoEnabled }) => {
   const hasVideo = !!videoStream && isVideoEnabled;
 
   useEffect(() => {
-    if (videoRef.current) videoRef.current.srcObject = videoStream || null;
+    if (!videoRef.current) return;
+    videoRef.current.srcObject = videoStream || null;
+    if (!videoStream) videoRef.current.load();
   }, [videoStream]);
 
   return (
