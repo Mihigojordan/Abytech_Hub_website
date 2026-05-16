@@ -24,14 +24,18 @@ export function useCall() {
   const [speakingPeers, setSpeakingPeers] = useState(new Set());
   // Conversation members for the add-to-call panel
   const [conversationMembers, setConversationMembers] = useState([]);
+  // Toast shown when someone calls while we're already in a call
+  const [busyCallToast, setBusyCallToast] = useState(null);
 
   // Pending accept from service worker push notification
   const pendingSwAcceptRef = useRef(null);
   // 30-second no-answer timeout ref
   const noAnswerTimerRef = useRef(null);
-  // Ref to always have latest callInfo in callbacks
+  // Refs to always have latest values in async callbacks
   const callInfoRef = useRef(null);
+  const callStateRef = useRef('idle');
   useEffect(() => { callInfoRef.current = callInfo; }, [callInfo]);
+  useEffect(() => { callStateRef.current = callState; }, [callState]);
 
   const webrtc = useWebRTC({
     socket,
@@ -228,7 +232,12 @@ export function useCall() {
   // ── Socket event: incoming call ─────────────────────────────────────────────
   useSocketEvent('call:incoming', (data) => {
     // Allow receiving even if we have a pending SW accept (fresh page load scenario)
-    if (callState !== 'idle' && !pendingSwAcceptRef.current) return;
+    if (callState !== 'idle' && !pendingSwAcceptRef.current) {
+      // Show a toast — user is already in / handling a call
+      setBusyCallToast({ callerName: data.callerName, callId: data.callId });
+      setTimeout(() => setBusyCallToast(null), 6000);
+      return;
+    }
 
     const info = {
       callId: data.callId,
@@ -249,6 +258,30 @@ export function useCall() {
     if (pendingSwAcceptRef.current?.callId === data.callId) {
       pendingSwAcceptRef.current = null;
       setTimeout(() => answerCall(), 400);
+    }
+  });
+
+  // ── Socket event: rejoin needed (socket reconnected mid-call, or page refreshed) ──
+  useSocketEvent('call:rejoin-needed', async (data) => {
+    if (callStateRef.current === 'active') {
+      // Seamless rejoin — don't interrupt the UI, just re-establish WebRTC
+      webrtc.cleanupPeers();
+      // Re-answer to get a fresh call:joined with current participant socket IDs
+      emit('call:answer', { callId: data.callId });
+    } else {
+      // Page was refreshed — show the call as incoming so the user can rejoin
+      const info = {
+        callId: data.callId,
+        conversationId: data.conversationId,
+        callerName: data.callerName,
+        callType: data.callType,
+        isRejoin: true,
+      };
+      setCallInfo(info);
+      setCallState('ringing-in');
+      playRingtone();
+      startVibration();
+      fetchConversationMembers(data.conversationId);
     }
   });
 
@@ -364,6 +397,41 @@ export function useCall() {
     return () => navigator.serviceWorker.removeEventListener('message', handler);
   }, [answerCall, declineCall]);
 
+  // ── Socket reconnect watchdog ────────────────────────────────────────────────
+  // When the socket reconnects, the backend will send call:rejoin-needed if the call
+  // still exists. If it doesn't send anything within 5 seconds (e.g. server restarted
+  // and lost all call state), we clean up so the UI doesn't hang in active/ringing state.
+  useEffect(() => {
+    if (!socket) return;
+    let watchdogTimer = null;
+
+    const handleConnect = () => {
+      if (callStateRef.current === 'idle') return;
+      watchdogTimer = setTimeout(() => {
+        // Still in a call state 5s after reconnect with no rejoin event — assume call is gone
+        if (callStateRef.current !== 'idle') {
+          resetCall();
+        }
+      }, 5000);
+    };
+
+    // Cancel the watchdog if we receive a rejoin or any call state transition
+    const cancelWatchdog = () => {
+      if (watchdogTimer) { clearTimeout(watchdogTimer); watchdogTimer = null; }
+    };
+
+    socket.on('connect', handleConnect);
+    socket.on('call:rejoin-needed', cancelWatchdog);
+    socket.on('call:joined', cancelWatchdog);
+
+    return () => {
+      socket.off('connect', handleConnect);
+      socket.off('call:rejoin-needed', cancelWatchdog);
+      socket.off('call:joined', cancelWatchdog);
+      if (watchdogTimer) clearTimeout(watchdogTimer);
+    };
+  }, [socket, resetCall]);
+
   return {
     callState,
     callInfo,
@@ -371,6 +439,7 @@ export function useCall() {
     conversationMembers,
     isMuted,
     speakingPeers,
+    busyCallToast,
     initiateCall,
     answerCall,
     declineCall,

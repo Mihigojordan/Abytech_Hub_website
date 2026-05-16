@@ -14,6 +14,7 @@ const IncomingCallModal = ({ callInfo, onAnswer, onDecline }) => {
   const textC   = '#ffffff';
   const text2   = 'rgba(255,255,255,0.65)';
 
+  const isRejoin = !!callInfo?.isRejoin;
   const initial = (callInfo?.callerName || '?').charAt(0).toUpperCase();
 
   // Vibration on mount
@@ -34,7 +35,7 @@ const IncomingCallModal = ({ callInfo, onAnswer, onDecline }) => {
     }}>
       {/* Call type label */}
       <p style={{ color: text2, fontSize: 13, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 40 }}>
-        {callInfo?.callType === 'video' ? 'Incoming Video Call' : 'Incoming Voice Call'}
+        {isRejoin ? 'Active Call' : (callInfo?.callType === 'video' ? 'Incoming Video Call' : 'Incoming Voice Call')}
       </p>
 
       {/* Ripple + avatar */}
@@ -68,12 +69,12 @@ const IncomingCallModal = ({ callInfo, onAnswer, onDecline }) => {
         {callInfo?.callerName || 'Unknown'}
       </h1>
       <p style={{ color: text2, fontSize: 14, margin: '0 0 64px' }}>
-        is calling you...
+        {isRejoin ? 'Call still active — tap to rejoin' : 'is calling you...'}
       </p>
 
       {/* Accept / Decline */}
       <div style={{ display: 'flex', gap: 48 }}>
-        {/* Decline */}
+        {/* Decline / Dismiss */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
           <button
             onClick={onDecline}
@@ -89,10 +90,10 @@ const IncomingCallModal = ({ callInfo, onAnswer, onDecline }) => {
           >
             <PhoneOff size={28} color="#fff" />
           </button>
-          <span style={{ color: text2, fontSize: 12, letterSpacing: 1 }}>DECLINE</span>
+          <span style={{ color: text2, fontSize: 12, letterSpacing: 1 }}>{isRejoin ? 'DISMISS' : 'DECLINE'}</span>
         </div>
 
-        {/* Accept */}
+        {/* Accept / Rejoin */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
           <button
             onClick={onAnswer}
@@ -108,7 +109,7 @@ const IncomingCallModal = ({ callInfo, onAnswer, onDecline }) => {
           >
             <Phone size={28} color="#fff" />
           </button>
-          <span style={{ color: text2, fontSize: 12, letterSpacing: 1 }}>ACCEPT</span>
+          <span style={{ color: text2, fontSize: 12, letterSpacing: 1 }}>{isRejoin ? 'REJOIN' : 'ACCEPT'}</span>
         </div>
       </div>
 

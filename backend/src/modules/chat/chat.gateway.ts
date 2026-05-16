@@ -28,10 +28,14 @@ interface ActiveCall {
     hostType: 'ADMIN' | 'USER';
     hostSocketId: string;
     callerName: string;
-    callMessageId: number | null;   // ID of the "Calling..." message to update later
-    createdAt: Date;                // Used to sweep abandoned calls
+    callMessageId: number | null;
+    createdAt: Date;
     /** socketId → { userId, userType, name } */
     participants: Map<string, { userId: string; userType: 'ADMIN' | 'USER'; name: string }>;
+    /** "userId:userType" of everyone who should receive call:incoming (re-sent on reconnect) */
+    invitedParticipants: Set<string>;
+    /** "userId:userType" of users whose socket disconnected mid-call (offered rejoin on reconnect) */
+    recentlyLeft: Set<string>;
 }
 
 @WebSocketGateway({
@@ -92,10 +96,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 
             const lastSeenTime = new Date();
 
-            // Clean up any active calls this socket was part of
+            // Clean up any active calls this socket was part of (mark as disconnect for rejoin tracking)
             this.calls.forEach((call, callId) => {
-                if (call.participants.has(client.id)) {
-                    this.handleCallLeave(client.id, callId);
+                if (call.participants.has(client.id) || call.hostSocketId === client.id) {
+                    this.handleCallLeave(client.id, callId, true);
                 }
             });
 
@@ -225,11 +229,60 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
                 });
             });
 
+            // Re-notify user about any active calls they should know about
+            const userKey = `${client.userId}:${client.userType}`;
+            for (const [, call] of this.calls.entries()) {
+                // Case 1: User was in the call and their socket disconnected — offer seamless rejoin
+                if (call.recentlyLeft.has(userKey) && call.participants.size > 0) {
+                    call.recentlyLeft.delete(userKey);
+                    const currentParticipants = Array.from(call.participants.entries())
+                        .map(([socketId, p]) => ({ socketId, userId: p.userId, userType: p.userType, name: p.name }));
+                    client.emit('call:rejoin-needed', {
+                        callId: call.callId,
+                        conversationId: call.conversationId,
+                        callType: call.callType,
+                        callerName: call.callerName,
+                        currentParticipants,
+                    });
+                    break;
+                }
+
+                // Case 2: User was invited but hasn't joined yet — re-send incoming notification
+                if (call.invitedParticipants.has(userKey)) {
+                    const alreadyIn = Array.from(call.participants.values())
+                        .some(p => p.userId === client.userId && p.userType === client.userType);
+                    if (!alreadyIn) {
+                        client.emit('call:incoming', {
+                            callId: call.callId,
+                            conversationId: call.conversationId,
+                            callerId: call.hostId,
+                            callerType: call.hostType,
+                            callerName: call.callerName,
+                            callType: call.callType,
+                        });
+                    }
+                    break;
+                }
+            }
+
             return { success: true, userId: client.userId, status: 'online' };
         } catch (error) {
             console.error('Failed to set user online:', error.message);
             return { success: false, error: error.message };
         }
+    }
+
+    /**
+     * Check if a specific call is still active. Used by the frontend watchdog
+     * after a socket reconnect to detect when the backend no longer has the call.
+     */
+    @SubscribeMessage('call:check-active')
+    handleCheckActiveCall(
+        @ConnectedSocket() client: AuthenticatedSocket,
+        @MessageBody() data: { callId: string },
+    ) {
+        const call = this.calls.get(data.callId);
+        return { exists: !!call };
     }
 
     // ====================
@@ -413,6 +466,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
                 callMessageId: null,
                 createdAt: new Date(),
                 participants: new Map(),
+                invitedParticipants: new Set([`${callerId}:${callerType}`]), // host can also rejoin
+                recentlyLeft: new Set(),
             };
             this.calls.set(callId, call);
 
@@ -456,6 +511,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
                 );
 
                 for (const p of others) {
+                    // Track everyone who should be able to join (for reconnect re-notification)
+                    call.invitedParticipants.add(`${p.participantId}:${p.participantType}`);
+
                     const isOnline = this.cache.isUserOnline(p.participantId);
                     const payload = {
                         callId,
@@ -724,6 +782,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
         const call = this.calls.get(data.callId);
         if (!call) return { success: false };
 
+        // Track this invite so the user gets re-notified if they reconnect
+        call.invitedParticipants.add(`${data.targetUserId}:${data.targetUserType}`);
+
         const payload = {
             callId: data.callId,
             conversationId: call.conversationId,
@@ -758,9 +819,19 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     }
 
     // ── Internal helper: remove a socket from a call ──────────────────────────
-    private async handleCallLeave(socketId: string, callId: string) {
+    private async handleCallLeave(socketId: string, callId: string, isDisconnect = false) {
         const call = this.calls.get(callId);
         if (!call) return;
+
+        // Track disconnected users so we can offer rejoin when they reconnect
+        if (isDisconnect) {
+            const participant = call.participants.get(socketId);
+            if (participant) {
+                call.recentlyLeft.add(`${participant.userId}:${participant.userType}`);
+            } else if (socketId === call.hostSocketId) {
+                call.recentlyLeft.add(`${call.hostId}:${call.hostType}`);
+            }
+        }
 
         call.participants.delete(socketId);
 

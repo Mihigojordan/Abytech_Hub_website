@@ -243,6 +243,19 @@ export function useWebRTC({ socket, callId, onSpeakingChange }) {
     }
   }, []);
 
+  // ── Cleanup peers only (keep local stream) — used for seamless call rejoin ──
+  const cleanupPeers = useCallback(() => {
+    peersRef.current.forEach(pc => pc.close());
+    peersRef.current.clear();
+    pendingCandidatesRef.current.clear();
+    remoteAudiosRef.current.forEach(audio => { audio.srcObject = null; audio.remove(); });
+    remoteAudiosRef.current.clear();
+    // Remove all analysers except 'self' (local stream stays connected)
+    analysersRef.current.forEach((_, id) => {
+      if (id !== 'self') analysersRef.current.delete(id);
+    });
+  }, []);
+
   // ── Full cleanup ────────────────────────────────────────────────────────────
   const cleanup = useCallback(() => {
     stopSpeakingDetection();
@@ -277,6 +290,7 @@ export function useWebRTC({ socket, callId, onSpeakingChange }) {
     addIceCandidate,
     removePeer,
     setMuted,
+    cleanupPeers,
     cleanup,
   };
 }
