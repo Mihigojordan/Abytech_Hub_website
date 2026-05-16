@@ -36,13 +36,15 @@ const ICE_SERVERS = [
  *   cleanup          ()         → closes everything
  */
 export function useWebRTC({ socket, callId, onSpeakingChange }) {
-  const peersRef = useRef(new Map());          // socketId → RTCPeerConnection
+  const peersRef = useRef(new Map());               // socketId → RTCPeerConnection
   const localStreamRef = useRef(null);
-  const remoteAudiosRef = useRef(new Map());   // socketId → HTMLAudioElement
+  const remoteAudiosRef = useRef(new Map());        // socketId → HTMLAudioElement
   const audioCtxRef = useRef(null);
-  const analysersRef = useRef(new Map());      // 'self' | socketId → AnalyserNode
+  const analysersRef = useRef(new Map());           // 'self' | socketId → AnalyserNode
   const speakingRef = useRef(new Set());
   const rafRef = useRef(null);
+  // ICE candidates that arrive before setRemoteDescription completes are queued here
+  const pendingCandidatesRef = useRef(new Map());  // socketId → RTCIceCandidateInit[]
 
   // ── AudioContext helpers ────────────────────────────────────────────────────
   const ensureAudioCtx = useCallback(() => {
@@ -141,11 +143,9 @@ export function useWebRTC({ socket, callId, onSpeakingChange }) {
     };
 
     pc.onconnectionstatechange = () => {
-      if (
-        pc.connectionState === 'failed' ||
-        pc.connectionState === 'disconnected' ||
-        pc.connectionState === 'closed'
-      ) {
+      // 'disconnected' is transient (wifi blip) — browser can self-recover.
+      // Only remove on terminal states.
+      if (pc.connectionState === 'failed' || pc.connectionState === 'closed') {
         removePeer(remoteSocketId);
       }
     };
@@ -161,6 +161,19 @@ export function useWebRTC({ socket, callId, onSpeakingChange }) {
     const audio = remoteAudiosRef.current.get(socketId);
     if (audio) { audio.srcObject = null; audio.remove(); remoteAudiosRef.current.delete(socketId); }
     analysersRef.current.delete(socketId);
+    pendingCandidatesRef.current.delete(socketId);
+  }, []);
+
+  // ── Drain queued ICE candidates after setRemoteDescription completes ────────
+  const drainPendingCandidates = useCallback(async (socketId) => {
+    const pc = peersRef.current.get(socketId);
+    const queue = pendingCandidatesRef.current.get(socketId);
+    if (!pc || !queue?.length) return;
+    pendingCandidatesRef.current.delete(socketId);
+    for (const candidate of queue) {
+      try { await pc.addIceCandidate(new RTCIceCandidate(candidate)); }
+      catch (e) { console.error('ICE error (queued):', e); }
+    }
   }, []);
 
   // ── Create offer (we initiate to an existing participant) ───────────────────
@@ -175,29 +188,48 @@ export function useWebRTC({ socket, callId, onSpeakingChange }) {
   const handleOffer = useCallback(async ({ callerSocketId, offer }) => {
     const pc = createPeerConnection(callerSocketId);
     await pc.setRemoteDescription(new RTCSessionDescription(offer));
+    await drainPendingCandidates(callerSocketId);
     const answer = await pc.createAnswer();
     await pc.setLocalDescription(answer);
     socket?.emit('call:answer-sdp', { targetSocketId: callerSocketId, answer, callId });
-  }, [createPeerConnection, socket, callId]);
+  }, [createPeerConnection, drainPendingCandidates, socket, callId]);
 
   // ── Handle incoming answer ──────────────────────────────────────────────────
   const handleAnswer = useCallback(async ({ answererSocketId, answer }) => {
     const pc = peersRef.current.get(answererSocketId);
-    if (pc) await pc.setRemoteDescription(new RTCSessionDescription(answer));
-  }, []);
+    if (pc) {
+      await pc.setRemoteDescription(new RTCSessionDescription(answer));
+      await drainPendingCandidates(answererSocketId);
+    }
+  }, [drainPendingCandidates]);
 
   // ── Handle ICE candidate ────────────────────────────────────────────────────
+  // If the remote description isn't set yet (setRemoteDescription still in progress),
+  // queue the candidate and apply it once the description is ready. This mirrors
+  // what PeerJS does internally and is the fix for "connected but no audio."
   const addIceCandidate = useCallback(async ({ senderSocketId, candidate }) => {
     const pc = peersRef.current.get(senderSocketId);
-    if (pc && candidate) {
-      try { await pc.addIceCandidate(new RTCIceCandidate(candidate)); }
-      catch (e) { console.error('ICE error:', e); }
+    if (!pc || !candidate) return;
+    if (!pc.remoteDescription) {
+      const q = pendingCandidatesRef.current.get(senderSocketId) || [];
+      q.push(candidate);
+      pendingCandidatesRef.current.set(senderSocketId, q);
+      return;
     }
+    try { await pc.addIceCandidate(new RTCIceCandidate(candidate)); }
+    catch (e) { console.error('ICE error:', e); }
   }, []);
 
   // ── Get local mic stream ────────────────────────────────────────────────────
   const getLocalStream = useCallback(async () => {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+    const stream = await navigator.mediaDevices.getUserMedia({
+      audio: {
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true,
+      },
+      video: false,
+    });
     localStreamRef.current = stream;
     attachAnalyser('self', stream);
     startSpeakingDetection();
@@ -216,6 +248,7 @@ export function useWebRTC({ socket, callId, onSpeakingChange }) {
     stopSpeakingDetection();
     peersRef.current.forEach(pc => pc.close());
     peersRef.current.clear();
+    pendingCandidatesRef.current.clear();
     remoteAudiosRef.current.forEach(audio => { audio.srcObject = null; audio.remove(); });
     remoteAudiosRef.current.clear();
     if (localStreamRef.current) {
