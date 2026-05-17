@@ -847,10 +847,14 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 
         // If no one left, end the call and post a call message
         if (call.participants.size === 0) {
-            // Capture all socket IDs that should receive the call message
-            // BEFORE deleting the call from the map
-            const allSocketIds = new Set<string>([call.hostSocketId]);
-            call.participants.forEach((_, sid) => allSocketIds.add(sid));
+            // Notify invited-but-not-yet-joined participants that the call is over
+            // so their IncomingCallModal is dismissed automatically.
+            call.invitedParticipants.forEach(userKey => {
+                const lastColon = userKey.lastIndexOf(':');
+                const userId   = userKey.slice(0, lastColon);
+                const userType = userKey.slice(lastColon + 1) as 'ADMIN' | 'USER';
+                this.emitToUser(userId, userType, 'call:cancelled', { callId });
+            });
 
             this.calls.delete(callId);
             try {

@@ -166,7 +166,13 @@ export function useCall() {
     stopVibration();
     try {
       await webrtc.getLocalStream();
-      emit('call:answer', { callId: info.callId });
+      emit('call:answer', { callId: info.callId }, (response) => {
+        if (response && !response.success) {
+          // Call no longer exists (ended before we could join)
+          webrtc.cleanup();
+          resetCall();
+        }
+      });
     } catch (err) {
       console.error('Failed to get mic:', err);
       alert('Could not access microphone.');
@@ -377,8 +383,10 @@ export function useCall() {
       const next = new Map(prev);
       next.delete(data.participantSocketId);
       if (next.size === 0) {
-        // Backend already ended the call when last participant left — just clean up locally
-        setTimeout(() => resetCall(), 0);
+        // We are now alone — tell the backend to close the call so any pending
+        // invitees cannot join a ghost call. endCall() emits call:end which
+        // triggers the backend cleanup and call:cancelled broadcast to invitees.
+        setTimeout(() => endCall(), 0);
       }
       return next;
     });
@@ -388,6 +396,17 @@ export function useCall() {
   useSocketEvent('call:declined', () => {
     stopRingtone();
     resetCall();
+  });
+
+  // ── Socket event: call ended while we hadn't joined yet ───────────────────
+  // Fires when the last active participant leaves while we still have an
+  // incoming call modal open (we were invited but never accepted).
+  useSocketEvent('call:cancelled', () => {
+    if (callStateRef.current === 'ringing-in') {
+      stopRingtone();
+      stopVibration();
+      resetCall();
+    }
   });
 
   // ── WebRTC signaling relay ──────────────────────────────────────────────────
