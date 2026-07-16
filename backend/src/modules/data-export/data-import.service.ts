@@ -111,65 +111,66 @@ export class DataImportService {
     const activeGroups = groups ?? payload.meta?.groups ?? [];
     const hasGroup = (g: string) => activeGroups.length === 0 || activeGroups.includes(g) || activeGroups.includes('all');
 
-    let wouldCreate = 0;
-    let wouldUpdate = 0;
-    let wouldSkip = 0;
+    const wouldCreate: Record<string, number> = {};
+    const wouldUpdate: Record<string, number> = {};
+    const wouldSkip: Record<string, number> = {};
     const detectedGroups: string[] = [];
     const warnings: string[] = [];
 
-    const check = (items: any[] = [], isNew: (item: any) => boolean) => {
+    const bump = (obj: Record<string, number>, key: string) => { obj[key] = (obj[key] ?? 0) + 1; };
+    const check = (key: string, items: any[] = [], isNew: (item: any) => boolean) => {
       for (const item of items) {
-        if (isNew(item)) wouldCreate++;
-        else if (strategy === 'OVERWRITE') wouldUpdate++;
-        else wouldSkip++;
+        if (isNew(item)) bump(wouldCreate, key);
+        else if (strategy === 'OVERWRITE') bump(wouldUpdate, key);
+        else bump(wouldSkip, key);
       }
     };
 
     // Core (always included)
-    check(d.permissions ?? [], (p) => !e.permissionIds.has(p.id) && !e.permissionNames.has(p.name));
-    check(d.admins ?? [], (a) => !e.adminIds.has(a.id) && !e.adminEmails.has(a.adminEmail));
-    check(d.adminPermissions ?? [], (ap) => !e.adminPermissionPairs.has(`${ap.adminId}:${ap.permissionId}`));
+    check('core', d.permissions ?? [], (p) => !e.permissionIds.has(p.id) && !e.permissionNames.has(p.name));
+    check('core', d.admins ?? [], (a) => !e.adminIds.has(a.id) && !e.adminEmails.has(a.adminEmail));
+    check('core', d.adminPermissions ?? [], (ap) => !e.adminPermissionPairs.has(`${ap.adminId}:${ap.permissionId}`));
 
     if (hasGroup('expenses') && (d.expenses?.length ?? 0) > 0) {
       detectedGroups.push('expenses');
-      check(d.expenses, (ex) => !e.expenseIds.has(ex.id));
+      check('expenses', d.expenses, (ex) => !e.expenseIds.has(ex.id));
     }
     if (hasGroup('salaries') && (d.salaries?.length ?? 0) > 0) {
       detectedGroups.push('salaries');
-      check(d.salaries, (s) => !e.salaryIds.has(s.id));
+      check('salaries', d.salaries, (s) => !e.salaryIds.has(s.id));
     }
     if (hasGroup('reports') && ((d.reports?.length ?? 0) > 0 || (d.replyReports?.length ?? 0) > 0)) {
       detectedGroups.push('reports');
-      check(d.reports ?? [], (r) => !e.reportIds.has(r.id));
-      check(d.replyReports ?? [], (r) => !e.replyReportIds.has(r.id));
+      check('reports', d.reports ?? [], (r) => !e.reportIds.has(r.id));
+      check('reports', d.replyReports ?? [], (r) => !e.replyReportIds.has(r.id));
     }
     if (hasGroup('research') && (d.research?.length ?? 0) > 0) {
       detectedGroups.push('research');
-      check(d.research, (r) => !e.researchIds.has(r.id) && !e.researchSlugs.has(r.slug));
+      check('research', d.research, (r) => !e.researchIds.has(r.id) && !e.researchSlugs.has(r.slug));
     }
     if (hasGroup('meetings') && (d.meetings?.length ?? 0) > 0) {
       detectedGroups.push('meetings');
-      check(d.meetings, (m) => !e.meetingIds.has(m.id));
+      check('meetings', d.meetings, (m) => !e.meetingIds.has(m.id));
     }
     if (hasGroup('internships') && (d.internshipApplications?.length ?? 0) > 0) {
       detectedGroups.push('internships');
-      check(d.internshipApplications, (i) => !e.internshipIds.has(i.id));
+      check('internships', d.internshipApplications, (i) => !e.internshipIds.has(i.id));
     }
     if (hasGroup('hostedWebsites') && (d.hostedWebsites?.length ?? 0) > 0) {
       detectedGroups.push('hostedWebsites');
-      check(d.hostedWebsites, (h) => !e.hostedWebsiteIds.has(h.id) && !e.hostedWebsiteDomains.has(h.domain));
+      check('hostedWebsites', d.hostedWebsites, (h) => !e.hostedWebsiteIds.has(h.id) && !e.hostedWebsiteDomains.has(h.domain));
     }
     if (hasGroup('weeklyGoals') && (d.weeklyGoals?.length ?? 0) > 0) {
       detectedGroups.push('weeklyGoals');
-      check(d.weeklyGoals, (g) => !e.weeklyGoalIds.has(g.id));
+      check('weeklyGoals', d.weeklyGoals, (g) => !e.weeklyGoalIds.has(g.id));
     }
     if (hasGroup('demoRequests') && (d.demoRequests?.length ?? 0) > 0) {
       detectedGroups.push('demoRequests');
-      check(d.demoRequests, (dr) => !e.demoRequestIds.has(dr.id));
+      check('demoRequests', d.demoRequests, (dr) => !e.demoRequestIds.has(dr.id));
     }
     if (hasGroup('notifications') && (d.notifications?.length ?? 0) > 0) {
       detectedGroups.push('notifications');
-      check(d.notifications, (n) => !e.notificationIds.has(n.id));
+      check('notifications', d.notifications, (n) => !e.notificationIds.has(n.id));
     }
 
     // Conflict warnings

@@ -25,6 +25,7 @@ const EXPORT_GROUPS = [
 ];
 
 const GROUP_LABELS = {
+    core:           'Core Data',
     expenses:       'Expenses',
     salaries:       'Salaries',
     reports:        'Reports & Replies',
@@ -114,11 +115,12 @@ export default function DataExportPage() {
 
     // ─── Import logic ──────────────────────────────────
 
-    const loadPreview = async (f, strategy, gs) => {
+    const loadPreview = async (f, strategy) => {
         setPreview(null); setPreviewError(''); setPreviewLoading(true);
         try {
-            const data = await dataExportService.importPreview(f, { strategy, groups: gs ?? [] });
+            const data = await dataExportService.importPreview(f, { strategy, groups: [] });
             setPreview(data);
+            if (data.detectedGroups?.length > 0) setImportGroups(data.detectedGroups);
         } catch (err) {
             setPreviewError(err?.message ?? 'Could not read file. Make sure it is a valid AbyTech Hub backup.');
         } finally {
@@ -207,7 +209,7 @@ export default function DataExportPage() {
         }
         if (importStep === 3) { await runImport(); return; }
         if (importStep === 2 && file && !preview) {
-            await loadPreview(file, conflictStrategy, importGroups);
+            await loadPreview(file, conflictStrategy);
         }
         setImportStep(s => s + 1);
     };
@@ -216,7 +218,8 @@ export default function DataExportPage() {
         (isExport  && exportLoading) ||
         (!isExport && importLoading) ||
         (!isExport && importStep === 2 && !file) ||
-        (!isExport && importStep === 3 && (previewLoading || !!previewError));
+        (!isExport && importStep === 3 && (previewLoading || !!previewError)) ||
+        (!isExport && importStep === 3 && importGroups !== null && importGroups.length === 0);
 
     const nextLabel =
         exportLoading ? 'Exporting…' :
@@ -502,16 +505,6 @@ export default function DataExportPage() {
                         </div>
                     );
                 })}
-
-                <p style={{ ...ba(12, 600, { color: text2, margin: '14px 0 8px' }) }}>Optional: limit to specific groups (leave empty for all)</p>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                    {EXPORT_GROUPS.map(g => (
-                        <button key={g.id} onClick={() => toggleImportGroup(g.id)} style={chip((importGroups ?? []).includes(g.id))}>{g.label}</button>
-                    ))}
-                </div>
-                {(!importGroups || importGroups.length === 0) && (
-                    <p style={{ ...ba(11, 400, { color: text2, marginTop: 6 }) }}>No filter — all data in the backup will be imported.</p>
-                )}
             </div>
         </div>
     );
@@ -563,61 +556,92 @@ export default function DataExportPage() {
 
     // ─── Import step 3 — preview ───────────────────────
 
-    const renderImportStep3 = () => (
-        <div style={panel}>
-            <div style={panelHead}>{panelTitleWrap('Import Preview', `"${selStrat.label}"`)}</div>
+    const renderImportStep3 = () => {
+        const entityKeys = preview ? Object.keys(preview.wouldCreate ?? {}) : [];
+        const detectedGroups = preview?.detectedGroups ?? [];
+        const activeGroups = importGroups ?? detectedGroups;
 
-            {previewLoading && <div style={{ padding: '32px 16px', textAlign: 'center', ...ba(12, 400, { color: text2 }) }}>Analysing file…</div>}
-            {!previewLoading && previewError && <div style={{ padding: 16, color: '#e84040', fontSize: 12 }}>{previewError}</div>}
+        return (
+            <div style={panel}>
+                <div style={panelHead}>{panelTitleWrap('Import Preview', `"${selStrat.label}"`)}</div>
 
-            {!previewLoading && !previewError && preview && (
-                <>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1, background: border }}>
-                        {[
-                            { label: 'Will Create', value: preview.wouldCreate, color: '#4ade80' },
-                            { label: 'Will Update', value: preview.wouldUpdate, color: ORG },
-                            { label: 'Will Skip',   value: preview.wouldSkip,   color: text2 },
-                        ].map((k, i) => (
-                            <div key={i} style={{ padding: '14px', textAlign: 'center', background: bg2 }}>
-                                <div style={{ ...bb(24, { color: k.color, lineHeight: 1, marginBottom: 4 }) }}>{k.value}</div>
-                                <div style={{ ...bc(10, 700, { letterSpacing: 1, textTransform: 'uppercase', color: text2 }) }}>{k.label}</div>
+                {/* Group filter chips */}
+                {!previewLoading && !previewError && preview && detectedGroups.length > 0 && (
+                    <div style={{ padding: '12px 18px', borderBottom: '1px solid ' + border, background: bg3 }}>
+                        <div style={{ ...bc(10, 700, { letterSpacing: 1, textTransform: 'uppercase', color: text2, marginBottom: 8 }) }}>
+                            Import Groups
+                        </div>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                            {detectedGroups.map(g => (
+                                <button key={g} onClick={() => toggleImportGroup(g)} style={chip(activeGroups.includes(g))}>
+                                    {GROUP_LABELS[g] ?? g}
+                                </button>
+                            ))}
+                        </div>
+                        {activeGroups.length === 0 && (
+                            <p style={{ ...ba(11, 400, { color: '#fbbf24', marginTop: 6 }) }}>Select at least one group to import.</p>
+                        )}
+                    </div>
+                )}
+
+                {previewLoading && <div style={{ padding: '32px 16px', textAlign: 'center', ...ba(12, 400, { color: text2 }) }}>Analysing file…</div>}
+                {!previewLoading && previewError && <div style={{ padding: 16, color: '#e84040', fontSize: 12 }}>{previewError}</div>}
+
+                {!previewLoading && !previewError && preview && (
+                    <div style={{ overflowX: 'auto' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                            <thead>
+                                <tr style={{ borderBottom: '1px solid ' + border, background: bg3 }}>
+                                    <th style={{ textAlign: 'left', padding: '9px 18px', whiteSpace: 'nowrap', ...bc(10, 700, { letterSpacing: 1, textTransform: 'uppercase', color: text2 }) }}>Entity</th>
+                                    <th style={{ textAlign: 'right', padding: '9px 18px', ...bc(10, 700, { letterSpacing: 1, textTransform: 'uppercase', color: '#4ade80' }) }}>Create</th>
+                                    <th style={{ textAlign: 'right', padding: '9px 18px', ...bc(10, 700, { letterSpacing: 1, textTransform: 'uppercase', color: ORG }) }}>Update</th>
+                                    <th style={{ textAlign: 'right', padding: '9px 18px', ...bc(10, 700, { letterSpacing: 1, textTransform: 'uppercase', color: '#fbbf24' }) }}>Skip</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {entityKeys.map(key => {
+                                    const c = preview.wouldCreate?.[key] ?? 0;
+                                    const u = preview.wouldUpdate?.[key] ?? 0;
+                                    const s = preview.wouldSkip?.[key] ?? 0;
+                                    if (c === 0 && u === 0 && s === 0) return null;
+                                    return (
+                                        <tr key={key} style={{ borderBottom: '1px solid ' + border }}>
+                                            <td style={{ padding: '9px 18px', ...ba(12, 600, { color: textC }) }}>{GROUP_LABELS[key] ?? key}</td>
+                                            <td style={{ padding: '9px 18px', textAlign: 'right', ...ba(12, 700, { color: c > 0 ? '#4ade80' : text2 }) }}>{c > 0 ? `+${c}` : '—'}</td>
+                                            <td style={{ padding: '9px 18px', textAlign: 'right', ...ba(12, 700, { color: u > 0 ? ORG : text2 }) }}>{u > 0 ? `↑${u}` : '—'}</td>
+                                            <td style={{ padding: '9px 18px', textAlign: 'right', ...ba(12, 700, { color: s > 0 ? '#fbbf24' : text2 }) }}>{s > 0 ? s : '—'}</td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+
+                {!previewLoading && !previewError && preview?.warnings?.length > 0 && (
+                    <div style={{ padding: '10px 18px', borderTop: '1px solid ' + border, background: 'rgba(251,191,36,.08)' }}>
+                        <p style={{ ...ba(12, 700, { color: '#fbbf24', marginBottom: 6 }) }}>Warnings</p>
+                        {preview.warnings.map((w, i) => (
+                            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, ...ba(11, 400, { color: '#fbbf24' }) }}>
+                                <AlertTriangle size={12} style={{ flexShrink: 0 }} />{w}
                             </div>
                         ))}
                     </div>
+                )}
 
-                    {preview.detectedGroups?.length > 0 && (
-                        <div style={{ padding: '12px 18px', borderTop: '1px solid ' + border, background: bg3 }}>
-                            <div style={{ ...bc(10, 700, { letterSpacing: 1, textTransform: 'uppercase', color: text2, marginBottom: 8 }) }}>Detected Groups</div>
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                                {preview.detectedGroups.map(g => (
-                                    <span key={g} style={{ padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 600, background: 'rgba(232,98,26,.12)', color: ORG }}>
-                                        {GROUP_LABELS[g] ?? g}
-                                    </span>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-
-                    {preview.warnings?.length > 0 && (
-                        <div style={{ padding: '10px 18px', borderTop: '1px solid ' + border, background: 'rgba(251,191,36,.08)' }}>
-                            <p style={{ ...ba(12, 700, { color: '#fbbf24', marginBottom: 6 }) }}>Warnings</p>
-                            {preview.warnings.map((w, i) => (
-                                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, ...ba(11, 400, { color: '#fbbf24' }) }}>
-                                    <AlertTriangle size={12} style={{ flexShrink: 0 }} />{w}
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </>
-            )}
-
-            {importError && (
-                <div style={{ padding: '10px 18px', borderTop: '1px solid ' + border, background: 'rgba(232,64,64,.1)', color: '#e84040', fontSize: 12 }}>
-                    {importError}
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '10px 18px', borderTop: '1px solid ' + border, background: bg3 }}>
+                    <AlertTriangle size={13} style={{ flexShrink: 0, marginTop: 1, color: text2 }} />
+                    <p style={{ ...ba(11, 400, { color: text2, lineHeight: 1.5 }) }}>Core data (Admins &amp; Permissions) is always included and cannot be filtered out.</p>
                 </div>
-            )}
-        </div>
-    );
+
+                {importError && (
+                    <div style={{ padding: '10px 18px', borderTop: '1px solid ' + border, background: 'rgba(232,64,64,.1)', color: '#e84040', fontSize: 12 }}>
+                        {importError}
+                    </div>
+                )}
+            </div>
+        );
+    };
 
     // ─── Import done ───────────────────────────────────
 
