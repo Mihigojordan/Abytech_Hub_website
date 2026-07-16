@@ -68,7 +68,8 @@ function App() {
         {/* ================= ICONS ================= */}
         <link rel="icon" href="/favicon.ico" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-        <link rel="manifest" href="/site.webmanifest" />
+        {/* No app manifest here on purpose — it's injected only inside /admin
+            (see InstallScopeGate) so the public site never becomes installable. */}
 
         {/* ================= SECURITY ================= */}
         <meta httpEquiv="Content-Security-Policy" content="upgrade-insecure-requests" />

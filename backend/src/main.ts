@@ -81,7 +81,7 @@ async function bootstrap() {
         res.setHeader('Permissions-Policy', 'geolocation=(self), microphone=(), camera=()');
         res.setHeader('X-Content-Type-Options', 'nosniff');
         res.setHeader('X-XSS-Protection', '1; mode=block');
-        res.setHeader('Access-Control-Allow-Origin', 'http://localhost:5173'); // Adjust to your frontend URL
+        res.setHeader('Access-Control-Allow-Origin', process.env.FRONTEND_URL_ONLY || 'https://abytechhub.com');
         res.setHeader('Access-Control-Allow-Credentials', 'true');
         res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
         res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');

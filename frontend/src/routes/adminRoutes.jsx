@@ -29,6 +29,7 @@ const ResearchManagement = lazy(() => import("../pages/dashboard/ResearchManagem
 const ResearchFormPage = lazy(() => import("../pages/dashboard/ResearchFormPage"));
 const ResearchViewPage = lazy(() => import("../pages/dashboard/ResearchViewPage"));
 const SalaryManagement = lazy(() => import("../pages/dashboard/SalaryManagement"));
+const DataExportPage = lazy(() => import("../pages/dashboard/DataExportPage"));
 
 const adminRoutes = [
   {
@@ -70,6 +71,7 @@ const adminRoutes = [
           { path: "research/edit/:id", element: <PermissionRoute permission="research_management"><SW><ResearchFormPage /></SW></PermissionRoute> },
           { path: "research/view/:id", element: <PermissionRoute permission="research_management"><SW><ResearchViewPage /></SW></PermissionRoute> },
           { path: "salary", element: <PermissionRoute permission="salary_management"><SW><SalaryManagement /></SW></PermissionRoute> },
+          { path: "data-export", element: <PermissionRoute permission="data_export_management"><SW><DataExportPage /></SW></PermissionRoute> },
         ],
       },
     ],

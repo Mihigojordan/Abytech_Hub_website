@@ -55,7 +55,6 @@ const AdminAvatar = ({ admin, size = 'md', border, bg3 }) => {
     );
 };
 
-// Available permissions defined in backend
 const AVAILABLE_PERMISSIONS = [
     { id: 'dashboard_home',        label: 'Dashboard Home',             locked: true },
     { id: 'report_management',     label: 'Report Management',          locked: false, desc: 'View all reports vs just own' },
@@ -68,6 +67,7 @@ const AVAILABLE_PERMISSIONS = [
     { id: 'research_management',   label: 'Research Management',        locked: false },
     { id: 'hosted_website',        label: 'Hosted Website Management',  locked: false },
     { id: 'internship_management', label: 'Internship Management',      locked: false },
+    { id: 'data_export_management',label: 'Data Export & Import',       locked: false, desc: 'Export backups and import data' },
 ];
 
 const PermissionManagement = () => {
@@ -376,7 +376,6 @@ const PermissionManagement = () => {
                                                             : { background: bg2, border: '1px solid ' + border }),
                                                 }}
                                             >
-                                                {/* Toggle / Checkbox */}
                                                 <div
                                                     style={{
                                                         width: 20,

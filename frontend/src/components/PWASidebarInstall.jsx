@@ -1,74 +1,34 @@
 import { useState, useEffect, useRef } from "react";
 import { Download, X, Smartphone } from "lucide-react";
+import { usePWA } from "../context/PWAContext";
 
 /**
  * PWASidebarInstall
  *
- * A compact PWA install button designed for use inside narrow sidebars.
- * Improvements over PWAInstallButton:
- *  - No fixed floating card - lives inline inside the sidebar
- *  - Tooltip on hover instead of verbose card text
- *  - Dismissed state is read once on mount (not on every render)
- *  - Correctly handles browsers that don't fire beforeinstallprompt
- *    (shows a manual-instructions popover instead of a bare alert)
- *  - Cleans up the beforeinstallprompt listener after first capture
- *    to avoid redundant re-registrations
- *  - Accepts a `variant` prop: "sidebar" (default) | "floating"
+ * A compact PWA install affordance for the dashboard sidebar.
+ *
+ * - Android/Desktop: relies entirely on PWAContext's captured
+ *   beforeinstallprompt event, which is never preventDefault()-ed — the
+ *   browser's own native install UI (address-bar icon / mini-infobar)
+ *   already shows automatically. Clicking this button just re-invokes that
+ *   same native prompt; it never draws its own install dialog.
+ * - iOS: Safari has no beforeinstallprompt at all, so a manual
+ *   "Add to Home Screen" tip is the only option there.
  */
 const PWASidebarInstall = ({ variant = "sidebar" }) => {
-    const [deferredPrompt, setDeferredPrompt] = useState(null);
-    const [showButton, setShowButton] = useState(false);
-    const [isInstalled, setIsInstalled] = useState(false);
+    const { isInstallable, isInstalled, install } = usePWA();
     const [isDismissed, setIsDismissed] = useState(false);
     const [showManualTip, setShowManualTip] = useState(false);
     const tipRef = useRef(null);
 
-    // Read sessionStorage once on mount
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+
     useEffect(() => {
         if (sessionStorage.getItem("pwa-install-dismissed") === "true") {
             setIsDismissed(true);
         }
     }, []);
 
-    useEffect(() => {
-        // Already installed as standalone PWA?
-        const isStandalone = window.matchMedia("(display-mode: standalone)").matches;
-        const isInWebAppMode = window.navigator.standalone === true;
-
-        if (isStandalone || isInWebAppMode) {
-            setIsInstalled(true);
-            return;
-        }
-
-        const handleBeforeInstallPrompt = (e) => {
-            e.preventDefault();
-            setDeferredPrompt(e);
-            setShowButton(true);
-        };
-
-        const handleAppInstalled = () => {
-            setShowButton(false);
-            setIsInstalled(true);
-            setDeferredPrompt(null);
-        };
-
-        window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
-        window.addEventListener("appinstalled", handleAppInstalled);
-
-        // Fallback: if the browser never fires the event (e.g. Firefox, Safari),
-        // show the button after 3 s so the user can still get manual instructions.
-        const timer = setTimeout(() => {
-            setShowButton((prev) => prev || true);
-        }, 3000);
-
-        return () => {
-            window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
-            window.removeEventListener("appinstalled", handleAppInstalled);
-            clearTimeout(timer);
-        };
-    }, []);
-
-    // Close manual tip when clicking outside
     useEffect(() => {
         const handleOutsideClick = (e) => {
             if (tipRef.current && !tipRef.current.contains(e.target)) {
@@ -82,31 +42,20 @@ const PWASidebarInstall = ({ variant = "sidebar" }) => {
     }, [showManualTip]);
 
     const handleInstallClick = async () => {
-        if (!deferredPrompt) {
-            // Browser doesn't support the install prompt – show inline tip
+        if (isIOS) {
             setShowManualTip((prev) => !prev);
             return;
         }
-
-        try {
-            await deferredPrompt.prompt();
-            const { outcome } = await deferredPrompt.userChoice;
-            if (outcome === "accepted") {
-                setShowButton(false);
-            }
-        } catch (_) {
-            // prompt() can throw if called more than once; ignore
-        } finally {
-            setDeferredPrompt(null);
-        }
+        await install();
     };
 
     const handleDismiss = (e) => {
         e.stopPropagation();
-        setShowButton(false);
         setIsDismissed(true);
         sessionStorage.setItem("pwa-install-dismissed", "true");
     };
+
+    const showButton = isIOS || isInstallable;
 
     if (isInstalled || isDismissed || !showButton) return null;
 
@@ -114,7 +63,6 @@ const PWASidebarInstall = ({ variant = "sidebar" }) => {
     if (variant === "sidebar") {
         return (
             <div className="relative" ref={tipRef}>
-                {/* Main install button */}
                 <div className="relative group">
                     <button
                         onClick={handleInstallClick}
@@ -125,7 +73,6 @@ const PWASidebarInstall = ({ variant = "sidebar" }) => {
                         <Smartphone className="w-5 h-5" />
                     </button>
 
-                    {/* Dismiss badge */}
                     <button
                         onClick={handleDismiss}
                         className="absolute -top-1 -right-1 w-4 h-4 bg-gray-400 hover:bg-gray-600 text-white rounded-full flex items-center justify-center transition-colors opacity-0 group-hover:opacity-100"
@@ -136,8 +83,7 @@ const PWASidebarInstall = ({ variant = "sidebar" }) => {
                     </button>
                 </div>
 
-                {/* Tooltip / manual instructions popover */}
-                {showManualTip && !deferredPrompt && (
+                {showManualTip && isIOS && (
                     <div className="absolute bottom-full left-full ml-3 mb-1 w-60 bg-white border border-gray-200 rounded-xl shadow-xl p-4 z-50 animate-fade-in">
                         <div className="flex items-center gap-2 mb-2">
                             <Download className="w-4 h-4 text-dashboard-600 flex-shrink-0" />
@@ -145,13 +91,7 @@ const PWASidebarInstall = ({ variant = "sidebar" }) => {
                         </div>
                         <ul className="text-xs text-gray-600 space-y-1 list-disc list-inside">
                             <li>
-                                <span className="font-medium">Android Chrome:</span> Menu ⋮ → "Add to Home screen"
-                            </li>
-                            <li>
                                 <span className="font-medium">iPhone Safari:</span> Share □↑ → "Add to Home Screen"
-                            </li>
-                            <li>
-                                <span className="font-medium">Desktop Chrome/Edge:</span> Address bar install icon
                             </li>
                         </ul>
                         <button
@@ -170,7 +110,6 @@ const PWASidebarInstall = ({ variant = "sidebar" }) => {
     return (
         <div className="fixed bottom-6 right-6 z-50 animate-float" ref={tipRef}>
             <div className="bg-white rounded-2xl shadow-2xl border border-gray-100 p-4 max-w-xs">
-                {/* Close button */}
                 <button
                     onClick={handleDismiss}
                     className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 transition-colors"
@@ -197,11 +136,9 @@ const PWASidebarInstall = ({ variant = "sidebar" }) => {
                             Install App
                         </button>
 
-                        {showManualTip && (
+                        {showManualTip && isIOS && (
                             <ul className="mt-3 text-xs text-gray-600 space-y-1 list-disc list-inside border-t pt-3">
-                                <li>Android: Menu ⋮ → "Add to Home screen"</li>
                                 <li>iPhone: Share □↑ → "Add to Home Screen"</li>
-                                <li>Desktop: Address bar install icon</li>
                             </ul>
                         )}
                     </div>

@@ -22,6 +22,8 @@ import { PermissionModule } from './modules/permission-management/permission.mod
 import { ContactModule } from './modules/contact/contact.module';
 
 import { CallModule } from './modules/call/call.module';
+import { DataExportModule } from './modules/data-export/data-export.module';
+import { CookieCheckModule } from './modules/cookie-check/cookie-check.module';
 
 @Module({
   imports: [
@@ -44,6 +46,8 @@ import { CallModule } from './modules/call/call.module';
     PermissionModule,
     ContactModule,
     CallModule,
+    DataExportModule,
+    CookieCheckModule,
   ],
   controllers: [AppController],
 })

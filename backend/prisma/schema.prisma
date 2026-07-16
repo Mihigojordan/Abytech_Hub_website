@@ -765,3 +765,21 @@ model AdminPermission {
   @@map("AdminPermission")
 }
 
+model ImportSnapshot {
+  id               String    @id @default(cuid())
+  createdAt        DateTime  @default(now())
+  performedById    String
+  performedByName  String
+  fileName         String    @default("backup.json")
+  strategy         String    @default("SKIP")
+  groups           Json?
+  summary          Json
+  createdIds       Json
+  status           String    @default("active")
+  rolledBackAt     DateTime?
+  rolledBackById   String?
+  rolledBackByName String?
+
+  @@map("ImportSnapshot")
+}
+

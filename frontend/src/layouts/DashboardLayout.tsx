@@ -11,6 +11,7 @@ import { CallProvider, useCallContext } from '../context/CallContext';
 import IncomingCallModal from '../components/dashboard/chat/ui/IncomingCallModal';
 import ActiveCallModal from '../components/dashboard/chat/ui/ActiveCallModal';
 import CallingOutModal from '../components/dashboard/chat/ui/CallingOutModal';
+import InstallScopeGate from '../components/pwa/InstallScopeGate';
 
 export type RoleType = 'admin';
 
@@ -173,6 +174,7 @@ const DashboardLayout = ({ role }) => {
 
   return (
     <CallProvider>
+      <InstallScopeGate />
       <DashboardInner role={role} isOpen={isOpen} onToggle={onToggle} />
     </CallProvider>
   );

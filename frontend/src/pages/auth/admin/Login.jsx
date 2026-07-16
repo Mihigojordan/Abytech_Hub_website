@@ -5,6 +5,8 @@ import useAdminAuth from '../../../context/AdminAuthContext';
 import Logo from '../../../assets/tran.png';
 import { useDashboardTheme } from '../../../utils/dashboardTheme';
 import { ORG, TEAL, bc, ba } from '../../../utils/homeConstants';
+import ThirdPartyCookieModal from '../../../components/auth/ThirdPartyCookieModal';
+import useThirdPartyCookieCheck from '../../../hooks/useThirdPartyCookieCheck';
 
 const GOOGLE_SVG = (
   <svg width={18} height={18} viewBox="0 0 24 24" fill="none">
@@ -27,6 +29,17 @@ const AdminLogin = () => {
 
   const navigate = useNavigate();
   const location = useLocation();
+
+  const { blocked: cookiesBlocked, recheck: recheckCookies } = useThirdPartyCookieCheck();
+  const [cookieModalDismissed, setCookieModalDismissed] = useState(false);
+  const [recheckingCookies, setRecheckingCookies] = useState(false);
+
+  const handleRetryCookies = async () => {
+    setRecheckingCookies(true);
+    const stillBlocked = await recheckCookies();
+    setRecheckingCookies(false);
+    if (!stillBlocked) setCookieModalDismissed(true);
+  };
 
   useEffect(() => {
     if (isAuthenticated && !authLoading) {
@@ -281,6 +294,14 @@ const AdminLogin = () => {
         data-login_uri={import.meta.env.VITE_ADMIN_CALLBACK_URL}
         data-auto_prompt="false" />
       <div className="g_id_signin" data-type="standard" data-shape="rectangular" data-theme="filled_black" data-text="signin_with" data-size="large" />
+
+      {cookiesBlocked && !cookieModalDismissed && (
+        <ThirdPartyCookieModal
+          onRetry={handleRetryCookies}
+          onDismiss={() => setCookieModalDismissed(true)}
+          retrying={recheckingCookies}
+        />
+      )}
     </div>
   );
 };
