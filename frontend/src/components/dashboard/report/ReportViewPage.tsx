@@ -37,6 +37,7 @@ interface ReplyReport {
   createdAt: string;
   adminId: string;
   reportId: string;
+  replyName?: string;
   admin?: {
     name?: string;
     adminName?: string;
@@ -148,15 +149,17 @@ const ReportViewPage = () => {
   useSocketEvent(
     'reportReplyCreated',
     (newReply: ReplyReport) => {
-      if (selectedReport?.id === newReply.reportId && newReply.adminId !== user?.id) {
-        showOperationStatus("info", `${newReply.admin?.name || 'Someone'} replied`);
+      if (selectedReport?.id !== newReply.reportId) return;
+      if (newReply.adminId !== user?.id) {
+        showOperationStatus("info", `${newReply.replyName || newReply.admin?.name || 'Someone'} replied`);
       }
-      if (selectedReport?.id === newReply.reportId) {
-        setSelectedReport(prev => prev ? {
-          ...prev,
-          replies: [...(prev.replies || []), newReply]
-        } : null);
-      }
+      setSelectedReport(prev => {
+        if (!prev) return null;
+        // The sender already appended this reply from the direct REST response
+        // (handleSendReply below); skip it here so it isn't shown twice.
+        if (prev.replies?.some(r => r.id === newReply.id)) return prev;
+        return { ...prev, replies: [...(prev.replies || []), newReply] };
+      });
     },
     [selectedReport?.id, user?.id]
   );
@@ -270,7 +273,11 @@ const ReportViewPage = () => {
     try {
       setReplying(true);
       const newReply = await reportService.replyToReport(selectedReport.id, replyContent, user?.id);
-      setSelectedReport(prev => prev ? { ...prev, replies: [...(prev.replies || []), newReply] } : null);
+      setSelectedReport(prev => {
+        if (!prev) return null;
+        if (prev.replies?.some(r => r.id === newReply.id)) return prev;
+        return { ...prev, replies: [...(prev.replies || []), newReply] };
+      });
       setReplyContent("");
       showOperationStatus("success", "Reply sent successfully!");
     } catch (err: any) {
@@ -605,11 +612,11 @@ const ReportViewPage = () => {
                               display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                               ...bc(16, 800)
                             }}>
-                              {initials(reply.admin?.adminName || reply.admin?.name)}
+                              {initials(reply.replyName || reply.admin?.adminName || reply.admin?.name)}
                             </div>
                             <div style={{ flex: 1 }}>
                               <div className="flex items-center justify-between mb-2">
-                                <h4 style={{ ...bc(14, 800, { color: textC, margin: 0 }) }}>{reply.admin?.adminName || 'TEAM MEMBER'}</h4>
+                                <h4 style={{ ...bc(14, 800, { color: textC, margin: 0 }) }}>{reply.replyName || reply.admin?.adminName || 'TEAM MEMBER'}</h4>
                                 <span style={{ ...bc(10, 800, { color: text3 }) }}>{getRelativeTime(reply.createdAt).toUpperCase()}</span>
                               </div>
                               <p style={{ ...ba(14, 500, { color: text2, margin: 0, lineHeight: 1.6, whiteSpace: 'pre-line' }) }}>{reply.content}</p>

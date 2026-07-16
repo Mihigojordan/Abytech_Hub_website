@@ -727,13 +727,17 @@ model ReplyReport {
 
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
-  
+
   // Foreign keys
   reportId     String
   report       Report   @relation(fields: [reportId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  
+
   adminId      String
   admin        Admin    @relation(fields: [adminId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  // Snapshot of the replier's name at the time the reply was posted, so
+  // rendering a reply never needs to join/fetch Admin just to show who wrote it.
+  replyName    String?
     @@map("ReplyReport")
 }
 

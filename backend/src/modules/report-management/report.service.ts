@@ -170,10 +170,12 @@ export class ReportService {
 
 
 
-      // Create the reply
+      // Create the reply, snapshotting the replier's current name so
+      // displaying it later never needs to join/fetch the Admin.
       const reply = await this.prisma.replyReport.create({
         data: {
           content,
+          replyName: admin.adminName,
           report: { connect: { id: reportId } },
           admin: { connect: { id: adminId } },
         },
