@@ -340,20 +340,33 @@ const ChatApp = () => {
     const previousMessagesLengthRef = useRef(0);
     const scrollHeightRef = useRef(0);
     const scrollAdjustChatIdRef = useRef<string | null>(null);
+    const firstMessageIdRef = useRef<string | null>(null);
 
     useEffect(() => {
         const container = messagesContainerRef.current;
         if (!container) return;
-        // Only adjust scroll for load-more within the same conversation
         const isSameConversation = scrollAdjustChatIdRef.current === selectedChatId;
-        if (isSameConversation && messages.length > previousMessagesLengthRef.current && previousMessagesLengthRef.current > 0) {
+        const newFirstId = messages.length > 0 ? messages[0].id : null;
+        // Only preserve scroll position for a genuine prepend (older messages loaded
+        // at the top — the first message id changes). An appended new message keeps
+        // the same first id and must NOT be treated as a load-more event, otherwise
+        // this fights with useScrollManagement's own bottom-scroll logic.
+        const isPrepend =
+            isSameConversation &&
+            previousMessagesLengthRef.current > 0 &&
+            messages.length > previousMessagesLengthRef.current &&
+            newFirstId !== null &&
+            newFirstId !== firstMessageIdRef.current;
+
+        if (isPrepend) {
             const heightDifference = container.scrollHeight - scrollHeightRef.current;
-            if (heightDifference > 0 && container.scrollTop < 300) container.scrollTop += heightDifference;
+            if (heightDifference > 0) container.scrollTop += heightDifference;
         }
         scrollAdjustChatIdRef.current = selectedChatId;
         previousMessagesLengthRef.current = messages.length;
         scrollHeightRef.current = container.scrollHeight;
-    }, [messages.length, messagesContainerRef, selectedChatId]);
+        firstMessageIdRef.current = newFirstId;
+    }, [messages, messagesContainerRef, selectedChatId]);
 
     const handleMarkAsRead = useCallback((messageId) => {
         markMessageAsRead(messageId).then(() => {

@@ -67,14 +67,18 @@ export class ReportController {
     return this.reportService.findAll(adminId, pageNum, limitNum, search, filter, from, to);
   }
 
-  // ✅ Get one report
+  // ✅ Get one report (owner-only while its scheduled time hasn't arrived)
   @Get(':id')
-  async findOne(@Param('id') id: string) {
-    return this.reportService.findOne(id);
+  @UseGuards(AdminJwtAuthGuard)
+  async findOne(@Param('id') id: string, @Req() req: RequestWithAdmin) {
+    const adminId = req.admin?.id;
+    if (!adminId) throw new HttpException('Unauthorized admin', 401);
+    return this.reportService.findOne(id, adminId);
   }
 
   // ✅ Update report
   @Put(':id')
+  @UseGuards(AdminJwtAuthGuard)
   @UseInterceptors(FileFieldsInterceptor(ReportFileFields, ReportUploadConfig))
   async update(
     @Param('id') id: string,
@@ -89,29 +93,29 @@ export class ReportController {
     return this.reportService.update(id, data);
   }
 
-  // ✅ Reply to a report
-@Post(':id/reply')
+  // ✅ Reply to a report (owner-only while its scheduled time hasn't arrived)
+  @Post(':id/reply')
+  @UseGuards(AdminJwtAuthGuard)
+  async replyToReport(
+    @Param('id') reportId: string,
+    @Body('content') content: string,
+    @Req() req: RequestWithAdmin,
+  ) {
+    const adminId = req.admin?.id;
+    if (!adminId) throw new HttpException('Unauthorized admin', 401);
 
-async replyToReport(
-  @Param('id') reportId: string,
-  @Body('content') content: string,
-  @Body('adminId') adminId: string,
-  @Req() req: RequestWithAdmin,
-) {
-  
-  if (!adminId) throw new HttpException('Unauthorized admin', 401);
+    if (!content || content.trim() === '') {
+      throw new HttpException('Reply content cannot be empty', 400);
+    }
 
-  if (!content || content.trim() === '') {
-    throw new HttpException('Reply content cannot be empty', 400);
+    return this.reportService.replyToReport(reportId, adminId, content);
   }
-
-  return this.reportService.replyToReport(reportId, adminId, content);
-}
 
 
 
   // ✅ Delete report
   @Delete(':id')
+  @UseGuards(AdminJwtAuthGuard)
   async remove(@Param('id') id: string) {
     return this.reportService.remove(id);
   }

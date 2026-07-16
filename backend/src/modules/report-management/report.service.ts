@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { deleteFile } from 'src/common/utils/file-upload.utils';
 import { CloudinaryService } from 'src/global/cloudinary/cloudinary.service';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -60,31 +60,31 @@ export class ReportService {
         PERMISSIONS.REPORT_MANAGEMENT,
       );
 
-      // base search filter
-      const where: any = search
-        ? {
-          OR: [
-            {
-              title: {
-                contains: search,
-              },
-            },
-            {
-              admin: {
-                is: {
-                  adminName: {
-                    contains: search,
-                  },
-                },
-              },
-            },
-          ],
-        }
-        : {};
+      const where: any = {};
+      const andConditions: any[] = [];
 
-      // If admin doesn't have report_management permission, filter to only their reports
+      // base search filter
+      if (search) {
+        andConditions.push({
+          OR: [
+            { title: { contains: search } },
+            { admin: { is: { adminName: { contains: search } } } },
+          ],
+        });
+      }
+
       if (!hasReportPermission) {
+        // Admins without report_management permission only ever see their own reports
         where.adminId = adminId;
+      } else {
+        // Otherwise, hide reports scheduled for the future from everyone but their owner
+        andConditions.push({
+          OR: [{ createdAt: { lte: new Date() } }, { adminId }],
+        });
+      }
+
+      if (andConditions.length) {
+        where.AND = andConditions;
       }
 
       // apply time filters if provided
@@ -160,6 +160,12 @@ export class ReportService {
       // Check if report exists
       const report = await this.prisma.report.findUnique({ where: { id: reportId } });
       if (!report) throw new BadRequestException('Report not found');
+
+      // Reports scheduled for the future are only accessible to their owner
+      if (report.createdAt > new Date() && report.adminId !== adminId) {
+        throw new ForbiddenException('This report is not yet available');
+      }
+
       const admin = await this.prisma.admin.findUnique({ where: { id: adminId } });
       if (!admin) throw new BadRequestException('Admin not found');
 
@@ -187,10 +193,15 @@ export class ReportService {
       };
 
       await this.notification.sendToAdmin(report.adminId, payload)
-      this.reportGateway.emitReplyCreated(reply)
+
+      // Never broadcast the report's own title/content over the (unscoped) socket
+      // channel, so a still-scheduled report can't leak to other admins via a reply.
+      const { report: _omittedReport, ...broadcastReply } = reply;
+      this.reportGateway.emitReplyCreated(broadcastReply)
 
       return reply;
     } catch (error) {
+      if (error instanceof ForbiddenException) throw error;
       throw new BadRequestException('Failed to reply to report: ' + error.message);
     }
   }
@@ -198,17 +209,19 @@ export class ReportService {
 
 
   // ✅ Fetch one report by ID
-  async findOne(id: string) {
-    try {
-      const report = await this.prisma.report.findUnique({
-        where: { id },
-        include: { admin: true, replies: true },
-      });
-      if (!report) throw new BadRequestException('Report not found');
-      return report;
-    } catch (error) {
-      throw new BadRequestException('Failed to fetch report: ' + error.message);
+  async findOne(id: string, adminId: string) {
+    const report = await this.prisma.report.findUnique({
+      where: { id },
+      include: { admin: true, replies: true },
+    });
+    if (!report) throw new BadRequestException('Report not found');
+
+    // Reports scheduled for the future are only visible to their owner
+    if (report.createdAt > new Date() && report.adminId !== adminId) {
+      throw new ForbiddenException('This report is not yet available');
     }
+
+    return report;
   }
 
   // ✅ Update report

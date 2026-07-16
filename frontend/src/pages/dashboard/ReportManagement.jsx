@@ -44,7 +44,7 @@ async function downloadFile(url, fileName) {
 }
 
 const ReportDashboard = () => {
-  const { hasPermission, permissions, isSuperAdmin } = useAdminAuth();
+  const { user, hasPermission, permissions, isSuperAdmin } = useAdminAuth();
   const hasReportPermission = hasPermission('report_management');
   const { isDark, bg, bg2, bg3, textC, text2, text3, border } = useDashboardTheme();
 
@@ -340,6 +340,22 @@ const ReportDashboard = () => {
     showOperationStatus('success', 'Reports exported successfully!');
   };
 
+  // A report is "scheduled" (owner-only visibility) while its date/time is still in the future
+  const isScheduled = (report) => report?.createdAt && new Date(report.createdAt) > new Date();
+
+  const ScheduledBadge = () => (
+    <span
+      title="Only visible to you until this date/time arrives"
+      style={{
+        display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px',
+        borderRadius: 4, background: 'rgba(232,98,26,.12)', border: '1px solid rgba(232,98,26,.3)',
+        ...bc(9, 700, { color: ORG, letterSpacing: 1, textTransform: 'uppercase' }),
+      }}
+    >
+      <Clock className="w-3 h-3" /> Scheduled
+    </span>
+  );
+
   const formatDate = (date) => {
     if (!date) return new Date().toLocaleDateString('en-GB');
     const parsedDate = new Date(date);
@@ -380,7 +396,12 @@ const ReportDashboard = () => {
                 onMouseEnter={e => e.currentTarget.style.background = bg3}
                 onMouseLeave={e => e.currentTarget.style.background = bg2}
               >
-                <td className="py-3 px-4" style={ba(12, 600, { color: textC })}>{report.title || 'N/A'}</td>
+                <td className="py-3 px-4" style={ba(12, 600, { color: textC })}>
+                  <div className="flex items-center gap-2">
+                    <span>{report.title || 'N/A'}</span>
+                    {report.adminId === user?.id && isScheduled(report) && <ScheduledBadge />}
+                  </div>
+                </td>
                 <td className="py-3 px-4 hidden md:table-cell" style={ba(12, 400, { color: text2 })}>{report.admin?.adminName || 'Unknown'}</td>
                 <td className="py-3 px-4" style={ba(12, 400, { color: text2 })}>{formatDate(report.createdAt)}</td>
                 <td className="py-3 px-4">
@@ -438,6 +459,9 @@ const ReportDashboard = () => {
             <div className="flex items-start justify-between mb-3">
               <div className="flex-1 pr-2">
                 <h3 className="mb-1 line-clamp-2 leading-snug" style={ba(13, 600, { color: textC })}>{report.title}</h3>
+                {report.adminId === user?.id && isScheduled(report) && (
+                  <div className="mb-1"><ScheduledBadge /></div>
+                )}
                 <p className="flex items-center space-x-1" style={ba(11, 400, { color: text2 })}>
                   <Users className="w-3 h-3" />
                   <span>{report.admin?.adminName || 'Unknown'}</span>
@@ -531,6 +555,7 @@ const ReportDashboard = () => {
                     <Calendar className="w-3 h-3 mr-1" />
                     {formatDate(report.createdAt)}
                   </span>
+                  {report.adminId === user?.id && isScheduled(report) && <ScheduledBadge />}
                 </div>
                 <p className="flex items-center" style={ba(11, 400, { color: text2 })}>
                   <Users className="w-3 h-3 mr-1" />

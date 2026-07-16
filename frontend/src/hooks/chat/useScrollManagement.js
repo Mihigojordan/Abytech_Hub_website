@@ -56,8 +56,12 @@ export const useScrollManagement = (messages, selectedChatId, onScrollToTop, has
         }
 
         // Detect scroll to top for loading more messages
-        // Add a threshold to trigger slightly before reaching absolute top
-        if (scrollTop < 200 && hasMore && !isLoadingRef.current) {
+        // Add a threshold to trigger slightly before reaching absolute top.
+        // Require real overflow first — otherwise a short conversation sits at
+        // scrollTop 0 while already "at the bottom", and every render (e.g. after
+        // sending a message) would spuriously trigger a pagination load.
+        const isScrollable = scrollHeight > clientHeight + 10;
+        if (isScrollable && scrollTop < 200 && hasMore && !isLoadingRef.current) {
             console.log('🔄 Triggering load more messages - scrollTop:', scrollTop);
             isLoadingRef.current = true;
             setIsLoadingMore(true);
