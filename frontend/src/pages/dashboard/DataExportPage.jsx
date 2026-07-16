@@ -1,13 +1,15 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, Fragment } from 'react';
 import {
     Download, Upload, History, FileJson, FileSpreadsheet, FileText,
-    RefreshCw, CheckCircle, XCircle, X, Eye, Undo2, AlertTriangle,
-    ChevronDown, ChevronUp, CheckSquare, Database,
+    RefreshCw, CheckCircle, XCircle, X, AlertTriangle,
+    ChevronDown, Database, ArrowLeft, ArrowRight,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import dataExportService from '../../services/dataExportService';
 import { useDashboardTheme } from '../../utils/dashboardTheme';
 import { ORG, bb, bc, ba } from '../../utils/homeConstants';
+
+// ─── Constants ────────────────────────────────────────
 
 const EXPORT_GROUPS = [
     { id: 'expenses',       label: 'Expenses',                desc: 'All expense records',                 warn: null },
@@ -35,573 +37,765 @@ const GROUP_LABELS = {
     notifications:  'Notifications',
 };
 
-const STRATEGY_INFO = {
-    SKIP:              { label: 'Skip duplicates',      desc: 'Existing records are left unchanged. Only new records are imported.' },
-    OVERWRITE:         { label: 'Overwrite duplicates', desc: 'Existing records are updated with data from the backup file.' },
-    ABORT_ON_CONFLICT: { label: 'Abort on conflict',   desc: 'If any conflicts are found, the entire import is cancelled.' },
-};
+const FORMAT_OPTIONS = [
+    { id: 'json',  label: 'JSON — Full Backup',  desc: 'Complete re-importable backup',          Icon: FileJson },
+    { id: 'excel', label: 'Excel — Spreadsheet',  desc: 'One sheet per entity, human-readable',   Icon: FileSpreadsheet },
+    { id: 'pdf',   label: 'PDF — Summary Report', desc: 'Print-ready organisation overview',      Icon: FileText },
+];
 
-const DataExportPage = () => {
-    const { bg, bg2, bg3, textC, text2, border } = useDashboardTheme();
+const CONFLICT_STRATEGIES = [
+    { id: 'SKIP',              label: 'Skip duplicates',     badge: 'Recommended',    desc: 'Existing records are left unchanged. Only new records are imported.' },
+    { id: 'OVERWRITE',         label: 'Overwrite duplicates', badge: 'Updates data',   desc: 'Existing records are updated with data from the backup file.' },
+    { id: 'ABORT_ON_CONFLICT', label: 'Abort on conflict',   badge: 'Strictest',      desc: 'If any conflicts are found, the entire import is cancelled.' },
+];
 
-    // Export
-    const [exportFormat, setExportFormat] = useState('json');
-    const [selectedGroups, setSelectedGroups] = useState([]);
-    const [isExporting, setIsExporting] = useState(false);
+export default function DataExportPage() {
+    const theme = useDashboardTheme();
+    const { bg, bg2, bg3, textC, text2, border } = theme;
 
-    // Import wizard
-    const [importStep, setImportStep] = useState(0); // 0=strategy, 1=upload, 2=preview, 3=done
-    const [importStrategy, setImportStrategy] = useState('SKIP');
-    const [importGroups, setImportGroups] = useState([]);
-    const [dragOver, setDragOver] = useState(false);
-    const [importFile, setImportFile] = useState(null);
-    const [isPreviewing, setIsPreviewing] = useState(false);
-    const [previewData, setPreviewData] = useState(null);
-    const [isImporting, setIsImporting] = useState(false);
-    const [importResult, setImportResult] = useState(null);
+    const [tab, setTab] = useState('export');
+
+    // ── Export state ──────────────────────────────────
+    const [exportStep, setExportStep]       = useState(1);
+    const [exportDone, setExportDone]       = useState(false);
+    const [exportLoading, setExportLoading] = useState(false);
+    const [exportError, setExportError]     = useState('');
+    const [groups, setGroups]               = useState([]);
+    const [format, setFormat]               = useState('json');
+
+    // ── Import state ──────────────────────────────────
+    const [importStep, setImportStep]       = useState(1);
+    const [importDone, setImportDone]       = useState(false);
+    const [importLoading, setImportLoading] = useState(false);
+    const [importError, setImportError]     = useState('');
+    const [conflictStrategy, setConflictStrategy] = useState('SKIP');
+    const [file, setFile]                   = useState(null);
+    const [drag, setDrag]                   = useState(false);
+    const [preview, setPreview]             = useState(null);
+    const [previewLoading, setPreviewLoading] = useState(false);
+    const [previewError, setPreviewError]   = useState('');
+    const [results, setResults]             = useState(null);
+    const [importGroups, setImportGroups]   = useState(null); // null = all groups
     const fileInputRef = useRef(null);
 
-    // History
-    const [history, setHistory] = useState([]);
+    // ── History state ─────────────────────────────────
+    const [history, setHistory]               = useState(null);
     const [historyLoading, setHistoryLoading] = useState(false);
-    const [historyOpen, setHistoryOpen] = useState(false);
     const [rollbackTarget, setRollbackTarget] = useState(null);
-    const [isRollingBack, setIsRollingBack] = useState(false);
+    const [rollbackLoading, setRollbackLoading] = useState(false);
+    const [rollbackError, setRollbackError]   = useState('');
 
-    // Toast
+    // ── Toast ──────────────────────────────────────────
     const [toast, setToast] = useState(null);
-
     const showToast = (type, message) => {
         setToast({ type, message });
         setTimeout(() => setToast(null), 4000);
     };
 
-    const toggleGroup = (id) =>
-        setSelectedGroups((p) => p.includes(id) ? p.filter((g) => g !== id) : [...p, id]);
+    // ─── Export logic ──────────────────────────────────
 
-    const toggleImportGroup = (id) =>
-        setImportGroups((p) => p.includes(id) ? p.filter((g) => g !== id) : [...p, id]);
-
-    // ── Export ──────────────────────────────────────────────────────────
-    const handleExport = async () => {
+    const runExport = async () => {
+        setExportLoading(true); setExportError('');
         try {
-            setIsExporting(true);
-            await dataExportService.exportData({ format: exportFormat, groups: selectedGroups });
+            await dataExportService.exportData({ format, groups });
+            setExportDone(true);
             showToast('success', 'Export downloaded successfully');
         } catch (err) {
-            showToast('error', err.message || 'Export failed');
+            setExportError(err?.message ?? 'Export failed. Please try again.');
         } finally {
-            setIsExporting(false);
+            setExportLoading(false);
         }
     };
 
-    // ── Import file pick ─────────────────────────────────────────────────
-    const handleFilePick = (e) => {
-        const file = e.target?.files?.[0];
-        if (file && file.name.endsWith('.json')) {
-            setImportFile(file);
-        } else if (file) {
-            showToast('error', 'Please upload a .json backup file');
-        }
+    const resetExport = () => {
+        setExportDone(false); setExportStep(1); setExportError('');
+        setGroups([]); setFormat('json');
     };
 
-    const handleDrop = (e) => {
-        e.preventDefault();
-        setDragOver(false);
-        const file = e.dataTransfer?.files?.[0];
-        if (file && file.name.endsWith('.json')) {
-            setImportFile(file);
-        } else if (file) {
-            showToast('error', 'Please upload a .json backup file');
-        }
-    };
+    // ─── Import logic ──────────────────────────────────
 
-    // ── Import preview ───────────────────────────────────────────────────
-    const handlePreview = async () => {
-        if (!importFile) return;
+    const loadPreview = async (f, strategy, gs) => {
+        setPreview(null); setPreviewError(''); setPreviewLoading(true);
         try {
-            setIsPreviewing(true);
-            const data = await dataExportService.importPreview(importFile, { strategy: importStrategy, groups: importGroups });
-            setPreviewData(data);
-            setImportStep(2);
+            const data = await dataExportService.importPreview(f, { strategy, groups: gs ?? [] });
+            setPreview(data);
         } catch (err) {
-            showToast('error', err.message || 'Preview failed');
+            setPreviewError(err?.message ?? 'Could not read file. Make sure it is a valid AbyTech Hub backup.');
         } finally {
-            setIsPreviewing(false);
+            setPreviewLoading(false);
         }
     };
 
-    // ── Import commit ────────────────────────────────────────────────────
-    const handleImport = async () => {
-        if (!importFile) return;
+    const handleFile = (f) => {
+        if (!f) return;
+        if (!f.name.endsWith('.json')) {
+            setPreviewError('Please upload a .json backup file');
+            return;
+        }
+        setFile(f); setPreview(null); setResults(null); setImportError(''); setPreviewError('');
+    };
+
+    const runImport = async () => {
+        if (!file) return;
+        setImportLoading(true); setImportError('');
         try {
-            setIsImporting(true);
-            const result = await dataExportService.importData(importFile, { strategy: importStrategy, groups: importGroups });
-            setImportResult(result);
-            setImportStep(3);
+            const data = await dataExportService.importData(file, { strategy: conflictStrategy, groups: importGroups ?? [] });
+            setResults(data);
+            setImportDone(true);
             showToast('success', 'Import completed successfully');
+            loadHistory();
         } catch (err) {
-            showToast('error', err.message || 'Import failed');
+            setImportError(err?.message ?? 'Import failed.');
         } finally {
-            setIsImporting(false);
+            setImportLoading(false);
         }
+    };
+
+    const toggleImportGroup = (g) => {
+        setImportGroups(prev => {
+            const current = prev ?? [];
+            return current.includes(g) ? current.filter(x => x !== g) : [...current, g];
+        });
     };
 
     const resetImport = () => {
-        setImportStep(0);
-        setImportFile(null);
-        setPreviewData(null);
-        setImportResult(null);
-        setImportGroups([]);
-        setImportStrategy('SKIP');
+        setImportDone(false); setImportStep(1); setImportError('');
+        setFile(null); setPreview(null); setPreviewError(''); setResults(null);
+        setConflictStrategy('SKIP'); setImportGroups(null);
+        if (fileInputRef.current) fileInputRef.current.value = '';
     };
 
-    // ── History ──────────────────────────────────────────────────────────
     const loadHistory = async () => {
-        try {
-            setHistoryLoading(true);
-            const data = await dataExportService.getImportHistory();
-            setHistory(data);
-            setHistoryOpen(true);
-        } catch {
-            showToast('error', 'Failed to load history');
-        } finally {
-            setHistoryLoading(false);
-        }
+        if (historyLoading) return;
+        setHistoryLoading(true);
+        try { setHistory(await dataExportService.getImportHistory()); }
+        catch { /* silent */ }
+        finally { setHistoryLoading(false); }
     };
 
-    const handleRollback = async () => {
+    const confirmRollback = async () => {
         if (!rollbackTarget) return;
+        setRollbackLoading(true); setRollbackError('');
         try {
-            setIsRollingBack(true);
             await dataExportService.rollbackImport(rollbackTarget.id);
-            showToast('success', 'Rollback completed');
             setRollbackTarget(null);
-            await loadHistory();
+            showToast('success', 'Rollback completed');
+            loadHistory();
         } catch (err) {
-            showToast('error', err.message || 'Rollback failed');
+            setRollbackError(err?.message ?? 'Rollback failed.');
         } finally {
-            setIsRollingBack(false);
+            setRollbackLoading(false);
         }
     };
 
-    const fmtDate = (iso) => (iso ? new Date(iso).toLocaleString() : '—');
-    const totalImported = (summary) =>
-        Array.isArray(summary) ? summary.reduce((a, r) => a + (r.created ?? 0) + (r.updated ?? 0), 0) : 0;
+    // ─── Navigation ────────────────────────────────────
 
-    // ── Shared style helpers ─────────────────────────────────────────────
-    const card = { background: bg2, border: '1px solid ' + border, borderRadius: 8, padding: 24, marginBottom: 24 };
-    const sectionTitle = bc(11, 700, { letterSpacing: 3, textTransform: 'uppercase', color: text2 });
-    const pill = (active) => ({
-        padding: '5px 14px', borderRadius: 20, fontSize: 12, fontWeight: 600,
-        cursor: 'pointer', transition: 'all .15s', border: 'none',
-        ...(active ? { background: ORG, color: '#fff' } : { background: bg3, color: textC, border: '1px solid ' + border }),
+    const isExport = tab === 'export';
+    const curStep  = isExport ? exportStep : importStep;
+    const isDone   = isExport ? exportDone : importDone;
+
+    const handleBack = () => {
+        if (isExport) setExportStep(s => Math.max(1, s - 1));
+        else           setImportStep(s => Math.max(1, s - 1));
+    };
+
+    const handleNext = async () => {
+        if (isExport) {
+            if (exportStep === 3) { await runExport(); return; }
+            setExportStep(s => s + 1);
+            return;
+        }
+        if (importStep === 3) { await runImport(); return; }
+        if (importStep === 2 && file && !preview) {
+            await loadPreview(file, conflictStrategy, importGroups);
+        }
+        setImportStep(s => s + 1);
+    };
+
+    const nextDisabled =
+        (isExport  && exportLoading) ||
+        (!isExport && importLoading) ||
+        (!isExport && importStep === 2 && !file) ||
+        (!isExport && importStep === 3 && (previewLoading || !!previewError));
+
+    const nextLabel =
+        exportLoading ? 'Exporting…' :
+        importLoading ? 'Importing…' :
+        curStep === 3 ? (isExport ? 'Export Now' : 'Import Now') :
+        'Continue';
+
+    // ─── Derived ───────────────────────────────────────
+
+    const selGroups = EXPORT_GROUPS.filter(g => groups.includes(g.id));
+    const selFormat = FORMAT_OPTIONS.find(f => f.id === format) ?? FORMAT_OPTIONS[0];
+    const selStrat  = CONFLICT_STRATEGIES.find(cs => cs.id === conflictStrategy) ?? CONFLICT_STRATEGIES[0];
+    const largeGroups = selGroups.filter(g => g.warn);
+
+    const EXPORT_LABELS = ['Select Data', 'Format', 'Review'];
+    const IMPORT_LABELS = ['Strategy', 'Upload File', 'Preview'];
+
+    // ─── Shared style tokens ───────────────────────────
+
+    const panel      = { background: bg2, border: '1px solid ' + border, borderRadius: 10, overflow: 'hidden' };
+    const panelHead  = { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '13px 18px', borderBottom: '1px solid ' + border, flexWrap: 'wrap' };
+    const panelTitleWrap = (label, sub) => (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ width: 3, height: 15, background: ORG, borderRadius: 2 }} />
+            <span style={{ ...bc(11, 700, { letterSpacing: 2, textTransform: 'uppercase', color: textC }) }}>{label}</span>
+            {sub && <span style={{ ...ba(11, 400, { color: text2 }) }}>{sub}</span>}
+        </div>
+    );
+    const chip = (active) => ({
+        border: `1px solid ${active ? ORG : border}`,
+        background: active ? 'rgba(232,98,26,.12)' : 'transparent',
+        color: active ? ORG : text2,
+        borderRadius: 20, padding: '3px 10px', fontSize: 11, fontWeight: 600, cursor: 'pointer', transition: 'all .15s',
     });
-    const stepBtn = (primary, disabled) => ({
+    const navBtn = (primary, disabled) => ({
         display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
         padding: '9px 20px', fontSize: 13, fontWeight: 700, borderRadius: 6, cursor: disabled ? 'not-allowed' : 'pointer',
-        transition: 'all .15s', border: 'none',
-        ...(primary
-            ? { background: ORG, color: '#fff', opacity: disabled ? 0.55 : 1 }
-            : { background: bg3, color: textC, border: '1px solid ' + border }),
+        transition: 'all .15s', border: primary ? 'none' : '1px solid ' + border,
+        background: primary ? ORG : bg3, color: primary ? '#fff' : textC, opacity: disabled ? 0.55 : 1,
     });
 
-    return (
-        <div style={{ background: bg, minHeight: '100vh' }}>
-            {/* ── Page header ─────────────────────────────────────────── */}
-            <div style={{ background: bg2, borderBottom: '1px solid ' + border, marginBottom: 0 }}>
-                <div style={{ maxWidth: 900, margin: '0 auto', padding: '20px 24px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                        <div style={{ width: 40, height: 40, borderRadius: 8, background: 'rgba(232,98,26,.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <Database size={20} color={ORG} />
+    function Dot({ checked }) {
+        return (
+            <div style={{ width: 14, height: 14, borderRadius: '50%', flexShrink: 0, border: `1.5px solid ${checked ? ORG : border}`, background: checked ? ORG : bg2, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all .12s' }}>
+                {checked && <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#fff' }} />}
+            </div>
+        );
+    }
+
+    function Checkbox({ checked }) {
+        return (
+            <div style={{ width: 14, height: 14, borderRadius: 3, flexShrink: 0, marginTop: 1, border: `1px solid ${checked ? ORG : border}`, background: checked ? ORG : bg2, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all .12s' }}>
+                {checked && (
+                    <svg width="8" height="7" viewBox="0 0 8 7" fill="none">
+                        <path d="M1 3.5l2.5 2.5 3.5-5" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                )}
+            </div>
+        );
+    }
+
+    function sv(n, curr) {
+        const done = curr > n, active = curr === n;
+        return {
+            bg:    done ? '#4ade80' : active ? ORG : bg3,
+            color: (done || active) ? '#fff' : text2,
+            text:  done ? '✓' : String(n),
+            labelColor: active ? ORG : done ? '#4ade80' : text2,
+        };
+    }
+
+    const renderWizard = (curr, labels) => (
+        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 20, padding: '0 4px' }}>
+            {[1, 2, 3].map((n, i) => {
+                const s = sv(n, curr);
+                return (
+                    <Fragment key={n}>
+                        {i > 0 && (
+                            <div style={{ flex: 1, height: 1, margin: '0 10px', marginBottom: 15, transition: 'background .3s', background: curr > i ? '#4ade80' : border }} />
+                        )}
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5 }}>
+                            <div style={{ width: 30, height: 30, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, transition: 'all .25s', background: s.bg, color: s.color }}>
+                                {s.text}
+                            </div>
+                            <span style={{ ...bc(10, 700, { letterSpacing: 1, textTransform: 'uppercase', whiteSpace: 'nowrap', color: s.labelColor }) }}>
+                                {labels[i]}
+                            </span>
                         </div>
-                        <div>
-                            <h1 style={{ ...bb(26, { color: ORG, margin: 0, lineHeight: 1 }) }}>Data Export & Import</h1>
-                            <p style={{ ...ba(12, 400, { color: text2, marginTop: 3 }) }}>Back up, restore, and manage your organisation data</p>
+                    </Fragment>
+                );
+            })}
+        </div>
+    );
+
+    // ─── ResultRow ─────────────────────────────────────
+
+    function ResultRow({ r }) {
+        const [open, setOpen] = useState(false);
+        const hasWarnings = r.warnings?.length > 0;
+        const dotColor = r.failed > 0 ? '#e84040' : hasWarnings ? '#fbbf24' : '#4ade80';
+
+        return (
+            <div style={{ border: '1px solid ' + border, borderRadius: 6, overflow: 'hidden', marginBottom: 4 }}>
+                <button
+                    onClick={() => hasWarnings && setOpen(o => !o)}
+                    style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '9px 14px', background: 'none', border: 'none', cursor: hasWarnings ? 'pointer' : 'default', textAlign: 'left' }}
+                >
+                    <div style={{ width: 8, height: 8, borderRadius: '50%', background: dotColor, flexShrink: 0 }} />
+                    <span style={{ flex: 1, ...ba(12, 600, { color: textC }) }}>{r.entity}</span>
+                    <span style={{ display: 'flex', gap: 10, ...ba(11, 400, { color: text2 }) }}>
+                        {r.created > 0 && <span style={{ color: '#4ade80' }}>+{r.created} created</span>}
+                        {r.updated > 0 && <span style={{ color: ORG }}>↑{r.updated} updated</span>}
+                        {r.skipped > 0 && <span style={{ color: '#fbbf24' }}>{r.skipped} skipped</span>}
+                        {r.failed  > 0 && <span style={{ color: '#e84040' }}>{r.failed} failed</span>}
+                        {!r.created && !r.updated && !r.skipped && !r.failed && <span>no changes</span>}
+                    </span>
+                    {hasWarnings && (
+                        <ChevronDown size={12} style={{ flexShrink: 0, color: text2, transform: open ? 'rotate(180deg)' : 'none', transition: 'transform .15s' }} />
+                    )}
+                </button>
+                {open && hasWarnings && (
+                    <div style={{ padding: '8px 14px 10px', borderTop: '1px solid ' + border, background: 'rgba(251,191,36,.08)' }}>
+                        {r.warnings.map((w, i) => (
+                            <p key={i} style={{ ...ba(11, 400, { color: '#fbbf24', lineHeight: 1.5 }) }}>{w}</p>
+                        ))}
+                    </div>
+                )}
+            </div>
+        );
+    }
+
+    // ─── Export step 1 — data groups ───────────────────
+
+    const renderExportStep1 = () => (
+        <div>
+            <div style={{ ...panel, marginBottom: 10 }}>
+                <div style={panelHead}>
+                    {panelTitleWrap('Data Groups')}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <span style={{ ...ba(11, 600, { color: ORG }) }}>{groups.length}/{EXPORT_GROUPS.length} selected</span>
+                        <button onClick={() => setGroups(EXPORT_GROUPS.map(g => g.id))} style={{ ...navBtn(false, false), padding: '4px 10px', fontSize: 11 }}>All</button>
+                        <button onClick={() => setGroups([])} style={{ ...navBtn(false, false), padding: '4px 10px', fontSize: 11 }}>None</button>
+                    </div>
+                </div>
+                {/* Core data locked row */}
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '9px 18px', background: bg3, borderBottom: '1px solid ' + border }}>
+                    <div style={{ width: 14, height: 14, borderRadius: 3, background: '#4ade80', border: '1px solid #4ade80', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
+                        <svg width="8" height="7" viewBox="0 0 8 7" fill="none"><path d="M1 3.5l2.5 2.5 3.5-5" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                    </div>
+                    <div style={{ flex: 1 }}>
+                        <span style={{ ...ba(12, 700, { color: textC }) }}>Core Data</span>
+                        <span style={{ ...ba(11, 400, { color: text2, marginLeft: 6 }) }}>always included</span>
+                        <div style={{ ...ba(11, 400, { color: text2, marginTop: 1 }) }}>Admins, Permissions</div>
+                    </div>
+                </div>
+                {EXPORT_GROUPS.map(g => {
+                    const c = groups.includes(g.id);
+                    return (
+                        <div
+                            key={g.id}
+                            onClick={() => setGroups(prev => prev.includes(g.id) ? prev.filter(x => x !== g.id) : [...prev, g.id])}
+                            style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '9px 18px', cursor: 'pointer', borderBottom: '1px solid ' + border, background: c ? 'rgba(232,98,26,.08)' : 'transparent', transition: 'background .1s' }}
+                        >
+                            <Checkbox checked={c} />
+                            <div style={{ flex: 1 }}>
+                                <div style={{ ...ba(12, 600, { color: textC }) }}>{g.label}</div>
+                                <div style={{ ...ba(11, 400, { color: text2, marginTop: 1 }) }}>{g.desc}</div>
+                            </div>
+                            {g.warn && (
+                                <span style={{ padding: '2px 8px', borderRadius: 20, fontSize: 10, fontWeight: 600, background: 'rgba(251,191,36,.15)', color: '#fbbf24' }}>{g.warn}</span>
+                            )}
                         </div>
+                    );
+                })}
+            </div>
+        </div>
+    );
+
+    // ─── Export step 2 — format ────────────────────────
+
+    const renderExportStep2 = () => (
+        <div style={panel}>
+            <div style={panelHead}>{panelTitleWrap('Export Format')}</div>
+            <div style={{ padding: 14 }}>
+                {FORMAT_OPTIONS.map(opt => {
+                    const sel = format === opt.id;
+                    const Icon = opt.Icon;
+                    return (
+                        <div key={opt.id} onClick={() => setFormat(opt.id)} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '12px 14px', borderRadius: 8, cursor: 'pointer', border: `1px solid ${sel ? ORG : border}`, background: sel ? 'rgba(232,98,26,.08)' : bg3, marginBottom: 6, transition: 'all .12s' }}>
+                            <div style={{ width: 36, height: 36, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: sel ? 'rgba(232,98,26,.15)' : bg2 }}>
+                                <Icon size={18} color={sel ? ORG : text2} />
+                            </div>
+                            <div style={{ flex: 1 }}>
+                                <div style={{ ...ba(12, 700, { color: sel ? ORG : textC }) }}>{opt.label}</div>
+                                <div style={{ ...ba(11, 400, { color: text2, marginTop: 2 }) }}>{opt.desc}</div>
+                            </div>
+                            <div style={{ marginTop: 2 }}><Dot checked={sel} /></div>
+                        </div>
+                    );
+                })}
+            </div>
+        </div>
+    );
+
+    // ─── Export step 3 — review ────────────────────────
+
+    const renderExportStep3 = () => (
+        <div style={panel}>
+            <div style={panelHead}>{panelTitleWrap('Review Export')}</div>
+            <div style={{ display: 'grid', gap: 1, background: border }}>
+                <div style={{ background: bg2, padding: '12px 18px', display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                    <div style={{ width: 26, height: 26, borderRadius: 6, background: 'rgba(232,98,26,.12)', color: ORG, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <Database size={13} />
+                    </div>
+                    <div>
+                        <div style={{ ...bc(10, 700, { letterSpacing: 1, color: text2, textTransform: 'uppercase', marginBottom: 3 }) }}>Data Groups</div>
+                        <div style={{ ...ba(12, 700, { color: textC }) }}>
+                            {groups.length === 0 ? 'Core data only' : `Core data + ${groups.length} more (${selGroups.map(g => g.label).join(', ')})`}
+                        </div>
+                    </div>
+                </div>
+                <div style={{ background: bg2, padding: '12px 18px', display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                    <div style={{ width: 26, height: 26, borderRadius: 6, background: 'rgba(232,98,26,.12)', color: ORG, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <selFormat.Icon size={13} />
+                    </div>
+                    <div>
+                        <div style={{ ...bc(10, 700, { letterSpacing: 1, color: text2, textTransform: 'uppercase', marginBottom: 3 }) }}>Format</div>
+                        <div style={{ ...ba(12, 700, { color: textC }) }}>{selFormat.label}</div>
                     </div>
                 </div>
             </div>
+            {largeGroups.length > 0 && (
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '10px 18px', borderTop: '1px solid ' + border, background: 'rgba(251,191,36,.08)' }}>
+                    <AlertTriangle size={14} style={{ flexShrink: 0, marginTop: 1, color: '#fbbf24' }} />
+                    <p style={{ ...ba(11, 600, { color: '#fbbf24', lineHeight: 1.5 }) }}>
+                        {largeGroups.map(g => g.label).join(', ')} can produce very large files.
+                    </p>
+                </div>
+            )}
+            {exportError && (
+                <div style={{ padding: '10px 18px', borderTop: '1px solid ' + border, background: 'rgba(232,64,64,.1)', color: '#e84040', fontSize: 12 }}>
+                    {exportError}
+                </div>
+            )}
+        </div>
+    );
 
-            <div style={{ maxWidth: 900, margin: '0 auto', padding: '28px 24px' }}>
+    // ─── Export done ───────────────────────────────────
 
-                {/* ══════════════════════════════════════════════════════ */}
-                {/* EXPORT SECTION                                        */}
-                {/* ══════════════════════════════════════════════════════ */}
-                <div style={card}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
-                        <div style={{ width: 3, height: 16, background: ORG, borderRadius: 2 }} />
-                        <span style={sectionTitle}>Export Data</span>
-                    </div>
+    const renderExportDone = () => (
+        <div style={{ ...panel, padding: '48px 24px', textAlign: 'center' }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 56, height: 56, borderRadius: '50%', background: 'rgba(74,222,128,.15)', marginBottom: 16 }}>
+                <CheckCircle size={26} color="#4ade80" />
+            </div>
+            <div style={{ ...bb(20, { color: textC, marginBottom: 6 }) }}>Export complete</div>
+            <div style={{ ...ba(12, 400, { color: text2, marginBottom: 20 }) }}>
+                {groups.length + 1} data group{groups.length + 1 !== 1 ? 's' : ''} exported as {selFormat.label}
+            </div>
+            <button onClick={resetExport} style={navBtn(true, false)}>New export</button>
+        </div>
+    );
 
-                    {/* Format picker */}
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginBottom: 20 }}>
-                        {[
-                            { id: 'json',  Icon: FileJson,        label: 'JSON Backup',  desc: 'Full backup · re-importable' },
-                            { id: 'excel', Icon: FileSpreadsheet, label: 'Excel Report',  desc: 'Spreadsheet · human-readable' },
-                            { id: 'pdf',   Icon: FileText,        label: 'PDF Summary',   desc: 'Print-ready report' },
-                        ].map(({ id, Icon, label, desc }) => (
-                            <button
-                                key={id}
-                                onClick={() => setExportFormat(id)}
-                                style={{
-                                    flex: '1 1 160px', padding: '12px 16px', borderRadius: 8, cursor: 'pointer',
-                                    display: 'flex', alignItems: 'center', gap: 10, transition: 'all .15s',
-                                    ...(exportFormat === id
-                                        ? { background: 'rgba(232,98,26,.1)', border: '2px solid rgba(232,98,26,.5)' }
-                                        : { background: bg3, border: '1px solid ' + border }),
-                                }}
-                            >
-                                <Icon size={20} color={exportFormat === id ? ORG : text2} style={{ flexShrink: 0 }} />
-                                <div style={{ textAlign: 'left' }}>
-                                    <div style={{ ...ba(13, 700, { color: exportFormat === id ? ORG : textC }) }}>{label}</div>
-                                    <div style={{ ...ba(11, 400, { color: text2 }) }}>{desc}</div>
+    // ─── Import step 1 — strategy ──────────────────────
+
+    const renderImportStep1 = () => (
+        <div style={panel}>
+            <div style={panelHead}>{panelTitleWrap('Import Strategy', 'What happens when a record already exists?')}</div>
+            <div style={{ padding: 14 }}>
+                {CONFLICT_STRATEGIES.map(strat => {
+                    const sel = conflictStrategy === strat.id;
+                    return (
+                        <div key={strat.id} onClick={() => setConflictStrategy(strat.id)} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '12px 14px', borderRadius: 8, cursor: 'pointer', border: `1px solid ${sel ? ORG : border}`, background: sel ? 'rgba(232,98,26,.08)' : bg3, marginBottom: 6, transition: 'all .12s' }}>
+                            <div style={{ marginTop: 3 }}><Dot checked={sel} /></div>
+                            <div style={{ flex: 1 }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
+                                    <span style={{ ...ba(12, 700, { color: textC }) }}>{strat.label}</span>
+                                    <span style={{ display: 'inline-flex', alignItems: 'center', height: 20, padding: '0 7px', borderRadius: 4, fontSize: 10, fontWeight: 600, background: 'rgba(232,98,26,.12)', color: ORG, whiteSpace: 'nowrap' }}>
+                                        {strat.badge}
+                                    </span>
                                 </div>
-                            </button>
+                                <div style={{ ...ba(11, 400, { color: text2, lineHeight: 1.5 }) }}>{strat.desc}</div>
+                            </div>
+                        </div>
+                    );
+                })}
+
+                <p style={{ ...ba(12, 600, { color: text2, margin: '14px 0 8px' }) }}>Optional: limit to specific groups (leave empty for all)</p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                    {EXPORT_GROUPS.map(g => (
+                        <button key={g.id} onClick={() => toggleImportGroup(g.id)} style={chip((importGroups ?? []).includes(g.id))}>{g.label}</button>
+                    ))}
+                </div>
+                {(!importGroups || importGroups.length === 0) && (
+                    <p style={{ ...ba(11, 400, { color: text2, marginTop: 6 }) }}>No filter — all data in the backup will be imported.</p>
+                )}
+            </div>
+        </div>
+    );
+
+    // ─── Import step 2 — upload ────────────────────────
+
+    const renderImportStep2 = () => (
+        <div style={panel}>
+            <div style={panelHead}>{panelTitleWrap('Upload File')}</div>
+            <div style={{ padding: 16 }}>
+                <p style={{ ...ba(12, 400, { color: text2, marginBottom: 14, lineHeight: 1.6 }) }}>
+                    Upload a <code style={{ fontSize: 11, background: bg3, padding: '1px 4px', borderRadius: 3 }}>.json</code> backup file to restore organisation data.
+                </p>
+                {!file ? (
+                    <div
+                        onClick={() => fileInputRef.current?.click()}
+                        onDragOver={e => { e.preventDefault(); setDrag(true); }}
+                        onDragLeave={() => setDrag(false)}
+                        onDrop={e => { e.preventDefault(); setDrag(false); const f = e.dataTransfer.files[0]; if (f) handleFile(f); }}
+                        style={{ borderRadius: 10, padding: '40px 20px', textAlign: 'center', cursor: 'pointer', transition: 'all .15s', border: drag ? `2px dashed ${ORG}` : '2px dashed ' + border, background: drag ? 'rgba(232,98,26,.05)' : bg3 }}
+                    >
+                        <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 44, height: 44, borderRadius: 10, background: 'rgba(232,98,26,.12)', color: ORG, marginBottom: 12 }}>
+                            <Upload size={20} />
+                        </div>
+                        <div style={{ ...ba(13, 700, { color: textC, marginBottom: 4 }) }}>Drop file here or click to browse</div>
+                        <div style={{ ...ba(11, 400, { color: text2 }) }}>.json backup files only</div>
+                    </div>
+                ) : (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 12, borderRadius: 8, border: '1px solid ' + border, background: bg3 }}>
+                        <div style={{ width: 36, height: 36, borderRadius: 8, background: 'rgba(74,222,128,.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                            <CheckCircle size={16} color="#4ade80" />
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ ...ba(12, 700, { color: textC }), overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{file.name}</div>
+                            <div style={{ ...ba(11, 400, { color: text2, marginTop: 1 }) }}>{(file.size / 1024).toFixed(1)} KB · JSON backup</div>
+                        </div>
+                        <button onClick={() => { setFile(null); setPreview(null); setPreviewError(''); if (fileInputRef.current) fileInputRef.current.value = ''; }} style={{ ...navBtn(false, false), padding: '4px 10px', fontSize: 11 }}>Remove</button>
+                    </div>
+                )}
+                {previewError && (
+                    <div style={{ marginTop: 10, padding: '10px 14px', borderRadius: 8, background: 'rgba(232,64,64,.1)', color: '#e84040', fontSize: 12 }}>
+                        {previewError}
+                    </div>
+                )}
+                <input ref={fileInputRef} type="file" accept=".json" onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f); }} style={{ display: 'none' }} />
+            </div>
+        </div>
+    );
+
+    // ─── Import step 3 — preview ───────────────────────
+
+    const renderImportStep3 = () => (
+        <div style={panel}>
+            <div style={panelHead}>{panelTitleWrap('Import Preview', `"${selStrat.label}"`)}</div>
+
+            {previewLoading && <div style={{ padding: '32px 16px', textAlign: 'center', ...ba(12, 400, { color: text2 }) }}>Analysing file…</div>}
+            {!previewLoading && previewError && <div style={{ padding: 16, color: '#e84040', fontSize: 12 }}>{previewError}</div>}
+
+            {!previewLoading && !previewError && preview && (
+                <>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1, background: border }}>
+                        {[
+                            { label: 'Will Create', value: preview.wouldCreate, color: '#4ade80' },
+                            { label: 'Will Update', value: preview.wouldUpdate, color: ORG },
+                            { label: 'Will Skip',   value: preview.wouldSkip,   color: text2 },
+                        ].map((k, i) => (
+                            <div key={i} style={{ padding: '14px', textAlign: 'center', background: bg2 }}>
+                                <div style={{ ...bb(24, { color: k.color, lineHeight: 1, marginBottom: 4 }) }}>{k.value}</div>
+                                <div style={{ ...bc(10, 700, { letterSpacing: 1, textTransform: 'uppercase', color: text2 }) }}>{k.label}</div>
+                            </div>
                         ))}
                     </div>
 
-                    {/* Group chips */}
-                    <div style={{ marginBottom: 4 }}>
-                        <p style={{ ...ba(12, 600, { color: text2, marginBottom: 10 }) }}>
-                            Core data (Admins & Permissions) is always included. Add more:
-                        </p>
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 8 }}>
-                            {EXPORT_GROUPS.map((g) => (
-                                <button key={g.id} onClick={() => toggleGroup(g.id)} title={g.desc + (g.warn ? ' ⚠ ' + g.warn : '')} style={pill(selectedGroups.includes(g.id))}>
-                                    {g.warn && <AlertTriangle size={11} style={{ marginRight: 3, verticalAlign: 'middle' }} />}
-                                    {g.label}
-                                </button>
+                    {preview.detectedGroups?.length > 0 && (
+                        <div style={{ padding: '12px 18px', borderTop: '1px solid ' + border, background: bg3 }}>
+                            <div style={{ ...bc(10, 700, { letterSpacing: 1, textTransform: 'uppercase', color: text2, marginBottom: 8 }) }}>Detected Groups</div>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                                {preview.detectedGroups.map(g => (
+                                    <span key={g} style={{ padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 600, background: 'rgba(232,98,26,.12)', color: ORG }}>
+                                        {GROUP_LABELS[g] ?? g}
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {preview.warnings?.length > 0 && (
+                        <div style={{ padding: '10px 18px', borderTop: '1px solid ' + border, background: 'rgba(251,191,36,.08)' }}>
+                            <p style={{ ...ba(12, 700, { color: '#fbbf24', marginBottom: 6 }) }}>Warnings</p>
+                            {preview.warnings.map((w, i) => (
+                                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, ...ba(11, 400, { color: '#fbbf24' }) }}>
+                                    <AlertTriangle size={12} style={{ flexShrink: 0 }} />{w}
+                                </div>
                             ))}
                         </div>
-                        {selectedGroups.length > 0 && (
-                            <button onClick={() => setSelectedGroups([])} style={{ fontSize: 11, color: text2, background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', padding: 0 }}>
-                                Clear — export core only
-                            </button>
-                        )}
-                    </div>
+                    )}
+                </>
+            )}
 
-                    <div style={{ marginTop: 20 }}>
-                        <motion.button
-                            whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
-                            onClick={handleExport} disabled={isExporting}
-                            style={stepBtn(true, isExporting)}
-                        >
-                            {isExporting ? <RefreshCw size={15} className="animate-spin" /> : <Download size={15} />}
-                            {isExporting ? 'Exporting…' : `Download ${exportFormat.toUpperCase()}`}
-                        </motion.button>
+            {importError && (
+                <div style={{ padding: '10px 18px', borderTop: '1px solid ' + border, background: 'rgba(232,64,64,.1)', color: '#e84040', fontSize: 12 }}>
+                    {importError}
+                </div>
+            )}
+        </div>
+    );
+
+    // ─── Import done ───────────────────────────────────
+
+    const renderImportDone = () => (
+        <div>
+            <div style={{ ...panel, padding: '48px 24px', textAlign: 'center', marginBottom: results ? 10 : 0 }}>
+                <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 56, height: 56, borderRadius: '50%', background: 'rgba(74,222,128,.15)', marginBottom: 16 }}>
+                    <CheckCircle size={26} color="#4ade80" />
+                </div>
+                <div style={{ ...bb(20, { color: textC, marginBottom: 6 }) }}>Import complete</div>
+                <div style={{ ...ba(12, 400, { color: text2, marginBottom: 20 }) }}>
+                    Data restored from "{file?.name}" using "{selStrat.label}"
+                </div>
+                <button onClick={resetImport} style={navBtn(true, false)}>Import another file</button>
+            </div>
+            {results && (
+                <div style={panel}>
+                    <div style={panelHead}>
+                        {panelTitleWrap('Results')}
+                        <span style={{ ...ba(11, 400, { color: text2 }) }}>
+                            {[
+                                results.summary?.reduce((a, r) => a + r.created, 0) > 0 && `${results.summary.reduce((a, r) => a + r.created, 0)} created`,
+                                results.summary?.reduce((a, r) => a + r.updated, 0) > 0 && `${results.summary.reduce((a, r) => a + r.updated, 0)} updated`,
+                                results.summary?.reduce((a, r) => a + r.skipped, 0) > 0 && `${results.summary.reduce((a, r) => a + r.skipped, 0)} skipped`,
+                            ].filter(Boolean).join(' · ')}
+                        </span>
+                    </div>
+                    <div style={{ padding: 14 }}>
+                        {(results.summary ?? []).map((r, i) => <ResultRow key={i} r={r} />)}
                     </div>
                 </div>
+            )}
+        </div>
+    );
 
-                {/* ══════════════════════════════════════════════════════ */}
-                {/* IMPORT SECTION                                        */}
-                {/* ══════════════════════════════════════════════════════ */}
-                <div style={card}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                            <div style={{ width: 3, height: 16, background: ORG, borderRadius: 2 }} />
-                            <span style={sectionTitle}>Import Data</span>
+    // ─── Render ─────────────────────────────────────────
+
+    return (
+        <div style={{ minHeight: '100vh', background: bg, padding: '24px 24px 60px' }}>
+            <div>
+
+                {/* Page head */}
+                <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 24, marginBottom: 18, flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                        <div style={{ width: 40, height: 40, borderRadius: 8, background: 'rgba(232,98,26,.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                            <Database size={20} color={ORG} />
                         </div>
-                        {importStep > 0 && (
-                            <button onClick={resetImport} style={{ fontSize: 12, color: text2, background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
-                                <X size={13} /> Start over
-                            </button>
-                        )}
+                        <div>
+                            <h1 style={{ ...bb(26, { color: textC, margin: 0, lineHeight: 1 }) }}>Data Export &amp; Import</h1>
+                            <p style={{ ...ba(12, 400, { color: text2, marginTop: 3 }) }}>Export organisation data for backup or reporting. Import a JSON backup to restore data.</p>
+                        </div>
                     </div>
-
-                    {/* Step indicators */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 24 }}>
-                        {['Strategy', 'Upload File', 'Preview', 'Done'].map((label, i) => (
-                            <React.Fragment key={label}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                    <div style={{
-                                        width: 22, height: 22, borderRadius: '50%', display: 'flex', alignItems: 'center',
-                                        justifyContent: 'center', fontSize: 11, fontWeight: 700, flexShrink: 0,
-                                        ...(importStep === i
-                                            ? { background: ORG, color: '#fff' }
-                                            : importStep > i
-                                                ? { background: 'rgba(74,222,128,.2)', color: '#4ade80', border: '1.5px solid #4ade80' }
-                                                : { background: bg3, color: text2, border: '1px solid ' + border }),
-                                    }}>
-                                        {importStep > i ? <CheckCircle size={12} /> : i + 1}
-                                    </div>
-                                    <span style={{ fontSize: 12, fontWeight: importStep === i ? 700 : 400, color: importStep === i ? textC : text2 }}>{label}</span>
-                                </div>
-                                {i < 3 && <div style={{ flex: 1, height: 1, background: importStep > i ? 'rgba(74,222,128,.4)' : border }} />}
-                            </React.Fragment>
-                        ))}
-                    </div>
-
-                    {/* ── Step 0: Strategy ── */}
-                    {importStep === 0 && (
-                        <div>
-                            <p style={{ ...ba(12, 600, { color: text2, marginBottom: 10 }) }}>Conflict resolution strategy:</p>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
-                                {Object.entries(STRATEGY_INFO).map(([key, info]) => (
-                                    <button
-                                        key={key}
-                                        onClick={() => setImportStrategy(key)}
-                                        style={{
-                                            width: '100%', textAlign: 'left', padding: '12px 16px', borderRadius: 8,
-                                            cursor: 'pointer', transition: 'all .15s',
-                                            ...(importStrategy === key
-                                                ? { background: 'rgba(232,98,26,.08)', border: '2px solid rgba(232,98,26,.4)' }
-                                                : { background: bg3, border: '1px solid ' + border }),
-                                        }}
-                                    >
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                                            <div style={{
-                                                width: 16, height: 16, borderRadius: '50%', flexShrink: 0,
-                                                border: '2px solid ' + (importStrategy === key ? ORG : border),
-                                                background: importStrategy === key ? ORG : 'transparent',
-                                            }} />
-                                            <div>
-                                                <div style={{ ...ba(13, 700, { color: importStrategy === key ? ORG : textC }) }}>{info.label}</div>
-                                                <div style={{ ...ba(11, 400, { color: text2 }) }}>{info.desc}</div>
-                                            </div>
-                                        </div>
-                                    </button>
-                                ))}
-                            </div>
-
-                            <p style={{ ...ba(12, 600, { color: text2, marginBottom: 10 }) }}>Optional: limit to specific groups (leave empty for all):</p>
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 6 }}>
-                                {EXPORT_GROUPS.map((g) => (
-                                    <button key={g.id} onClick={() => toggleImportGroup(g.id)} style={pill(importGroups.includes(g.id))}>{g.label}</button>
-                                ))}
-                            </div>
-                            {importGroups.length === 0 && (
-                                <p style={{ ...ba(11, 400, { color: text2, marginBottom: 16 }) }}>No filter — all data in the backup will be imported.</p>
-                            )}
-
-                            <div style={{ marginTop: 16 }}>
-                                <motion.button whileHover={{ scale: 1.02 }} onClick={() => setImportStep(1)} style={stepBtn(true, false)}>
-                                    Continue
-                                </motion.button>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* ── Step 1: Upload ── */}
-                    {importStep === 1 && (
-                        <div>
-                            <div
-                                onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-                                onDragLeave={() => setDragOver(false)}
-                                onDrop={handleDrop}
-                                onClick={() => !importFile && fileInputRef.current?.click()}
-                                style={{
-                                    border: `2px dashed ${dragOver ? ORG : importFile ? '#4ade80' : border}`,
-                                    borderRadius: 10, padding: '44px 24px', textAlign: 'center',
-                                    cursor: importFile ? 'default' : 'pointer', transition: 'all .2s', marginBottom: 16,
-                                    background: dragOver ? 'rgba(232,98,26,.04)' : importFile ? 'rgba(74,222,128,.05)' : bg3,
-                                }}
-                            >
-                                <input ref={fileInputRef} type="file" accept=".json" style={{ display: 'none' }} onChange={handleFilePick} />
-                                {importFile ? (
-                                    <>
-                                        <CheckCircle size={40} color="#4ade80" style={{ margin: '0 auto 10px' }} />
-                                        <div style={{ ...ba(14, 700, { color: textC }) }}>{importFile.name}</div>
-                                        <div style={{ ...ba(12, 400, { color: text2, marginTop: 2 }) }}>{(importFile.size / 1024).toFixed(1)} KB</div>
-                                        <button onClick={(e) => { e.stopPropagation(); setImportFile(null); }}
-                                            style={{ marginTop: 10, fontSize: 12, color: text2, background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>
-                                            Remove
-                                        </button>
-                                    </>
-                                ) : (
-                                    <>
-                                        <Upload size={40} color={text2} style={{ margin: '0 auto 10px' }} />
-                                        <div style={{ ...ba(14, 600, { color: textC, marginBottom: 4 }) }}>Drop your backup file here</div>
-                                        <div style={{ ...ba(12, 400, { color: text2 }) }}>or click to browse — accepts .json backup files</div>
-                                    </>
-                                )}
-                            </div>
-                            <div style={{ display: 'flex', gap: 8 }}>
-                                <button onClick={() => setImportStep(0)} style={stepBtn(false, false)}>Back</button>
-                                <motion.button whileHover={{ scale: 1.02 }} onClick={handlePreview} disabled={!importFile || isPreviewing}
-                                    style={{ ...stepBtn(true, !importFile || isPreviewing), flex: 1 }}>
-                                    {isPreviewing ? <RefreshCw size={15} className="animate-spin" /> : <Eye size={15} />}
-                                    {isPreviewing ? 'Analyzing…' : 'Preview Import'}
-                                </motion.button>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* ── Step 2: Preview ── */}
-                    {importStep === 2 && previewData && (
-                        <div>
-                            {/* Stats row */}
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 20 }}>
-                                {[
-                                    { label: 'Will Create', value: previewData.wouldCreate, color: '#4ade80' },
-                                    { label: 'Will Update', value: previewData.wouldUpdate, color: ORG },
-                                    { label: 'Will Skip',   value: previewData.wouldSkip,   color: text2 },
-                                ].map(({ label, value, color }) => (
-                                    <div key={label} style={{ background: bg3, border: '1px solid ' + border, borderRadius: 8, padding: '14px 12px', textAlign: 'center' }}>
-                                        <div style={{ ...bb(28, { color, lineHeight: 1, marginBottom: 4 }) }}>{value}</div>
-                                        <div style={{ ...ba(11, 600, { color: text2 }) }}>{label}</div>
-                                    </div>
-                                ))}
-                            </div>
-
-                            {/* Detected groups */}
-                            {previewData.detectedGroups?.length > 0 && (
-                                <div style={{ marginBottom: 14 }}>
-                                    <p style={{ ...ba(11, 600, { color: text2, marginBottom: 6 }) }}>Detected data groups in file:</p>
-                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                                        {previewData.detectedGroups.map((g) => (
-                                            <span key={g} style={{ padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 700, background: 'rgba(232,98,26,.12)', color: ORG }}>
-                                                {GROUP_LABELS[g] ?? g}
-                                            </span>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Warnings */}
-                            {previewData.warnings?.length > 0 && (
-                                <div style={{ background: 'rgba(251,191,36,.08)', border: '1px solid rgba(251,191,36,.3)', borderRadius: 8, padding: '10px 14px', marginBottom: 14 }}>
-                                    <p style={{ ...ba(12, 700, { color: '#fbbf24', marginBottom: 6 }) }}>Warnings</p>
-                                    {previewData.warnings.map((w, i) => (
-                                        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, ...ba(12, 400, { color: '#fbbf24' }) }}>
-                                            <AlertTriangle size={13} style={{ flexShrink: 0 }} />{w}
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-
-                            <p style={{ ...ba(12, 400, { color: text2, marginBottom: 16 }) }}>
-                                Strategy: <strong style={{ color: textC }}>{STRATEGY_INFO[importStrategy]?.label}</strong>
-                                {importGroups.length > 0 && <> · Groups: <strong style={{ color: textC }}>{importGroups.map((g) => GROUP_LABELS[g] ?? g).join(', ')}</strong></>}
-                            </p>
-
-                            <div style={{ display: 'flex', gap: 8 }}>
-                                <button onClick={() => setImportStep(1)} style={stepBtn(false, false)}>Back</button>
-                                <motion.button whileHover={{ scale: 1.02 }} onClick={handleImport} disabled={isImporting}
-                                    style={{ ...stepBtn(true, isImporting), flex: 1 }}>
-                                    {isImporting ? <RefreshCw size={15} className="animate-spin" /> : <Upload size={15} />}
-                                    {isImporting ? 'Importing…' : 'Confirm Import'}
-                                </motion.button>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* ── Step 3: Done ── */}
-                    {importStep === 3 && importResult && (
-                        <div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
-                                <CheckSquare size={32} color="#4ade80" style={{ flexShrink: 0 }} />
-                                <div>
-                                    <div style={{ ...ba(16, 700, { color: textC }) }}>Import Complete</div>
-                                    <div style={{ ...ba(12, 400, { color: text2 }) }}>
-                                        {totalImported(importResult.summary)} records imported · Snapshot: <code style={{ fontSize: 11 }}>{importResult.snapshotId?.slice(0, 12)}…</code>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {Array.isArray(importResult.summary) && importResult.summary.length > 0 && (
-                                <div style={{ background: bg3, border: '1px solid ' + border, borderRadius: 8, overflow: 'hidden', marginBottom: 20 }}>
-                                    <div style={{ overflowX: 'auto' }}>
-                                        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 480 }}>
-                                            <thead>
-                                                <tr style={{ background: 'rgba(232,98,26,.08)', borderBottom: '1px solid ' + border }}>
-                                                    {['Entity', 'Total', 'Created', 'Updated', 'Skipped', 'Failed'].map((h) => (
-                                                        <th key={h} style={{ padding: '8px 12px', textAlign: 'left', ...bc(10, 700, { color: text2, letterSpacing: 2 }) }}>{h}</th>
-                                                    ))}
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {importResult.summary.map((r, i) => (
-                                                    <tr key={i} style={{ borderBottom: i < importResult.summary.length - 1 ? '1px solid ' + border : 'none' }}>
-                                                        <td style={{ padding: '8px 12px', ...ba(12, 600, { color: textC }) }}>{r.entity}</td>
-                                                        <td style={{ padding: '8px 12px', ...ba(12, 400, { color: text2 }) }}>{r.total}</td>
-                                                        <td style={{ padding: '8px 12px', ...ba(12, r.created > 0 ? 700 : 400, { color: r.created > 0 ? '#4ade80' : text2 }) }}>{r.created}</td>
-                                                        <td style={{ padding: '8px 12px', ...ba(12, r.updated > 0 ? 700 : 400, { color: r.updated > 0 ? ORG : text2 }) }}>{r.updated}</td>
-                                                        <td style={{ padding: '8px 12px', ...ba(12, 400, { color: text2 }) }}>{r.skipped}</td>
-                                                        <td style={{ padding: '8px 12px', ...ba(12, r.failed > 0 ? 700 : 400, { color: r.failed > 0 ? '#e84040' : text2 }) }}>{r.failed}</td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            )}
-
-                            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                                <motion.button whileHover={{ scale: 1.02 }} onClick={resetImport} style={stepBtn(true, false)}>
-                                    Import Another File
-                                </motion.button>
-                                <button onClick={() => { resetImport(); loadHistory(); }} style={stepBtn(false, false)}>
-                                    <History size={15} /> View History
-                                </button>
-                            </div>
-                        </div>
-                    )}
-                </div>
-
-                {/* ══════════════════════════════════════════════════════ */}
-                {/* IMPORT HISTORY                                        */}
-                {/* ══════════════════════════════════════════════════════ */}
-                <div style={{ ...card, marginBottom: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: historyOpen ? 16 : 0 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                            <div style={{ width: 3, height: 16, background: ORG, borderRadius: 2 }} />
-                            <span style={sectionTitle}>Import History</span>
-                        </div>
+                    <div style={{ display: 'flex', gap: 2, padding: 3, borderRadius: 8, background: bg3, border: '1px solid ' + border, flexShrink: 0 }}>
                         <button
-                            onClick={historyOpen ? () => setHistoryOpen(false) : loadHistory}
-                            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', fontSize: 12, fontWeight: 600, background: bg3, border: '1px solid ' + border, borderRadius: 6, color: textC, cursor: 'pointer' }}
+                            onClick={() => setTab('export')}
+                            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 6, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700, background: isExport ? ORG : 'transparent', color: isExport ? '#fff' : text2 }}
                         >
-                            {historyLoading ? <RefreshCw size={13} className="animate-spin" /> : <History size={13} />}
-                            {historyOpen ? 'Hide' : 'Load History'}
-                            {historyOpen ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+                            <Download size={13} /> Export
+                        </button>
+                        <button
+                            onClick={() => { setTab('import'); if (!history) loadHistory(); }}
+                            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 6, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700, background: !isExport ? ORG : 'transparent', color: !isExport ? '#fff' : text2 }}
+                        >
+                            <Upload size={13} /> Import
                         </button>
                     </div>
-
-                    <AnimatePresence>
-                        {historyOpen && (
-                            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} style={{ overflow: 'hidden' }}>
-                                {history.length === 0 ? (
-                                    <div style={{ padding: '24px 0', textAlign: 'center', ...ba(13, 400, { color: text2 }) }}>No import history found.</div>
-                                ) : (
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                                        {history.map((snap) => (
-                                            <div key={snap.id} style={{ background: bg3, border: '1px solid ' + border, borderRadius: 8, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
-                                                <div style={{ flex: 1, minWidth: 0 }}>
-                                                    <div style={{ ...ba(13, 600, { color: textC }) }}>{snap.fileName}</div>
-                                                    <div style={{ ...ba(11, 400, { color: text2 }) }}>
-                                                        {fmtDate(snap.createdAt)} · by {snap.performedByName} · {snap.strategy}
-                                                    </div>
-                                                    <div style={{ ...ba(11, 400, { color: text2 }) }}>
-                                                        {totalImported(snap.summary)} records imported
-                                                    </div>
-                                                </div>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-                                                    <span style={{
-                                                        padding: '3px 10px', borderRadius: 20, fontSize: 10, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase',
-                                                        ...(snap.status === 'active'
-                                                            ? { background: 'rgba(74,222,128,.15)', color: '#4ade80' }
-                                                            : { background: 'rgba(120,120,120,.15)', color: text2 }),
-                                                    }}>
-                                                        {snap.status}
-                                                    </span>
-                                                    {snap.status === 'active' && (
-                                                        <button
-                                                            onClick={() => setRollbackTarget(snap)}
-                                                            style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 10px', fontSize: 11, fontWeight: 700, background: 'rgba(232,64,64,.1)', color: '#e84040', border: '1px solid rgba(232,64,64,.3)', borderRadius: 6, cursor: 'pointer' }}
-                                                        >
-                                                            <Undo2 size={13} /> Rollback
-                                                        </button>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
                 </div>
+
+                {/* Step wizard */}
+                {!isDone && renderWizard(curStep, isExport ? EXPORT_LABELS : IMPORT_LABELS)}
+
+                {/* Tab content */}
+                {isExport ? (
+                    exportDone   ? renderExportDone()  :
+                    exportStep === 1 ? renderExportStep1() :
+                    exportStep === 2 ? renderExportStep2() :
+                                       renderExportStep3()
+                ) : (
+                    importDone   ? renderImportDone()  :
+                    importStep === 1 ? renderImportStep1() :
+                    importStep === 2 ? renderImportStep2() :
+                                       renderImportStep3()
+                )}
+
+                {/* Nav footer */}
+                {!isDone && (
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 16 }}>
+                        <button
+                            onClick={handleBack}
+                            style={{ ...navBtn(false, false), visibility: curStep > 1 ? 'visible' : 'hidden' }}
+                        >
+                            <ArrowLeft size={13} /> Back
+                        </button>
+                        <motion.button whileHover={{ scale: nextDisabled ? 1 : 1.02 }} whileTap={{ scale: nextDisabled ? 1 : 0.97 }} onClick={handleNext} disabled={nextDisabled} style={navBtn(true, nextDisabled)}>
+                            {(exportLoading || importLoading) && <RefreshCw size={13} className="animate-spin" />}
+                            {nextLabel}
+                            {curStep < 3 && !exportLoading && !importLoading && <ArrowRight size={13} />}
+                        </motion.button>
+                    </div>
+                )}
+
+                {/* Import History */}
+                {!isExport && (
+                    <div style={{ ...panel, marginTop: 24 }}>
+                        <div style={panelHead}>
+                            {panelTitleWrap('Import History')}
+                            <button onClick={loadHistory} disabled={historyLoading} style={{ ...navBtn(false, historyLoading), padding: '5px 12px', fontSize: 11 }}>
+                                {historyLoading ? <RefreshCw size={12} className="animate-spin" /> : <History size={12} />}
+                                {historyLoading ? 'Loading…' : 'Refresh'}
+                            </button>
+                        </div>
+                        {!history && !historyLoading && (
+                            <div style={{ padding: '20px 14px', textAlign: 'center', ...ba(12, 400, { color: text2 }) }}>
+                                Switch to the Import tab to load history
+                            </div>
+                        )}
+                        {historyLoading && (
+                            <div style={{ padding: '20px 14px', textAlign: 'center', ...ba(12, 400, { color: text2 }) }}>Loading…</div>
+                        )}
+                        {history && history.length === 0 && (
+                            <div style={{ padding: '20px 14px', textAlign: 'center', ...ba(12, 400, { color: text2 }) }}>No imports recorded yet.</div>
+                        )}
+                        {history && history.length > 0 && (
+                            <div style={{ overflowX: 'auto' }}>
+                                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                    <thead>
+                                        <tr style={{ borderBottom: '1px solid ' + border, background: bg3 }}>
+                                            {['Date', 'File', 'Strategy', 'Created', 'Updated', 'Skipped', 'Status', ''].map(h => (
+                                                <th key={h} style={{ textAlign: 'left', padding: '8px 18px', whiteSpace: 'nowrap', ...bc(10, 700, { letterSpacing: 1, textTransform: 'uppercase', color: text2 }) }}>{h}</th>
+                                            ))}
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {history.map(snap => {
+                                            const summaryArr = Array.isArray(snap.summary) ? snap.summary : [];
+                                            const created = summaryArr.reduce((a, r) => a + (r.created ?? 0), 0);
+                                            const updated = summaryArr.reduce((a, r) => a + (r.updated ?? 0), 0);
+                                            const skipped = summaryArr.reduce((a, r) => a + (r.skipped ?? 0), 0);
+                                            return (
+                                                <tr key={snap.id} style={{ borderBottom: '1px solid ' + border, opacity: snap.status === 'rolled_back' ? 0.55 : 1 }}>
+                                                    <td style={{ padding: '9px 18px', whiteSpace: 'nowrap', ...ba(11, 400, { color: text2 }) }}>
+                                                        {new Date(snap.createdAt).toLocaleString()}
+                                                    </td>
+                                                    <td style={{ padding: '9px 18px', maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', ...ba(11, 400, { color: textC }) }} title={snap.fileName}>
+                                                        {snap.fileName}
+                                                    </td>
+                                                    <td style={{ padding: '9px 18px', ...ba(11, 400, { color: text2 }) }}>{snap.strategy}</td>
+                                                    <td style={{ padding: '9px 18px', ...ba(11, 700, { color: '#4ade80' }) }}>
+                                                        {created > 0 ? `+${created}` : '—'}
+                                                    </td>
+                                                    <td style={{ padding: '9px 18px', ...ba(11, 700, { color: ORG }) }}>
+                                                        {updated > 0 ? `↑${updated}` : '—'}
+                                                    </td>
+                                                    <td style={{ padding: '9px 18px', ...ba(11, 400, { color: text2 }) }}>
+                                                        {skipped > 0 ? skipped : '—'}
+                                                    </td>
+                                                    <td style={{ padding: '9px 18px' }}>
+                                                        <span style={{ display: 'inline-block', padding: '2px 8px', borderRadius: 6, fontSize: 10, fontWeight: 700, background: snap.status === 'rolled_back' ? bg3 : 'rgba(74,222,128,.15)', color: snap.status === 'rolled_back' ? text2 : '#4ade80' }}>
+                                                            {snap.status === 'rolled_back' ? 'Rolled back' : 'Active'}
+                                                        </span>
+                                                    </td>
+                                                    <td style={{ padding: '9px 18px' }}>
+                                                        {snap.status === 'active' && created > 0 && (
+                                                            <button onClick={() => { setRollbackTarget(snap); setRollbackError(''); }} style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 10px', fontSize: 11, fontWeight: 700, background: 'rgba(232,64,64,.1)', color: '#e84040', border: '1px solid rgba(232,64,64,.3)', borderRadius: 6, cursor: 'pointer' }}>
+                                                                Rollback
+                                                            </button>
+                                                        )}
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </div>
+                )}
+
             </div>
 
             {/* ── Toast ───────────────────────────────────────────────── */}
@@ -631,27 +825,26 @@ const DataExportPage = () => {
                 {rollbackTarget && (
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                         style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.55)', zIndex: 9998, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
-                        onClick={() => !isRollingBack && setRollbackTarget(null)}>
+                        onClick={() => !rollbackLoading && setRollbackTarget(null)}>
                         <motion.div initial={{ scale: .92, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: .92, opacity: 0 }}
                             onClick={(e) => e.stopPropagation()}
                             style={{ background: bg2, border: '1px solid rgba(232,64,64,.4)', borderRadius: 10, padding: 28, maxWidth: 440, width: '100%' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
                                 <AlertTriangle size={22} color="#e84040" />
-                                <h3 style={{ ...ba(17, 700, { color: textC, margin: 0 }) }}>Rollback Import?</h3>
+                                <h3 style={{ ...ba(17, 700, { color: textC, margin: 0 }) }}>Rollback this import?</h3>
                             </div>
-                            <p style={{ ...ba(13, 400, { color: text2, marginBottom: 8 }) }}>
-                                This will permanently delete all <strong style={{ color: textC }}>{totalImported(rollbackTarget.summary)}</strong> records that were created by this import.
+                            <p style={{ ...ba(13, 400, { color: text2, marginBottom: 12, lineHeight: 1.6 }) }}>
+                                This will permanently delete the records created by the import of <strong style={{ color: textC }}>"{rollbackTarget.fileName}"</strong> on {new Date(rollbackTarget.createdAt).toLocaleString()}.
+                                Records that were <em>updated</em> (not created) are not reverted.
                             </p>
-                            <p style={{ ...ba(12, 400, { color: text2, marginBottom: 20 }) }}>
-                                File: <strong style={{ color: textC }}>{rollbackTarget.fileName}</strong><br />
-                                Imported: {fmtDate(rollbackTarget.createdAt)} · by {rollbackTarget.performedByName}
-                            </p>
+                            {rollbackError && (
+                                <div style={{ marginBottom: 10, padding: '8px 12px', borderRadius: 8, background: 'rgba(232,64,64,.1)', color: '#e84040', fontSize: 12 }}>{rollbackError}</div>
+                            )}
                             <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-                                <button onClick={() => setRollbackTarget(null)} disabled={isRollingBack} style={stepBtn(false, isRollingBack)}>Cancel</button>
-                                <button onClick={handleRollback} disabled={isRollingBack}
-                                    style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 18px', fontSize: 13, fontWeight: 700, background: '#e84040', color: '#fff', border: 'none', borderRadius: 6, cursor: isRollingBack ? 'not-allowed' : 'pointer', opacity: isRollingBack ? 0.6 : 1 }}>
-                                    {isRollingBack ? <RefreshCw size={14} className="animate-spin" /> : <Undo2 size={14} />}
-                                    {isRollingBack ? 'Rolling back…' : 'Yes, rollback'}
+                                <button onClick={() => setRollbackTarget(null)} disabled={rollbackLoading} style={navBtn(false, rollbackLoading)}>Cancel</button>
+                                <button onClick={confirmRollback} disabled={rollbackLoading} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 18px', fontSize: 13, fontWeight: 700, background: '#e84040', color: '#fff', border: 'none', borderRadius: 6, cursor: rollbackLoading ? 'not-allowed' : 'pointer', opacity: rollbackLoading ? 0.6 : 1 }}>
+                                    {rollbackLoading ? <RefreshCw size={14} className="animate-spin" /> : null}
+                                    {rollbackLoading ? 'Rolling back…' : 'Yes, rollback'}
                                 </button>
                             </div>
                         </motion.div>
@@ -660,6 +853,4 @@ const DataExportPage = () => {
             </AnimatePresence>
         </div>
     );
-};
-
-export default DataExportPage;
+}
