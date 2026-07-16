@@ -12,7 +12,7 @@ import {
 } from '@nestjs/common';
 import { DemoRequestService } from './demo-request.service';
 import { AdminJwtAuthGuard } from 'src/guards/adminGuard.guard';
-import { DemoRequestStatus, DemoType } from '../../../generated/prisma';
+import { DemoRequestStatus, DemoType } from '@prisma/client';
 
 @Controller('demo-requests')
 export class DemoRequestController {

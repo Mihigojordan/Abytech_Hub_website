@@ -1,6 +1,6 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { WeeklyGoalStatus } from '../../../generated/prisma';
+import { WeeklyGoalStatus } from '@prisma/client';
 import { NotificationService } from '../notification/notification.service';
 
 @Injectable()

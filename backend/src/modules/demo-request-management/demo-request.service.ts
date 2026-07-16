@@ -1,6 +1,6 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { DemoRequestStatus, DemoType } from '../../../generated/prisma';
+import { DemoRequestStatus, DemoType } from '@prisma/client';
 
 @Injectable()
 export class DemoRequestService {

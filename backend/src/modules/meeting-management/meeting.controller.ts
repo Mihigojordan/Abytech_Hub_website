@@ -19,7 +19,7 @@ import { AdminJwtAuthGuard } from 'src/guards/adminGuard.guard';
 import { RequestWithAdmin } from 'src/common/interfaces/admin.interface';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { AttachmentsFileFields, AttachmentsUploadConfig } from 'src/common/utils/file-upload.utils';
-import { MeetingStatus } from '../../../generated/prisma';
+import { MeetingStatus } from '@prisma/client';
 
 @Controller('meetings')
 export class MeetingController {

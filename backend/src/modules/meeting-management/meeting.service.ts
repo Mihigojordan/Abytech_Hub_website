@@ -1,7 +1,7 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { deleteFile } from 'src/common/utils/file-upload.utils';
-import { MeetingStatus } from '../../../generated/prisma';
+import { MeetingStatus } from '@prisma/client';
 import { NotificationService } from '../notification/notification.service';
 
 @Injectable()

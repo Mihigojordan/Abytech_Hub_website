@@ -14,7 +14,7 @@ import {
 import { WeeklyGoalService } from './weekly-goal.service';
 import { AdminJwtAuthGuard } from 'src/guards/adminGuard.guard';
 import { RequestWithAdmin } from 'src/common/interfaces/admin.interface';
-import { WeeklyGoalStatus } from '../../../generated/prisma';
+import { WeeklyGoalStatus } from '@prisma/client';
 
 @Controller('weekly-goals')
 @UseGuards(AdminJwtAuthGuard)

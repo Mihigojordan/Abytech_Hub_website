@@ -12,7 +12,7 @@ import {
   InternshipPeriod,
   InternshipEmploymentStatus,
   UserRole,
-} from '../../../generated/prisma';
+} from '@prisma/client';
 import { NotificationService } from '../notification/notification.service';
 import { AdminService } from '../admin-management/admin.service';
 import * as bcrypt from 'bcryptjs';

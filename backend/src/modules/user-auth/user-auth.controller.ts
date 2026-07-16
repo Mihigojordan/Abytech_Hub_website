@@ -16,7 +16,7 @@ import { UserAuthService } from './user-auth.service';
 import { Response } from 'express';
 import { RequestWithUser } from 'src/common/interfaces/user.interface';
 import { UserJwtAuthGuard } from 'src/guards/userGuard.guard';
-import { EmployeeType, UserRole } from '../../../generated/prisma';
+import { EmployeeType, UserRole } from '@prisma/client';
 
 @Controller('user-auth')
 export class UserAuthController {

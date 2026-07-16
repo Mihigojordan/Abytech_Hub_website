@@ -23,7 +23,7 @@ import {
   InternshipType,
   InternshipPeriod,
   InternshipEmploymentStatus,
-} from '../../../generated/prisma';
+} from '@prisma/client';
 import { InternshipFileFields, InternshipUploadConfig } from 'src/common/utils/file-upload.utils';
 
 @Controller('internships')

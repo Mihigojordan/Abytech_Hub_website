@@ -12,7 +12,7 @@ import {
 } from '@nestjs/common';
 import { HostedWebsiteService } from './hosted-website.service';
 import { AdminJwtAuthGuard } from 'src/guards/adminGuard.guard';
-import { WebsiteStatus } from '../../../generated/prisma';
+import { WebsiteStatus } from '@prisma/client';
 
 @Controller('hosted-websites')
 export class HostedWebsiteController {
