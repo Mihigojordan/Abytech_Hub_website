@@ -129,7 +129,7 @@ export class ReportService {
       const [reports, total] = await Promise.all([
         this.prisma.report.findMany({
           where,
-          include: { admin: true, replies: true },
+          include: { admin: true, replies: { orderBy: { createdAt: 'desc' } } },
           orderBy: { createdAt: 'desc' },
           skip,
           take: limit,
@@ -252,7 +252,7 @@ export class ReportService {
   async findOne(id: string, adminId: string) {
     const report = await this.prisma.report.findUnique({
       where: { id },
-      include: { admin: true, replies: true },
+      include: { admin: true, replies: { orderBy: { createdAt: 'desc' } } },
     });
     if (!report) throw new BadRequestException('Report not found');
 

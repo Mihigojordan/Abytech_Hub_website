@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   FileText, Calendar, ArrowLeft, AlertTriangle, Search,
@@ -112,11 +112,13 @@ const ReportViewPage = () => {
   const url = "/admin/dashboard/report/view/";
   const root_url = "/admin/dashboard/report/";
 
-  const repliesEndRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    repliesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [selectedReport?.replies?.length]);
+  // Newest reply first, regardless of the order replies arrive in (initial
+  // fetch, direct REST response, or realtime socket events).
+  const sortedReplies = useMemo(() => {
+    return [...(selectedReport?.replies || [])].sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+  }, [selectedReport?.replies]);
 
   // Add state for calendar visibility
   const [showCalendar, setShowCalendar] = useState(false);
@@ -672,8 +674,8 @@ const ReportViewPage = () => {
                     </div>
 
                     <div className="space-y-6">
-                      {selectedReport.replies && selectedReport.replies.length > 0 ? (
-                        selectedReport.replies.map((reply) => {
+                      {sortedReplies.length > 0 ? (
+                        sortedReplies.map((reply) => {
                           const isOwner = reply.adminId === user?.id;
                           const isEditing = editingReplyId === reply.id;
                           const isEdited = !!reply.updatedAt && reply.updatedAt !== reply.createdAt;
@@ -770,7 +772,6 @@ const ReportViewPage = () => {
                           <p style={{ ...ba(14, 500, { color: text3, margin: 0 }) }}>No communication logs for this session.</p>
                         </div>
                       )}
-                      <div ref={repliesEndRef} />
                     </div>
                   </div>
                 </motion.div>
