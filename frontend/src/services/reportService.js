@@ -60,6 +60,30 @@ async getReportCount(filter, from = '', to = '') {
     }
   }
 
+  // ✅ Edit a reply (owner only)
+  async editReply(replyId, content) {
+    try {
+      const response = await api.patch(`/report/reply/${replyId}`, { content });
+      return response.data;
+    } catch (error) {
+      const msg =
+        error.response?.data?.message || error.message || 'Failed to edit reply';
+      throw new Error(msg);
+    }
+  }
+
+  // ✅ Delete a reply (owner only)
+  async deleteReply(replyId) {
+    try {
+      const response = await api.delete(`/report/reply/${replyId}`);
+      return response.data;
+    } catch (error) {
+      const msg =
+        error.response?.data?.message || error.message || 'Failed to delete reply';
+      throw new Error(msg);
+    }
+  }
+
 
   // ✅ Get all reports
 async getAllReports({
@@ -162,4 +186,6 @@ export const {
   updateReport,
   deleteReport,
   replyToReport,
+  editReply,
+  deleteReply,
 } = reportService;

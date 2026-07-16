@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Put,
+  Patch,
   Delete,
   Param,
   Body,
@@ -109,6 +110,34 @@ export class ReportController {
     }
 
     return this.reportService.replyToReport(reportId, adminId, content);
+  }
+
+  // ✅ Edit a reply (owner only)
+  @Patch('reply/:replyId')
+  @UseGuards(AdminJwtAuthGuard)
+  async editReply(
+    @Param('replyId') replyId: string,
+    @Body('content') content: string,
+    @Req() req: RequestWithAdmin,
+  ) {
+    const adminId = req.admin?.id;
+    if (!adminId) throw new HttpException('Unauthorized admin', 401);
+
+    if (!content || content.trim() === '') {
+      throw new HttpException('Reply content cannot be empty', 400);
+    }
+
+    return this.reportService.editReply(replyId, adminId, content);
+  }
+
+  // ✅ Delete a reply (owner only)
+  @Delete('reply/:replyId')
+  @UseGuards(AdminJwtAuthGuard)
+  async deleteReply(@Param('replyId') replyId: string, @Req() req: RequestWithAdmin) {
+    const adminId = req.admin?.id;
+    if (!adminId) throw new HttpException('Unauthorized admin', 401);
+
+    return this.reportService.deleteReply(replyId, adminId);
   }
 
 

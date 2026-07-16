@@ -35,6 +35,7 @@ interface ReplyReport {
   id: string;
   content: string;
   createdAt: string;
+  updatedAt?: string;
   adminId: string;
   reportId: string;
   replyName?: string;
@@ -102,6 +103,11 @@ const ReportViewPage = () => {
   // === REPLY STATE ===
   const [replyContent, setReplyContent] = useState<string>("");
   const [replying, setReplying] = useState<boolean>(false);
+  const [editingReplyId, setEditingReplyId] = useState<string | null>(null);
+  const [editingReplyContent, setEditingReplyContent] = useState<string>("");
+  const [savingReplyEdit, setSavingReplyEdit] = useState<boolean>(false);
+  const [deleteReplyConfirm, setDeleteReplyConfirm] = useState<ReplyReport | null>(null);
+  const [deletingReply, setDeletingReply] = useState<boolean>(false);
 
   const url = "/admin/dashboard/report/view/";
   const root_url = "/admin/dashboard/report/";
@@ -162,6 +168,28 @@ const ReportViewPage = () => {
       });
     },
     [selectedReport?.id, user?.id]
+  );
+
+  useSocketEvent(
+    'reportReplyUpdated',
+    (updatedReply: ReplyReport) => {
+      setSelectedReport(prev => {
+        if (!prev?.replies?.some(r => r.id === updatedReply.id)) return prev;
+        return { ...prev, replies: prev.replies.map(r => r.id === updatedReply.id ? { ...r, ...updatedReply } : r) };
+      });
+    },
+    []
+  );
+
+  useSocketEvent(
+    'reportReplyDeleted',
+    (payload: { replyId: string; reportId: string }) => {
+      setSelectedReport(prev => {
+        if (!prev || prev.id !== payload.reportId) return prev;
+        return { ...prev, replies: (prev.replies || []).filter(r => r.id !== payload.replyId) };
+      });
+    },
+    []
   );
 
   // Fetch sidebar reports with server-side pagination
@@ -284,6 +312,53 @@ const ReportViewPage = () => {
       showOperationStatus("error", err.message || "Failed to send reply");
     } finally {
       setReplying(false);
+    }
+  };
+
+  // === EDIT / DELETE REPLY (owner only) ===
+  const handleStartEditReply = (reply: ReplyReport) => {
+    setEditingReplyId(reply.id);
+    setEditingReplyContent(reply.content);
+  };
+
+  const handleCancelEditReply = () => {
+    setEditingReplyId(null);
+    setEditingReplyContent("");
+  };
+
+  const handleSaveReplyEdit = async () => {
+    if (!editingReplyId || !editingReplyContent.trim()) return;
+
+    try {
+      setSavingReplyEdit(true);
+      const updated = await reportService.editReply(editingReplyId, editingReplyContent.trim());
+      setSelectedReport(prev => prev ? {
+        ...prev,
+        replies: (prev.replies || []).map(r => r.id === updated.id ? { ...r, ...updated } : r),
+      } : null);
+      setEditingReplyId(null);
+      setEditingReplyContent("");
+    } catch (err: any) {
+      showOperationStatus("error", err.message || "Failed to edit reply");
+    } finally {
+      setSavingReplyEdit(false);
+    }
+  };
+
+  const handleDeleteReply = async (reply: ReplyReport) => {
+    try {
+      setDeletingReply(true);
+      await reportService.deleteReply(reply.id);
+      setSelectedReport(prev => prev ? {
+        ...prev,
+        replies: (prev.replies || []).filter(r => r.id !== reply.id),
+      } : null);
+      setDeleteReplyConfirm(null);
+      showOperationStatus("success", "Reply deleted");
+    } catch (err: any) {
+      showOperationStatus("error", err.message || "Failed to delete reply");
+    } finally {
+      setDeletingReply(false);
     }
   };
 
@@ -598,31 +673,98 @@ const ReportViewPage = () => {
 
                     <div className="space-y-6">
                       {selectedReport.replies && selectedReport.replies.length > 0 ? (
-                        selectedReport.replies.map((reply) => (
-                          <motion.div
-                            key={reply.id}
-                            initial={{ opacity: 0, x: -10 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            style={{ 
-                              display: 'flex', gap: 14, padding: '14px 18px', borderRadius: 20, background: bg, border: `1px solid ${border}` 
-                            }}
-                          >
-                            <div style={{ 
-                              width: 44, height: 44, borderRadius: 14, background: `${ORG}15`, color: ORG,
-                              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                              ...bc(16, 800)
-                            }}>
-                              {initials(reply.replyName || reply.admin?.adminName || reply.admin?.name)}
-                            </div>
-                            <div style={{ flex: 1 }}>
-                              <div className="flex items-center justify-between mb-2">
-                                <h4 style={{ ...bc(14, 800, { color: textC, margin: 0 }) }}>{reply.replyName || reply.admin?.adminName || 'TEAM MEMBER'}</h4>
-                                <span style={{ ...bc(10, 800, { color: text3 }) }}>{getRelativeTime(reply.createdAt).toUpperCase()}</span>
+                        selectedReport.replies.map((reply) => {
+                          const isOwner = reply.adminId === user?.id;
+                          const isEditing = editingReplyId === reply.id;
+                          const isEdited = !!reply.updatedAt && reply.updatedAt !== reply.createdAt;
+                          return (
+                            <motion.div
+                              key={reply.id}
+                              initial={{ opacity: 0, x: -10 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              className="group"
+                              style={{
+                                display: 'flex', gap: 14, padding: '14px 18px', borderRadius: 20, background: bg, border: `1px solid ${border}`
+                              }}
+                            >
+                              <div style={{
+                                width: 44, height: 44, borderRadius: 14, background: `${ORG}15`, color: ORG,
+                                display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                                ...bc(16, 800)
+                              }}>
+                                {initials(reply.replyName || reply.admin?.adminName || reply.admin?.name)}
                               </div>
-                              <p style={{ ...ba(14, 500, { color: text2, margin: 0, lineHeight: 1.6, whiteSpace: 'pre-line' }) }}>{reply.content}</p>
-                            </div>
-                          </motion.div>
-                        ))
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <div className="flex items-center justify-between mb-2">
+                                  <div className="flex items-center gap-2">
+                                    <h4 style={{ ...bc(14, 800, { color: textC, margin: 0 }) }}>{reply.replyName || reply.admin?.adminName || 'TEAM MEMBER'}</h4>
+                                    {isEdited && <span style={{ ...ba(10, 500, { color: text3, fontStyle: 'italic' }) }}>(edited)</span>}
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <span style={{ ...bc(10, 800, { color: text3 }) }}>{getRelativeTime(reply.createdAt).toUpperCase()}</span>
+                                    {isOwner && !isEditing && (
+                                      <div className="hidden group-hover:flex items-center gap-1">
+                                        <button
+                                          onClick={() => handleStartEditReply(reply)}
+                                          title="Edit reply"
+                                          style={{ background: 'none', border: 'none', padding: 4, cursor: 'pointer', color: text3, display: 'flex' }}
+                                          onMouseOver={(e) => e.currentTarget.style.color = ORG}
+                                          onMouseOut={(e) => e.currentTarget.style.color = text3}
+                                        >
+                                          <Edit size={13} />
+                                        </button>
+                                        <button
+                                          onClick={() => setDeleteReplyConfirm(reply)}
+                                          title="Delete reply"
+                                          style={{ background: 'none', border: 'none', padding: 4, cursor: 'pointer', color: text3, display: 'flex' }}
+                                          onMouseOver={(e) => e.currentTarget.style.color = '#ef4444'}
+                                          onMouseOut={(e) => e.currentTarget.style.color = text3}
+                                        >
+                                          <Trash2 size={13} />
+                                        </button>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+
+                                {isEditing ? (
+                                  <div>
+                                    <textarea
+                                      value={editingReplyContent}
+                                      onChange={(e) => setEditingReplyContent(e.target.value)}
+                                      autoFocus
+                                      rows={2}
+                                      style={{
+                                        width: '100%', padding: '10px 12px', borderRadius: 12, border: `1px solid ${ORG}`,
+                                        background: bg2, color: textC, ...ba(14, 500), outline: 'none', resize: 'vertical'
+                                      }}
+                                    />
+                                    <div className="flex items-center gap-2 mt-2">
+                                      <button
+                                        onClick={handleSaveReplyEdit}
+                                        disabled={savingReplyEdit || !editingReplyContent.trim()}
+                                        style={{
+                                          padding: '6px 14px', borderRadius: 10, background: ORG, color: '#fff', border: 'none',
+                                          cursor: 'pointer', ...bc(11, 700), opacity: (savingReplyEdit || !editingReplyContent.trim()) ? 0.5 : 1
+                                        }}
+                                      >
+                                        {savingReplyEdit ? 'SAVING...' : 'SAVE'}
+                                      </button>
+                                      <button
+                                        onClick={handleCancelEditReply}
+                                        style={{ padding: '6px 14px', borderRadius: 10, background: bg2, color: text2, border: `1px solid ${border}`, cursor: 'pointer', ...bc(11, 700) }}
+                                      >
+                                        CANCEL
+                                      </button>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <p style={{ ...ba(14, 500, { color: text2, margin: 0, lineHeight: 1.6, whiteSpace: 'pre-line' }) }}>{reply.content}</p>
+                                )}
+                              </div>
+                            </motion.div>
+                          );
+                        })
                       ) : (
                         <div style={{ textAlign: 'center', padding: '40px 0', border: `1px dashed ${border}`, borderRadius: 24 }}>
                           <p style={{ ...ba(14, 500, { color: text3, margin: 0 }) }}>No communication logs for this session.</p>
@@ -667,6 +809,40 @@ const ReportViewPage = () => {
                   style={{ flex: 1, padding: '16px', borderRadius: 14, background: '#ef4444', color: '#fff', border: 'none', cursor: 'pointer', ...bc(13, 800), boxShadow: '0 10px 25px rgba(239,68,68,0.3)' }}
                 >
                   PURGE DATA
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+
+        {deleteReplyConfirm && (
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 20 }}>
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              style={{ background: bg, border: `1px solid ${border}`, borderRadius: 32, padding: 40, maxWidth: 460, width: '100%', boxShadow: '0 40px 80px rgba(0,0,0,0.3)' }}
+            >
+              <div style={{ width: 64, height: 64, borderRadius: 20, background: '#ef444415', color: '#ef4444', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 24 }}>
+                <Trash2 size={32} />
+              </div>
+              <h3 style={{ ...bc(24, 800, { color: textC, marginBottom: 16 }) }}>Delete Reply?</h3>
+              <p style={{ ...ba(16, 500, { color: text2, marginBottom: 32, lineHeight: 1.6 }) }}>
+                This reply will be permanently removed for everyone. This action cannot be undone.
+              </p>
+              <div className="flex gap-4">
+                <button
+                  onClick={() => setDeleteReplyConfirm(null)}
+                  style={{ flex: 1, padding: '16px', borderRadius: 14, background: bg2, color: textC, border: `1px solid ${border}`, cursor: 'pointer', ...bc(13, 800) }}
+                >
+                  CANCEL
+                </button>
+                <button
+                  onClick={() => handleDeleteReply(deleteReplyConfirm)}
+                  disabled={deletingReply}
+                  style={{ flex: 1, padding: '16px', borderRadius: 14, background: '#ef4444', color: '#fff', border: 'none', cursor: 'pointer', ...bc(13, 800), boxShadow: '0 10px 25px rgba(239,68,68,0.3)', opacity: deletingReply ? 0.6 : 1 }}
+                >
+                  {deletingReply ? 'DELETING...' : 'DELETE REPLY'}
                 </button>
               </div>
             </motion.div>

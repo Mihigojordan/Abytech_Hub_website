@@ -213,6 +213,39 @@ export class ReportService {
     }
   }
 
+  // ✅ Edit a reply (owner only)
+  async editReply(replyId: string, adminId: string, content: string) {
+    const reply = await this.prisma.replyReport.findUnique({ where: { id: replyId } });
+    if (!reply) throw new BadRequestException('Reply not found');
+    if (reply.adminId !== adminId) {
+      throw new ForbiddenException('You can only edit your own reply');
+    }
+
+    const updated = await this.prisma.replyReport.update({
+      where: { id: replyId },
+      data: { content },
+    });
+
+    this.reportGateway.emitReplyUpdated(updated);
+
+    return updated;
+  }
+
+  // ✅ Delete a reply (owner only)
+  async deleteReply(replyId: string, adminId: string) {
+    const reply = await this.prisma.replyReport.findUnique({ where: { id: replyId } });
+    if (!reply) throw new BadRequestException('Reply not found');
+    if (reply.adminId !== adminId) {
+      throw new ForbiddenException('You can only delete your own reply');
+    }
+
+    await this.prisma.replyReport.delete({ where: { id: replyId } });
+
+    this.reportGateway.emitReplyDeleted({ replyId, reportId: reply.reportId });
+
+    return { success: true };
+  }
+
 
 
   // ✅ Fetch one report by ID

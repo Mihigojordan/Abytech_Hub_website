@@ -10,4 +10,14 @@ export class ReportGateway {
   emitReplyCreated(reply: any) {
     this.server.emit('reportReplyCreated', reply);
   }
+
+  // ✅ Emit event when a reply is edited
+  emitReplyUpdated(reply: any) {
+    this.server.emit('reportReplyUpdated', reply);
+  }
+
+  // ✅ Emit event when a reply is deleted
+  emitReplyDeleted(payload: { replyId: string; reportId: string }) {
+    this.server.emit('reportReplyDeleted', payload);
+  }
 }
