@@ -127,10 +127,15 @@ export class PushNotificationsService {
           return { success: true, endpoint: sub.endpoint };
         } catch (error: any) {
           console.error(`Failed to send to ${sub.endpoint}:`, error);
-          if (error?.statusCode === 410) {
+          // 410 = subscription expired/gone. 403 = the VAPID key used to send no
+          // longer matches the key the browser subscribed with (e.g. keys were
+          // rotated). Both are unrecoverable — the subscription is dead until the
+          // client re-subscribes — so clean it up either way instead of retrying
+          // forever.
+          if (error?.statusCode === 410 || error?.statusCode === 403) {
             await this.prisma.pushSubscription
               .delete({ where: { id: sub.id } })
-              .catch((e) => console.error(`Failed to delete expired sub (id=${sub.id}):`, e));
+              .catch((e) => console.error(`Failed to delete invalid sub (id=${sub.id}):`, e));
           }
           throw error;
         }
@@ -168,10 +173,10 @@ export class PushNotificationsService {
           return { success: true, endpoint: sub.endpoint };
         } catch (error: any) {
           console.error(`Failed to send to ${sub.endpoint}:`, error?.message);
-          if (error?.statusCode === 410) {
+          if (error?.statusCode === 410 || error?.statusCode === 403) {
             await this.prisma.pushSubscription
               .delete({ where: { id: sub.id } })
-              .catch((e) => console.error(`Failed to delete expired sub (id=${sub.id}):`, e));
+              .catch((e) => console.error(`Failed to delete invalid sub (id=${sub.id}):`, e));
           }
           throw error;
         }

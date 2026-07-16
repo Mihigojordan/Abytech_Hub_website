@@ -84,7 +84,7 @@ const ChatList = ({
                 : 'No conversations yet';
 
     return (
-        <div style={{ width: '100%', background: bg, borderRight: `1px solid ${border}`, flexDirection: 'column', height: '100%' }}>
+        <div style={{ width: '100%', background: bg, borderRight: `1px solid ${border}`, display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
             <ChatListHeader
                 searchQuery={searchQuery}
                 onSearchChange={onSearchChange}
@@ -92,7 +92,7 @@ const ChatList = ({
                 onFilterChange={setActiveFilter}
             />
 
-            <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }} className="custom-scrollbar">
+            <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column' }} className="custom-scrollbar">
                 <ContactsList contacts={contacts} onlineUsers={onlineUsers} />
 
                 <div style={{ padding: '20px 20px 10px' }}>

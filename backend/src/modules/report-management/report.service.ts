@@ -2,9 +2,8 @@ import { Injectable, BadRequestException, ForbiddenException } from '@nestjs/com
 import { deleteFile } from 'src/common/utils/file-upload.utils';
 import { CloudinaryService } from 'src/global/cloudinary/cloudinary.service';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { NotificationService } from 'src/global/notification/notification.service';
 import { ReportGateway } from './report.gateway';
-import { NotificationsService } from '../admin-management/notification/notifications.service';
+import { NotificationService } from '../notification/notification.service';
 import { PermissionService, PERMISSIONS } from '../permission-management/permission.service';
 
 @Injectable()
@@ -12,7 +11,7 @@ export class ReportService {
   constructor(
     private prisma: PrismaService,
     private cloudinaryService: CloudinaryService,
-    private readonly notification: NotificationsService,
+    private readonly notificationService: NotificationService,
     private readonly reportGateway: ReportGateway,
     private readonly permissionService: PermissionService,
   ) { }
@@ -185,14 +184,20 @@ export class ReportService {
       });
 
 
-      const payload = {
+      // Creates the in-app notification-center entry, pushes to every device the
+      // report owner is subscribed on, and emits it over the socket in real time.
+      await this.notificationService.createNotification({
+        recipients: [{
+          id: report.adminId,
+          type: 'ADMIN',
+          read: false,
+          link: `/admin/dashboard/report/view/${reportId}`,
+        }],
+        senderId: adminId,
+        senderType: 'ADMIN',
         title: `${admin.adminName} just replied to your report`,
-        body: content,
-        icon: `${admin.profileImage}` || '',
-        url: `${process.env.FRONTEND_URL_ONLY}/admin/dashboard/report/view/${reportId}`,
-      };
-
-      await this.notification.sendToAdmin(report.adminId, payload)
+        message: content,
+      });
 
       // Never broadcast the report's own title/content over the (unscoped) socket
       // channel, so a still-scheduled report can't leak to other admins via a reply.

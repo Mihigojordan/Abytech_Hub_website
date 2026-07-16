@@ -1,13 +1,12 @@
 import { useMemo, useState, useRef, useEffect } from 'react';
 import { UserPlus, MoreVertical, Users, ArrowLeft, ShieldCheck, ChevronDown, Info, X, Phone, Video, UserMinus, BellOff, Trash2 } from 'lucide-react';
 import Avatar from '../ui/Avatar';
-import CallButton from '../ui/CallButton';
 import useAdminAuth from '../../../../context/AdminAuthContext';
 import { useDashboardTheme } from '../../../../utils/dashboardTheme';
 import { ORG, bb, ba } from '../../../../utils/homeConstants';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const ChatHeader = ({ conversation, isTyping, onAddMember, onBack, onInfoClick, onRemoveMember, currentUserRole, onCallStart, callState }) => {
+const ChatHeader = ({ conversation, isTyping, onAddMember, onBack, onInfoClick, onRemoveMember, currentUserRole }) => {
     const { user: currentUser } = useAdminAuth();
     const { bg, bg2, textC, text2, text3, border } = useDashboardTheme();
     const [showMembers, setShowMembers] = useState(false);
@@ -155,10 +154,6 @@ const ChatHeader = ({ conversation, isTyping, onAddMember, onBack, onInfoClick, 
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginRight: 4 }}>
-                    <CallButton onCallStart={onCallStart} callState={callState} />
-                </div>
-
                 {isGroup && onAddMember && (
                     <motion.button whileHover={{ scale: 1.05, background: bg2 }} whileTap={{ scale: 0.95 }}
                         onClick={onAddMember}
