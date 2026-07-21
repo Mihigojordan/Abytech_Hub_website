@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   ArrowLeft, Save, Plus, Trash2, CheckCircle2,
   Calendar, Clock, Users, Zap, ListTodo, MessageSquare,
-  X, AlertCircle, FileText
+  X, AlertCircle, FileText, Upload, Download, FileJson
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Swal from 'sweetalert2';
 import { useDashboardTheme } from '../../../utils/dashboardTheme';
 import { ORG, TEAL, bb, bc, ba } from '../../../utils/homeConstants';
 
@@ -28,6 +29,61 @@ const TABS = [
   { id: 'review', label: 'TEAM REFLECTIONS', icon: MessageSquare },
 ];
 
+const TEMPLATE_JSON = JSON.stringify({
+  title: "Example Weekly Goal",
+  description: "Short description of what this goal aims to accomplish this week.",
+  weekStart: "2026-01-05",
+  weekEnd: "2026-01-11",
+  status: "PENDING",
+  progress: 0,
+  tasks: [
+    { title: "Task 1", description: "Details about this task", done: false },
+    { title: "Task 2", description: "Details about this task", done: false }
+  ],
+  reviewNotes: []
+}, null, 2);
+
+const TEMPLATE_RULES = `WEEKLY GOAL IMPORT — FILE RULES
+================================
+
+The imported file must be valid JSON (.json). Use template.json as a
+starting point and edit the values.
+
+FIELDS
+------
+title        string, required   Goal title.
+description  string, optional   Longer description of the goal.
+weekStart    date,   required   e.g. "2026-01-05" or a full ISO datetime.
+weekEnd      date,   required   Must be after weekStart.
+status       string, optional   One of: PENDING, IN_PROGRESS, COMPLETED, MISSED.
+                                 Defaults to PENDING.
+progress     number, optional   0-100. Defaults to 0.
+tasks        array,  optional   Each item: { "title", "description", "done" }
+reviewNotes  array,  optional   Each item: { "name", "notes" }
+
+OWNERSHIP
+---------
+Any "ownerId" or "owner" field in the file is ignored. Whoever imports and
+saves the file becomes the goal's owner — this is enforced by the server
+and cannot be overridden from the file.
+
+AFTER IMPORTING
+---------------
+Review the populated form and click "INITIALIZE GOAL" to save it.
+`;
+
+function downloadTextFile(filename, content, mimeType) {
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
 function initials(name) {
   if (!name) return "?";
   return name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
@@ -44,6 +100,30 @@ const INITIAL_FORM = {
   reviewNotes: [],
 };
 
+// Shared by "load existing goal for edit" and "import goal from JSON" — builds
+// form state from any goal-shaped object. Ownership fields (ownerId/owner) are
+// intentionally never read here: whoever submits the form becomes the owner,
+// enforced server-side from the authenticated session regardless of what a
+// pasted-in JSON file might contain.
+function buildFormState(data) {
+  let parsedTasks = [];
+  try { parsedTasks = typeof data.tasks === 'string' ? JSON.parse(data.tasks) : (data.tasks || []); } catch { parsedTasks = []; }
+
+  let parsedReviewNotes = [];
+  try { parsedReviewNotes = typeof data.reviewNotes === 'string' ? JSON.parse(data.reviewNotes) : (data.reviewNotes || []); } catch { parsedReviewNotes = []; }
+
+  return {
+    title: data.title || '',
+    description: data.description || '',
+    weekStart: formatDateTimeLocal(data.weekStart),
+    weekEnd: formatDateTimeLocal(data.weekEnd),
+    status: data.status || 'PENDING',
+    progress: data.progress || 0,
+    tasks: parsedTasks.map(t => ({ title: '', description: '', done: false, ...t, id: uid() })),
+    reviewNotes: parsedReviewNotes.map(r => ({ adminId: '', name: '', notes: '', ...r, id: uid() })),
+  };
+}
+
 export default function WeeklyGoalForm({
   goal = null,
   currentAdmin = null,
@@ -55,32 +135,71 @@ export default function WeeklyGoalForm({
   const isEdit = !!goal;
   const [activeTab, setActiveTab] = useState('details');
   const [errors, setErrors] = useState({});
+  const importInputRef = useRef(null);
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
 
-  const [form, setForm] = useState(() => {
-    if (goal) {
-      let parsedTasks = [];
-      try { parsedTasks = typeof goal.tasks === 'string' ? JSON.parse(goal.tasks) : (goal.tasks || []); } catch { parsedTasks = []; }
-      
-      let parsedReviewNotes = [];
-      try { parsedReviewNotes = typeof goal.reviewNotes === 'string' ? JSON.parse(goal.reviewNotes) : (goal.reviewNotes || []); } catch { parsedReviewNotes = []; }
-
-      return {
-        title: goal.title || '',
-        description: goal.description || '',
-        weekStart: formatDateTimeLocal(goal.weekStart),
-        weekEnd: formatDateTimeLocal(goal.weekEnd),
-        status: goal.status || 'PENDING',
-        progress: goal.progress || 0,
-        tasks: parsedTasks.map(t => ({ ...t, id: t.id || uid() })),
-        reviewNotes: parsedReviewNotes.map(r => ({ ...r, id: r.id || uid() })),
-      };
-    }
-    return INITIAL_FORM;
-  });
+  const [form, setForm] = useState(() => (goal ? buildFormState(goal) : INITIAL_FORM));
 
   const handleChange = (field, value) => {
     setForm(prev => ({ ...prev, [field]: value }));
     if (errors[field]) setErrors(prev => ({ ...prev, [field]: undefined }));
+  };
+
+  const processImportFile = (file) => {
+    if (!file) return;
+    if (!file.name.toLowerCase().endsWith('.json') && file.type !== 'application/json') {
+      Swal.fire({ icon: 'error', title: 'WRONG FILE TYPE', text: 'Please upload a .json file.', confirmButtonColor: ORG });
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const parsed = JSON.parse(ev.target.result);
+        setForm(buildFormState(parsed));
+        setErrors({});
+        setActiveTab('details');
+        setShowImportModal(false);
+        Swal.fire({
+          icon: 'success',
+          title: 'GOAL IMPORTED',
+          text: 'Review the details below, then save to create it — you will be set as the owner.',
+          confirmButtonColor: ORG,
+        });
+      } catch (err) {
+        Swal.fire({
+          icon: 'error',
+          title: 'INVALID FILE',
+          text: 'That file is not valid JSON. Please check its contents and try again.',
+          confirmButtonColor: ORG,
+        });
+      }
+    };
+    reader.onerror = () => {
+      Swal.fire({ icon: 'error', title: 'READ FAILED', text: 'Could not read the selected file.', confirmButtonColor: ORG });
+    };
+    reader.readAsText(file);
+  };
+
+  const handleImportClick = () => setShowImportModal(true);
+  const handleBrowseClick = () => importInputRef.current?.click();
+  const handleImportFile = (e) => {
+    processImportFile(e.target.files?.[0]);
+    e.target.value = ''; // allow re-selecting the same file later
+  };
+
+  const handleDragOver = (e) => { e.preventDefault(); setIsDragging(true); };
+  const handleDragLeave = (e) => { e.preventDefault(); setIsDragging(false); };
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    processImportFile(e.dataTransfer.files?.[0]);
+  };
+
+  const handleDownloadTemplate = () => {
+    downloadTextFile('template.json', TEMPLATE_JSON, 'application/json');
+    downloadTextFile('rule.txt', TEMPLATE_RULES, 'text/plain');
   };
 
   const addTask = () => {
@@ -179,8 +298,23 @@ export default function WeeklyGoalForm({
           >
             <ArrowLeft size={16} /> DISCARD & EXIT
           </button>
-          <div style={{ ...bc(12, 800, { color: text3, letterSpacing: '0.1em' }) }}>
-            GOALS / <span style={{ color: ORG }}>{isEdit ? 'EDIT' : 'CREATE'} SESSION</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+            {!isEdit && (
+              <button
+                type="button"
+                onClick={handleImportClick}
+                title="Populate this form from a JSON file. You will become the owner regardless of what the file contains."
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 8, padding: '10px 18px', borderRadius: 12,
+                  background: 'none', border: `1px solid ${border}`, color: text2, cursor: 'pointer', ...bc(11, 800)
+                }}
+              >
+                <Upload size={14} /> IMPORT JSON
+              </button>
+            )}
+            <div style={{ ...bc(12, 800, { color: text3, letterSpacing: '0.1em' }) }}>
+              GOALS / <span style={{ color: ORG }}>{isEdit ? 'EDIT' : 'CREATE'} SESSION</span>
+            </div>
           </div>
         </div>
 
@@ -458,6 +592,88 @@ export default function WeeklyGoalForm({
           </div>
         </div>
       </form>
+
+      {/* Import JSON Modal */}
+      <AnimatePresence>
+        {showImportModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowImportModal(false)}
+            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 20 }}
+          >
+            <motion.div
+              onClick={(e) => e.stopPropagation()}
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              style={{ background: bg, border: `1px solid ${border}`, borderRadius: 32, padding: 40, maxWidth: 480, width: '100%', boxShadow: '0 40px 80px rgba(0,0,0,0.3)' }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
+                <h3 style={{ ...bc(20, 800, { color: textC, margin: 0 }) }}>IMPORT GOAL FROM JSON</h3>
+                <button
+                  type="button"
+                  onClick={() => setShowImportModal(false)}
+                  style={{ background: 'none', border: 'none', color: text3, cursor: 'pointer', padding: 4 }}
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              <input
+                ref={importInputRef}
+                type="file"
+                accept=".json,application/json"
+                onChange={handleImportFile}
+                hidden
+              />
+
+              <div
+                onClick={handleBrowseClick}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                style={{
+                  border: `2px dashed ${isDragging ? ORG : border}`,
+                  borderRadius: 24,
+                  padding: '48px 24px',
+                  textAlign: 'center',
+                  cursor: 'pointer',
+                  background: isDragging ? `${ORG}08` : bg2,
+                  transition: 'all 0.2s',
+                }}
+              >
+                <div style={{
+                  width: 56, height: 56, borderRadius: 16, background: `${ORG}15`, color: ORG,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px'
+                }}>
+                  <Upload size={24} />
+                </div>
+                <p style={{ ...bc(14, 800, { color: textC, margin: '0 0 6px' }) }}>
+                  DRAG AND DROP OR CLICK TO UPLOAD
+                </p>
+                <p style={{ ...ba(12, 500, { color: text3, margin: 0 }) }}>
+                  .json files only
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleDownloadTemplate}
+                style={{
+                  width: '100%', marginTop: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+                  padding: '14px', borderRadius: 14, background: 'none', border: `1px solid ${border}`,
+                  color: text2, cursor: 'pointer', ...bc(12, 800)
+                }}
+              >
+                <FileJson size={16} /> DOWNLOAD TEMPLATE
+                <Download size={14} />
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
