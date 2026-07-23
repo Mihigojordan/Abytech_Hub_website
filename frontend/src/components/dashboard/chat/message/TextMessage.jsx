@@ -31,7 +31,7 @@ const TextMessage = ({ message, onMenuAction, showMenu, setShowMenu, selectionMo
                     </div>
                 )}
                 
-                <p style={{ ...ba(14, 400, { margin: 0, lineHeight: 1.5, wordBreak: 'break-word' }) }}>
+                <p style={{ ...ba(14, 400, { margin: 0, lineHeight: 1.5, wordBreak: 'break-word', whiteSpace: 'pre-wrap' }) }}>
                     {parseLinks(message.content).map((seg, i) =>
                         seg.type === 'url' ? (
                             <a

@@ -73,7 +73,7 @@ const CombinedMessage = ({ message, onMenuAction, showMenu, setShowMenu, onMedia
                     color: message.isSent ? textC : '#fff',
                     boxShadow: message.isSent ? 'none' : '0 10px 20px rgba(232,98,26,0.2)'
                 }}>
-                    <p style={{ ...ba(14, 400, { margin: 0, lineHeight: 1.5, wordBreak: 'break-word' }) }}>
+                    <p style={{ ...ba(14, 400, { margin: 0, lineHeight: 1.5, wordBreak: 'break-word', whiteSpace: 'pre-wrap' }) }}>
                         {parseLinks(message.content).map((seg, i) =>
                             seg.type === 'url' ? (
                                 <a
