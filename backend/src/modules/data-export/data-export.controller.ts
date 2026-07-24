@@ -18,11 +18,11 @@ import { Response } from 'express';
 import { DataExportService } from './data-export.service';
 import { DataImportService } from './data-import.service';
 import { AdminJwtAuthGuard } from 'src/guards/adminGuard.guard';
+import { AdminOrBackupKeyGuard } from './guards/admin-or-backup-key.guard';
 import { RequestWithAdmin } from 'src/common/interfaces/admin.interface';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Controller('data-export')
-@UseGuards(AdminJwtAuthGuard)
 export class DataExportController {
   constructor(
     private readonly exportService: DataExportService,
@@ -31,13 +31,19 @@ export class DataExportController {
   ) {}
 
   private async resolveActor(req: RequestWithAdmin) {
+    if (req.isBackupServiceCall) {
+      return { id: 'backup-service', name: 'Backup Service' };
+    }
     const adminId = req.admin?.id;
     if (!adminId) throw new HttpException('Unauthorized', HttpStatus.UNAUTHORIZED);
     const admin = await this.prisma.admin.findUnique({ where: { id: adminId }, select: { adminName: true } });
     return { id: adminId, name: admin?.adminName ?? 'Unknown' };
   }
 
+  // Allows either an interactive admin (JWT cookie) or the external Backup-auto
+  // service (x-backup-api-key header) to trigger an export unattended.
   @Post('export')
+  @UseGuards(AdminOrBackupKeyGuard)
   async export(@Body() body: any, @Req() req: RequestWithAdmin, @Res() res: Response) {
     try {
       const actor = await this.resolveActor(req);
@@ -77,6 +83,7 @@ export class DataExportController {
   }
 
   @Post('import/preview')
+  @UseGuards(AdminJwtAuthGuard)
   @UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
   async importPreview(@UploadedFile() file: Express.Multer.File, @Body() body: any, @Req() req: RequestWithAdmin) {
     try {
@@ -92,6 +99,7 @@ export class DataExportController {
   }
 
   @Post('import')
+  @UseGuards(AdminJwtAuthGuard)
   @UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
   async importData(@UploadedFile() file: Express.Multer.File, @Body() body: any, @Req() req: RequestWithAdmin) {
     try {
@@ -107,12 +115,14 @@ export class DataExportController {
   }
 
   @Get('import/history')
+  @UseGuards(AdminJwtAuthGuard)
   async getHistory(@Req() req: RequestWithAdmin) {
     await this.resolveActor(req);
     return this.importService.getHistory(50);
   }
 
   @Post('import/rollback/:id')
+  @UseGuards(AdminJwtAuthGuard)
   async rollback(@Param('id') id: string, @Req() req: RequestWithAdmin) {
     try {
       const actor = await this.resolveActor(req);
