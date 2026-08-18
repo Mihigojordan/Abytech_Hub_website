@@ -12,6 +12,17 @@ export const BILLING_CYCLES = ['MONTHLY', 'YEARLY'];
 // Modules & Access — the plan only caps *how many* they can enable.
 const SEED_PLANS = [
   {
+    id: 'plan-free',
+    name: 'Free Trial',
+    description: 'A no-cost way to try Abydash before committing to a paid tier.',
+    price: 0,
+    currency: 'RWF',
+    billingCycle: 'MONTHLY',
+    maxModules: 2,
+    isActive: true,
+    createdAt: daysAgo(60),
+  },
+  {
     id: 'plan-starter',
     name: 'Starter',
     description: 'For small single-location businesses just getting going.',

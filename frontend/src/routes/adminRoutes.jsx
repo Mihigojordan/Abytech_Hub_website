@@ -29,6 +29,7 @@ const CompanyRegistrationManagement = lazy(() => import("../pages/dashboard/Comp
 const ModulesAccessManagement = lazy(() => import("../pages/dashboard/ModulesAccessManagement"));
 const SubscriptionPlansManagement = lazy(() => import("../pages/dashboard/SubscriptionPlansManagement"));
 const SubscriptionsPaymentsManagement = lazy(() => import("../pages/dashboard/SubscriptionsPaymentsManagement"));
+const PlatformAnalyticsManagement = lazy(() => import("../pages/dashboard/PlatformAnalyticsManagement"));
 const ResearchManagement = lazy(() => import("../pages/dashboard/ResearchManagement"));
 const ResearchFormPage = lazy(() => import("../pages/dashboard/ResearchFormPage"));
 const ResearchViewPage = lazy(() => import("../pages/dashboard/ResearchViewPage"));
@@ -70,6 +71,7 @@ const adminRoutes = [
           { path: "modules-access", element: <PermissionRoute permission="module_access_management"><SW><ModulesAccessManagement /></SW></PermissionRoute> },
           { path: "subscription-plans", element: <PermissionRoute permission="subscription_plan_management"><SW><SubscriptionPlansManagement /></SW></PermissionRoute> },
           { path: "subscriptions-payments", element: <PermissionRoute permission="subscription_billing_management"><SW><SubscriptionsPaymentsManagement /></SW></PermissionRoute> },
+          { path: "platform-analytics", element: <PermissionRoute permission="platform_analytics_management"><SW><PlatformAnalyticsManagement /></SW></PermissionRoute> },
           { path: "meetings", element: <PermissionRoute permission="meeting_management"><SW><MeetingManagement /></SW></PermissionRoute> },
           { path: "meetings/create", element: <PermissionRoute permission="meeting_management"><SW><MeetingFormPage /></SW></PermissionRoute> },
           { path: "meetings/edit/:id", element: <PermissionRoute permission="meeting_management"><SW><MeetingFormPage /></SW></PermissionRoute> },

@@ -61,6 +61,7 @@ const AVAILABLE_PERMISSIONS = [
     { id: 'module_access_management', label: 'Modules & Access',                 locked: false, desc: 'Toggle module access and plan assignment per tenant' },
     { id: 'subscription_plan_management', label: 'Subscription Plans',           locked: false, desc: 'Manage the plan catalog: pricing, billing cycle, bundled modules' },
     { id: 'subscription_billing_management', label: 'Subscriptions & Payments',  locked: false, desc: 'Manage tenant subscriptions, invoices and payments' },
+    { id: 'platform_analytics_management', label: 'Platform Analytics',        locked: false, desc: 'View company, module adoption, growth and churn analytics' },
     { id: 'report_management',     label: 'Report Management',          locked: false, desc: 'View all reports vs just own' },
     { id: 'expense_management',    label: 'Expense Management',         locked: false },
     { id: 'salary_management',     label: 'Salary Management',          locked: false },

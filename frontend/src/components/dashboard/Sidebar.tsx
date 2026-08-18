@@ -20,6 +20,7 @@ import {
   Package,
   CreditCard,
   ClipboardCheck,
+  BarChart3,
 } from "lucide-react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import useAdminAuth from "../../context/AdminAuthContext";
@@ -84,6 +85,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onToggle }) => {
           { id: "modules-access",          label: "Modules & Access",          icon: Grid3x3,         path: `${basePath}/modules-access`,           requiredPermission: "module_access_management" },
           { id: "subscription-plans",      label: "Subscription Plans",        icon: Package,         path: `${basePath}/subscription-plans`,       requiredPermission: "subscription_plan_management" },
           { id: "subscriptions-payments",  label: "Subscriptions & Payments",  icon: CreditCard,      path: `${basePath}/subscriptions-payments`,   requiredPermission: "subscription_billing_management" },
+          { id: "platform-analytics",      label: "Platform Analytics",        icon: BarChart3,       path: `${basePath}/platform-analytics`,       requiredPermission: "platform_analytics_management" },
         ],
       },
       { id: "expense",     label: "Expense Management",         icon: ShoppingBag,   path: `${basePath}/expense`,        requiredPermission: "expense_management" },
