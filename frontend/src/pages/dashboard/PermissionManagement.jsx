@@ -57,6 +57,10 @@ const AdminAvatar = ({ admin, size = 'md', border, bg3 }) => {
 
 const AVAILABLE_PERMISSIONS = [
     { id: 'dashboard_home',        label: 'Dashboard Home',             locked: true },
+    { id: 'company_registration_management', label: 'Company Registers',          locked: false, desc: 'Review, approve or reject business sign-up requests' },
+    { id: 'module_access_management', label: 'Modules & Access',                 locked: false, desc: 'Toggle module access and plan assignment per tenant' },
+    { id: 'subscription_plan_management', label: 'Subscription Plans',           locked: false, desc: 'Manage the plan catalog: pricing, billing cycle, bundled modules' },
+    { id: 'subscription_billing_management', label: 'Subscriptions & Payments',  locked: false, desc: 'Manage tenant subscriptions, invoices and payments' },
     { id: 'report_management',     label: 'Report Management',          locked: false, desc: 'View all reports vs just own' },
     { id: 'expense_management',    label: 'Expense Management',         locked: false },
     { id: 'salary_management',     label: 'Salary Management',          locked: false },

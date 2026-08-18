@@ -15,7 +15,12 @@ export default defineConfig({
         react(),
         tailwindcss(),
         VitePWA({
-            registerType: 'autoUpdate',
+            // 'prompt' (not 'autoUpdate'): PWAContext.jsx already builds a full
+            // manual update flow (updateAvailable state, an update() action that
+            // does skipWaiting + reload) driven off registerSW's onNeedRefresh.
+            // autoUpdate mode reloads the page on its own the moment a new SW is
+            // found, racing/bypassing that UI entirely.
+            registerType: 'prompt',
             strategies: 'injectManifest',
             srcDir: 'src',
             filename: 'sw.ts',
@@ -42,7 +47,13 @@ export default defineConfig({
             // and InstallScopeGate.jsx injects the <link> at runtime, only inside /admin.
             manifest: false,
             injectManifest: {
-                globPatterns: [],
+                // Only the app shell (JS/CSS/HTML) — deliberately excludes image
+                // extensions so the marketing site's multi-MB bundled photos
+                // (dist/assets/*.jpg, dist/image/*.png) never get swept into the
+                // precache; the admin app doesn't reference them at runtime.
+                globPatterns: ['**/*.{js,css,html}'],
+                globIgnores: ['**/dev-dist/**'],
+                maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
             },
             devOptions: {
                 enabled: true,

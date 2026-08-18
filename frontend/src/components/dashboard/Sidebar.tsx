@@ -15,6 +15,11 @@ import {
   Wallet,
   ChevronDown,
   Database,
+  Building2,
+  Grid3x3,
+  Package,
+  CreditCard,
+  ClipboardCheck,
 } from "lucide-react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import useAdminAuth from "../../context/AdminAuthContext";
@@ -72,19 +77,28 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onToggle }) => {
     const basePath = `/${role}/dashboard`;
     return [
       { id: "dashboard",   label: "Dashboard Summary",          icon: TrendingUp,    path: basePath },
+      {
+        id: "tenant-management", label: "Tenant Management", icon: Building2,
+        items: [
+          { id: "company-registers",       label: "Company Registers",         icon: ClipboardCheck, path: `${basePath}/company-registrations`,   requiredPermission: "company_registration_management" },
+          { id: "modules-access",          label: "Modules & Access",          icon: Grid3x3,         path: `${basePath}/modules-access`,           requiredPermission: "module_access_management" },
+          { id: "subscription-plans",      label: "Subscription Plans",        icon: Package,         path: `${basePath}/subscription-plans`,       requiredPermission: "subscription_plan_management" },
+          { id: "subscriptions-payments",  label: "Subscriptions & Payments",  icon: CreditCard,      path: `${basePath}/subscriptions-payments`,   requiredPermission: "subscription_billing_management" },
+        ],
+      },
       { id: "expense",     label: "Expense Management",         icon: ShoppingBag,   path: `${basePath}/expense`,        requiredPermission: "expense_management" },
       { id: "salary",      label: "Salary Management",          icon: Wallet,        path: `${basePath}/salary`,         requiredPermission: "salary_management" },
       { id: "employee",    label: "Employee Management",        icon: Users2,        path: `${basePath}/employee`,       requiredPermission: "employee_management" },
-      { id: "interns",     label: "Intern Management",          icon: GraduationCap, path: `${basePath}/interns`,        requiredPermission: "internship_management" },
+      // { id: "interns",     label: "Intern Management",          icon: GraduationCap, path: `${basePath}/interns`,        requiredPermission: "internship_management" },
       { id: "chat",        label: "Chat Management",            icon: MessageSquare, path: `${basePath}/chat`,           requiredPermission: "chat_management" },
       { id: "report",      label: "Report Management",          icon: ClipboardList, path: `${basePath}/report` },
       { id: "meeting",     label: "Meeting Management",         icon: Calendar,      path: `${basePath}/meetings`,       requiredPermission: "meeting_management" },
       { id: "weekly-goals",label: "Weekly Goals Management",    icon: Target,        path: `${basePath}/weekly-goals`,   requiredPermission: "weekly_management" },
       { id: "research",    label: "Research Management",        icon: Microscope,    path: `${basePath}/research`,       requiredPermission: "research_management" },
       { id: "hosted-web",  label: "Hosted Website Management",  icon: Globe,         path: `${basePath}/hosted-website`, requiredPermission: "hosted_website" },
-      { id: "internships", label: "Internship Management",      icon: GraduationCap, path: `${basePath}/internships`,    requiredPermission: "internship_management" },
+      // { id: "internships", label: "Internship Management",      icon: GraduationCap, path: `${basePath}/internships`,    requiredPermission: "internship_management" },
       { id: "permissions", label: "Permission Management",      icon: Users2,        path: `${basePath}/permissions`,    requireSuperAdmin: true },
-      { id: "data-export", label: "Data Export & Import",       icon: Database,      path: `${basePath}/data-export`,    requiredPermission: "data_export_management" },
+      // { id: "data-export", label: "Data Export & Import",       icon: Database,      path: `${basePath}/data-export`,    requiredPermission: "data_export_management" },
     ];
   };
 

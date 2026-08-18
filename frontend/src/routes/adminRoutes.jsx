@@ -25,6 +25,10 @@ const InternManagement = lazy(() => import("../pages/dashboard/InternManagement"
 const InternshipViewPage = lazy(() => import("../pages/dashboard/InternshipViewPage"));
 const HostedWebsiteManagement = lazy(() => import("../pages/dashboard/HostedWebsiteManagement"));
 const DemoRequestManagement = lazy(() => import("../pages/dashboard/DemoRequestManagement"));
+const CompanyRegistrationManagement = lazy(() => import("../pages/dashboard/CompanyRegistrationManagement"));
+const ModulesAccessManagement = lazy(() => import("../pages/dashboard/ModulesAccessManagement"));
+const SubscriptionPlansManagement = lazy(() => import("../pages/dashboard/SubscriptionPlansManagement"));
+const SubscriptionsPaymentsManagement = lazy(() => import("../pages/dashboard/SubscriptionsPaymentsManagement"));
 const ResearchManagement = lazy(() => import("../pages/dashboard/ResearchManagement"));
 const ResearchFormPage = lazy(() => import("../pages/dashboard/ResearchFormPage"));
 const ResearchViewPage = lazy(() => import("../pages/dashboard/ResearchViewPage"));
@@ -62,6 +66,10 @@ const adminRoutes = [
           { path: "internships/view/:id", element: <PermissionRoute permission="internship_management"><SW><InternshipViewPage /></SW></PermissionRoute> },
           { path: "hosted-website", element: <PermissionRoute permission="hosted_website"><SW><HostedWebsiteManagement /></SW></PermissionRoute> },
           { path: "demo-request", element: <SW><DemoRequestManagement /></SW> },
+          { path: "company-registrations", element: <PermissionRoute permission="company_registration_management"><SW><CompanyRegistrationManagement /></SW></PermissionRoute> },
+          { path: "modules-access", element: <PermissionRoute permission="module_access_management"><SW><ModulesAccessManagement /></SW></PermissionRoute> },
+          { path: "subscription-plans", element: <PermissionRoute permission="subscription_plan_management"><SW><SubscriptionPlansManagement /></SW></PermissionRoute> },
+          { path: "subscriptions-payments", element: <PermissionRoute permission="subscription_billing_management"><SW><SubscriptionsPaymentsManagement /></SW></PermissionRoute> },
           { path: "meetings", element: <PermissionRoute permission="meeting_management"><SW><MeetingManagement /></SW></PermissionRoute> },
           { path: "meetings/create", element: <PermissionRoute permission="meeting_management"><SW><MeetingFormPage /></SW></PermissionRoute> },
           { path: "meetings/edit/:id", element: <PermissionRoute permission="meeting_management"><SW><MeetingFormPage /></SW></PermissionRoute> },
