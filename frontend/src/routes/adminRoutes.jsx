@@ -7,6 +7,7 @@ const DashboardLayout = lazy(() => import("../layouts/DashboardLayout"));
 const DashboardHome = lazy(() => import("../pages/dashboard/DashboardHome"));
 const ExpenseDashboard = lazy(() => import("../pages/dashboard/ExpenseDashboard"));
 const EmployeeeDashboard = lazy(() => import("../pages/dashboard/EmployeeManagement"));
+const EmployeeCreatePage = lazy(() => import("../pages/dashboard/EmployeeCreatePage"));
 const ReportDashboard = lazy(() => import("../pages/dashboard/ReportManagement"));
 const UpsertReportPage = lazy(() => import("../components/dashboard/report/UpsertReportPage"));
 const ReportViewPage = lazy(() => import("../components/dashboard/report/ReportViewPage"));
@@ -49,6 +50,7 @@ const adminRoutes = [
           { index: true, element: <SW><DashboardHome /></SW> },
           { path: "expense", element: <PermissionRoute permission="expense_management"><SW><ExpenseDashboard /></SW></PermissionRoute> },
           { path: "employee", element: <PermissionRoute permission="employee_management"><SW><EmployeeeDashboard /></SW></PermissionRoute> },
+          { path: "employee/new", element: <SuperAdminRoute><SW><EmployeeCreatePage /></SW></SuperAdminRoute> },
           { path: "interns", element: <PermissionRoute permission="internship_management"><SW><InternManagement /></SW></PermissionRoute> },
           { path: "report", element: <SW><ReportDashboard /></SW> },
           { path: "report/create", element: <SW><UpsertReportPage /></SW> },

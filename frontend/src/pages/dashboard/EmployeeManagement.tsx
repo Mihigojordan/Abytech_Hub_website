@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   AlertCircle,
   Calendar,
@@ -11,6 +12,7 @@ import {
   List,
   Mail,
   Phone,
+  Plus,
   RefreshCw,
   Search,
   Table,
@@ -169,6 +171,7 @@ const EmployeeAvatar = ({ employee, size = 'md' }: { employee: EmployeeRecord; s
 };
 
 const EmployeeDirectoryPage = () => {
+  const navigate = useNavigate();
   const { isSuperAdmin } = useAdminAuth();
   const { isDark, bg, bg2, bg3, textC, text2, text3, border } = useDashboardTheme();
   const [employees, setEmployees] = useState<EmployeeRecord[]>([]);
@@ -547,6 +550,28 @@ const EmployeeDirectoryPage = () => {
               </p>
             </div>
             <div className="flex items-center space-x-2">
+              {isSuperAdmin && (
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  onClick={() => navigate('/admin/dashboard/employee/new')}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    padding: '6px 12px',
+                    fontSize: 12,
+                    background: ORG,
+                    border: `1px solid ${ORG}`,
+                    color: '#fff',
+                    borderRadius: 4,
+                    cursor: 'pointer',
+                    fontWeight: 600,
+                  }}
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Add Employee</span>
+                </motion.button>
+              )}
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 onClick={handleExport}

@@ -149,6 +149,40 @@ async updateAdmin(id, updateData) {
 }
 
 
+  async createEmployee(employeeData) {
+    try {
+      let payload;
+
+      if (employeeData instanceof FormData) {
+        payload = employeeData;
+      } else {
+        payload = new FormData();
+        Object.entries(employeeData).forEach(([key, value]) => {
+          if (value === undefined || value === null || value === '') return;
+
+          if (value instanceof File) {
+            payload.append(key, value);
+          } else if (Array.isArray(value)) {
+            payload.append(key, JSON.stringify(value));
+          } else {
+            payload.append(key, value);
+          }
+        });
+      }
+
+      const response = await this.api.post('/admin/employees', payload, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      return response.data;
+    } catch (error) {
+      const msg = error.response?.data?.message || error.message || 'Failed to create employee';
+      throw new Error(msg);
+    }
+  }
+
   async deleteAdmin(id) {
     try {
       const response = await this.api.delete(`/admin/${id}`);
