@@ -142,7 +142,7 @@ const EmployeeCreatePage = () => {
         </div>
       </div>
 
-      <div className="mx-auto px-4 sm:px-6 py-10 max-w-3xl">
+      <div className="mx-auto px-4 sm:px-6 py-10 ">
         <motion.form
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
