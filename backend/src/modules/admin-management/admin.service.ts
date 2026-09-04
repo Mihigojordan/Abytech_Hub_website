@@ -117,6 +117,86 @@ export class AdminService {
     }
   }
 
+  // Create a new employee account (super-admin only, enforced in controller)
+  async createEmployee(data: {
+    adminName: string;
+    adminEmail: string;
+    password: string;
+    phone?: string;
+    location?: string;
+    bio?: string;
+    idNumber?: string | number;
+    joinedDate?: string | Date;
+    skills?: string | string[];
+    status?: 'ACTIVE' | 'INACTIVE';
+    profileImage?: string;
+    cv?: string;
+    passport?: string;
+    identityCard?: string;
+  }) {
+    try {
+      const { adminName, adminEmail, password } = data;
+
+      if (!adminEmail || !adminName || !password) {
+        throw new BadRequestException('Name, email, and password are required');
+      }
+
+      if (!this.emailRegex.test(adminEmail)) {
+        throw new BadRequestException('Invalid email format');
+      }
+
+      if (password.length < 6) {
+        throw new BadRequestException('Password must be at least 6 characters');
+      }
+
+      const existing = await this.findAdminByEmail(adminEmail);
+      if (existing) {
+        throw new BadRequestException('Admin already exists');
+      }
+
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      let skills: string[] | undefined;
+      if (Array.isArray(data.skills)) {
+        skills = data.skills;
+      } else if (typeof data.skills === 'string' && data.skills.trim()) {
+        try {
+          const parsed = JSON.parse(data.skills);
+          skills = Array.isArray(parsed) ? parsed : undefined;
+        } catch {
+          skills = data.skills.split(',').map((s) => s.trim()).filter(Boolean);
+        }
+      }
+
+      const newAdmin = await this.prisma.admin.create({
+        data: {
+          adminName,
+          adminEmail,
+          password: hashedPassword,
+          phone: data.phone || null,
+          location: data.location || null,
+          bio: data.bio || null,
+          idNumber: data.idNumber !== undefined && data.idNumber !== '' ? Number(data.idNumber) : null,
+          joinedDate: data.joinedDate ? new Date(data.joinedDate) : null,
+          skills: skills ?? undefined,
+          status: data.status || 'ACTIVE',
+          profileImage: data.profileImage || null,
+          cv: data.cv || null,
+          passport: data.passport || null,
+          identityCard: data.identityCard || null,
+          isSuperAdmin: false,
+        },
+      });
+
+      const { password: _password, ...safeAdmin } = newAdmin;
+
+      return { message: 'Employee created successfully', admin: safeAdmin };
+    } catch (error) {
+      console.error('error creating employee', error);
+      throw new Error(error.message);
+    }
+  }
+
 
   async findAll() {
     try {

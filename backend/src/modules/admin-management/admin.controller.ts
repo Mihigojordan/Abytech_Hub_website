@@ -45,6 +45,60 @@ export class AdminController {
     }
   }
 
+  // Create a new employee (admin dashboard, super-admin only)
+  @Post('employees')
+  @UseGuards(AdminJwtAuthGuard)
+  @UseInterceptors(
+    FileFieldsInterceptor(AdminFileFields, AdminUploadConfig),
+  )
+  async createEmployee(
+    @Req() req: RequestWithAdmin,
+    @UploadedFiles() files: {
+      profileImage?: Express.Multer.File[],
+      passport?: Express.Multer.File[],
+      cv?: Express.Multer.File[],
+      identityCard?: Express.Multer.File[],
+    },
+    @Body()
+    body: {
+      adminName: string;
+      adminEmail: string;
+      password: string;
+      phone?: string;
+      location?: string;
+      bio?: string;
+      idNumber?: string;
+      joinedDate?: string;
+      skills?: string;
+      status?: 'ACTIVE' | 'INACTIVE';
+    },
+  ) {
+    try {
+      const requester = await this.adminServices.findAdminById(req.admin?.id as string);
+      if (!requester?.isSuperAdmin) {
+        throw new HttpException('Only super admins can add employees', 403);
+      }
+
+      if (files?.profileImage?.[0]?.path) {
+        body['profileImage'] = files.profileImage[0].path;
+      }
+      if (files?.cv?.[0]?.path) {
+        body['cv'] = files.cv[0].path;
+      }
+      if (files?.passport?.[0]?.path) {
+        body['passport'] = files.passport[0].path;
+      }
+      if (files?.identityCard?.[0]?.path) {
+        body['identityCard'] = files.identityCard[0].path;
+      }
+
+      return await this.adminServices.createEmployee(body);
+    } catch (error) {
+      console.log('error creating employee', error);
+      throw new HttpException(error.message || 'Failed to create employee', error.status || 400);
+    }
+  }
+
     @Get()
     @UseGuards(AdminJwtAuthGuard)
     async findAll() {
