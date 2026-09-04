@@ -379,14 +379,16 @@ export class AdminController {
   }
 
   @Put(':id')
+  @UseGuards(AdminJwtAuthGuard)
   @UseInterceptors(
     FileFieldsInterceptor(AdminFileFields, AdminUploadConfig),
   )
   async updateAdmin(
+    @Req() req: RequestWithAdmin,
     @Param('id') id: string,
-    @UploadedFiles() files: { 
-      profileImage?: Express.Multer.File[] , 
-       passport?: Express.Multer.File[] , 
+    @UploadedFiles() files: {
+      profileImage?: Express.Multer.File[] ,
+       passport?: Express.Multer.File[] ,
        cv?: Express.Multer.File[],
        identityCard?: Express.Multer.File[],
        },
@@ -399,6 +401,10 @@ export class AdminController {
       status?: 'ACTIVE' | 'INACTIVE';
     },
   ) {
+    const requester = await this.adminServices.findAdminById(req.admin?.id as string);
+    if (req.admin?.id !== id && !requester?.isSuperAdmin) {
+      throw new HttpException('Not authorized to modify this account', 403);
+    }
 
     function parseBoolean(value: string | boolean | undefined): boolean | undefined {
       if (typeof value === 'string') return JSON.parse(value);
@@ -432,7 +438,12 @@ export class AdminController {
   }
 
   @Delete(':id')
-  async deleteAdmin(@Param('id') id: string) {
+  @UseGuards(AdminJwtAuthGuard)
+  async deleteAdmin(@Req() req: RequestWithAdmin, @Param('id') id: string) {
+    const requester = await this.adminServices.findAdminById(req.admin?.id as string);
+    if (req.admin?.id !== id && !requester?.isSuperAdmin) {
+      throw new HttpException('Not authorized to delete this account', 403);
+    }
     return this.adminServices.deleteAdmin(id);
   }
 }

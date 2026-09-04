@@ -16,7 +16,10 @@ import {
   RefreshCw,
   Search,
   Table,
+  Trash2,
   User,
+  UserCheck,
+  UserX,
   X,
   XCircle,
 } from 'lucide-react';
@@ -172,7 +175,7 @@ const EmployeeAvatar = ({ employee, size = 'md' }: { employee: EmployeeRecord; s
 
 const EmployeeDirectoryPage = () => {
   const navigate = useNavigate();
-  const { isSuperAdmin } = useAdminAuth();
+  const { isSuperAdmin, user: currentAdmin } = useAdminAuth();
   const { isDark, bg, bg2, bg3, textC, text2, text3, border } = useDashboardTheme();
   const [employees, setEmployees] = useState<EmployeeRecord[]>([]);
   const [loading, setLoading] = useState(true);
@@ -188,6 +191,8 @@ const EmployeeDirectoryPage = () => {
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [selectedEmployee, setSelectedEmployee] = useState<EmployeeRecord | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<EmployeeRecord | null>(null);
+  const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
 
   useEffect(() => {
     loadData();
@@ -221,6 +226,35 @@ const EmployeeDirectoryPage = () => {
   const showOperationStatus = (type: 'success' | 'error', message: string, duration = 3000) => {
     setOperationStatus({ type, message });
     window.setTimeout(() => setOperationStatus(null), duration);
+  };
+
+  const handleToggleStatus = async (employee: EmployeeRecord) => {
+    const nextStatus: EmployeeStatus = employee.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
+    try {
+      setActionLoadingId(employee.id);
+      await adminAuthService.updateAdmin(employee.id, { status: nextStatus });
+      showOperationStatus('success', `${employee.name} ${nextStatus === 'ACTIVE' ? 'activated' : 'deactivated'} successfully`);
+      await loadData();
+    } catch (err: any) {
+      showOperationStatus('error', err.message || 'Failed to update status');
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
+    try {
+      setActionLoadingId(deleteTarget.id);
+      await adminAuthService.deleteAdmin(deleteTarget.id);
+      showOperationStatus('success', `${deleteTarget.name} deleted successfully`);
+      setDeleteTarget(null);
+      await loadData();
+    } catch (err: any) {
+      showOperationStatus('error', err.message || 'Failed to delete employee');
+    } finally {
+      setActionLoadingId(null);
+    }
   };
 
   const formatDate = (date: string) => {
@@ -409,6 +443,48 @@ const EmployeeDirectoryPage = () => {
       >
         <Phone className="w-3.5 h-3.5" />
       </motion.button>
+      {isSuperAdmin && employee.role === 'ADMIN' && employee.id !== currentAdmin?.id && (
+        <>
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            onClick={() => handleToggleStatus(employee)}
+            disabled={actionLoadingId === employee.id}
+            style={{
+              padding: '6px',
+              borderRadius: 4,
+              background: bg3,
+              border: `1px solid ${border}`,
+              color: employee.status === 'ACTIVE' ? '#e8a640' : '#4ade80',
+              cursor: actionLoadingId === employee.id ? 'not-allowed' : 'pointer',
+              opacity: actionLoadingId === employee.id ? 0.5 : 1,
+              display: 'flex',
+              alignItems: 'center',
+            }}
+            title={employee.status === 'ACTIVE' ? 'Deactivate' : 'Activate'}
+          >
+            {employee.status === 'ACTIVE' ? <UserX className="w-3.5 h-3.5" /> : <UserCheck className="w-3.5 h-3.5" />}
+          </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            onClick={() => setDeleteTarget(employee)}
+            disabled={actionLoadingId === employee.id}
+            style={{
+              padding: '6px',
+              borderRadius: 4,
+              background: 'rgba(232,64,64,.1)',
+              border: '1px solid rgba(232,64,64,.3)',
+              color: '#e84040',
+              cursor: actionLoadingId === employee.id ? 'not-allowed' : 'pointer',
+              opacity: actionLoadingId === employee.id ? 0.5 : 1,
+              display: 'flex',
+              alignItems: 'center',
+            }}
+            title="Delete"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </motion.button>
+        </>
+      )}
     </div>
   );
 
@@ -980,6 +1056,104 @@ const EmployeeDirectoryPage = () => {
             </div>
           </div>
         )}
+
+        {/* Delete confirmation modal */}
+        <AnimatePresence>
+          {deleteTarget && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              style={{
+                position: 'fixed',
+                inset: 0,
+                background: 'rgba(0,0,0,.75)',
+                zIndex: 50,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: 16,
+              }}
+              onClick={() => {
+                if (actionLoadingId !== deleteTarget.id) setDeleteTarget(null);
+              }}
+            >
+              <motion.div
+                initial={{ scale: 0.96, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.96, opacity: 0 }}
+                onClick={(event) => event.stopPropagation()}
+                style={{
+                  width: '100%',
+                  maxWidth: 420,
+                  background: bg2,
+                  border: `1px solid ${border}`,
+                  borderRadius: 4,
+                  overflow: 'hidden',
+                }}
+              >
+                <div style={{ padding: 24, textAlign: 'center' }}>
+                  <div style={{
+                    width: 48,
+                    height: 48,
+                    borderRadius: '50%',
+                    background: 'rgba(232,64,64,.1)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    margin: '0 auto 16px',
+                  }}>
+                    <AlertCircle className="w-6 h-6" style={{ color: '#e84040' }} />
+                  </div>
+                  <h2 style={{ fontSize: 16, fontWeight: 600, color: textC, marginBottom: 8 }}>Delete Employee</h2>
+                  <p style={{ fontSize: 13, color: text2 }}>
+                    Are you sure you want to delete <strong style={{ color: textC }}>{deleteTarget.name}</strong>? This action cannot be undone and their account will lose access immediately.
+                  </p>
+                </div>
+
+                <div className="flex items-center justify-center gap-3 pb-6 px-6">
+                  <button
+                    type="button"
+                    onClick={() => setDeleteTarget(null)}
+                    disabled={actionLoadingId === deleteTarget.id}
+                    style={{
+                      flex: 1,
+                      padding: '10px 16px',
+                      fontSize: 13,
+                      fontWeight: 600,
+                      background: bg3,
+                      border: `1px solid ${border}`,
+                      color: textC,
+                      borderRadius: 4,
+                      cursor: actionLoadingId === deleteTarget.id ? 'not-allowed' : 'pointer',
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleConfirmDelete}
+                    disabled={actionLoadingId === deleteTarget.id}
+                    style={{
+                      flex: 1,
+                      padding: '10px 16px',
+                      fontSize: 13,
+                      fontWeight: 600,
+                      background: '#e84040',
+                      border: '1px solid #e84040',
+                      color: '#fff',
+                      borderRadius: 4,
+                      cursor: actionLoadingId === deleteTarget.id ? 'not-allowed' : 'pointer',
+                      opacity: actionLoadingId === deleteTarget.id ? 0.7 : 1,
+                    }}
+                  >
+                    {actionLoadingId === deleteTarget.id ? 'Deleting...' : 'Yes, Delete'}
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Employee detail modal */}
         <AnimatePresence>
