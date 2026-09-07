@@ -24,6 +24,7 @@ import { ContactModule } from './modules/contact/contact.module';
 import { CallModule } from './modules/call/call.module';
 import { DataExportModule } from './modules/data-export/data-export.module';
 import { CookieCheckModule } from './modules/cookie-check/cookie-check.module';
+import { AbydashIntegrationModule } from './modules/abydash-integration/abydash-integration.module';
 
 @Module({
   imports: [
@@ -48,6 +49,7 @@ import { CookieCheckModule } from './modules/cookie-check/cookie-check.module';
     CallModule,
     DataExportModule,
     CookieCheckModule,
+    AbydashIntegrationModule,
   ],
   controllers: [AppController],
 })

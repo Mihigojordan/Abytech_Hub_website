@@ -7,6 +7,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import companyRegistrationService, { BUSINESS_TYPES, MODULES, STATUS } from '../../services/companyRegistrationService';
 import companyService from '../../services/companyService';
+import abydashService from '../../services/abydashService';
 import useAdminAuth from '../../context/AdminAuthContext';
 import { useDashboardTheme } from '../../utils/dashboardTheme';
 import { ORG, TEAL, bb, bc, ba } from '../../utils/homeConstants';
@@ -39,6 +40,7 @@ const CompanyRegistrationManagement = () => {
   const [approveNotes, setApproveNotes] = useState('');
   const [showApproveModal, setShowApproveModal] = useState(false);
   const [busyId, setBusyId] = useState(null);
+  const [createdCredentials, setCreatedCredentials] = useState(null);
 
   useEffect(() => { loadRegistrations(); }, [searchTerm, statusFilter, typeFilter]);
 
@@ -70,15 +72,36 @@ const CompanyRegistrationManagement = () => {
     setTimeout(() => setOperationStatus(null), 3000);
   };
 
+  // A registration has no password (it's a public sign-up form) — generate
+  // a one-time temporary one for the real AbyDash super admin account and
+  // show it to the reviewer once, so they can hand it to the customer.
+  // AbyDash's own welcome email supports a temporaryPassword field but
+  // provisionOrganization doesn't pass one through yet — showing it here
+  // instead is the simplest thing that works today without touching
+  // AbyDash's email wiring.
+  const genTempPassword = () =>
+    `Aby-${Math.random().toString(36).slice(-6)}${Math.floor(Math.random() * 90 + 10)}!`;
+
   const handleApprove = async () => {
     if (!selected) return;
     try {
       setBusyId(selected.id);
       await companyRegistrationService.approveRegistration(selected.id, { reviewedBy: reviewerName, reviewNotes: approveNotes });
-      // Provision the tenant with whatever modules they asked for at sign-up —
-      // admins can fine-tune access afterwards from Modules & Access.
+      // Mock local record, still used by Analytics/Subscriptions/Payments
+      // pages (unrelated, mock-only for now) — kept so those keep working.
       await companyService.createFromRegistration(selected);
-      showOperationMessage('success', `${selected.businessName} approved and granted access to ${selected.interestedModules.length || 0} module${selected.interestedModules.length !== 1 ? 's' : ''}`);
+
+      // The real thing: actually provisions this business as an AbyDash
+      // organization, via this app's own backend → AbyDash's trusted
+      // integration surface. See abydashService.js.
+      const tempPassword = genTempPassword();
+      await abydashService.createOrganization({
+        organizationName: selected.businessName,
+        superAdmin: { name: selected.contactName, email: selected.email, password: tempPassword },
+      });
+      setCreatedCredentials({ email: selected.email, password: tempPassword, businessName: selected.businessName });
+
+      showOperationMessage('success', `${selected.businessName} approved and provisioned on AbyDash`);
       setShowApproveModal(false);
       setShowViewModal(false);
       setApproveNotes('');
@@ -515,12 +538,12 @@ const CompanyRegistrationManagement = () => {
               <div className="p-4 space-y-4">
                 <p style={{ ...ba(13, 400, { color: text2, lineHeight: 1.6 }) }}>
                   Approve <strong style={{ color: textC }}>{selected.businessName}</strong> to access Abydash.
-                  A tenant account will be created automatically, granted the modules they requested at sign-up.
-                  You can fine-tune access anytime from Modules & Access.
+                  A real tenant account is created automatically with no plan or modules yet — assign
+                  those afterward from Modules & Access.
                 </p>
                 {selected.interestedModules.length > 0 && (
                   <div>
-                    <label style={bc(10, 700, { letterSpacing: 2, textTransform: 'uppercase', color: text2, display: 'block', marginBottom: 6 })}>Will be granted</label>
+                    <label style={bc(10, 700, { letterSpacing: 2, textTransform: 'uppercase', color: text2, display: 'block', marginBottom: 6 })}>Expressed interest in</label>
                     <div className="flex flex-wrap gap-1.5">
                       {selected.interestedModules.map((m) => (
                         <span key={m} style={{ padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 600, background: 'rgba(74,222,128,.12)', color: '#4ade80' }}>
@@ -584,6 +607,47 @@ const CompanyRegistrationManagement = () => {
                   <button onClick={handleReject} disabled={!rejectReason.trim() || busyId === selected.id}
                     style={{ padding: '8px 16px', fontSize: 13, fontWeight: 700, background: '#e84040', color: '#fff', border: 'none', borderRadius: 4, cursor: !rejectReason.trim() ? 'not-allowed' : 'pointer', opacity: !rejectReason.trim() ? 0.5 : 1 }}>
                     Confirm Rejection
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Shown once right after a successful approval — the only place this
+          temporary password is ever displayed, so the reviewer needs to
+          copy/share it now. */}
+      <AnimatePresence>
+        {createdCredentials && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 flex items-center justify-center z-50 p-4"
+            style={{ background: 'rgba(0,0,0,.75)' }} onClick={() => setCreatedCredentials(null)}>
+            <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }}
+              style={{ background: bg2, border: '1px solid ' + border, borderRadius: 4, width: '100%', maxWidth: 440 }}
+              onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center justify-between p-4" style={{ background: bg3, borderBottom: '1px solid ' + border }}>
+                <h2 style={{ ...ba(15, 700, { color: textC, margin: 0 }) }}>Tenant Provisioned</h2>
+                <button onClick={() => setCreatedCredentials(null)}
+                  style={{ background: bg2, border: '1px solid ' + border, borderRadius: 4, padding: 6, color: text2, cursor: 'pointer' }}>
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="p-4 space-y-4">
+                <p style={{ ...ba(13, 400, { color: text2, lineHeight: 1.6 }) }}>
+                  <strong style={{ color: textC }}>{createdCredentials.businessName}</strong> is now live on AbyDash.
+                  Share these sign-in details with them — this password is shown only this once.
+                </p>
+                <div style={{ background: bg3, border: '1px solid ' + border, borderRadius: 4, padding: 12 }}>
+                  <div style={{ ...ba(11, 700, { color: text2, textTransform: 'uppercase', letterSpacing: 1 }) }}>Email</div>
+                  <div style={{ ...ba(13, 600, { color: textC, marginBottom: 8 }) }}>{createdCredentials.email}</div>
+                  <div style={{ ...ba(11, 700, { color: text2, textTransform: 'uppercase', letterSpacing: 1 }) }}>Temporary Password</div>
+                  <div style={{ ...ba(14, 700, { color: ORG, fontFamily: 'monospace' }) }}>{createdCredentials.password}</div>
+                </div>
+                <div className="flex justify-end pt-2">
+                  <button onClick={() => setCreatedCredentials(null)}
+                    style={{ padding: '8px 16px', fontSize: 13, fontWeight: 700, background: ORG, color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer' }}>
+                    Done
                   </button>
                 </div>
               </div>
