@@ -27,6 +27,8 @@ const InternshipViewPage = lazy(() => import("../pages/dashboard/InternshipViewP
 const HostedWebsiteManagement = lazy(() => import("../pages/dashboard/HostedWebsiteManagement"));
 const DemoRequestManagement = lazy(() => import("../pages/dashboard/DemoRequestManagement"));
 const CompanyRegistrationManagement = lazy(() => import("../pages/dashboard/CompanyRegistrationManagement"));
+const OrganizationCreatePage = lazy(() => import("../pages/dashboard/OrganizationCreatePage"));
+const OrganizationEditPage = lazy(() => import("../pages/dashboard/OrganizationEditPage"));
 const ModulesAccessManagement = lazy(() => import("../pages/dashboard/ModulesAccessManagement"));
 const SubscriptionPlansManagement = lazy(() => import("../pages/dashboard/SubscriptionPlansManagement"));
 const SubscriptionsPaymentsManagement = lazy(() => import("../pages/dashboard/SubscriptionsPaymentsManagement"));
@@ -70,6 +72,8 @@ const adminRoutes = [
           { path: "hosted-website", element: <PermissionRoute permission="hosted_website"><SW><HostedWebsiteManagement /></SW></PermissionRoute> },
           { path: "demo-request", element: <SW><DemoRequestManagement /></SW> },
           { path: "company-registrations", element: <PermissionRoute permission="company_registration_management"><SW><CompanyRegistrationManagement /></SW></PermissionRoute> },
+          { path: "organizations/new", element: <PermissionRoute permission="company_registration_management"><SW><OrganizationCreatePage /></SW></PermissionRoute> },
+          { path: "organizations/:id/edit", element: <PermissionRoute permission="company_registration_management"><SW><OrganizationEditPage /></SW></PermissionRoute> },
           { path: "modules-access", element: <PermissionRoute permission="module_access_management"><SW><ModulesAccessManagement /></SW></PermissionRoute> },
           { path: "subscription-plans", element: <PermissionRoute permission="subscription_plan_management"><SW><SubscriptionPlansManagement /></SW></PermissionRoute> },
           { path: "subscriptions-payments", element: <PermissionRoute permission="subscription_billing_management"><SW><SubscriptionsPaymentsManagement /></SW></PermissionRoute> },

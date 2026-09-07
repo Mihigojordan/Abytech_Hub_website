@@ -83,9 +83,13 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onToggle }) => {
         items: [
           { id: "company-registers",       label: "Company Registers",         icon: ClipboardCheck, path: `${basePath}/company-registrations`,   requiredPermission: "company_registration_management" },
           { id: "modules-access",          label: "Modules & Access",          icon: Grid3x3,         path: `${basePath}/modules-access`,           requiredPermission: "module_access_management" },
-          { id: "subscription-plans",      label: "Subscription Plans",        icon: Package,         path: `${basePath}/subscription-plans`,       requiredPermission: "subscription_plan_management" },
-          { id: "subscriptions-payments",  label: "Subscriptions & Payments",  icon: CreditCard,      path: `${basePath}/subscriptions-payments`,   requiredPermission: "subscription_billing_management" },
-          { id: "platform-analytics",      label: "Platform Analytics",        icon: BarChart3,       path: `${basePath}/platform-analytics`,       requiredPermission: "platform_analytics_management" },
+          // Hidden for now, per explicit request — these three still run on
+          // mock data (no real Plan CRUD / Subscription-Billing / Analytics
+          // backend exists yet), so they stay out of the nav until that's
+          // real. Routes themselves are untouched, just not linked to here.
+          // { id: "subscription-plans",      label: "Subscription Plans",        icon: Package,         path: `${basePath}/subscription-plans`,       requiredPermission: "subscription_plan_management" },
+          // { id: "subscriptions-payments",  label: "Subscriptions & Payments",  icon: CreditCard,      path: `${basePath}/subscriptions-payments`,   requiredPermission: "subscription_billing_management" },
+          // { id: "platform-analytics",      label: "Platform Analytics",        icon: BarChart3,       path: `${basePath}/platform-analytics`,       requiredPermission: "platform_analytics_management" },
         ],
       },
       { id: "expense",     label: "Expense Management",         icon: ShoppingBag,   path: `${basePath}/expense`,        requiredPermission: "expense_management" },
