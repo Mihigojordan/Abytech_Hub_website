@@ -115,17 +115,17 @@ const OrganizationEditPage = () => {
       </div>
 
       {error && (
-        <div style={{ maxWidth: 560, padding: '10px 12px', borderRadius: 4, background: 'rgba(232,64,64,.15)', border: '1px solid #e84040', color: '#e84040', fontSize: 12.5, fontWeight: 600, marginBottom: 16 }}>
+        <div style={{ padding: '10px 12px', borderRadius: 4, background: 'rgba(232,64,64,.15)', border: '1px solid #e84040', color: '#e84040', fontSize: 12.5, fontWeight: 600, marginBottom: 16 }}>
           <AlertCircle className="w-4 h-4" style={{ display: 'inline', marginRight: 6 }} />{error}
         </div>
       )}
       {saved && (
-        <div style={{ maxWidth: 560, padding: '10px 12px', borderRadius: 4, background: 'rgba(74,222,128,.15)', border: '1px solid #4ade80', color: '#4ade80', fontSize: 12.5, fontWeight: 600, marginBottom: 16 }}>
+        <div style={{ padding: '10px 12px', borderRadius: 4, background: 'rgba(74,222,128,.15)', border: '1px solid #4ade80', color: '#4ade80', fontSize: 12.5, fontWeight: 600, marginBottom: 16 }}>
           <CheckCircle className="w-4 h-4" style={{ display: 'inline', marginRight: 6 }} />Saved.
         </div>
       )}
 
-      <div style={{ maxWidth: 560, background: bg2, border: '1px solid ' + border, borderRadius: 4, padding: 24 }}>
+      <div style={{ background: bg2, border: '1px solid ' + border, borderRadius: 4, padding: 24 }}>
         <label style={bc(10, 700, { letterSpacing: 2, textTransform: 'uppercase', color: text2, display: 'block', marginBottom: 6 })}>Assigned Plan</label>
         <select value={draftPlanId} onChange={(e) => setDraftPlanId(e.target.value)} style={inputStyle}>
           <option value="">No Plan</option>

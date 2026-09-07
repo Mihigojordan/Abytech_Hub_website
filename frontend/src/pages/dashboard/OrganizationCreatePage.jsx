@@ -66,7 +66,7 @@ const OrganizationCreatePage = () => {
   if (created) {
     return (
       <div className="min-h-screen" style={{ background: bg, padding: 24 }}>
-        <div style={{ maxWidth: 520, margin: '40px auto' }}>
+        <div style={{ margin: '40px auto' }}>
           <div style={{ background: bg2, border: '1px solid ' + border, borderRadius: 4, padding: 24 }}>
             <div className="flex items-center gap-2 mb-3">
               <CheckCircle className="w-6 h-6" style={{ color: '#4ade80' }} />
@@ -114,7 +114,7 @@ const OrganizationCreatePage = () => {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} style={{ maxWidth: 520, background: bg2, border: '1px solid ' + border, borderRadius: 4, padding: 24 }}>
+      <form onSubmit={handleSubmit} style={{ background: bg2, border: '1px solid ' + border, borderRadius: 4, padding: 24 }}>
         {error && (
           <div style={{ padding: '10px 12px', borderRadius: 4, background: 'rgba(232,64,64,.15)', border: '1px solid #e84040', color: '#e84040', fontSize: 12.5, fontWeight: 600, marginBottom: 16 }}>
             {error}
