@@ -15,16 +15,33 @@ class AbydashService {
     }
   }
 
-  async createOrganization({ organizationName, organizationSlug, superAdmin }) {
+  async createOrganization({ organizationName, organizationSlug, businessType, superAdmin }) {
     try {
       const response = await api.post('/abydash/organizations', {
         organizationName,
         organizationSlug,
+        businessType,
         superAdmin,
       });
       return response.data;
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Failed to create organization');
+    }
+  }
+
+  // Rename, (de)activate, or re-type an organization already created.
+  // AbyDash pushes this live to that org's connected employees the moment
+  // it lands — see D:\project\JOB\Report Managment's real-time propagation.
+  async updateOrganization(organizationId, { name, status, businessType } = {}) {
+    try {
+      const response = await api.patch(`/abydash/organizations/${organizationId}`, {
+        name,
+        status,
+        businessType,
+      });
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to update organization');
     }
   }
 

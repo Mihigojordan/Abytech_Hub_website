@@ -21,6 +21,7 @@ const OrganizationCreatePage = () => {
   const { bg, bg2, bg3, textC, text2, border } = useDashboardTheme();
 
   const [organizationName, setOrganizationName] = useState('');
+  const [businessType, setBusinessType] = useState('RETAILER');
   const [adminName, setAdminName] = useState('');
   const [adminEmail, setAdminEmail] = useState('');
   const [error, setError] = useState(null);
@@ -46,6 +47,7 @@ const OrganizationCreatePage = () => {
       setSaving(true);
       await abydashService.createOrganization({
         organizationName: organizationName.trim(),
+        businessType,
         superAdmin: { name: adminName.trim(), email: adminEmail.trim(), password },
       });
       setCreated({ organizationName: organizationName.trim(), email: adminEmail.trim(), password });
@@ -128,6 +130,36 @@ const OrganizationCreatePage = () => {
         <div style={{ marginBottom: 20 }}>
           <label style={bc(10, 700, { letterSpacing: 1, textTransform: 'uppercase', color: text2, display: 'block', marginBottom: 6 })}>Organization Name *</label>
           <input type="text" value={organizationName} onChange={(e) => setOrganizationName(e.target.value)} placeholder="e.g. Kigali Bites Restaurant" style={inputStyle} />
+        </div>
+
+        <div style={{ marginBottom: 20 }}>
+          <label style={bc(10, 700, { letterSpacing: 1, textTransform: 'uppercase', color: text2, display: 'block', marginBottom: 6 })}>Business Type</label>
+          <div className="flex items-center gap-2">
+            {[
+              { value: 'MANUFACTURER', label: 'Manufacturer' },
+              { value: 'RETAILER', label: 'Retailer' },
+              { value: 'WHOLESALER', label: 'Wholesaler' },
+            ].map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => setBusinessType(opt.value)}
+                style={{
+                  padding: '8px 14px', fontSize: 12.5, fontWeight: 600, borderRadius: 4, cursor: 'pointer',
+                  background: businessType === opt.value ? ORG : bg3,
+                  border: '1px solid ' + (businessType === opt.value ? ORG : border),
+                  color: businessType === opt.value ? '#fff' : text2,
+                }}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+          <p style={{ ...ba(11.5, 400, { color: text2, marginTop: 6 }) }}>
+            {businessType === 'MANUFACTURER' && 'Sells only — visible to other organizations in the marketplace, cannot place purchases of its own.'}
+            {businessType === 'RETAILER' && 'Buys only — can place purchases from other distributors, stays off the marketplace as a seller.'}
+            {businessType === 'WHOLESALER' && 'Buys and sells — visible in the marketplace and can also place purchases.'}
+          </p>
         </div>
 
         <div className="flex items-center gap-2 mb-4">

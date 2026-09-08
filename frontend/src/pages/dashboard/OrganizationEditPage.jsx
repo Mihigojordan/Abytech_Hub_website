@@ -5,13 +5,13 @@ import abydashService from '../../services/abydashService';
 import { useDashboardTheme } from '../../utils/dashboardTheme';
 import { ORG, TEAL, bb, bc, ba } from '../../utils/homeConstants';
 
-// Editing a real organization means what AbyDash actually lets a platform
-// admin change: its plan, and individual module overrides on top of that —
-// the same real calls already proven on Modules & Access
+// Editing a real organization: its name, active/inactive status, and
+// business type (all real now — AbyDash pushes any change live to that
+// org's connected employees, see OrganizationService.adminUpdateOrganization),
+// plus its plan and individual module overrides on top of that — the same
+// real calls already proven on Modules & Access
 // (assignPlan/setModuleOverride/getOrganizationModuleAccess), just scoped
-// to one org as its own page instead of a modal. Renaming/suspending an
-// organization isn't exposed by AbyDash's integration surface yet — not
-// faked here, just not offered until that's real too.
+// to one org as its own page instead of a modal.
 const OrganizationEditPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -23,6 +23,9 @@ const OrganizationEditPage = () => {
   const [access, setAccess] = useState([]);
   const [draftModuleKeys, setDraftModuleKeys] = useState([]);
   const [draftPlanId, setDraftPlanId] = useState('');
+  const [draftName, setDraftName] = useState('');
+  const [draftStatus, setDraftStatus] = useState('ACTIVE');
+  const [draftBusinessType, setDraftBusinessType] = useState('RETAILER');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
@@ -47,6 +50,9 @@ const OrganizationEditPage = () => {
       setAccess(accessRows);
       setDraftPlanId(found.planId || '');
       setDraftModuleKeys(accessRows.filter((r) => r.enabled).map((r) => r.moduleKey));
+      setDraftName(found.name || '');
+      setDraftStatus(found.status || 'ACTIVE');
+      setDraftBusinessType(found.businessType || 'RETAILER');
       setError(null);
     } catch (err) {
       setError(err.message);
@@ -64,6 +70,16 @@ const OrganizationEditPage = () => {
     try {
       setSaving(true);
       setError(null);
+      const nameChanged = draftName.trim() && draftName.trim() !== org.name;
+      const statusChanged = draftStatus !== org.status;
+      const businessTypeChanged = draftBusinessType !== (org.businessType || 'RETAILER');
+      if (nameChanged || statusChanged || businessTypeChanged) {
+        await abydashService.updateOrganization(org.id, {
+          ...(nameChanged && { name: draftName.trim() }),
+          ...(statusChanged && { status: draftStatus }),
+          ...(businessTypeChanged && { businessType: draftBusinessType }),
+        });
+      }
       if (draftPlanId !== (org.planId || '') && draftPlanId) {
         await abydashService.assignPlan(org.id, draftPlanId);
       }
@@ -124,6 +140,62 @@ const OrganizationEditPage = () => {
           <CheckCircle className="w-4 h-4" style={{ display: 'inline', marginRight: 6 }} />Saved.
         </div>
       )}
+
+      <div style={{ background: bg2, border: '1px solid ' + border, borderRadius: 4, padding: 24, marginBottom: 20 }}>
+        <label style={bc(10, 700, { letterSpacing: 2, textTransform: 'uppercase', color: text2, display: 'block', marginBottom: 6 })}>Organization Name</label>
+        <input type="text" value={draftName} onChange={(e) => setDraftName(e.target.value)} style={{ ...inputStyle, marginBottom: 20 }} />
+
+        <label style={bc(10, 700, { letterSpacing: 2, textTransform: 'uppercase', color: text2, display: 'block', marginBottom: 6 })}>Status</label>
+        <div className="flex items-center gap-2" style={{ marginBottom: 20 }}>
+          {[
+            { value: 'ACTIVE', label: 'Active' },
+            { value: 'SUSPENDED', label: 'Inactive' },
+          ].map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => setDraftStatus(opt.value)}
+              style={{
+                padding: '8px 14px', fontSize: 12.5, fontWeight: 600, borderRadius: 4, cursor: 'pointer',
+                background: draftStatus === opt.value ? (opt.value === 'ACTIVE' ? '#4ade80' : '#e84040') : bg3,
+                border: '1px solid ' + (draftStatus === opt.value ? (opt.value === 'ACTIVE' ? '#4ade80' : '#e84040') : border),
+                color: draftStatus === opt.value ? '#fff' : text2,
+              }}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+        {draftStatus === 'SUSPENDED' && (
+          <p style={{ ...ba(11.5, 400, { color: '#e84040', marginTop: -12, marginBottom: 20 }) }}>
+            An inactive organization's employees are immediately signed out of AbyDash and shown a
+            "contact Abytech Hub" screen — including anyone already using it right now.
+          </p>
+        )}
+
+        <label style={bc(10, 700, { letterSpacing: 2, textTransform: 'uppercase', color: text2, display: 'block', marginBottom: 6 })}>Business Type</label>
+        <div className="flex items-center gap-2">
+          {[
+            { value: 'MANUFACTURER', label: 'Manufacturer' },
+            { value: 'RETAILER', label: 'Retailer' },
+            { value: 'WHOLESALER', label: 'Wholesaler' },
+          ].map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => setDraftBusinessType(opt.value)}
+              style={{
+                padding: '8px 14px', fontSize: 12.5, fontWeight: 600, borderRadius: 4, cursor: 'pointer',
+                background: draftBusinessType === opt.value ? ORG : bg3,
+                border: '1px solid ' + (draftBusinessType === opt.value ? ORG : border),
+                color: draftBusinessType === opt.value ? '#fff' : text2,
+              }}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      </div>
 
       <div style={{ background: bg2, border: '1px solid ' + border, borderRadius: 4, padding: 24 }}>
         <label style={bc(10, 700, { letterSpacing: 2, textTransform: 'uppercase', color: text2, display: 'block', marginBottom: 6 })}>Assigned Plan</label>

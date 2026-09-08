@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, RefreshCw, AlertCircle, Building2, Plus, Grid3x3 } from 'lucide-react';
+import { Search, RefreshCw, AlertCircle, Building2, Plus, Grid3x3, Power } from 'lucide-react';
 import abydashService from '../../services/abydashService';
 import { useDashboardTheme } from '../../utils/dashboardTheme';
 import { ORG, TEAL, bb, bc, ba } from '../../utils/homeConstants';
@@ -19,6 +19,7 @@ const CompanyRegistrationManagement = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [togglingId, setTogglingId] = useState(null);
 
   useEffect(() => { load(); }, []);
 
@@ -47,6 +48,22 @@ const CompanyRegistrationManagement = () => {
     active: organizations.filter((o) => o.status === 'ACTIVE').length,
     unassigned: organizations.filter((o) => !o.planId).length,
   }), [organizations]);
+
+  // One click, no confirmation dialog — AbyDash pushes the change live to
+  // that org's connected employees the moment it lands (see
+  // OrganizationService.adminUpdateOrganization), so this is deliberately
+  // as immediate on this side as its effect is on theirs.
+  const toggleStatus = async (o) => {
+    setTogglingId(o.id);
+    try {
+      await abydashService.updateOrganization(o.id, { status: o.status === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE' });
+      await load();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setTogglingId(null);
+    }
+  };
 
   const inputStyle = {
     width: '100%', padding: '8px 12px', fontSize: 13,
@@ -148,8 +165,13 @@ const CompanyRegistrationManagement = () => {
                     </td>
                     <td style={{ padding: '12px 16px' }}>
                       <div className="flex items-center justify-end gap-1">
+                        <button onClick={() => toggleStatus(o)} disabled={togglingId === o.id}
+                          style={{ background: bg3, border: '1px solid ' + border, borderRadius: 4, padding: '5px 7px', color: o.status === 'ACTIVE' ? '#e84040' : '#4ade80', cursor: togglingId === o.id ? 'default' : 'pointer', opacity: togglingId === o.id ? 0.6 : 1 }}
+                          title={o.status === 'ACTIVE' ? 'Deactivate organization' : 'Activate organization'}>
+                          <Power className="w-4 h-4" />
+                        </button>
                         <button onClick={() => navigate(`/admin/dashboard/organizations/${o.id}/edit`)}
-                          style={{ background: bg3, border: '1px solid ' + border, borderRadius: 4, padding: '5px 7px', color: TEAL, cursor: 'pointer' }} title="Edit plan & modules">
+                          style={{ background: bg3, border: '1px solid ' + border, borderRadius: 4, padding: '5px 7px', color: TEAL, cursor: 'pointer' }} title="Edit organization">
                           <Grid3x3 className="w-4 h-4" />
                         </button>
                       </div>

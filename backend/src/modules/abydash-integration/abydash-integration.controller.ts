@@ -49,11 +49,26 @@ export class AbydashIntegrationController {
     body: {
       organizationName: string;
       organizationSlug?: string;
+      businessType?: 'MANUFACTURER' | 'RETAILER' | 'WHOLESALER';
       superAdmin: { name: string; email: string; password: string };
     },
     @Req() req: RequestWithAdmin,
   ) {
     return this.abydash.createOrganization(body, await this.actorFrom(req));
+  }
+
+  @Patch('organizations/:organizationId')
+  async updateOrganization(
+    @Param('organizationId') organizationId: string,
+    @Body()
+    body: {
+      name?: string;
+      status?: 'ACTIVE' | 'SUSPENDED';
+      businessType?: 'MANUFACTURER' | 'RETAILER' | 'WHOLESALER';
+    },
+    @Req() req: RequestWithAdmin,
+  ) {
+    return this.abydash.updateOrganization(organizationId, body, await this.actorFrom(req));
   }
 
   @Get('plans')

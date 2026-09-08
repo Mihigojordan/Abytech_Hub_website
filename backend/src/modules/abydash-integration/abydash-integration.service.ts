@@ -54,11 +54,31 @@ export class AbydashIntegrationService {
     input: {
       organizationName: string;
       organizationSlug?: string;
+      businessType?: 'MANUFACTURER' | 'RETAILER' | 'WHOLESALER';
       superAdmin: { name: string; email: string; password: string };
     },
     actor: Actor,
   ) {
     return this.call('/organizations', { method: 'POST', body: { ...input, ...actor } });
+  }
+
+  // Rename, (de)activate, or re-type an organization already created —
+  // AbyDash broadcasts the change live to that org's connected employees
+  // (see OrganizationService.adminUpdateOrganization) the moment this
+  // returns, so a deactivation here takes effect mid-session there.
+  updateOrganization(
+    organizationId: string,
+    input: {
+      name?: string;
+      status?: 'ACTIVE' | 'SUSPENDED';
+      businessType?: 'MANUFACTURER' | 'RETAILER' | 'WHOLESALER';
+    },
+    actor: Actor,
+  ) {
+    return this.call(`/organizations/${organizationId}`, {
+      method: 'PATCH',
+      body: { ...input, ...actor },
+    });
   }
 
   listPlans() {
