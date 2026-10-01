@@ -25,6 +25,7 @@ import { CallModule } from './modules/call/call.module';
 import { DataExportModule } from './modules/data-export/data-export.module';
 import { CookieCheckModule } from './modules/cookie-check/cookie-check.module';
 import { AbydashIntegrationModule } from './modules/abydash-integration/abydash-integration.module';
+import { VaultModule } from './modules/password-vault/vault.module';
 
 @Module({
   imports: [
@@ -50,6 +51,7 @@ import { AbydashIntegrationModule } from './modules/abydash-integration/abydash-
     DataExportModule,
     CookieCheckModule,
     AbydashIntegrationModule,
+    VaultModule,
   ],
   controllers: [AppController],
 })
