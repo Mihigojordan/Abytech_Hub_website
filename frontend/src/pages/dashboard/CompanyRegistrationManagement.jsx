@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, RefreshCw, AlertCircle, Building2, Plus, Grid3x3, Power } from 'lucide-react';
+import { Search, RefreshCw, AlertCircle, Building2, Plus, Grid3x3, Power, Percent } from 'lucide-react';
 import abydashService from '../../services/abydashService';
 import { useDashboardTheme } from '../../utils/dashboardTheme';
 import { ORG, TEAL, bb, bc, ba } from '../../utils/homeConstants';
@@ -21,7 +21,33 @@ const CompanyRegistrationManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [togglingId, setTogglingId] = useState(null);
 
-  useEffect(() => { load(); }, []);
+  // AbyDash's SCM Purchase payment gate (Pesapal) takes this % as AbyDash's
+  // own cut of every purchase paid through the platform — see Report
+  // Managment's purchase.service.ts#initiatePayment.
+  const [commissionRate, setCommissionRate] = useState('');
+  const [savingCommission, setSavingCommission] = useState(false);
+  const [commissionSaved, setCommissionSaved] = useState(false);
+
+  useEffect(() => {
+    load();
+    abydashService.getPaymentSettings().then((s) => setCommissionRate(String(s.commissionRatePercent))).catch(() => {});
+  }, []);
+
+  const saveCommissionRate = async () => {
+    const rate = Number(commissionRate);
+    if (!Number.isFinite(rate) || rate < 0 || rate > 100) return;
+    setSavingCommission(true);
+    setCommissionSaved(false);
+    try {
+      await abydashService.updatePaymentSettings(rate);
+      setCommissionSaved(true);
+      setTimeout(() => setCommissionSaved(false), 2000);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSavingCommission(false);
+    }
+  };
 
   const load = async () => {
     try {
@@ -99,6 +125,26 @@ const CompanyRegistrationManagement = () => {
             <p style={bc(10, 700, { letterSpacing: 3, textTransform: 'uppercase', color: text2, margin: 0 })}>{label}</p>
           </div>
         ))}
+      </div>
+
+      <div style={{ background: bg2, border: '1px solid ' + border, borderRadius: 4, padding: 16, marginBottom: 24 }}>
+        <div className="flex items-center gap-3 flex-wrap">
+          <div style={{ width: 36, height: 36, background: 'rgba(232,98,26,.1)', border: '1px solid rgba(232,98,26,.2)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: ORG, flexShrink: 0 }}>
+            <Percent className="w-4 h-4" />
+          </div>
+          <div style={{ flex: 1, minWidth: 200 }}>
+            <div style={{ ...ba(13, 600, { color: textC }) }}>Platform commission rate</div>
+            <div style={{ ...ba(11, 400, { color: text2 }) }}>AbyDash's cut of every SCM purchase paid via Pesapal</div>
+          </div>
+          <div className="flex items-center gap-2">
+            <input type="number" min="0" max="100" step="0.1" value={commissionRate} onChange={(e) => setCommissionRate(e.target.value)} style={{ ...inputStyle, width: 90 }} />
+            <span style={{ ...ba(13, 400, { color: text2 }) }}>%</span>
+            <button onClick={saveCommissionRate} disabled={savingCommission}
+              style={{ padding: '8px 16px', fontSize: 13, fontWeight: 700, background: commissionSaved ? '#4ade80' : ORG, color: '#fff', border: 'none', borderRadius: 4, cursor: savingCommission ? 'default' : 'pointer', opacity: savingCommission ? 0.7 : 1 }}>
+              {savingCommission ? 'Saving...' : commissionSaved ? 'Saved' : 'Save'}
+            </button>
+          </div>
+        </div>
       </div>
 
       <div style={{ background: bg2, border: '1px solid ' + border, borderRadius: 4, padding: 16, marginBottom: 24 }}>

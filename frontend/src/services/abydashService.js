@@ -119,6 +119,26 @@ class AbydashService {
     }
   }
 
+  // Commission rate SCM Purchase's Pesapal payment gate uses on AbyDash's
+  // side — see D:\project\JOB\Report Managment's purchase.service.ts.
+  async getPaymentSettings() {
+    try {
+      const response = await api.get('/abydash/platform-settings/payment');
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to fetch payment settings');
+    }
+  }
+
+  async updatePaymentSettings(commissionRatePercent) {
+    try {
+      const response = await api.patch('/abydash/platform-settings/payment', { commissionRatePercent });
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to update payment settings');
+    }
+  }
+
   async getModuleGroups() {
     try {
       const response = await api.get('/abydash/module-groups');

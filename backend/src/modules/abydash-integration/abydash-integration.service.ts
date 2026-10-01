@@ -134,6 +134,20 @@ export class AbydashIntegrationService {
     });
   }
 
+  // ─── Payment settings ──────────────────────────────────────────────────
+  // The commission rate SCM Purchase's Pesapal payment gate uses on
+  // AbyDash's side — see Report Managment's purchase.service.ts.
+  getPaymentSettings() {
+    return this.call('/platform-settings/payment');
+  }
+
+  updatePaymentSettings(commissionRatePercent: number, actor: Actor) {
+    return this.call('/platform-settings/payment', {
+      method: 'PATCH',
+      body: { commissionRatePercent, ...actor },
+    });
+  }
+
   // ─── Module group registry ────────────────────────────────────────────
   listModuleGroups() {
     return this.call('/module-groups');

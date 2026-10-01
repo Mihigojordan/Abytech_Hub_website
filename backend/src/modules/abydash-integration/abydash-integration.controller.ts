@@ -131,6 +131,19 @@ export class AbydashIntegrationController {
     return this.abydash.grantGroup(organizationId, body, await this.actorFrom(req));
   }
 
+  @Get('platform-settings/payment')
+  getPaymentSettings() {
+    return this.abydash.getPaymentSettings();
+  }
+
+  @Patch('platform-settings/payment')
+  async updatePaymentSettings(
+    @Body() body: { commissionRatePercent: number },
+    @Req() req: RequestWithAdmin,
+  ) {
+    return this.abydash.updatePaymentSettings(body.commissionRatePercent, await this.actorFrom(req));
+  }
+
   @Get('module-groups')
   listModuleGroups() {
     return this.abydash.listModuleGroups();
