@@ -78,6 +78,7 @@ model Admin {
   weeklyGoals WeeklyGoal[]
   demoRequests DemoRequest[]
   salaries Salary[]
+  calendarEvents CalendarEvent[]
 
   // Permission relation
   permissions AdminPermission[]
@@ -654,6 +655,9 @@ model Expense {
   status      ExpenseStatus @default(PENDING)
   description String?
   reason String?
+  usageStatus ExpenseUsageStatus @default(PLANNED) // USED = already spent, PLANNED = requested to spend later
+  usageDate   DateTime? // when it was spent (USED) or when it is planned to be spent (PLANNED)
+  receiptUrl  String? // optional receipt, only for USED expenses
   adminId     String
   createdAt   DateTime @default(now())
   admin    Admin    @relation(fields: [adminId], references: [id], onDelete: Cascade, onUpdate: Cascade)
@@ -665,6 +669,32 @@ enum ExpenseStatus{
     APPROVED
     REJECTED
     COMPLETED
+}
+
+enum ExpenseUsageStatus {
+    USED
+    PLANNED
+}
+
+// Personal schedule entries; a reminder notification is sent at remindAt
+model CalendarEvent {
+  id              String   @id @default(cuid())
+  title           String
+  description     String?  @db.Text
+  startTime       DateTime
+  endTime         DateTime?
+  reminderMinutes Int      @default(0) // how many minutes before startTime to notify
+  remindAt        DateTime // startTime - reminderMinutes
+  notified        Boolean  @default(false)
+  color           String?
+  adminId         String
+  admin           Admin    @relation(fields: [adminId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([notified, remindAt])
+  @@index([adminId, startTime])
+  @@map("CalendarEvent")
 }
 
 

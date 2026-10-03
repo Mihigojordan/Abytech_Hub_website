@@ -39,6 +39,8 @@ const ResearchViewPage = lazy(() => import("../pages/dashboard/ResearchViewPage"
 const SalaryManagement = lazy(() => import("../pages/dashboard/SalaryManagement"));
 const DataExportPage = lazy(() => import("../pages/dashboard/DataExportPage"));
 const PasswordVaultPage = lazy(() => import("../pages/dashboard/PasswordVaultPage"));
+const CalendarPage = lazy(() => import("../pages/dashboard/CalendarPage"));
+const AiPredictionsPage = lazy(() => import("../pages/dashboard/AiPredictionsPage"));
 
 const adminRoutes = [
   {
@@ -55,6 +57,8 @@ const adminRoutes = [
           { path: "employee", element: <PermissionRoute permission="employee_management"><SW><EmployeeeDashboard /></SW></PermissionRoute> },
           { path: "employee/new", element: <SuperAdminRoute><SW><EmployeeCreatePage /></SW></SuperAdminRoute> },
           { path: "interns", element: <PermissionRoute permission="internship_management"><SW><InternManagement /></SW></PermissionRoute> },
+          { path: "calendar", element: <SW><CalendarPage /></SW> },
+          { path: "ai-predictions", element: <SuperAdminRoute><SW><AiPredictionsPage /></SW></SuperAdminRoute> },
           { path: "report", element: <SW><ReportDashboard /></SW> },
           { path: "report/create", element: <SW><UpsertReportPage /></SW> },
           { path: "report/edit/:id", element: <SW><UpsertReportPage /></SW> },

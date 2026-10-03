@@ -22,6 +22,9 @@ import {
   CreditCard,
   ClipboardCheck,
   BarChart3,
+  Briefcase,
+  CalendarDays,
+  Sparkles,
 } from "lucide-react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import useAdminAuth from "../../context/AdminAuthContext";
@@ -79,6 +82,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onToggle }) => {
     const basePath = `/${role}/dashboard`;
     return [
       { id: "dashboard",   label: "Dashboard Summary",          icon: TrendingUp,    path: basePath },
+      { id: "ai-predictions", label: "AI Predictions",          icon: Sparkles,      path: `${basePath}/ai-predictions`, requireSuperAdmin: true },
       {
         id: "tenant-management", label: "Tenant Management", icon: Building2,
         items: [
@@ -98,10 +102,16 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onToggle }) => {
       { id: "employee",    label: "Employee Management",        icon: Users2,        path: `${basePath}/employee`,       requiredPermission: "employee_management" },
       // { id: "interns",     label: "Intern Management",          icon: GraduationCap, path: `${basePath}/interns`,        requiredPermission: "internship_management" },
       { id: "chat",        label: "Chat Management",            icon: MessageSquare, path: `${basePath}/chat`,           requiredPermission: "chat_management" },
-      { id: "report",      label: "Report Management",          icon: ClipboardList, path: `${basePath}/report` },
-      { id: "meeting",     label: "Meeting Management",         icon: Calendar,      path: `${basePath}/meetings`,       requiredPermission: "meeting_management" },
-      { id: "weekly-goals",label: "Weekly Goals Management",    icon: Target,        path: `${basePath}/weekly-goals`,   requiredPermission: "weekly_management" },
-      { id: "research",    label: "Research Management",        icon: Microscope,    path: `${basePath}/research`,       requiredPermission: "research_management" },
+      {
+        id: "work-management", label: "Work Management", icon: Briefcase,
+        items: [
+          { id: "report",      label: "Report Management",       icon: ClipboardList, path: `${basePath}/report` },
+          { id: "weekly-goals",label: "Weekly Goals Management", icon: Target,        path: `${basePath}/weekly-goals`,   requiredPermission: "weekly_management" },
+          { id: "research",    label: "Research Management",     icon: Microscope,    path: `${basePath}/research`,       requiredPermission: "research_management" },
+          { id: "meeting",     label: "Meeting Management",      icon: Calendar,      path: `${basePath}/meetings`,       requiredPermission: "meeting_management" },
+          { id: "calendar",    label: "My Calendar",             icon: CalendarDays,  path: `${basePath}/calendar` },
+        ],
+      },
       { id: "hosted-web",  label: "Hosted Website Management",  icon: Globe,         path: `${basePath}/hosted-website`, requiredPermission: "hosted_website" },
       // { id: "internships", label: "Internship Management",      icon: GraduationCap, path: `${basePath}/internships`,    requiredPermission: "internship_management" },
       { id: "password-locker", label: "Password Locker",        icon: LockKeyhole,   path: `${basePath}/password-locker` },
