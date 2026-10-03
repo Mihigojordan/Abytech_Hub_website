@@ -13,7 +13,7 @@ import {
 import { AdminJwtAuthGuard } from 'src/guards/adminGuard.guard';
 import { RequestWithAdmin } from 'src/common/interfaces/admin.interface';
 import { AdminService } from '../admin-management/admin.service';
-import { AbydashIntegrationService, Actor } from './abydash-integration.service';
+import { AbydashIntegrationService, Actor, OrganizationIndustry } from './abydash-integration.service';
 
 // Everything under here is reachable only by an admin already logged into
 // THIS site (AdminJwtAuthGuard — the existing AccessAdminToken cookie, no
@@ -50,6 +50,7 @@ export class AbydashIntegrationController {
       organizationName: string;
       organizationSlug?: string;
       businessType?: 'MANUFACTURER' | 'RETAILER' | 'WHOLESALER';
+      industry?: OrganizationIndustry;
       superAdmin: { name: string; email: string; password: string };
     },
     @Req() req: RequestWithAdmin,
@@ -65,6 +66,7 @@ export class AbydashIntegrationController {
       name?: string;
       status?: 'ACTIVE' | 'SUSPENDED';
       businessType?: 'MANUFACTURER' | 'RETAILER' | 'WHOLESALER';
+      industry?: OrganizationIndustry;
     },
     @Req() req: RequestWithAdmin,
   ) {
@@ -129,6 +131,19 @@ export class AbydashIntegrationController {
     @Req() req: RequestWithAdmin,
   ) {
     return this.abydash.grantGroup(organizationId, body, await this.actorFrom(req));
+  }
+
+  @Get('platform-settings/payment')
+  getPaymentSettings() {
+    return this.abydash.getPaymentSettings();
+  }
+
+  @Patch('platform-settings/payment')
+  async updatePaymentSettings(
+    @Body() body: { commissionRatePercent: number },
+    @Req() req: RequestWithAdmin,
+  ) {
+    return this.abydash.updatePaymentSettings(body.commissionRatePercent, await this.actorFrom(req));
   }
 
   @Get('module-groups')

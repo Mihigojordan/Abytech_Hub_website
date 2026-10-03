@@ -15,6 +15,7 @@ import {
   Wallet,
   ChevronDown,
   Database,
+  LockKeyhole,
   Building2,
   Grid3x3,
   Package,
@@ -113,6 +114,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onToggle }) => {
       },
       { id: "hosted-web",  label: "Hosted Website Management",  icon: Globe,         path: `${basePath}/hosted-website`, requiredPermission: "hosted_website" },
       // { id: "internships", label: "Internship Management",      icon: GraduationCap, path: `${basePath}/internships`,    requiredPermission: "internship_management" },
+      { id: "password-locker", label: "Password Locker",        icon: LockKeyhole,   path: `${basePath}/password-locker` },
       { id: "permissions", label: "Permission Management",      icon: Users2,        path: `${basePath}/permissions`,    requireSuperAdmin: true },
       // { id: "data-export", label: "Data Export & Import",       icon: Database,      path: `${basePath}/data-export`,    requiredPermission: "data_export_management" },
     ];

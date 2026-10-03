@@ -5,6 +5,23 @@ import abydashService from '../../services/abydashService';
 import { useDashboardTheme } from '../../utils/dashboardTheme';
 import { ORG, TEAL, bb, bc, ba } from '../../utils/homeConstants';
 
+// Mirrors AbyDash's own OrganizationIndustry enum (schema.prisma) — what the
+// org actually sells, separate from businessType's buy/sell role. Drives
+// which extra product fields AbyDash's own Supply Chain Add Product form
+// shows for that org.
+const INDUSTRY_OPTIONS = [
+  { value: 'GENERAL', label: 'General' },
+  { value: 'BEVERAGES', label: 'Beverages' },
+  { value: 'ELECTRONICS', label: 'Electronics' },
+  { value: 'GROCERIES', label: 'Groceries' },
+  { value: 'PHARMACEUTICALS', label: 'Pharmaceuticals' },
+  { value: 'CONSTRUCTION_MATERIALS', label: 'Construction Materials' },
+  { value: 'FASHION_APPAREL', label: 'Fashion & Apparel' },
+  { value: 'AGRICULTURE', label: 'Agriculture' },
+  { value: 'FURNITURE_HOMEWARE', label: 'Furniture & Homeware' },
+  { value: 'AUTOMOTIVE_PARTS', label: 'Automotive Parts' },
+];
+
 // Editing a real organization: its name, active/inactive status, and
 // business type (all real now — AbyDash pushes any change live to that
 // org's connected employees, see OrganizationService.adminUpdateOrganization),
@@ -26,6 +43,7 @@ const OrganizationEditPage = () => {
   const [draftName, setDraftName] = useState('');
   const [draftStatus, setDraftStatus] = useState('ACTIVE');
   const [draftBusinessType, setDraftBusinessType] = useState('RETAILER');
+  const [draftIndustry, setDraftIndustry] = useState('GENERAL');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
@@ -53,6 +71,7 @@ const OrganizationEditPage = () => {
       setDraftName(found.name || '');
       setDraftStatus(found.status || 'ACTIVE');
       setDraftBusinessType(found.businessType || 'RETAILER');
+      setDraftIndustry(found.industry || 'GENERAL');
       setError(null);
     } catch (err) {
       setError(err.message);
@@ -73,11 +92,13 @@ const OrganizationEditPage = () => {
       const nameChanged = draftName.trim() && draftName.trim() !== org.name;
       const statusChanged = draftStatus !== org.status;
       const businessTypeChanged = draftBusinessType !== (org.businessType || 'RETAILER');
-      if (nameChanged || statusChanged || businessTypeChanged) {
+      const industryChanged = draftIndustry !== (org.industry || 'GENERAL');
+      if (nameChanged || statusChanged || businessTypeChanged || industryChanged) {
         await abydashService.updateOrganization(org.id, {
           ...(nameChanged && { name: draftName.trim() }),
           ...(statusChanged && { status: draftStatus }),
           ...(businessTypeChanged && { businessType: draftBusinessType }),
+          ...(industryChanged && { industry: draftIndustry }),
         });
       }
       if (draftPlanId !== (org.planId || '') && draftPlanId) {
@@ -195,6 +216,16 @@ const OrganizationEditPage = () => {
             </button>
           ))}
         </div>
+
+        <label style={bc(10, 700, { letterSpacing: 2, textTransform: 'uppercase', color: text2, display: 'block', marginTop: 20, marginBottom: 6 })}>Industry</label>
+        <select value={draftIndustry} onChange={(e) => setDraftIndustry(e.target.value)} style={inputStyle}>
+          {INDUSTRY_OPTIONS.map((opt) => (
+            <option key={opt.value} value={opt.value}>{opt.label}</option>
+          ))}
+        </select>
+        <p style={{ ...ba(11.5, 400, { color: text2, marginTop: 6 }) }}>
+          What this organization actually sells — drives which extra product fields its Supply Chain Add Product form shows, and scopes its marketplace to distributors in the same industry.
+        </p>
       </div>
 
       <div style={{ background: bg2, border: '1px solid ' + border, borderRadius: 4, padding: 24 }}>
