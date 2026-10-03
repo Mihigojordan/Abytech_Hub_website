@@ -15,12 +15,13 @@ class AbydashService {
     }
   }
 
-  async createOrganization({ organizationName, organizationSlug, businessType, superAdmin }) {
+  async createOrganization({ organizationName, organizationSlug, businessType, industry, superAdmin }) {
     try {
       const response = await api.post('/abydash/organizations', {
         organizationName,
         organizationSlug,
         businessType,
+        industry,
         superAdmin,
       });
       return response.data;
@@ -29,15 +30,16 @@ class AbydashService {
     }
   }
 
-  // Rename, (de)activate, or re-type an organization already created.
-  // AbyDash pushes this live to that org's connected employees the moment
-  // it lands — see D:\project\JOB\Report Managment's real-time propagation.
-  async updateOrganization(organizationId, { name, status, businessType } = {}) {
+  // Rename, (de)activate, re-type, or re-industry an organization already
+  // created. AbyDash pushes this live to that org's connected employees the
+  // moment it lands — see D:\project\JOB\Report Managment's real-time propagation.
+  async updateOrganization(organizationId, { name, status, businessType, industry } = {}) {
     try {
       const response = await api.patch(`/abydash/organizations/${organizationId}`, {
         name,
         status,
         businessType,
+        industry,
       });
       return response.data;
     } catch (error) {
