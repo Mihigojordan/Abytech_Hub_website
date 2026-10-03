@@ -83,6 +83,9 @@ model Admin {
   // Permission relation
   permissions AdminPermission[]
 
+  // Password locker (zero-knowledge vault)
+  vault VaultAccount?
+
   @@map("Admin")
 }
 
@@ -813,3 +816,42 @@ model ImportSnapshot {
   @@map("ImportSnapshot")
 }
 
+
+// ─── Password Locker (zero-knowledge vault) ─────────────────────────────
+// Everything secret is encrypted in the browser (AES-256-GCM, key derived
+// from the admin's master password with Argon2id) and then wrapped a second
+// time on the server with VAULT_SERVER_KEY before it reaches this table.
+// The server never sees the master password or any plaintext secret.
+model VaultAccount {
+  id             String      @id @default(uuid())
+  adminId        String      @unique
+  kdfSalt        String      // base64, public salt for the client-side KDF
+  kdfParams      Json        // { alg: "argon2id", memoryKiB, iterations, parallelism }
+  authSalt       String      // base64, server-side salt for authHash
+  authHash       String      // scrypt(authKey) - proves knowledge of master password
+  encryptedDek   String      @db.Text // data key, client-wrapped then server-wrapped
+  sessionVersion Int         @default(0) // bump to revoke every open vault session
+  failedAttempts Int         @default(0)
+  lockedUntil    DateTime?
+  lastUnlockedAt DateTime?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  admin Admin       @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  items VaultItem[]
+
+  @@map("VaultAccount")
+}
+
+model VaultItem {
+  id        String   @id @default(uuid())
+  vaultId   String
+  payload   String   @db.LongText // client ciphertext, server-wrapped
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  vault VaultAccount @relation(fields: [vaultId], references: [id], onDelete: Cascade)
+
+  @@index([vaultId])
+  @@map("VaultItem")
+}

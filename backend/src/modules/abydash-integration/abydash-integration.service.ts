@@ -5,6 +5,20 @@ export interface Actor {
   actorName: string;
 }
 
+// Mirrors AbyDash's own OrganizationIndustry enum (schema.prisma) — what an
+// org actually sells, separate from businessType's buy/sell role.
+export type OrganizationIndustry =
+  | 'BEVERAGES'
+  | 'ELECTRONICS'
+  | 'GROCERIES'
+  | 'PHARMACEUTICALS'
+  | 'CONSTRUCTION_MATERIALS'
+  | 'FASHION_APPAREL'
+  | 'AGRICULTURE'
+  | 'FURNITURE_HOMEWARE'
+  | 'AUTOMOTIVE_PARTS'
+  | 'GENERAL';
+
 // Calls AbyDash's trusted /integrations/abytech-hub/* surface. This is a
 // server-to-server call — ABYDASH_INTEGRATION_KEY lives only here, never
 // reaches this app's own frontend. Its value must exactly match AbyDash's
@@ -55,6 +69,7 @@ export class AbydashIntegrationService {
       organizationName: string;
       organizationSlug?: string;
       businessType?: 'MANUFACTURER' | 'RETAILER' | 'WHOLESALER';
+      industry?: OrganizationIndustry;
       superAdmin: { name: string; email: string; password: string };
     },
     actor: Actor,
@@ -72,6 +87,7 @@ export class AbydashIntegrationService {
       name?: string;
       status?: 'ACTIVE' | 'SUSPENDED';
       businessType?: 'MANUFACTURER' | 'RETAILER' | 'WHOLESALER';
+      industry?: OrganizationIndustry;
     },
     actor: Actor,
   ) {
@@ -131,6 +147,20 @@ export class AbydashIntegrationService {
     return this.call(`/organizations/${organizationId}/grant-group`, {
       method: 'POST',
       body: { ...input, ...actor },
+    });
+  }
+
+  // ─── Payment settings ──────────────────────────────────────────────────
+  // The commission rate SCM Purchase's Pesapal payment gate uses on
+  // AbyDash's side — see Report Managment's purchase.service.ts.
+  getPaymentSettings() {
+    return this.call('/platform-settings/payment');
+  }
+
+  updatePaymentSettings(commissionRatePercent: number, actor: Actor) {
+    return this.call('/platform-settings/payment', {
+      method: 'PATCH',
+      body: { commissionRatePercent, ...actor },
     });
   }
 

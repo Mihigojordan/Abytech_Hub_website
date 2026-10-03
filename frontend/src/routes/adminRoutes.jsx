@@ -38,6 +38,7 @@ const ResearchFormPage = lazy(() => import("../pages/dashboard/ResearchFormPage"
 const ResearchViewPage = lazy(() => import("../pages/dashboard/ResearchViewPage"));
 const SalaryManagement = lazy(() => import("../pages/dashboard/SalaryManagement"));
 const DataExportPage = lazy(() => import("../pages/dashboard/DataExportPage"));
+const PasswordVaultPage = lazy(() => import("../pages/dashboard/PasswordVaultPage"));
 const CalendarPage = lazy(() => import("../pages/dashboard/CalendarPage"));
 const AiPredictionsPage = lazy(() => import("../pages/dashboard/AiPredictionsPage"));
 
@@ -91,6 +92,8 @@ const adminRoutes = [
           { path: "research/edit/:id", element: <PermissionRoute permission="research_management"><SW><ResearchFormPage /></SW></PermissionRoute> },
           { path: "research/view/:id", element: <PermissionRoute permission="research_management"><SW><ResearchViewPage /></SW></PermissionRoute> },
           { path: "salary", element: <PermissionRoute permission="salary_management"><SW><SalaryManagement /></SW></PermissionRoute> },
+          // Personal, per-admin locker — every admin gets their own vault.
+          { path: "password-locker", element: <SW><PasswordVaultPage /></SW> },
           { path: "data-export", element: <PermissionRoute permission="data_export_management"><SW><DataExportPage /></SW></PermissionRoute> },
         ],
       },

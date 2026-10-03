@@ -16,12 +16,30 @@ function genTempPassword() {
   return `Aby-${Math.random().toString(36).slice(-6)}${Math.floor(Math.random() * 90 + 10)}!`;
 }
 
+// Mirrors AbyDash's own OrganizationIndustry enum (schema.prisma) — what the
+// org actually sells, separate from businessType's buy/sell role. Drives
+// which extra product fields AbyDash's own Supply Chain Add Product form
+// shows for that org.
+const INDUSTRY_OPTIONS = [
+  { value: 'GENERAL', label: 'General' },
+  { value: 'BEVERAGES', label: 'Beverages' },
+  { value: 'ELECTRONICS', label: 'Electronics' },
+  { value: 'GROCERIES', label: 'Groceries' },
+  { value: 'PHARMACEUTICALS', label: 'Pharmaceuticals' },
+  { value: 'CONSTRUCTION_MATERIALS', label: 'Construction Materials' },
+  { value: 'FASHION_APPAREL', label: 'Fashion & Apparel' },
+  { value: 'AGRICULTURE', label: 'Agriculture' },
+  { value: 'FURNITURE_HOMEWARE', label: 'Furniture & Homeware' },
+  { value: 'AUTOMOTIVE_PARTS', label: 'Automotive Parts' },
+];
+
 const OrganizationCreatePage = () => {
   const navigate = useNavigate();
   const { bg, bg2, bg3, textC, text2, border } = useDashboardTheme();
 
   const [organizationName, setOrganizationName] = useState('');
   const [businessType, setBusinessType] = useState('RETAILER');
+  const [industry, setIndustry] = useState('GENERAL');
   const [adminName, setAdminName] = useState('');
   const [adminEmail, setAdminEmail] = useState('');
   const [error, setError] = useState(null);
@@ -48,6 +66,7 @@ const OrganizationCreatePage = () => {
       await abydashService.createOrganization({
         organizationName: organizationName.trim(),
         businessType,
+        industry,
         superAdmin: { name: adminName.trim(), email: adminEmail.trim(), password },
       });
       setCreated({ organizationName: organizationName.trim(), email: adminEmail.trim(), password });
@@ -159,6 +178,18 @@ const OrganizationCreatePage = () => {
             {businessType === 'MANUFACTURER' && 'Sells only — visible to other organizations in the marketplace, cannot place purchases of its own.'}
             {businessType === 'RETAILER' && 'Buys only — can place purchases from other distributors, stays off the marketplace as a seller.'}
             {businessType === 'WHOLESALER' && 'Buys and sells — visible in the marketplace and can also place purchases.'}
+          </p>
+        </div>
+
+        <div style={{ marginBottom: 20 }}>
+          <label style={bc(10, 700, { letterSpacing: 1, textTransform: 'uppercase', color: text2, display: 'block', marginBottom: 6 })}>Industry</label>
+          <select value={industry} onChange={(e) => setIndustry(e.target.value)} style={inputStyle}>
+            {INDUSTRY_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
+          <p style={{ ...ba(11.5, 400, { color: text2, marginTop: 6 }) }}>
+            What this organization actually sells — drives which extra product fields its Supply Chain Add Product form shows, and scopes its marketplace to distributors in the same industry.
           </p>
         </div>
 
