@@ -3,11 +3,13 @@ import {
   ServiceUnavailableException,
   BadGatewayException,
   ForbiddenException,
+  HttpException,
 } from '@nestjs/common';
 import Anthropic from '@anthropic-ai/sdk';
 import { betaZodOutputFormat } from '@anthropic-ai/sdk/helpers/beta/zod';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { Insights, InsightsSchema } from './ai-insights.schema';
+import { AiOutputSchema, Insights, toInsights } from './ai-insights.schema';
+import { computeMetrics, Metrics } from './ai-insights.metrics';
 
 const MODEL = 'claude-opus-5-5';
 // Claude calls cost money and take time; reuse a result for this long unless refreshed
@@ -17,14 +19,24 @@ const MAX_REPORT_EXCERPTS = 25;
 
 const SYSTEM_PROMPT = `You are the operations analyst for Abytech Hub, a Rwandan tech company. You receive a JSON snapshot of the company's internal records: expenses (with whether money is already USED or PLANNED for later), salaries, employee reports, weekly goals, meetings, research and upcoming schedules. All money is in Rwandan Francs (RWF).
 
+The snapshot includes "computedMetrics": exact figures calculated by code, including a 0-100 score per section with the factors that produced it, trend-line forecasts with low/high ranges, and targets. These are the source of truth.
+
 Analyse the data and fill every field of the requested output:
-- Base every number and claim on the snapshot. When data is too thin for a trend or forecast, say so plainly, use trend "insufficient_data", and give a cautious forecast.
-- Forecasts are for the calendar month after the snapshot date. Explain the reasoning briefly.
+- Quote computedMetrics figures exactly; never invent or recompute different totals, percentages or scores. When data is too thin for a trend or forecast, say so plainly, use trend "insufficient_data", and give a cautious forecast.
+- Give one "sections" entry per section. "meaning" explains the section's numbers and score in plain words a non-finance manager understands: what is good, what is weak, and why the score is what it is (refer to the weakest factor).
+- Every "advice" item is an action for this week with a short calculation using real numbers (amounts in RWF, counts, percentages) and its expected impact, ideally in score points from the factor it improves.
+- Forecasts are for the calendar month after the snapshot date. Start from the computed trend forecast and explain if you adjust it (e.g. known planned expenses).
 - For reports, read the excerpts to identify recurring themes, blockers and achievements, and rate each employee's reporting activity relative to the period length.
-- Recommendations must be concrete actions a manager could take this week.
+- Predictions must each carry a concrete expected number and the figures they rest on.
 - Write for a busy manager: short, specific sentences. No markdown.`;
 
-type Cached = { insights: Insights; generatedAt: string; periodMonths: number };
+type Cached = {
+  insights: Insights | null;
+  metrics: Metrics;
+  generatedAt: string;
+  periodMonths: number;
+  aiError?: string;
+};
 
 // Pull human-readable text out of rich-text JSON (TipTap/Quill) or plain strings
 const extractText = (value: unknown): string => {
@@ -64,7 +76,7 @@ export class AiInsightsService {
 
   constructor(private prisma: PrismaService) {}
 
-  // Created on first use so .env (loaded by Prisma at startup) is already in process.env
+  // Created on first use; .env is loaded by dotenv at the top of main.ts
   private getClient(): Anthropic {
     if (!process.env.ANTHROPIC_API_KEY) {
       throw new ServiceUnavailableException('AI predictions are not configured: ANTHROPIC_API_KEY is missing');
@@ -93,15 +105,31 @@ export class AiInsightsService {
     // Collapse concurrent requests into one Claude call
     if (!this.pending) {
       this.pending = this.generate(months)
-        .then((result) => (this.cache = result))
+        .then((result) => {
+          // Don't cache a metrics-only result, so the next load retries the AI
+          if (!result.aiError) this.cache = result;
+          return result;
+        })
         .finally(() => (this.pending = null));
     }
     return this.pending;
   }
 
+  // Computed metrics are always returned; if the AI part fails the page still shows them
   private async generate(months: number): Promise<Cached> {
+    const { snapshot, metrics } = await this.buildSnapshot(months);
+    const base = { metrics, generatedAt: new Date().toISOString(), periodMonths: months };
+
+    try {
+      return { ...base, insights: await this.askClaude(snapshot) };
+    } catch (error) {
+      if (!(error instanceof HttpException)) throw error;
+      return { ...base, insights: null, aiError: error.message };
+    }
+  }
+
+  private async askClaude(snapshot: object): Promise<Insights> {
     const client = this.getClient();
-    const snapshot = await this.buildSnapshot(months);
 
     let response;
     try {
@@ -109,7 +137,7 @@ export class AiInsightsService {
         model: MODEL,
         max_tokens: 16000,
         system: SYSTEM_PROMPT,
-        output_config: { effort: 'medium', format: betaZodOutputFormat(InsightsSchema) },
+        output_config: { effort: 'medium', format: betaZodOutputFormat(AiOutputSchema) },
         // If a safety classifier declines, re-run on Anthropic's recommended fallback model
         betas: ['server-side-fallback-2026-07-01'],
         fallbacks: 'default',
@@ -129,7 +157,8 @@ export class AiInsightsService {
       }
       if (error instanceof Anthropic.APIError) {
         console.error('Claude API error:', error.status, error.message);
-        throw new BadGatewayException('AI service error. Please try again later.');
+        // Super-admin-only page, so include the API's reason to make failures diagnosable
+        throw new BadGatewayException(`AI service error (${error.status ?? 'network'}): ${error.message}`);
       }
       throw error;
     }
@@ -141,11 +170,7 @@ export class AiInsightsService {
       throw new BadGatewayException('The AI returned an incomplete analysis. Please regenerate.');
     }
 
-    return {
-      insights: response.parsed_output,
-      generatedAt: new Date().toISOString(),
-      periodMonths: months,
-    };
+    return toInsights(response.parsed_output);
   }
 
   // Aggregated, compact view of the database for the prompt
@@ -199,11 +224,16 @@ export class AiInsightsService {
     const usedExpenses = expenses.filter((e) => e.usageStatus === 'USED');
     const plannedUpcoming = expenses.filter((e) => e.usageStatus === 'PLANNED' && e.usageDate && e.usageDate >= now);
 
-    return {
+    const metrics = computeMetrics({
+      now, since, months, admins, expenses, salaries, reports, goals, meetings, research, calendarEvents,
+    });
+
+    const snapshot = {
       snapshotDate: now.toISOString().slice(0, 10),
       periodMonths: months,
       periodStart: since.toISOString().slice(0, 10),
       activeEmployees: admins.map((a) => a.adminName || 'Unnamed'),
+      computedMetrics: metrics,
 
       expenses: {
         count: expenses.length,
@@ -281,5 +311,7 @@ export class AiInsightsService {
         calendarEventsNext14DaysPerEmployee: countBy(calendarEvents, (c) => name(c.adminId)),
       },
     };
+
+    return { snapshot, metrics };
   }
 }
