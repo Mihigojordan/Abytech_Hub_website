@@ -35,6 +35,9 @@ export const createUnifiedUploadConfig = (): MulterOptions => ({
       else if (file.fieldname === 'attachments') {
         subFolder = 'attachments';
       }
+      else if (file.fieldname === 'receipt') {
+        subFolder = 'expense_receipts';
+      }
 
       console.log('Received file.fieldname:', file.fieldname);
 
@@ -120,7 +123,12 @@ export const InternshipFileFields = [
   { name: 'cv', maxCount: 1 },
 ];
 
+export const ExpenseFileFields = [
+  { name: 'receipt', maxCount: 1 },
+];
+
 export const ReportUploadConfig = createUnifiedUploadConfig();
+export const ExpenseUploadConfig = createUnifiedUploadConfig();
 export const AdminUploadConfig = createUnifiedUploadConfig();
 export const ChatUploadConfig = createUnifiedUploadConfig();
 export const AttachmentsUploadConfig = createUnifiedUploadConfig();

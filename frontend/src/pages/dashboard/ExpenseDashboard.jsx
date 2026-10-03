@@ -11,6 +11,50 @@ import expenseService from '../../services/expenseService';
 import { useNavigate } from 'react-router-dom';
 import { useDashboardTheme } from '../../utils/dashboardTheme';
 import { ORG, TEAL, bb, bc, ba } from '../../utils/homeConstants';
+import { API_URL } from '../../api/api';
+
+// usageStatus: USED = money already spent, PLANNED = requested to spend later
+const EMPTY_FORM = {
+  title: '',
+  amount: 0,
+  description: '',
+  usageStatus: 'PLANNED',
+  usageDate: '',
+  receipt: null,
+  removeReceipt: false,
+};
+
+// YYYY-MM-DD in local time (toISOString would shift the day for non-UTC timezones)
+const toDateInput = (date) => {
+  if (!date) return '';
+  const d = new Date(date);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
+const todayInput = () => toDateInput(new Date());
+
+const buildExpenseFormData = (data) => {
+  const fd = new FormData();
+  fd.append('title', data.title);
+  fd.append('amount', String(data.amount));
+  fd.append('description', data.description || '');
+  fd.append('usageStatus', data.usageStatus);
+  fd.append('usageDate', data.usageDate || '');
+  if (data.usageStatus === 'USED' && data.receipt) fd.append('receipt', data.receipt);
+  if (data.removeReceipt) fd.append('removeReceipt', 'true');
+  return fd;
+};
+
+const validateUsage = (data) => {
+  if (!data.usageDate) {
+    return data.usageStatus === 'USED'
+      ? 'Please select the date the money was used'
+      : 'Please select the date you plan to use the money';
+  }
+  if (data.usageStatus === 'USED' && data.usageDate > todayInput()) {
+    return 'Date used cannot be in the future';
+  }
+  return '';
+};
 
 
 
@@ -31,7 +75,7 @@ const RejectModal = ({ isOpen, onClose, onReject }) => {
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}>
-      <div style={{ background: bg2, border: `1px solid ${border}`, borderRadius: 4, padding: 24, width: '100%', maxWidth: 448 }}>
+      <div style={{ background: bg2, border: `1px solid ${border}`, borderRadius: 4, padding: 24, width: '100%', maxWidth: 448, maxHeight: '90vh', overflowY: 'auto' }}>
         <h2 style={{ ...ba(18, 600, { color: textC, marginBottom: 12 }) }}>Reject Request</h2>
         <p style={{ ...ba(13, 400, { color: text2, marginBottom: 16 }) }}>
           Please provide a reason for rejecting this request:
@@ -118,11 +162,7 @@ const ExpenseDashboard = () => {
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedExpense, setSelectedExpense] = useState(null);
   const [expenseId, setExpenseId] = useState(null)
-  const [formData, setFormData] = useState({
-    title: '',
-    amount: 0,
-    description: '',
-  });
+  const [formData, setFormData] = useState(EMPTY_FORM);
   const [formError, setFormError] = useState('');
   const navigate = useNavigate();
 
@@ -237,13 +277,17 @@ const ExpenseDashboard = () => {
   const totalAmount = allExpenses.reduce((sum, expense) => sum + expense.amount, 0);
 
   const handleAddExpense = () => {
-    setFormData({ title: '', amount: 0, description: '' });
+    setFormData(EMPTY_FORM);
     setFormError('');
     setShowAddModal(true);
   };
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, files } = e.target;
+    if (name === 'receipt') {
+      setFormData({ ...formData, receipt: files?.[0] || null });
+      return;
+    }
     setFormData({
       ...formData,
       [name]: name === 'amount' ? parseFloat(value) || 0 : value,
@@ -261,13 +305,18 @@ const ExpenseDashboard = () => {
       setFormError('Amount must be greater than 0');
       return;
     }
+    const usageError = validateUsage(formData);
+    if (usageError) {
+      setFormError(usageError);
+      return;
+    }
     try {
       setOperationLoading(true);
-      const newExpense = await expenseService.createExpense(formData);
+      await expenseService.createExpense(buildExpenseFormData(formData));
       setShowAddModal(false);
-      setFormData({ title: '', amount: 0, description: '' });
+      setFormData(EMPTY_FORM);
       await loadData();
-      showOperationStatus('success', `${newExpense.title} created successfully!`);
+      showOperationStatus('success', `${formData.title} created successfully!`);
     } catch (err) {
       setFormError(err.message || 'Failed to create expense');
     } finally {
@@ -282,6 +331,10 @@ const ExpenseDashboard = () => {
       title: expense.title || '',
       amount: expense.amount || 0,
       description: expense.description || '',
+      usageStatus: expense.usageStatus || 'PLANNED',
+      usageDate: toDateInput(expense.usageDate),
+      receipt: null,
+      removeReceipt: false,
     });
     setFormError('');
     setShowUpdateModal(true);
@@ -302,12 +355,17 @@ const ExpenseDashboard = () => {
       setFormError('Invalid expense ID');
       return;
     }
+    const usageError = validateUsage(formData);
+    if (usageError) {
+      setFormError(usageError);
+      return;
+    }
     try {
       setOperationLoading(true);
-      await expenseService.updateExpense(selectedExpense.id, formData);
+      await expenseService.updateExpense(selectedExpense.id, buildExpenseFormData(formData));
       setShowUpdateModal(false);
       setSelectedExpense(null);
-      setFormData({ title: '', amount: 0, description: '' });
+      setFormData(EMPTY_FORM);
       await loadData();
       showOperationStatus('success', `${formData.title} updated successfully!`);
     } catch (err) {
@@ -885,6 +943,88 @@ const ExpenseDashboard = () => {
     ...ba(12),
   };
 
+  const labelStyle = { ...bc(11, 700, { color: text2, display: 'block', marginBottom: 6, letterSpacing: 1, textTransform: 'uppercase' }) };
+
+  // Usage status, date and optional receipt — shared by the add and update forms
+  const renderUsageFields = (existingReceiptUrl) => {
+    const isUsed = formData.usageStatus === 'USED';
+    const showExisting = isUsed && existingReceiptUrl && !formData.removeReceipt && !formData.receipt;
+    return (
+      <>
+        <div>
+          <label style={labelStyle}>Is this money already used? *</label>
+          <div style={{ display: 'flex', gap: 8 }}>
+            {[
+              { value: 'USED', label: 'Already used' },
+              { value: 'PLANNED', label: 'Plan to use later' },
+            ].map((opt) => {
+              const active = formData.usageStatus === opt.value;
+              return (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => setFormData({ ...formData, usageStatus: opt.value })}
+                  style={{
+                    flex: 1, padding: '8px 12px', borderRadius: 4, cursor: 'pointer',
+                    background: active ? ORG : bg3,
+                    border: `1px solid ${active ? ORG : border}`,
+                    color: active ? '#fff' : textC,
+                    ...bc(12, 600),
+                  }}
+                >
+                  {opt.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+        <div>
+          <label style={labelStyle}>{isUsed ? 'Date used *' : 'Planned date of use *'}</label>
+          <input
+            type="date"
+            name="usageDate"
+            value={formData.usageDate}
+            onChange={handleInputChange}
+            max={isUsed ? todayInput() : undefined}
+            required
+            style={inputStyle}
+            onFocus={(e) => e.target.style.borderColor = ORG}
+            onBlur={(e) => e.target.style.borderColor = border}
+          />
+        </div>
+        {isUsed && (
+          <div>
+            <label style={labelStyle}>Receipt (optional)</label>
+            {showExisting && (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6, ...ba(12, 400, { color: textC }) }}>
+                <a href={`${API_URL}${existingReceiptUrl}`} target="_blank" rel="noopener noreferrer" style={{ color: TEAL }}>
+                  View current receipt
+                </a>
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, removeReceipt: true })}
+                  style={{ background: 'none', border: 'none', color: '#e84040', cursor: 'pointer', ...ba(12) }}
+                >
+                  Remove
+                </button>
+              </div>
+            )}
+            <input
+              type="file"
+              name="receipt"
+              accept="image/*,.pdf"
+              onChange={handleInputChange}
+              style={inputStyle}
+            />
+            {showExisting && (
+              <p style={{ ...ba(11, 400, { color: text3, marginTop: 4 }) }}>Choosing a new file replaces the current receipt.</p>
+            )}
+          </div>
+        )}
+      </>
+    );
+  };
+
   return (
     <div className="min-h-screen" style={{ background: bg }}>
       {/* Header */}
@@ -1242,7 +1382,7 @@ const ExpenseDashboard = () => {
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.95, opacity: 0 }}
                 transition={{ type: "spring", duration: 0.3 }}
-                style={{ background: bg2, border: `1px solid ${border}`, borderRadius: 4, padding: 24, width: '100%', maxWidth: 448 }}
+                style={{ background: bg2, border: `1px solid ${border}`, borderRadius: 4, padding: 24, width: '100%', maxWidth: 448, maxHeight: '90vh', overflowY: 'auto' }}
               >
                 <div className="flex items-start space-x-3 mb-4">
                   <div style={{ width: 40, height: 40, background: 'rgba(232,64,64,.12)', borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -1303,7 +1443,7 @@ const ExpenseDashboard = () => {
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.95, opacity: 0 }}
                 transition={{ type: "spring", duration: 0.3 }}
-                style={{ background: bg2, border: `1px solid ${border}`, borderRadius: 4, padding: 24, width: '100%', maxWidth: 448 }}
+                style={{ background: bg2, border: `1px solid ${border}`, borderRadius: 4, padding: 24, width: '100%', maxWidth: 448, maxHeight: '90vh', overflowY: 'auto' }}
               >
                 <h3 style={{ ...bc(15, 700, { color: textC, borderLeft: `3px solid ${ORG}`, paddingLeft: 10, marginBottom: 16 }) }}>
                   Add New Expense
@@ -1350,6 +1490,7 @@ const ExpenseDashboard = () => {
                       placeholder="Enter amount"
                     />
                   </div>
+                  {renderUsageFields(showUpdateModal ? selectedExpense?.receiptUrl : null)}
                   <div>
                     <label style={{ ...bc(11, 700, { color: text2, display: 'block', marginBottom: 6, letterSpacing: 1, textTransform: 'uppercase' }) }}>Description</label>
                     <textarea
@@ -1370,7 +1511,7 @@ const ExpenseDashboard = () => {
                       type="button"
                       onClick={() => {
                         setShowAddModal(false);
-                        setFormData({ title: '', amount: 0, description: '' });
+                        setFormData(EMPTY_FORM);
                         setFormError('');
                       }}
                       style={{
@@ -1418,7 +1559,7 @@ const ExpenseDashboard = () => {
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.95, opacity: 0 }}
                 transition={{ type: "spring", duration: 0.3 }}
-                style={{ background: bg2, border: `1px solid ${border}`, borderRadius: 4, padding: 24, width: '100%', maxWidth: 448 }}
+                style={{ background: bg2, border: `1px solid ${border}`, borderRadius: 4, padding: 24, width: '100%', maxWidth: 448, maxHeight: '90vh', overflowY: 'auto' }}
               >
                 <h3 style={{ ...bc(15, 700, { color: textC, borderLeft: `3px solid ${ORG}`, paddingLeft: 10, marginBottom: 16 }) }}>
                   Update Expense
@@ -1465,6 +1606,7 @@ const ExpenseDashboard = () => {
                       placeholder="Enter amount"
                     />
                   </div>
+                  {renderUsageFields(showUpdateModal ? selectedExpense?.receiptUrl : null)}
                   <div>
                     <label style={{ ...bc(11, 700, { color: text2, display: 'block', marginBottom: 6, letterSpacing: 1, textTransform: 'uppercase' }) }}>Description</label>
                     <textarea
@@ -1486,7 +1628,7 @@ const ExpenseDashboard = () => {
                       onClick={() => {
                         setShowUpdateModal(false);
                         setSelectedExpense(null);
-                        setFormData({ title: '', amount: 0, description: '' });
+                        setFormData(EMPTY_FORM);
                         setFormError('');
                       }}
                       style={{
@@ -1534,7 +1676,7 @@ const ExpenseDashboard = () => {
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.95, opacity: 0 }}
                 transition={{ type: "spring", duration: 0.3 }}
-                style={{ background: bg2, border: `1px solid ${border}`, borderRadius: 4, padding: 24, width: '100%', maxWidth: 448 }}
+                style={{ background: bg2, border: `1px solid ${border}`, borderRadius: 4, padding: 24, width: '100%', maxWidth: 448, maxHeight: '90vh', overflowY: 'auto' }}
               >
                 <h3 style={{ ...bc(15, 700, { color: textC, borderLeft: `3px solid ${ORG}`, paddingLeft: 10, marginBottom: 16 }) }}>
                   Expense Details
@@ -1556,6 +1698,27 @@ const ExpenseDashboard = () => {
                     <div>
                       <label style={{ ...bc(11, 700, { color: '#e84040', display: 'block', marginBottom: 4, letterSpacing: 1, textTransform: 'uppercase' }) }}>Reason of Rejection</label>
                       <p style={{ ...ba(12, 400, { color: textC }) }}>{selectedExpense.reason || '-'}</p>
+                    </div>
+                  )}
+                  <div>
+                    <label style={{ ...bc(11, 700, { color: text2, display: 'block', marginBottom: 4, letterSpacing: 1, textTransform: 'uppercase' }) }}>Usage</label>
+                    <p style={{ ...ba(12, 400, { color: textC }) }}>
+                      {selectedExpense.usageStatus === 'USED' ? 'Already used' : 'Plan to use later'}
+                      {selectedExpense.usageDate && (
+                        <> — {selectedExpense.usageStatus === 'USED' ? 'used on' : 'planned for'} {new Date(selectedExpense.usageDate).toLocaleDateString()}</>
+                      )}
+                    </p>
+                  </div>
+                  {selectedExpense.usageStatus === 'USED' && (
+                    <div>
+                      <label style={{ ...bc(11, 700, { color: text2, display: 'block', marginBottom: 4, letterSpacing: 1, textTransform: 'uppercase' }) }}>Receipt</label>
+                      {selectedExpense.receiptUrl ? (
+                        <a href={`${API_URL}${selectedExpense.receiptUrl}`} target="_blank" rel="noopener noreferrer" style={{ ...ba(12, 400, { color: TEAL }) }}>
+                          View receipt
+                        </a>
+                      ) : (
+                        <p style={{ ...ba(12, 400, { color: text3 }) }}>No receipt uploaded</p>
+                      )}
                     </div>
                   )}
                   <div>

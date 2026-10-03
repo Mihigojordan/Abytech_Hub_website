@@ -12,6 +12,7 @@ import IncomingCallModal from '../components/dashboard/chat/ui/IncomingCallModal
 import ActiveCallModal from '../components/dashboard/chat/ui/ActiveCallModal';
 import CallingOutModal from '../components/dashboard/chat/ui/CallingOutModal';
 import InstallScopeGate from '../components/pwa/InstallScopeGate';
+import NotificationAlarm from '../components/dashboard/notification/NotificationAlarm';
 
 export type RoleType = 'admin';
 
@@ -52,6 +53,9 @@ const DashboardInner = ({ role, isOpen, onToggle }) => {
           <Outlet context={{ role }} />
         </main>
       </div>
+
+      {/* ── Notification alarm — rings on any dashboard page until stopped ── */}
+      <NotificationAlarm />
 
       {/* ── Outgoing call overlay — waiting for someone to answer ── */}
       {callState === 'ringing-out' && callInfo && (

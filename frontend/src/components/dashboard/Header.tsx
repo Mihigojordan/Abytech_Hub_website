@@ -12,12 +12,14 @@ import {
   Sun,
   Download,
   RefreshCw,
+  Music,
 } from "lucide-react";
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import useAdminAuth from "../../context/AdminAuthContext";
 import { useNotifications } from "../../context/NotificationContext";
 import { NotificationPanel } from "./NotificationPanel";
+import NotificationSoundModal from "./notification/NotificationSoundModal";
 import { API_URL } from "../../api/api";
 import ReactCountryFlag from "react-country-flag";
 import { useDashboardTheme } from "../../utils/dashboardTheme";
@@ -57,6 +59,7 @@ const Header: React.FC<HeaderProps> = ({ onToggle }) => {
   const [installing, setInstalling] = useState(false);
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isSoundOpen, setIsSoundOpen] = useState(false);
   const [isCountryOpen, setIsCountryOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [isLocking, setIsLocking] = useState(false);
@@ -305,6 +308,7 @@ const Header: React.FC<HeaderProps> = ({ onToggle }) => {
                       {[
                         { icon: User,     label: "My Profile", onClick: () => { navigate(`/admin/dashboard/profile/${adminUser?.id}`); setIsDropdownOpen(false); } },
                         { icon: Settings, label: "Settings",   onClick: () => setIsDropdownOpen(false) },
+                        { icon: Music,    label: "Notification Sound", onClick: () => { setIsSoundOpen(true); setIsDropdownOpen(false); } },
                         { icon: Lock,     label: isLocking ? "Locking…" : "Lock Screen", onClick: handleLock, disabled: isLocking },
                       ].map(({ icon: Icon, label, onClick, disabled }) => (
                         <button
@@ -345,6 +349,7 @@ const Header: React.FC<HeaderProps> = ({ onToggle }) => {
       </header>
 
       <NotificationPanel isOpen={isNotificationOpen} onClose={() => setIsNotificationOpen(false)} />
+      <NotificationSoundModal isOpen={isSoundOpen} onClose={() => setIsSoundOpen(false)} />
 
       <style>{`
         @keyframes pwa-install-glow {

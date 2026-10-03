@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE `Expense` ADD COLUMN `usageStatus` ENUM('USED', 'PLANNED') NOT NULL DEFAULT 'PLANNED',
+    ADD COLUMN `usageDate` DATETIME(3) NULL,
+    ADD COLUMN `receiptUrl` VARCHAR(191) NULL;

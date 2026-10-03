@@ -1,6 +1,7 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { NotificationService } from '../notification/notification.service';
+import { deleteFile } from 'src/common/utils/file-upload.utils';
 
 @Injectable()
 export class ExpenseService {
@@ -32,14 +33,55 @@ export class ExpenseService {
     return admin?.adminName || 'Unknown';
   }
 
-  async create(data: any, adminId: string) {
+  // Helper: Pick known fields and convert multipart string values to proper types
+  private normalizeExpenseData(data: any) {
+    const result: any = {};
+    const passThrough = ['title', 'description', 'status', 'reason'];
+    for (const key of passThrough) {
+      if (data[key] !== undefined) result[key] = data[key];
+    }
+
+    if (data.amount !== undefined) {
+      const amount = parseFloat(data.amount);
+      if (isNaN(amount)) throw new BadRequestException('Amount must be a number');
+      result.amount = amount;
+    }
+
+    if (data.usageStatus !== undefined) {
+      if (!['USED', 'PLANNED'].includes(data.usageStatus)) {
+        throw new BadRequestException('usageStatus must be USED or PLANNED');
+      }
+      result.usageStatus = data.usageStatus;
+    }
+
+    if (data.usageDate !== undefined) {
+      if (!data.usageDate) {
+        result.usageDate = null;
+      } else {
+        const date = new Date(data.usageDate);
+        if (isNaN(date.getTime())) throw new BadRequestException('Invalid usage date');
+        result.usageDate = date;
+      }
+    }
+
+    return result;
+  }
+
+  async create(data: any, adminId: string, receiptUrl?: string) {
     try {
+      const expenseData = this.normalizeExpenseData(data);
+      const isUsed = expenseData.usageStatus === 'USED';
+
       const expense = await this.prisma.expense.create({
         data: {
-          ...data,
+          ...expenseData,
+          // receipts only make sense for money that was already spent
+          receiptUrl: isUsed ? receiptUrl : undefined,
           admin: { connect: { id: adminId } }
         },
       });
+
+      if (!isUsed && receiptUrl) deleteFile(receiptUrl);
 
       try {
         const adminIds = await this.getFinanceAdminIds();
@@ -90,12 +132,32 @@ export class ExpenseService {
     }
   }
 
-  async update(id: string, data: any) {
+  async update(id: string, data: any, receiptUrl?: string) {
     try {
+      const existing = await this.prisma.expense.findUnique({ where: { id } });
+      if (!existing) throw new BadRequestException('Expense not found');
+
+      const expenseData = this.normalizeExpenseData(data);
+      const isUsed = (expenseData.usageStatus ?? existing.usageStatus) === 'USED';
+      const removeReceipt = data.removeReceipt === true || data.removeReceipt === 'true';
+
+      if (!isUsed || removeReceipt) {
+        // PLANNED expenses (or explicit removal) carry no receipt
+        expenseData.receiptUrl = null;
+        if (receiptUrl) deleteFile(receiptUrl);
+      } else if (receiptUrl) {
+        expenseData.receiptUrl = receiptUrl;
+      }
+
       const expense = await this.prisma.expense.update({
         where: { id },
-        data,
+        data: expenseData,
       });
+
+      // Clean up the old receipt file when it was replaced or removed
+      if (existing.receiptUrl && expenseData.receiptUrl !== undefined && expenseData.receiptUrl !== existing.receiptUrl) {
+        deleteFile(existing.receiptUrl);
+      }
 
       try {
         const adminIds = await this.getFinanceAdminIds();
@@ -124,6 +186,7 @@ export class ExpenseService {
     try {
       const expense = await this.prisma.expense.findUnique({ where: { id } });
       await this.prisma.expense.delete({ where: { id } });
+      if (expense?.receiptUrl) deleteFile(expense.receiptUrl);
 
       if (expense) {
         try {
