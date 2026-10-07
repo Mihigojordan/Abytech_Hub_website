@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   Users,
   FileText,
-  DollarSign,
+  Banknote,
   Calendar,
   Clock,
   TrendingUp,
@@ -37,6 +37,9 @@ import Swal from 'sweetalert2';
 import useAdminAuth from '../../context/AdminAuthContext';
 import { useDashboardTheme } from '../../utils/dashboardTheme';
 import { ORG, TEAL, bb, bc, ba } from '../../utils/homeConstants';
+
+const formatRWF = (amount) =>
+  new Intl.NumberFormat('en-US', { style: 'currency', currency: 'RWF' }).format(amount || 0);
 
 const DashboardHome = ({ role }) => {
   const { hasPermission, permissions, isSuperAdmin } = useAdminAuth();
@@ -310,9 +313,9 @@ const DashboardHome = ({ role }) => {
     },
     {
       label: 'Total Amount',
-      value: new Intl.NumberFormat('en-US', { style: 'currency', currency: 'RWF' }).format(dashboardData.stats.totalAmount),
+      value: formatRWF(dashboardData.stats.totalAmount),
       change: '+15%',
-      icon: DollarSign,
+      icon: Banknote,
       trend: 'up',
       visible: hasExpensePermission,
     },
@@ -705,9 +708,9 @@ const DashboardHome = ({ role }) => {
                     className="flex items-center gap-1 px-2 py-1"
                     style={{ background: 'rgba(232,98,26,.1)', border: '1px solid rgba(232,98,26,.2)', borderRadius: 4 }}
                   >
-                    <DollarSign className="w-3.5 h-3.5" style={{ color: ORG }} />
+                    <Banknote className="w-3.5 h-3.5" style={{ color: ORG }} />
                     <span style={{ ...bc(11, 700, { color: ORG }) }}>
-                      ${dashboardData.expenses.reduce((sum, exp) => sum + exp.amount, 0).toFixed(2)}
+                      {formatRWF(dashboardData.expenses.reduce((sum, exp) => sum + exp.amount, 0))}
                     </span>
                   </div>
                 </div>
@@ -731,7 +734,7 @@ const DashboardHome = ({ role }) => {
                                 borderRadius: 4,
                               }}
                             >
-                              <DollarSign className="w-3.5 h-3.5" style={{ color: ORG }} />
+                              <Banknote className="w-3.5 h-3.5" style={{ color: ORG }} />
                             </div>
                             <div className="min-w-0 flex-1">
                               <p style={{ ...ba(12, 600, { color: textC }) }} className="truncate">{expense.title}</p>
@@ -740,7 +743,7 @@ const DashboardHome = ({ role }) => {
                             </div>
                           </div>
                           <div className="flex flex-col items-end flex-shrink-0 ml-2">
-                            <span style={{ ...ba(12, 700, { color: textC }) }}>${expense.amount.toFixed(2)}</span>
+                            <span style={{ ...ba(12, 700, { color: textC }) }}>{formatRWF(expense.amount)}</span>
                             <span style={{ ...ba(11, 400, { color: text3 }) }}>
                               {new Date(expense.createdAt).toLocaleDateString()}
                             </span>
@@ -865,14 +868,14 @@ const DashboardHome = ({ role }) => {
                               borderRadius: 4,
                             }}
                           >
-                            <DollarSign className="w-3.5 h-3.5" style={{ color: ORG }} />
+                            <Banknote className="w-3.5 h-3.5" style={{ color: ORG }} />
                           </div>
                           <div className="flex-1 min-w-0">
                             <p style={{ ...ba(12, 600, { color: textC }) }} className="truncate">{metric.title}</p>
                             <p style={{ ...ba(11, 400, { color: text3 }) }}>{metric.adminName}</p>
                           </div>
                           <div className="text-right flex-shrink-0">
-                            <p style={{ ...ba(12, 700, { color: textC }) }}>${metric.amount.toFixed(2)}</p>
+                            <p style={{ ...ba(12, 700, { color: textC }) }}>{formatRWF(metric.amount)}</p>
                             <p style={{ ...ba(11, 400, { color: text3 }) }}>{new Date(metric.createdAt).toLocaleDateString()}</p>
                           </div>
                         </div>
