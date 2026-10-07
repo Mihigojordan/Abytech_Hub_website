@@ -76,7 +76,7 @@ const CiscoTraining = () => {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-4 gap-8">
+          <div className="grid md:grid-cols-3 gap-8">
             <div className="bg-white p-8 rounded-2xl shadow-xl text-center">
               <div className="text-5xl mb-4">📅</div>
               <h3 className="text-2xl font-bold text-gray-800 mb-2">Duration</h3>
@@ -94,12 +94,6 @@ const CiscoTraining = () => {
               <h3 className="text-2xl font-bold text-gray-800 mb-2">Class Size</h3>
               <p className="text-4xl font-bold text-[#ff5a00] mb-2">Max 18</p>
               <p className="text-gray-600">Students per batch</p>
-            </div>
-            <div className="bg-white p-8 rounded-2xl shadow-xl text-center">
-              <div className="text-5xl mb-4">💰</div>
-              <h3 className="text-2xl font-bold text-gray-800 mb-2">Investment</h3>
-              <p className="text-4xl font-bold text-[#ff5a00] mb-2">$4,500</p>
-              <p className="text-gray-600">Total program cost</p>
             </div>
           </div>
         </div>
@@ -369,7 +363,7 @@ const CiscoTraining = () => {
       <section className="relative py-32 overflow-hidden" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1920&h=800&fit=crop')", backgroundAttachment: "fixed", backgroundPosition: "center", backgroundSize: "cover" }}>
         <div className="absolute inset-0 bg-gradient-to-r from-blue-900/90 to-purple-900/90"></div>
         <div className="container mx-auto px-4 z-10 relative">
-          <div className="grid md:grid-cols-4 gap-8 text-center text-white">
+          <div className="grid md:grid-cols-3 gap-8 text-center text-white">
             <div className="space-y-2">
               <div className="text-6xl md:text-7xl font-bold text-[#ff5a00]">300+</div>
               <div className="text-xl md:text-2xl">CCNA Certified</div>
@@ -381,10 +375,6 @@ const CiscoTraining = () => {
             <div className="space-y-2">
               <div className="text-6xl md:text-7xl font-bold text-[#ff5a00]">4.9/5</div>
               <div className="text-xl md:text-2xl">Course Rating</div>
-            </div>
-            <div className="space-y-2">
-              <div className="text-6xl md:text-7xl font-bold text-[#ff5a00]">$70K</div>
-              <div className="text-xl md:text-2xl">Avg Salary</div>
             </div>
           </div>
         </div>
@@ -402,7 +392,6 @@ const CiscoTraining = () => {
 
             <div className="bg-gradient-to-br from-blue-50 to-purple-50 p-12 rounded-2xl shadow-2xl">
               <div className="text-center mb-8">
-                <div className="text-6xl font-bold text-[#ff5a00] mb-4">$4,500</div>
                 <p className="text-2xl text-gray-700">Flexible payment options available</p>
               </div>
 

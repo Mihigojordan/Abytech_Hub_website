@@ -66,7 +66,7 @@ const Faq = () => {
     {
       category: 'pricing',
       question: 'How much does it cost to develop a custom software solution?',
-      answer: 'Project costs vary based on complexity, features, technology stack, timeline, and team size required. A simple web application might start from $5,000-$15,000, while complex enterprise solutions can range from $50,000-$200,000+. We provide detailed project estimates after understanding your requirements. We offer flexible pricing models including fixed price, time and materials, and dedicated team arrangements to suit your budget and project needs, with no hidden fees.'
+      answer: 'Project costs vary based on complexity, features, technology stack, timeline, and team size required. We provide detailed project estimates after understanding your requirements. We offer flexible pricing models including fixed price, time and materials, and dedicated team arrangements to suit your budget and project needs, with no hidden fees.'
     },
     {
       category: 'pricing',
@@ -76,7 +76,7 @@ const Faq = () => {
     {
       category: 'pricing',
       question: 'Are there ongoing costs after project completion?',
-      answer: 'Post-launch costs typically include hosting and infrastructure (cloud services, domain, SSL certificates), maintenance and support services, software updates and security patches, feature enhancements, and technical support. We offer various maintenance packages starting from $500/month for basic support to comprehensive packages for mission-critical applications. We provide transparent pricing for all ongoing services, helping you budget effectively for long-term success.'
+      answer: 'Post-launch costs typically include hosting and infrastructure (cloud services, domain, SSL certificates), maintenance and support services, software updates and security patches, feature enhancements, and technical support. We offer various maintenance packages, from basic support to comprehensive packages for mission-critical applications. We provide transparent pricing for all ongoing services, helping you budget effectively for long-term success.'
     },
     {
       category: 'process',

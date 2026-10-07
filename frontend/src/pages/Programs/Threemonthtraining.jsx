@@ -358,7 +358,7 @@ const ThreeMonthTraining = () => {
       <section className="relative py-32 overflow-hidden" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1920&h=800&fit=crop')", backgroundAttachment: "fixed", backgroundPosition: "center", backgroundSize: "cover" }}>
         <div className="absolute inset-0 bg-gradient-to-r from-blue-900/90 to-purple-900/90"></div>
         <div className="container mx-auto px-4 z-10 relative">
-          <div className="grid md:grid-cols-4 gap-8 text-center text-white">
+          <div className="grid md:grid-cols-3 gap-8 text-center text-white">
             <div className="space-y-2">
               <div className="text-6xl md:text-7xl font-bold text-[#ff5a00]">500+</div>
               <div className="text-xl md:text-2xl">Graduates</div>
@@ -370,10 +370,6 @@ const ThreeMonthTraining = () => {
             <div className="space-y-2">
               <div className="text-6xl md:text-7xl font-bold text-[#ff5a00]">4.9/5</div>
               <div className="text-xl md:text-2xl">Student Rating</div>
-            </div>
-            <div className="space-y-2">
-              <div className="text-6xl md:text-7xl font-bold text-[#ff5a00]">$60K</div>
-              <div className="text-xl md:text-2xl">Average Starting Salary</div>
             </div>
           </div>
         </div>
@@ -391,7 +387,6 @@ const ThreeMonthTraining = () => {
 
             <div className="bg-gradient-to-br from-blue-50 to-purple-50 p-12 rounded-2xl shadow-2xl">
               <div className="text-center mb-8">
-                <div className="text-6xl font-bold text-[#ff5a00] mb-4">$3,500</div>
                 <p className="text-2xl text-gray-700">One-time payment or flexible installments</p>
               </div>
 
