@@ -53,7 +53,6 @@ const Training = () => {
             overview: [
                 { label: "Duration", value: "12 Months", icon: "📅" },
                 { label: "Schedule", value: "Full-Time", icon: "⏰" },
-                { label: "Stipend", value: "$2,000/mo", icon: "💰" },
                 { label: "Job Offer", value: "100% Guaranteed", icon: "🎯" }
             ]
         },

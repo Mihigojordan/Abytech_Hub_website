@@ -430,7 +430,6 @@ const OneMonthTraining = () => {
 
             <div className="bg-gradient-to-br from-blue-50 to-purple-50 p-12 rounded-2xl shadow-2xl">
               <div className="text-center mb-8">
-                <div className="text-6xl font-bold text-[#ff5a00] mb-4">$1,500</div>
                 <p className="text-2xl text-gray-700">One-time payment</p>
               </div>
 

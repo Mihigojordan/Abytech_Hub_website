@@ -310,7 +310,7 @@ const DashboardHome = ({ role }) => {
     },
     {
       label: 'Total Amount',
-      value: `$${dashboardData.stats.totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      value: new Intl.NumberFormat('en-US', { style: 'currency', currency: 'RWF' }).format(dashboardData.stats.totalAmount),
       change: '+15%',
       icon: DollarSign,
       trend: 'up',

@@ -337,11 +337,6 @@ const Apprenticeship = () => {
               <p className="text-gray-700">Work on actual projects</p>
             </div>
             <div className="bg-white p-8 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 text-center">
-              <div className="text-6xl mb-4">💰</div>
-              <h3 className="text-2xl font-bold text-gray-800 mb-3">Paid Training</h3>
-              <p className="text-gray-700">$2,000/month stipend</p>
-            </div>
-            <div className="bg-white p-8 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 text-center">
               <div className="text-6xl mb-4">🎓</div>
               <h3 className="text-2xl font-bold text-gray-800 mb-3">Certifications</h3>
               <p className="text-gray-700">Industry-recognized certs</p>
@@ -369,22 +364,14 @@ const Apprenticeship = () => {
       <section className="relative py-32 overflow-hidden" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1920&h=800&fit=crop')", backgroundAttachment: "fixed", backgroundPosition: "center", backgroundSize: "cover" }}>
         <div className="absolute inset-0 bg-gradient-to-r from-blue-900/90 to-purple-900/90"></div>
         <div className="container mx-auto px-4 z-10 relative">
-          <div className="grid md:grid-cols-4 gap-8 text-center text-white">
+          <div className="grid md:grid-cols-2 gap-8 text-center text-white">
             <div className="space-y-2">
               <div className="text-6xl md:text-7xl font-bold text-[#ff5a00]">100%</div>
               <div className="text-xl md:text-2xl">Job Placement</div>
             </div>
             <div className="space-y-2">
-              <div className="text-6xl md:text-7xl font-bold text-[#ff5a00]">$2K</div>
-              <div className="text-xl md:text-2xl">Monthly Stipend</div>
-            </div>
-            <div className="space-y-2">
               <div className="text-6xl md:text-7xl font-bold text-[#ff5a00]">50+</div>
               <div className="text-xl md:text-2xl">Partner Companies</div>
-            </div>
-            <div className="space-y-2">
-              <div className="text-6xl md:text-7xl font-bold text-[#ff5a00]">$65K</div>
-              <div className="text-xl md:text-2xl">Starting Salary</div>
             </div>
           </div>
         </div>
@@ -413,10 +400,6 @@ const Apprenticeship = () => {
                     <li className="flex items-start gap-2">
                       <span className="text-[#ff5a00]">✓</span>
                       <span>12 months paid apprenticeship</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-[#ff5a00]">✓</span>
-                      <span>Monthly stipend of $2,000</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="text-[#ff5a00]">✓</span>

@@ -76,7 +76,7 @@ const AcademicTraining = () => {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-4 gap-8">
+          <div className="grid md:grid-cols-3 gap-8">
             <div className="bg-white p-8 rounded-2xl shadow-xl text-center">
               <div className="text-5xl mb-4">📅</div>
               <h3 className="text-2xl font-bold text-gray-800 mb-2">Duration</h3>
@@ -94,12 +94,6 @@ const AcademicTraining = () => {
               <h3 className="text-2xl font-bold text-gray-800 mb-2">Class Size</h3>
               <p className="text-4xl font-bold text-[#ff5a00] mb-2">Max 25</p>
               <p className="text-gray-600">Students per batch</p>
-            </div>
-            <div className="bg-white p-8 rounded-2xl shadow-xl text-center">
-              <div className="text-5xl mb-4">💰</div>
-              <h3 className="text-2xl font-bold text-gray-800 mb-2">Investment</h3>
-              <p className="text-4xl font-bold text-[#ff5a00] mb-2">$2,800/semester</p>
-              <p className="text-gray-600">Total program cost</p>
             </div>
           </div>
         </div>
@@ -340,7 +334,6 @@ const AcademicTraining = () => {
 
             <div className="bg-gradient-to-br from-blue-50 to-purple-50 p-12 rounded-2xl shadow-2xl">
               <div className="text-center mb-8">
-                <div className="text-6xl font-bold text-[#ff5a00] mb-4">$2,800/semester</div>
                 <p className="text-2xl text-gray-700">Flexible payment options available</p>
               </div>
 
